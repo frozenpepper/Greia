@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T23:25:15.344373+00:00",
+  "created_utc": "2026-10-22T04:10:07.805859+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "Dov'è la lettera Z?",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano...\n\nDov'è la lettera Z?",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Dov'è la lettera Z?",
+    "cue_id": "alfabeto_leo.ask_Z",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Dov'è la lettera Z?",
     "cue_id": "alfabeto_leo.ask_Z",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/alfabeto_leo/assets/audio/it/ask_Z.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-012503-0d1aa98d",
-    "idempotency_key": "greia-2a59cc1af69e41a89a144b70be79b18b",
+    "job_id": "20261022-060915-8f88337f",
+    "idempotency_key": "greia-cc994cf2e9e54dcbb0413b56d4b3dcd2",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,281 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1696620768,
+    "script_seed": 1406948746,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
-    "effective_delivery": "Speak naturally in Italian. Leo, a warm, curious cartoon guide. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 428627091,
-        "sha256": "2636a60d747ad3ffa26162fc47a0032f895f35ae3b0c944f9010e1d0a756f16a",
+        "seed": 1153903316,
+        "sha256": "bd291281eb575728e9c29529a379758d70b56e5b3871e5ca79714cb8610eb9ad",
         "generation": {
-          "elapsed_seconds": 10.294761582976207,
+          "elapsed_seconds": 47.108859624990146,
           "model_load_seconds": 0.0,
-          "rtf": 5.848742495772867,
-          "peak_memory_gb": 8.21220922
+          "rtf": 9.814004991144088,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.807,
+    "transcript": " dove la lettera z è da",
+    "metrics": {
+      "duration_seconds": 2.331927437641723,
+      "rms_dbfs": -34.72,
+      "peak": 0.19464,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.2,
+      "trailing_silence_seconds": 0.2,
+      "longest_internal_pause_seconds": 0.2
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/alfabeto_leo/assets/audio/it/ask_Z.wav.raw.wav",
+    "sha256": "6edbcfdb2ddb577ea58db7330be0f150283e5873e7ca549987f82197964d4599",
+    "receipt_sha256": "65b343ab4c429d83be94a9808e1304bf4598fc67329a957ada7aee11a5975548"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/assets/audio/it/ask_Z.wav.extracted.wav",
+    "sha256": "79e26bd5f4ac9123838b0a14a5e227e53592e8a0cdeafcee2dc997061a0ffae4"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/assets/audio/it/ask_Z.wav.delivery.wav",
+    "sha256": "759a50adf78154f09d5e792724e168d6e57ac970453774c8c886e52ac339a1b0"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/activities/alfabeto_leo/assets/audio/it/ask_Z.wav.raw.wav",
+    "source_sha256": "6edbcfdb2ddb577ea58db7330be0f150283e5873e7ca549987f82197964d4599",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/activities/alfabeto_leo/assets/audio/it/ask_Z.wav.extracted.wav",
+    "output_sha256": "79e26bd5f4ac9123838b0a14a5e227e53592e8a0cdeafcee2dc997061a0ffae4",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Dov'è la lettera Z?",
+      "locale": "it",
+      "cue_id": "alfabeto_leo.ask_Z",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/activities/alfabeto_leo/assets/audio/it/ask_Z.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "65b343ab4c429d83be94a9808e1304bf4598fc67329a957ada7aee11a5975548"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "Dov'è la lettera Z?",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " ascolta questa frase in italiano, dove la lettera z è.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " dove la lettera z è.",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.5
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.5,
+        "end_seconds": 0.82
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.82,
+        "end_seconds": 1.08
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.08,
+        "end_seconds": 1.28
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.28,
+        "end_seconds": 1.8
+      },
+      {
+        "word": "dove",
+        "start_seconds": 2.62,
+        "end_seconds": 3.46
+      },
+      {
+        "word": "la",
+        "start_seconds": 3.46,
+        "end_seconds": 3.72
+      },
+      {
+        "word": "lettera",
+        "start_seconds": 3.72,
+        "end_seconds": 4.14
+      },
+      {
+        "word": "z",
+        "start_seconds": 4.14,
+        "end_seconds": 4.36
+      },
+      {
+        "word": "è",
+        "start_seconds": 4.36,
+        "end_seconds": 4.36
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "dove",
+        "start_seconds": 0.7800000000000002,
+        "end_seconds": 1.28
+      },
+      {
+        "word": "la",
+        "start_seconds": 1.28,
+        "end_seconds": 1.5
+      },
+      {
+        "word": "lettera",
+        "start_seconds": 1.5,
+        "end_seconds": 1.88
+      },
+      {
+        "word": "z",
+        "start_seconds": 1.88,
+        "end_seconds": 2.08
+      },
+      {
+        "word": "è",
+        "start_seconds": 2.08,
+        "end_seconds": 2.14
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5460164811876085,
+        "no_speech_prob": 0.031488195061683655,
+        "compression_ratio": 0.8870967741935484,
+        "word_probabilities": [
+          0.5830078125,
+          0.98828125,
+          0.955078125,
+          0.97216796875,
+          0.9931640625,
+          0.53271484375,
+          0.67138671875,
+          0.9462890625,
+          0.5751953125,
+          0.5107421875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.8610233306884766,
+        "no_speech_prob": 0.1679326593875885,
+        "compression_ratio": 0.7241379310344828,
+        "word_probabilities": [
+          0.1539306640625,
+          0.7275390625,
+          0.7763671875,
+          0.42236328125,
+          0.416259765625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 108,
+    "extracted_voiced_seconds": 1.08,
+    "unremoved_raw_target_tokens": [
+      "la",
+      "lettera",
+      "z",
+      "è"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "dove",
+      "la",
+      "lettera",
+      "z",
+      "è"
+    ],
+    "raw_transcript_alignment_suffix_match": false,
+    "duration_seconds": 4.8001814058956915,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.8,
+      "search_end_seconds": 2.62,
+      "prefix_last_word_end_seconds": 1.8,
+      "target_first_word_start_seconds": 2.62,
+      "gap_seconds": 0.7083900226757369,
+      "verified_silence_start_seconds": 1.8598639455782313,
+      "verified_silence_end_seconds": 2.5682539682539685,
+      "gap_rms_dbfs": -63.586,
+      "gap_peak_dbfs": -41.65,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.2140589569160998,
+      "cut_sample": 48820,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 5605,
+      "removed_seconds": 0.2541950113378685,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 54425,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/activities/alfabeto_leo/assets/audio/it/ask_Z.wav.delivery.wav",
+      "sha256": "759a50adf78154f09d5e792724e168d6e57ac970453774c8c886e52ac339a1b0"
+    }
+  },
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/it/ask_Z.wav",
-    "bytes": 77702,
-    "sha256": "1c4ccc5cc98f66c44a85185c125779b0fe5a526fe1fbcedb988a23df524a7b31"
+    "sha256": "7026331a73a7259cda60e32688e8c299150da95fe5e726dc5eda4dd2ac167824",
+    "bytes": 102916
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "474b8b7c29786ceb2d4495199cdf02317627eef0bfa0f027056739fcb97abf23",
+    "original_sha256": "1c4ccc5cc98f66c44a85185c125779b0fe5a526fe1fbcedb988a23df524a7b31",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

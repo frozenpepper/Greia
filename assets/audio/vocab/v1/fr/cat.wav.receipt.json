@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T21:00:33.691291+00:00",
+  "created_utc": "2026-10-23T02:53:31.282522+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
@@ -8,17 +8,22 @@
     "text": "Chat",
     "cue_id": "greia.vocab.cat.fr",
     "output": "assets/audio/vocab/v1/fr/cat.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama."
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic"
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-230029-96ab826e",
-    "idempotency_key": "greia-08fc8fea3cfc404a92479deb35b651b5",
+    "job_id": "20261023-045319-5adca8a2",
+    "idempotency_key": "greia-df79ac0668144a5ca275de2c5dffc436",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +46,415 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2034422145,
+    "script_seed": 1002371130,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
-    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
+    "delivery_prompt": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "effective_delivery": "Speak in French. Lecture chaleureuse et calme. Diction claire et naturelle.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3269278847,
-        "sha256": "a73196b9e29c38293adef3ed1a4c305058fbabebce01298c2434ed27c6ea9ac3",
+        "seed": 310002629,
+        "sha256": "2a854df126cd3509b4480cf1798d1c8351d69d53ee7267f16b77567d56401339",
         "generation": {
-          "elapsed_seconds": 3.386909334047232,
+          "elapsed_seconds": 10.265960541990353,
           "model_load_seconds": 0.0,
-          "rtf": 5.290668056309136,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.3767755743622674,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-audio-parakeet-tdt-v3",
+    "transcript": "Chat.",
+    "score": 1.0,
+    "detail": "Delivered target transcribed and screened; human listening remains pending",
+    "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+    "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+    "flags": [],
+    "metrics": {
+      "duration_seconds": 0.7601814058956916,
+      "rms_dbfs": -34.76,
+      "peak": 0.16537,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.08,
+      "trailing_silence_seconds": 0.24,
+      "longest_internal_pause_seconds": 0.1
+    }
   },
-  "attempts": 1,
+  "attempts": 3,
   "output": {
     "path": "assets/audio/vocab/v1/fr/cat.wav",
-    "bytes": 28310,
-    "sha256": "30630c7c058995d274cff3bd24788d66d49f450d8df5e879f6b394bd520ce1a4"
+    "bytes": 33602,
+    "sha256": "a7b3d809d1bef2b47e4120e0e06eecd81da6a776b2e369da4fa913a728d436ac"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "short_phrase": {
+    "mode": "automatic-carrier",
+    "composition_policy": "natural-context-period-v1",
+    "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/f1076deeb7584b6da925aff742b8dddd",
+    "prefix": "Nous allons parler ensemble.",
+    "composite_text": "Nous allons parler ensemble.\n\nChat",
+    "effective_delivery": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "extraction": {
+      "schema_version": 1,
+      "algorithm_version": "greia-spoken-carrier-extractor-v7",
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "status": "EXTRACTED_PENDING_LISTENING",
+      "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/f1076deeb7584b6da925aff742b8dddd/attempt-03/raw.wav",
+      "source_sha256": "2a854df126cd3509b4480cf1798d1c8351d69d53ee7267f16b77567d56401339",
+      "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/f1076deeb7584b6da925aff742b8dddd/attempt-03/target.wav",
+      "output_sha256": "eddc11ea0211c0fece25c07c4c2004c91649723d84ff2df7d5f194d37ee23cbf",
+      "output_bytes": 73020,
+      "locale": "fr",
+      "prefix": "Nous allons parler ensemble.",
+      "target": "Chat",
+      "remove_first_words": 4,
+      "ignore_accents": true,
+      "target_verification_requested": "warn",
+      "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+      "target_comparison_score": 1.0,
+      "target_word_count_matches": true,
+      "target_numbers_match": true,
+      "target_comparison_flags": [],
+      "target_transcript_warning": false,
+      "recognizer": "mlx-audio-parakeet-tdt-v3",
+      "recognizer_version": "0.5.0",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "extracted_transcript": "Chat.",
+      "expected_target_tokens": [
+        "kat"
+      ],
+      "extracted_target_tokens": [
+        "kat"
+      ],
+      "extracted_target_exact_match": true,
+      "transcription_settings": {
+        "language_detection": "automatic",
+        "expected_text_prompt": null,
+        "timestamps": "model-provided-token-timestamps"
+      },
+      "sample_rate": 48000,
+      "duration_seconds": 3.0401666666666665,
+      "boundary": {
+        "search_strategy": "target-only-global-quiet-run-v7",
+        "verified_silence_start_seconds": 1.69,
+        "verified_silence_end_seconds": 2.38,
+        "verified_silence_duration_seconds": 0.69,
+        "cut_sample": 109440,
+        "cut_time_seconds": 2.28,
+        "padding_seconds": 0.1,
+        "quiet_run_start_sample": 81120,
+        "quiet_run_end_sample": 114240,
+        "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+      },
+      "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/f1076deeb7584b6da925aff742b8dddd/attempt-03/target.wav.search/9c18340aeb9844c399bc4cb9a3cd3783",
+      "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/f1076deeb7584b6da925aff742b8dddd/attempt-03/target.wav.search/9c18340aeb9844c399bc4cb9a3cd3783/search.json",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/f1076deeb7584b6da925aff742b8dddd/attempt-03/raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "6d30afe5eef76a6cd583450b2b76de8e3af335b6372665fa4640c7d13c25c1c6",
+      "candidate_sha256": "eddc11ea0211c0fece25c07c4c2004c91649723d84ff2df7d5f194d37ee23cbf",
+      "candidate_id": "candidate-02",
+      "candidate_count": 2,
+      "qualifying_quiet_run_count": 2,
+      "candidate_results": [
+        {
+          "candidate_id": "candidate-01",
+          "quiet_run": {
+            "start_sample": 28320,
+            "end_sample": 38400,
+            "start_seconds": 0.59,
+            "end_seconds": 0.8,
+            "duration_seconds": 0.21
+          },
+          "cut_sample": 33600,
+          "cut_time_seconds": 0.7,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/f1076deeb7584b6da925aff742b8dddd/attempt-03/target.wav.search/9c18340aeb9844c399bc4cb9a3cd3783/candidate-01.wav",
+          "preceding_voiced_seconds": 0.54,
+          "retained_voiced_seconds": 0.87,
+          "retained_duration_seconds": 2.3401666666666667,
+          "candidate_sha256": "2b506d49af61262450fb26b984e45f8b59b9bf727ebf82264a2dd37296d67c16",
+          "extracted_transcript": "parler ensemble. Tchat !",
+          "canonical_transcript_tokens": [
+            "parler",
+            "ensemble",
+            "tkat"
+          ],
+          "exact_target_match": false,
+          "target_comparison_score": 0.1696,
+          "target_word_count_matches": false,
+          "target_numbers_match": true,
+          "target_comparison_flags": [
+            "TARGET_WORD_COUNT_MISMATCH"
+          ],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": false,
+          "asr_segment_count": 2
+        },
+        {
+          "candidate_id": "candidate-02",
+          "quiet_run": {
+            "start_sample": 81120,
+            "end_sample": 114240,
+            "start_seconds": 1.69,
+            "end_seconds": 2.38,
+            "duration_seconds": 0.69
+          },
+          "cut_sample": 109440,
+          "cut_time_seconds": 2.28,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/f1076deeb7584b6da925aff742b8dddd/attempt-03/target.wav.search/9c18340aeb9844c399bc4cb9a3cd3783/candidate-02.wav",
+          "preceding_voiced_seconds": 1.19,
+          "retained_voiced_seconds": 0.22,
+          "retained_duration_seconds": 0.7601666666666667,
+          "candidate_sha256": "eddc11ea0211c0fece25c07c4c2004c91649723d84ff2df7d5f194d37ee23cbf",
+          "extracted_transcript": "Chat.",
+          "canonical_transcript_tokens": [
+            "kat"
+          ],
+          "exact_target_match": true,
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": true,
+          "asr_segment_count": 1
+        }
+      ],
+      "human_review": "PENDING",
+      "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+      "delivery": {
+        "policy": "verified-carrier-gap-delivery-v1",
+        "removed_frames": 0,
+        "removed_seconds": 0.0,
+        "retained_verified_quiet_seconds": 0.1,
+        "raw_delivery_start_sample": 109440,
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/f1076deeb7584b6da925aff742b8dddd/attempt-03/delivery-target.wav",
+        "sha256": "eddc11ea0211c0fece25c07c4c2004c91649723d84ff2df7d5f194d37ee23cbf"
+      }
+    },
+    "quality": {
+      "disposition": "PASS",
+      "score": 1.0,
+      "transcript": "Chat.",
+      "metrics": {
+        "duration_seconds": 0.7601814058956916,
+        "rms_dbfs": -34.76,
+        "peak": 0.16537,
+        "clipped_fraction": 0.0,
+        "leading_silence_seconds": 0.08,
+        "trailing_silence_seconds": 0.24,
+        "longest_internal_pause_seconds": 0.1
+      },
+      "flags": [],
+      "ignore_accents": true,
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "detail": "Delivered target transcribed and screened; human listening remains pending"
+    },
+    "history": [
+      {
+        "attempt": 1,
+        "status": "REJECTED_CUT",
+        "error": "no candidate suffix meets target verification policy",
+        "evidence": {
+          "candidate_transcripts": [
+            "Shut."
+          ],
+          "matching_candidate_ids": [],
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/f1076deeb7584b6da925aff742b8dddd/attempt-01/target.wav.search/e374c304cbd147239757cec2ff65713b",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/f1076deeb7584b6da925aff742b8dddd/attempt-01/target.wav.search/e374c304cbd147239757cec2ff65713b/search.json"
+        }
+      },
+      {
+        "attempt": 2,
+        "status": "REJECTED_CUT",
+        "error": "no candidate suffix meets target verification policy",
+        "evidence": {
+          "candidate_transcripts": [
+            "Chut."
+          ],
+          "matching_candidate_ids": [],
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/f1076deeb7584b6da925aff742b8dddd/attempt-02/target.wav.search/43e5fe6afc2f4f35a7924b1a2a4d6ba2",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/f1076deeb7584b6da925aff742b8dddd/attempt-02/target.wav.search/43e5fe6afc2f4f35a7924b1a2a4d6ba2/search.json"
+        }
+      },
+      {
+        "attempt": 3,
+        "status": "PASS",
+        "quality": {
+          "disposition": "PASS",
+          "score": 1.0,
+          "transcript": "Chat.",
+          "metrics": {
+            "duration_seconds": 0.7601814058956916,
+            "rms_dbfs": -34.76,
+            "peak": 0.16537,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.08,
+            "trailing_silence_seconds": 0.24,
+            "longest_internal_pause_seconds": 0.1
+          },
+          "flags": [],
+          "ignore_accents": true,
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "detail": "Delivered target transcribed and screened; human listening remains pending"
+        },
+        "extraction": {
+          "schema_version": 1,
+          "algorithm_version": "greia-spoken-carrier-extractor-v7",
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "status": "EXTRACTED_PENDING_LISTENING",
+          "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/f1076deeb7584b6da925aff742b8dddd/attempt-03/raw.wav",
+          "source_sha256": "2a854df126cd3509b4480cf1798d1c8351d69d53ee7267f16b77567d56401339",
+          "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/f1076deeb7584b6da925aff742b8dddd/attempt-03/target.wav",
+          "output_sha256": "eddc11ea0211c0fece25c07c4c2004c91649723d84ff2df7d5f194d37ee23cbf",
+          "output_bytes": 73020,
+          "locale": "fr",
+          "prefix": "Nous allons parler ensemble.",
+          "target": "Chat",
+          "remove_first_words": 4,
+          "ignore_accents": true,
+          "target_verification_requested": "warn",
+          "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_transcript_warning": false,
+          "recognizer": "mlx-audio-parakeet-tdt-v3",
+          "recognizer_version": "0.5.0",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "extracted_transcript": "Chat.",
+          "expected_target_tokens": [
+            "kat"
+          ],
+          "extracted_target_tokens": [
+            "kat"
+          ],
+          "extracted_target_exact_match": true,
+          "transcription_settings": {
+            "language_detection": "automatic",
+            "expected_text_prompt": null,
+            "timestamps": "model-provided-token-timestamps"
+          },
+          "sample_rate": 48000,
+          "duration_seconds": 3.0401666666666665,
+          "boundary": {
+            "search_strategy": "target-only-global-quiet-run-v7",
+            "verified_silence_start_seconds": 1.69,
+            "verified_silence_end_seconds": 2.38,
+            "verified_silence_duration_seconds": 0.69,
+            "cut_sample": 109440,
+            "cut_time_seconds": 2.28,
+            "padding_seconds": 0.1,
+            "quiet_run_start_sample": 81120,
+            "quiet_run_end_sample": 114240,
+            "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+          },
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/f1076deeb7584b6da925aff742b8dddd/attempt-03/target.wav.search/9c18340aeb9844c399bc4cb9a3cd3783",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/f1076deeb7584b6da925aff742b8dddd/attempt-03/target.wav.search/9c18340aeb9844c399bc4cb9a3cd3783/search.json",
+          "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/f1076deeb7584b6da925aff742b8dddd/attempt-03/raw.wav.receipt.json",
+          "source_provider_receipt_sha256": "6d30afe5eef76a6cd583450b2b76de8e3af335b6372665fa4640c7d13c25c1c6",
+          "candidate_sha256": "eddc11ea0211c0fece25c07c4c2004c91649723d84ff2df7d5f194d37ee23cbf",
+          "candidate_id": "candidate-02",
+          "candidate_count": 2,
+          "qualifying_quiet_run_count": 2,
+          "candidate_results": [
+            {
+              "candidate_id": "candidate-01",
+              "quiet_run": {
+                "start_sample": 28320,
+                "end_sample": 38400,
+                "start_seconds": 0.59,
+                "end_seconds": 0.8,
+                "duration_seconds": 0.21
+              },
+              "cut_sample": 33600,
+              "cut_time_seconds": 0.7,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/f1076deeb7584b6da925aff742b8dddd/attempt-03/target.wav.search/9c18340aeb9844c399bc4cb9a3cd3783/candidate-01.wav",
+              "preceding_voiced_seconds": 0.54,
+              "retained_voiced_seconds": 0.87,
+              "retained_duration_seconds": 2.3401666666666667,
+              "candidate_sha256": "2b506d49af61262450fb26b984e45f8b59b9bf727ebf82264a2dd37296d67c16",
+              "extracted_transcript": "parler ensemble. Tchat !",
+              "canonical_transcript_tokens": [
+                "parler",
+                "ensemble",
+                "tkat"
+              ],
+              "exact_target_match": false,
+              "target_comparison_score": 0.1696,
+              "target_word_count_matches": false,
+              "target_numbers_match": true,
+              "target_comparison_flags": [
+                "TARGET_WORD_COUNT_MISMATCH"
+              ],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": false,
+              "asr_segment_count": 2
+            },
+            {
+              "candidate_id": "candidate-02",
+              "quiet_run": {
+                "start_sample": 81120,
+                "end_sample": 114240,
+                "start_seconds": 1.69,
+                "end_seconds": 2.38,
+                "duration_seconds": 0.69
+              },
+              "cut_sample": 109440,
+              "cut_time_seconds": 2.28,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/f1076deeb7584b6da925aff742b8dddd/attempt-03/target.wav.search/9c18340aeb9844c399bc4cb9a3cd3783/candidate-02.wav",
+              "preceding_voiced_seconds": 1.19,
+              "retained_voiced_seconds": 0.22,
+              "retained_duration_seconds": 0.7601666666666667,
+              "candidate_sha256": "eddc11ea0211c0fece25c07c4c2004c91649723d84ff2df7d5f194d37ee23cbf",
+              "extracted_transcript": "Chat.",
+              "canonical_transcript_tokens": [
+                "kat"
+              ],
+              "exact_target_match": true,
+              "target_comparison_score": 1.0,
+              "target_word_count_matches": true,
+              "target_numbers_match": true,
+              "target_comparison_flags": [],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": true,
+              "asr_segment_count": 1
+            }
+          ],
+          "human_review": "PENDING",
+          "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+          "delivery": {
+            "policy": "verified-carrier-gap-delivery-v1",
+            "removed_frames": 0,
+            "removed_seconds": 0.0,
+            "retained_verified_quiet_seconds": 0.1,
+            "raw_delivery_start_sample": 109440,
+            "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/f1076deeb7584b6da925aff742b8dddd/attempt-03/delivery-target.wav",
+            "sha256": "eddc11ea0211c0fece25c07c4c2004c91649723d84ff2df7d5f194d37ee23cbf"
+          }
+        },
+        "candidate": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/f1076deeb7584b6da925aff742b8dddd/attempt-03/candidate.wav"
+      }
+    ]
+  },
   "corpus_replacement": {
-    "original_sha256": "af5b161403c648327c503294e3fbba1595dac087b93430af02665cad124ace71",
+    "original_sha256": "5a980dcac9dd273f13ac18220871ec4b51d33d44e566edaf56287c0d4234a9c6",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T12:44:04.208447+00:00",
+  "created_utc": "2026-10-21T17:32:25.455874+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "Scegli un viaggio!",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. Scegli un viaggio!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Scegli un viaggio!",
+    "cue_id": "greia.requested.choose_journey.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Scegli un viaggio!",
     "cue_id": "greia.requested.choose_journey.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/viaggio_delfino/assets/audio/it/choose_journey.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.tito.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261021-144358-04f38848",
-    "idempotency_key": "greia-0a2d10996ee5425e8ba61f19353eac8f",
+    "job_id": "20261021-193212-7f364452",
+    "idempotency_key": "greia-c74e30a0edf74854b6a647ac55524dc5",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,240 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3119300475,
+    "script_seed": 4118488478,
     "language_direction": "Italian",
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in Italian. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3550531957,
-        "sha256": "ec35e2cdd401bcbb754b24cf541eac07e211da77f922dd805a32aa572a800cc8",
+        "seed": 781919750,
+        "sha256": "4b55b6817bf7ae61a9b0198061f45f54f94e02a9bf9b481ff3372668d0929ff5",
         "generation": {
-          "elapsed_seconds": 5.135235708999971,
+          "elapsed_seconds": 12.88920608299668,
           "model_load_seconds": 0.0,
-          "rtf": 3.5657232095822047,
+          "rtf": 3.8358829670145367,
           "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " C'è un viaggio",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/viaggio_delfino/assets/audio/it/choose_journey.wav.raw.wav",
+    "sha256": "616568f6642e2a251d042c0e4e36d63b2e8dae3592cfcce045d05ecd01fb7895",
+    "receipt_sha256": "b4ac345392baf5937081e41fa083726ca8bdc5a34928707456dd9c11ec64fbba"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/viaggio_delfino/assets/audio/it/choose_journey.wav.extracted.wav",
+    "sha256": "c5c1e12d8a6d515d0dfeaa4dfa4ba69a16eb8f5b566698b768d1cc97a0b4255f"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/viaggio_delfino/assets/audio/it/choose_journey.wav.raw.wav",
+    "source_sha256": "616568f6642e2a251d042c0e4e36d63b2e8dae3592cfcce045d05ecd01fb7895",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/viaggio_delfino/assets/audio/it/choose_journey.wav.extracted.wav",
+    "output_sha256": "c5c1e12d8a6d515d0dfeaa4dfa4ba69a16eb8f5b566698b768d1cc97a0b4255f",
+    "target_request": {
+      "speaker": "tito",
+      "kind": "character_dialogue",
+      "text": "Scegli un viaggio!",
+      "locale": "it",
+      "cue_id": "greia.requested.choose_journey.it",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/viaggio_delfino/assets/audio/it/choose_journey.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "b4ac345392baf5937081e41fa083726ca8bdc5a34928707456dd9c11ec64fbba"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "Scegli un viaggio!",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " ascolta questa frase in italiano. C'è gli un viaggio.",
+    "extracted_transcript": " C'è un viaggio",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.52
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.52,
+        "end_seconds": 0.76
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.76,
+        "end_seconds": 1.12
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.12,
+        "end_seconds": 1.32
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.32,
+        "end_seconds": 1.72
+      },
+      {
+        "word": "c",
+        "start_seconds": 2.52,
+        "end_seconds": 2.62
+      },
+      {
+        "word": "è",
+        "start_seconds": 2.62,
+        "end_seconds": 2.66
+      },
+      {
+        "word": "gli",
+        "start_seconds": 2.66,
+        "end_seconds": 2.78
+      },
+      {
+        "word": "un",
+        "start_seconds": 2.78,
+        "end_seconds": 2.88
+      },
+      {
+        "word": "viaggio",
+        "start_seconds": 2.88,
+        "end_seconds": 3.2
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "c",
+        "start_seconds": 0.0,
+        "end_seconds": 0.48
+      },
+      {
+        "word": "è",
+        "start_seconds": 0.48,
+        "end_seconds": 0.54
+      },
+      {
+        "word": "un",
+        "start_seconds": 0.54,
+        "end_seconds": 0.72
+      },
+      {
+        "word": "viaggio",
+        "start_seconds": 0.72,
+        "end_seconds": 1.08
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.4731470409192537,
+        "no_speech_prob": 0.0016074372688308358,
+        "compression_ratio": 0.8852459016393442,
+        "word_probabilities": [
+          0.68994140625,
+          0.98583984375,
+          0.82275390625,
+          0.90087890625,
+          0.92578125,
+          0.576171875,
+          0.7041015625,
+          0.54638671875,
+          0.89111328125,
+          0.9560546875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.4856698777940538,
+        "no_speech_prob": 0.016644546762108803,
+        "compression_ratio": 0.6521739130434783,
+        "word_probabilities": [
+          0.19384765625,
+          0.78564453125,
+          0.83056640625,
+          0.7880859375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 80,
+    "extracted_voiced_seconds": 0.8,
+    "unremoved_raw_target_tokens": [
+      "c'è",
+      "gli",
+      "un",
+      "viaggio"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "c",
+      "è",
+      "gli",
+      "un",
+      "viaggio"
+    ],
+    "raw_transcript_alignment_suffix_match": false,
+    "duration_seconds": 3.3601814058956916,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.72,
+      "target_first_word_start_seconds": 2.52,
+      "gap_seconds": 0.6385487528344671,
+      "verified_silence_start_seconds": 1.8197732426303854,
+      "verified_silence_end_seconds": 2.4583219954648525,
+      "gap_rms_dbfs": -57.427,
+      "gap_peak_dbfs": -34.717,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.139047619047619,
+      "cut_sample": 47166,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/viaggio_delfino/assets/audio/it/choose_journey.wav",
-    "bytes": 63590,
-    "sha256": "2daafe5ebff9fbac8f5aa4a1fd55d465aef95b2fe10fe23176d60376ad46669b"
+    "sha256": "429a99ba5c8023187993d2bb2aa473a39d4550e15142ae49062c5e7b51d3deb1",
+    "bytes": 53930
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "cda7f6471a174b471f3475719f114ffac39b8b84fda3e005c8d9e1bbfa7075df",
+    "original_sha256": "2daafe5ebff9fbac8f5aa4a1fd55d465aef95b2fe10fe23176d60376ad46669b",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

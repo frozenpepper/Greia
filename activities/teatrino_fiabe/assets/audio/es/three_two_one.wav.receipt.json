@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T17:13:37.354882+00:00",
+  "created_utc": "2026-10-22T10:01:57.155686+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "Tres, dos, uno… ¡acción!",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español...\n\nTres, dos, uno… ¡acción!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "lilli",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "Tres, dos, uno… ¡acción!",
+    "cue_id": "greia.requested.three_two_one.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "Tres, dos, uno… ¡acción!",
     "cue_id": "greia.requested.three_two_one.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/teatrino_fiabe/assets/audio/es/three_two_one.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. An excited countdown before the show: each number a little bigger, then a joyful burst on the last word."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.lilli.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "job_id": "20261020-191320-e834feef",
-    "idempotency_key": "greia-f510de39fa5c4e58a97fb6efb31c60eb",
+    "job_id": "20261022-120132-d0a61bc7",
+    "idempotency_key": "greia-63b4c68bf4244df59bdc337170d1eb67",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,329 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 626010320,
+    "script_seed": 3029256972,
     "language_direction": "Spanish",
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. An excited countdown before the show: each number a little bigger, then a joyful burst on the last word.",
-    "effective_delivery": "Speak in Spanish. Lilli, a sparkly, affectionate storybook unicorn. An excited countdown before the show: each number a little bigger, then a joyful burst on the last word.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 333079726,
-        "sha256": "03c3e59d878a9314d53bc7d2bbd06e3ce050b94585f0cf9e8a501130c44de6a3",
+        "seed": 940684152,
+        "sha256": "855aab205ba4ae5671d599fdce166bf8fcc2283ddcfd19b7264b1145ef12eba1",
         "generation": {
-          "elapsed_seconds": 15.48628050001571,
+          "elapsed_seconds": 21.941052540991222,
           "model_load_seconds": 0.0,
-          "rtf": 4.839210614035428,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.4282001834834337,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": "3, 2, 1, acción.",
+    "metrics": {
+      "duration_seconds": 3.1877097505668934,
+      "rms_dbfs": -26.51,
+      "peak": 0.45474,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.1,
+      "trailing_silence_seconds": 0.12,
+      "longest_internal_pause_seconds": 0.5
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v1",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/teatrino_fiabe/assets/audio/es/three_two_one.wav.raw.wav",
+    "sha256": "9f5362d17bb1315460af4ea76fd23c4b0f37cdffc4202f97ee0b03b6c9d96ee7",
+    "receipt_sha256": "a7bef8cc81954aa5286e1ff53cbdab99d92da581e13645b2478a6b679aff4690"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/teatrino_fiabe/assets/audio/es/three_two_one.wav.extracted.wav",
+    "sha256": "04fbbdb377832d82107576280abc4bf3bb3869336feec1cc2a65294cc8267def"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/teatrino_fiabe/assets/audio/es/three_two_one.wav.delivery.wav",
+    "sha256": "04fbbdb377832d82107576280abc4bf3bb3869336feec1cc2a65294cc8267def"
+  },
+  "extraction": {
+    "schema_version": 1,
+    "algorithm_version": "greia-spoken-carrier-extractor-v7",
+    "comparison_policy": "locale-number-tokens-v1",
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-raw/activities/teatrino_fiabe/assets/audio/es/three_two_one.wav.raw.wav",
+    "source_sha256": "9f5362d17bb1315460af4ea76fd23c4b0f37cdffc4202f97ee0b03b6c9d96ee7",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/teatrino_fiabe/assets/audio/es/three_two_one.wav.extracted.wav",
+    "output_sha256": "04fbbdb377832d82107576280abc4bf3bb3869336feec1cc2a65294cc8267def",
+    "output_bytes": 140622,
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "Tres, dos, uno… ¡acción!",
+    "remove_first_words": 5,
+    "ignore_accents": true,
+    "target_verification_requested": "warn",
+    "target_verification_policy": "warn",
+    "target_comparison_score": 1.0,
+    "target_word_count_matches": true,
+    "target_numbers_match": true,
+    "target_comparison_flags": [],
+    "target_transcript_warning": false,
+    "recognizer": "mlx-whisper-base",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extracted_transcript": "3, 2, 1, acción.",
+    "expected_target_tokens": [
+      "<num:3>",
+      "<num:2>",
+      "<num:1>",
+      "accion"
+    ],
+    "extracted_target_tokens": [
+      "<num:3>",
+      "<num:2>",
+      "<num:1>",
+      "accion"
+    ],
+    "extracted_target_exact_match": true,
+    "transcription_settings": {
+      "language": "es",
+      "initial_prompt": null,
+      "word_timestamps": true,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "sample_rate": 22050,
+    "duration_seconds": 6.400181405895691,
+    "boundary": {
+      "search_strategy": "target-only-global-quiet-run-v7",
+      "verified_silence_start_seconds": 2.673922902494331,
+      "verified_silence_end_seconds": 3.3124716553287983,
+      "verified_silence_duration_seconds": 0.6385487528344671,
+      "cut_sample": 70835,
+      "cut_time_seconds": 3.212471655328798,
+      "padding_seconds": 0.1,
+      "quiet_run_start_sample": 58960,
+      "quiet_run_end_sample": 73040,
+      "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+    },
+    "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/teatrino_fiabe/assets/audio/es/three_two_one.wav.extracted.wav.search/f95b9cae283947f5bd5aaee683cd1fb9",
+    "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/teatrino_fiabe/assets/audio/es/three_two_one.wav.extracted.wav.search/f95b9cae283947f5bd5aaee683cd1fb9/search.json",
+    "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-raw/activities/teatrino_fiabe/assets/audio/es/three_two_one.wav.raw.wav.receipt.json",
+    "source_provider_receipt_sha256": "a7bef8cc81954aa5286e1ff53cbdab99d92da581e13645b2478a6b679aff4690",
+    "candidate_sha256": "04fbbdb377832d82107576280abc4bf3bb3869336feec1cc2a65294cc8267def",
+    "candidate_id": "candidate-02",
+    "candidate_count": 5,
+    "qualifying_quiet_run_count": 5,
+    "candidate_results": [
+      {
+        "candidate_id": "candidate-01",
+        "quiet_run": {
+          "start_sample": 16940,
+          "end_sample": 25080,
+          "start_seconds": 0.7682539682539683,
+          "end_seconds": 1.1374149659863946,
+          "duration_seconds": 0.3691609977324263
+        },
+        "cut_sample": 22875,
+        "cut_time_seconds": 1.0374149659863945,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/teatrino_fiabe/assets/audio/es/three_two_one.wav.extracted.wav.search/f95b9cae283947f5bd5aaee683cd1fb9/candidate-01.wav",
+        "preceding_voiced_seconds": 0.46,
+        "retained_voiced_seconds": 2.56,
+        "retained_duration_seconds": 5.362766439909297,
+        "candidate_sha256": "9f14a3bae7002b321ce1d747894862955e94726408c6f8dcab617ea1e3e4c352",
+        "extracted_transcript": "Esta frase en español 3, 2, 1, acción",
+        "canonical_transcript_tokens": [
+          "esta",
+          "frase",
+          "en",
+          "espanol",
+          "<num:3>",
+          "<num:2>",
+          "<num:1>",
+          "accion"
+        ],
+        "exact_target_match": false,
+        "target_comparison_score": 0.6957,
+        "target_word_count_matches": false,
+        "target_numbers_match": true,
+        "target_comparison_flags": [
+          "TARGET_WORD_COUNT_MISMATCH"
+        ],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": false,
+        "asr_segment_count": 1
+      },
+      {
+        "candidate_id": "candidate-02",
+        "quiet_run": {
+          "start_sample": 58960,
+          "end_sample": 73040,
+          "start_seconds": 2.673922902494331,
+          "end_seconds": 3.3124716553287983,
+          "duration_seconds": 0.6385487528344671
+        },
+        "cut_sample": 70835,
+        "cut_time_seconds": 3.212471655328798,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/teatrino_fiabe/assets/audio/es/three_two_one.wav.extracted.wav.search/f95b9cae283947f5bd5aaee683cd1fb9/candidate-02.wav",
+        "preceding_voiced_seconds": 1.55,
+        "retained_voiced_seconds": 1.47,
+        "retained_duration_seconds": 3.1877097505668934,
+        "candidate_sha256": "04fbbdb377832d82107576280abc4bf3bb3869336feec1cc2a65294cc8267def",
+        "extracted_transcript": "3, 2, 1, acción.",
+        "canonical_transcript_tokens": [
+          "<num:3>",
+          "<num:2>",
+          "<num:1>",
+          "accion"
+        ],
+        "exact_target_match": true,
+        "target_comparison_score": 1.0,
+        "target_word_count_matches": true,
+        "target_numbers_match": true,
+        "target_comparison_flags": [],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": true,
+        "asr_segment_count": 1
+      },
+      {
+        "candidate_id": "candidate-03",
+        "quiet_run": {
+          "start_sample": 78760,
+          "end_sample": 90420,
+          "start_seconds": 3.5718820861678005,
+          "end_seconds": 4.100680272108844,
+          "duration_seconds": 0.5287981859410431
+        },
+        "cut_sample": 88215,
+        "cut_time_seconds": 4.000680272108844,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/teatrino_fiabe/assets/audio/es/three_two_one.wav.extracted.wav.search/f95b9cae283947f5bd5aaee683cd1fb9/candidate-03.wav",
+        "preceding_voiced_seconds": 1.81,
+        "retained_voiced_seconds": 1.21,
+        "retained_duration_seconds": 2.399501133786848,
+        "candidate_sha256": "b4b15fcf8923b3c793b76915f3c34a67f660afd688a6f2390137d3c923275e3d",
+        "extracted_transcript": "¡Dos! Uno... ¡AXIÓN!",
+        "canonical_transcript_tokens": [
+          "<num:2>",
+          "<num:1>",
+          "axion"
+        ],
+        "exact_target_match": false,
+        "target_comparison_score": 0.7407,
+        "target_word_count_matches": false,
+        "target_numbers_match": false,
+        "target_comparison_flags": [
+          "TARGET_NUMBER_MISMATCH",
+          "TARGET_WORD_COUNT_MISMATCH"
+        ],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": false,
+        "asr_segment_count": 1
+      },
+      {
+        "candidate_id": "candidate-04",
+        "quiet_run": {
+          "start_sample": 95700,
+          "end_sample": 106260,
+          "start_seconds": 4.340136054421769,
+          "end_seconds": 4.819047619047619,
+          "duration_seconds": 0.47891156462585033
+        },
+        "cut_sample": 104055,
+        "cut_time_seconds": 4.719047619047619,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/teatrino_fiabe/assets/audio/es/three_two_one.wav.extracted.wav.search/f95b9cae283947f5bd5aaee683cd1fb9/candidate-04.wav",
+        "preceding_voiced_seconds": 2.05,
+        "retained_voiced_seconds": 0.97,
+        "retained_duration_seconds": 1.6811337868480725,
+        "candidate_sha256": "f46f024f4ecd465f3fb139637a84bd5cf01b823d0fad297113ea207d9d0181e5",
+        "extracted_transcript": "O no, acción!",
+        "canonical_transcript_tokens": [
+          "o",
+          "no",
+          "accion"
+        ],
+        "exact_target_match": false,
+        "target_comparison_score": 0.4218,
+        "target_word_count_matches": false,
+        "target_numbers_match": false,
+        "target_comparison_flags": [
+          "TARGET_NUMBER_MISMATCH",
+          "TARGET_WORD_COUNT_MISMATCH"
+        ],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": false,
+        "asr_segment_count": 1
+      },
+      {
+        "candidate_id": "candidate-05",
+        "quiet_run": {
+          "start_sample": 115940,
+          "end_sample": 122540,
+          "start_seconds": 5.258049886621315,
+          "end_seconds": 5.557369614512472,
+          "duration_seconds": 0.29931972789115646
+        },
+        "cut_sample": 120335,
+        "cut_time_seconds": 5.457369614512472,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/teatrino_fiabe/assets/audio/es/three_two_one.wav.extracted.wav.search/f95b9cae283947f5bd5aaee683cd1fb9/candidate-05.wav",
+        "preceding_voiced_seconds": 2.49,
+        "retained_voiced_seconds": 0.53,
+        "retained_duration_seconds": 0.9428117913832199,
+        "candidate_sha256": "08d7bc0dc1e54338e80e288caf3de26e038f2f07f9c203fd3c2ba5fcc5d4ec86",
+        "extracted_transcript": "¡Acción!",
+        "canonical_transcript_tokens": [
+          "accion"
+        ],
+        "exact_target_match": false,
+        "target_comparison_score": 0.3767,
+        "target_word_count_matches": false,
+        "target_numbers_match": false,
+        "target_comparison_flags": [
+          "TARGET_NUMBER_MISMATCH",
+          "TARGET_WORD_COUNT_MISMATCH"
+        ],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": false,
+        "asr_segment_count": 1
+      }
+    ],
+    "human_review": "PENDING",
+    "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+    "target_verification_effective_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+    "target_verification_warning": false,
+    "saved_recovery_policy": "target-only-v7-saved-v1",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 0,
+      "removed_seconds": 0.0,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 70835,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/teatrino_fiabe/assets/audio/es/three_two_one.wav.delivery.wav",
+      "sha256": "04fbbdb377832d82107576280abc4bf3bb3869336feec1cc2a65294cc8267def"
+    }
+  },
   "output": {
     "path": "activities/teatrino_fiabe/assets/audio/es/three_two_one.wav",
-    "bytes": 141206,
-    "sha256": "85213e78bf645742785b741ab7387ccb5fed50d430abea7479e232752b59ad0d"
+    "sha256": "3d6e45c6c9146627315753ed9efdb714182dd8f16386782e479b9f71c503c0ba",
+    "bytes": 140656
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "4078906f9312e16d776d23525113c06f26dcd60cf674fcba17c41527ff7b9e06",
+    "original_sha256": "847ba74f7f85797786eb53769393eae1eb910ac56b73bdf2c4c5653a7e79c939",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

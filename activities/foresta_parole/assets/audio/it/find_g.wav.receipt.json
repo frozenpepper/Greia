@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:32:31.952192+00:00",
+  "created_utc": "2026-10-21T16:24:41.530698+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "G come Gatto",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. G come Gatto",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "G come Gatto",
+    "cue_id": "foresta_parole.find_g",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "G come Gatto",
     "cue_id": "foresta_parole.find_g",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/foresta_parole/assets/audio/it/find_g.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-143225-4ac8f451",
-    "idempotency_key": "greia-44ae7ae833ac420bb56e04285b3ccdfc",
+    "job_id": "20261021-182425-a1304a63",
+    "idempotency_key": "greia-53510bb30a9b468c818795422895fdd9",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,254 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 4131374332,
+    "script_seed": 793384717,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 96795270,
-        "sha256": "29f10ea15902bf2672f7e9e0f128658fd965caa05283937892a6b534c53b679b",
+        "seed": 3585306374,
+        "sha256": "ffbd13aaf5d31d76c1864b2f4e704055decd1464a59b320edf0acb58363ab1d7",
         "generation": {
-          "elapsed_seconds": 5.6598394170287065,
+          "elapsed_seconds": 15.329488040995784,
           "model_load_seconds": 0.0,
-          "rtf": 4.421173870872574,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.8322123347349986,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8551,
+    "transcript": " G come gato.",
+    "metrics": {
+      "duration_seconds": 1.3521541950113378,
+      "rms_dbfs": -33.73,
+      "peak": 0.2421,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.1,
+      "trailing_silence_seconds": 0.18,
+      "longest_internal_pause_seconds": 0.08
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/foresta_parole/assets/audio/it/find_g.wav.raw.wav",
+    "sha256": "b472caa7041175104c240959658b907cd1aaf353e3fb889fefb27377d655ded2",
+    "receipt_sha256": "23ade2da96505822cc9c4ef1700c5f1df2335aaa2c825fa5b2c3b87f576e7360"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/foresta_parole/assets/audio/it/find_g.wav.extracted.wav",
+    "sha256": "30df7491c9c7b409f55b7e7ce3e838c8e7a082710025990f9f6f134946b10115"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/foresta_parole/assets/audio/it/find_g.wav.delivery.wav",
+    "sha256": "f020f119c972d6192d2044bb3b79aff76de4bfde4137b986d9a58e2a422b8c47"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/foresta_parole/assets/audio/it/find_g.wav.raw.wav",
+    "source_sha256": "b472caa7041175104c240959658b907cd1aaf353e3fb889fefb27377d655ded2",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/foresta_parole/assets/audio/it/find_g.wav.extracted.wav",
+    "output_sha256": "30df7491c9c7b409f55b7e7ce3e838c8e7a082710025990f9f6f134946b10115",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "G come Gatto",
+      "locale": "it",
+      "cue_id": "foresta_parole.find_g",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/foresta_parole/assets/audio/it/find_g.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "23ade2da96505822cc9c4ef1700c5f1df2335aaa2c825fa5b2c3b87f576e7360"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "G come Gatto",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Ascolta questa frase in italiano. G come gatto.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " G come gato.",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.54
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.54,
+        "end_seconds": 0.84
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.84,
+        "end_seconds": 1.1
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.1,
+        "end_seconds": 1.34
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.34,
+        "end_seconds": 1.88
+      },
+      {
+        "word": "g",
+        "start_seconds": 2.8,
+        "end_seconds": 2.94
+      },
+      {
+        "word": "come",
+        "start_seconds": 2.94,
+        "end_seconds": 3.28
+      },
+      {
+        "word": "gatto",
+        "start_seconds": 3.28,
+        "end_seconds": 3.7
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "g",
+        "start_seconds": 0.0,
+        "end_seconds": 0.6
+      },
+      {
+        "word": "come",
+        "start_seconds": 0.6,
+        "end_seconds": 0.94
+      },
+      {
+        "word": "gato",
+        "start_seconds": 0.94,
+        "end_seconds": 1.38
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.4770672917366028,
+        "no_speech_prob": 0.012957810424268246,
+        "compression_ratio": 0.8867924528301887,
+        "word_probabilities": [
+          0.77587890625,
+          0.98486328125,
+          0.978515625,
+          0.9794921875,
+          0.9931640625,
+          0.66259765625,
+          0.60400390625,
+          0.841796875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.5425796508789062,
+        "no_speech_prob": 0.07238344103097916,
+        "compression_ratio": 0.6,
+        "word_probabilities": [
+          0.658203125,
+          0.6630859375,
+          0.884765625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 71,
+    "extracted_voiced_seconds": 0.71,
+    "unremoved_raw_target_tokens": [
+      "g",
+      "come",
+      "gatto"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "g",
+      "come",
+      "gatto"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 4.000181405895692,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.88,
+      "search_end_seconds": 2.8,
+      "prefix_last_word_end_seconds": 1.88,
+      "target_first_word_start_seconds": 2.8,
+      "gap_seconds": 0.8081632653061225,
+      "verified_silence_start_seconds": 1.9398639455782314,
+      "verified_silence_end_seconds": 2.7480272108843535,
+      "gap_rms_dbfs": -65.201,
+      "gap_peak_dbfs": -42.526,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.3439455782312923,
+      "cut_sample": 51684,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 6705,
+      "removed_seconds": 0.3040816326530612,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 58389,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/foresta_parole/assets/audio/it/find_g.wav.delivery.wav",
+      "sha256": "f020f119c972d6192d2044bb3b79aff76de4bfde4137b986d9a58e2a422b8c47"
+    }
+  },
   "output": {
     "path": "activities/foresta_parole/assets/audio/it/find_g.wav",
-    "bytes": 56534,
-    "sha256": "b751c9644817ce777de011d40319f8e7958c40a22b070f52e5878c523124a6fa"
+    "sha256": "2aa9bfb7a20bb8c05e4515f8e7054e95d6c19344ddae6f903135b3555eebc796",
+    "bytes": 59708
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "05c6370211a54fe8065fe4edead0268f388596f7cb50d40aad1a0dccf41c2344",
+    "original_sha256": "aa89724836988efdc61dbfbc0ced685f032008ad276b830a300d62a7c25af471",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T20:45:21.203859+00:00",
+  "created_utc": "2026-10-21T15:12:42.246473+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Listen to this phrase in English.",
+    "prefix_word_count": 6,
+    "target": "H as House",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Listen to this phrase in English. H as House",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "H as House",
+    "cue_id": "alfabeto_leo.letter_H.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "H as House",
     "cue_id": "alfabeto_leo.letter_H.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/alfabeto_leo/assets/audio/en/letter_H.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261019-224510-bef57c3f",
-    "idempotency_key": "greia-39bdfccd387848dc824855fe7969d03b",
+    "job_id": "20261021-171222-df64c144",
+    "idempotency_key": "greia-ec14bb4b6a1d4f7ba9dabdafbb5c4119",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,267 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3454672646,
+    "script_seed": 1185518215,
     "language_direction": "English",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak naturally in English. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in English. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 79024290,
-        "sha256": "4535ab8ec09ca93f26595df31dff42271b942a89fbf8437692ce5883c06c6019",
+        "seed": 1327006860,
+        "sha256": "ae3ee1f8d1b220fa628d0e66ec659bfa67b74aa90e9f5a5c2080a44e62b80b9a",
         "generation": {
-          "elapsed_seconds": 9.099996707984246,
+          "elapsed_seconds": 19.0870770420006,
           "model_load_seconds": 0.0,
-          "rtf": 4.739170232436896,
-          "peak_memory_gb": 8.21220922
+          "rtf": 4.260349773148455,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " H as House.",
+    "metrics": {
+      "duration_seconds": 1.6518820861678005,
+      "rms_dbfs": -35.84,
+      "peak": 0.17633,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.32,
+      "trailing_silence_seconds": 0.14,
+      "longest_internal_pause_seconds": 0.1
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/alfabeto_leo/assets/audio/en/letter_H.wav.raw.wav",
+    "sha256": "d3a55cfa7c8f8a8526c050a97e6c47018e9a7b8080ba98e137f3e4a4fe7fe46f",
+    "receipt_sha256": "bd9098a19e775b742b2464fbfc036256c05a96ab3ceb10d776e803d2810273b0"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_H.wav.extracted.wav",
+    "sha256": "7a783d4ebf1f3df9f4f764839b337025db05289c960c6fc2aef26d68343c9501"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_H.wav.delivery.wav",
+    "sha256": "2981fcbb0b6ba419987b8948887177f4b1f7df127e9024b7e502922ef4618e58"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/alfabeto_leo/assets/audio/en/letter_H.wav.raw.wav",
+    "source_sha256": "d3a55cfa7c8f8a8526c050a97e6c47018e9a7b8080ba98e137f3e4a4fe7fe46f",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_H.wav.extracted.wav",
+    "output_sha256": "7a783d4ebf1f3df9f4f764839b337025db05289c960c6fc2aef26d68343c9501",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "H as House",
+      "locale": "en",
+      "cue_id": "alfabeto_leo.letter_H.en",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/alfabeto_leo/assets/audio/en/letter_H.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "bd9098a19e775b742b2464fbfc036256c05a96ab3ceb10d776e803d2810273b0"
+    },
+    "locale": "en",
+    "prefix": "Listen to this phrase in English.",
+    "target": "H as House",
+    "remove_first_words": 6,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Listen to this phrase in English. H as House.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " H as House.",
+    "raw_word_alignment": [
+      {
+        "word": "listen",
+        "start_seconds": 0.0,
+        "end_seconds": 0.68
+      },
+      {
+        "word": "to",
+        "start_seconds": 0.68,
+        "end_seconds": 0.96
+      },
+      {
+        "word": "this",
+        "start_seconds": 0.96,
+        "end_seconds": 1.2
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 1.2,
+        "end_seconds": 1.54
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.54,
+        "end_seconds": 1.84
+      },
+      {
+        "word": "english",
+        "start_seconds": 1.84,
+        "end_seconds": 2.18
+      },
+      {
+        "word": "h",
+        "start_seconds": 2.98,
+        "end_seconds": 3.48
+      },
+      {
+        "word": "as",
+        "start_seconds": 3.48,
+        "end_seconds": 3.8
+      },
+      {
+        "word": "house",
+        "start_seconds": 3.8,
+        "end_seconds": 4.14
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "h",
+        "start_seconds": 0.0,
+        "end_seconds": 0.84
+      },
+      {
+        "word": "as",
+        "start_seconds": 0.84,
+        "end_seconds": 1.16
+      },
+      {
+        "word": "house",
+        "start_seconds": 1.16,
+        "end_seconds": 1.54
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.6008288860321045,
+        "no_speech_prob": 0.05151667073369026,
+        "compression_ratio": 0.8490566037735849,
+        "word_probabilities": [
+          0.81103515625,
+          0.9951171875,
+          0.99658203125,
+          0.9990234375,
+          0.9990234375,
+          0.9951171875
+        ]
+      },
+      {
+        "avg_logprob": -0.6008288860321045,
+        "no_speech_prob": 0.05151667073369026,
+        "compression_ratio": 0.8490566037735849,
+        "word_probabilities": [
+          0.7548828125,
+          0.78466796875,
+          0.62451171875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.7081050872802734,
+        "no_speech_prob": 0.26799553632736206,
+        "compression_ratio": 0.5789473684210527,
+        "word_probabilities": [
+          0.74169921875,
+          0.71240234375,
+          0.7197265625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 6,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 89,
+    "extracted_voiced_seconds": 0.89,
+    "unremoved_raw_target_tokens": [
+      "h",
+      "as",
+      "house"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "h",
+      "as",
+      "house"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 4.480181405895691,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 2.18,
+      "search_end_seconds": 2.98,
+      "prefix_last_word_end_seconds": 2.18,
+      "target_first_word_start_seconds": 2.98,
+      "gap_seconds": 0.5587301587301587,
+      "verified_silence_start_seconds": 2.3695691609977323,
+      "verified_silence_end_seconds": 2.9282993197278913,
+      "gap_rms_dbfs": -55.747,
+      "gap_peak_dbfs": -36.63,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.648934240362812,
+      "cut_sample": 58409,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 3955,
+      "removed_seconds": 0.17936507936507937,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 62364,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_H.wav.delivery.wav",
+      "sha256": "2981fcbb0b6ba419987b8948887177f4b1f7df127e9024b7e502922ef4618e58"
+    }
+  },
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/en/letter_H.wav",
-    "bytes": 84758,
-    "sha256": "1d71588a6cb5b78f977fe9f2c3da4dad0cc38aa80904f10670bd40dac1d42cae"
+    "sha256": "dc4155f4310c5d23a37b57de35a67b32ce2ab1041f86bb64029b622830fd59a8",
+    "bytes": 72926
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "111cacf8acacb552d73cc80bdee02e612a16abd0a85c6e0761aeaeeea82e86b4",
+    "original_sha256": "b94f14d5d624eae1695c2b78a948901f96a2eb340691a0c9bb2e9446af16032d",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

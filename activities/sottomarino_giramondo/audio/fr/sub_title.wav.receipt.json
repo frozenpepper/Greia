@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T16:01:18.003668+00:00",
+  "created_utc": "2026-10-21T17:16:10.909386+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "Exploration en sous-marin",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. Exploration en sous-marin",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Exploration en sous-marin",
+    "cue_id": "sottomarino_giramondo.title.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Exploration en sous-marin",
     "cue_id": "sottomarino_giramondo.title.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/sottomarino_giramondo/audio/fr/sub_title.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-180059-3e7b8dd4",
-    "idempotency_key": "greia-60465738d6894d38a4eb485628fe8536",
+    "job_id": "20261021-191554-dc73b00b",
+    "idempotency_key": "greia-784ecd6cea5842669b53a72d53ffbce1",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,275 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1635970533,
+    "script_seed": 3162757706,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 4069729919,
-        "sha256": "7c59a01f070d521b872334ef66a8b5bf15b2c35c6b7ed458d832f45180c8c9b6",
+        "seed": 2497502397,
+        "sha256": "f02ab00c37ece516ae316efbc89de68665c39f7f10074ee172c6c3369a3e0a96",
         "generation": {
-          "elapsed_seconds": 17.48440675000893,
+          "elapsed_seconds": 15.539803791994927,
           "model_load_seconds": 0.0,
-          "rtf": 6.829401764211548,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.4685771642412697,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " Exploration en sous-marin.",
+    "metrics": {
+      "duration_seconds": 1.9230839002267575,
+      "rms_dbfs": -35.19,
+      "peak": 0.12296,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.1,
+      "trailing_silence_seconds": 0.14,
+      "longest_internal_pause_seconds": 0.08
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/sottomarino_giramondo/audio/fr/sub_title.wav.raw.wav",
+    "sha256": "5ae74d10b25182555066e35f742d16bd73296c16f104d6d1b967f53d91dd7848",
+    "receipt_sha256": "4d396478ffa3707675858303e8584f98eb489e14607d503f63d1c3a8e9dc95c8"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/sottomarino_giramondo/audio/fr/sub_title.wav.extracted.wav",
+    "sha256": "d984951a37900e5dad798e69e5a1e8a73e3fcd42e32ce717e3265b8e91b8a08c"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/sottomarino_giramondo/audio/fr/sub_title.wav.delivery.wav",
+    "sha256": "f0e86b9716b9f39326f2158e2807c6ba250e5d0593abf0e74325a0a343c0d3ef"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/sottomarino_giramondo/audio/fr/sub_title.wav.raw.wav",
+    "source_sha256": "5ae74d10b25182555066e35f742d16bd73296c16f104d6d1b967f53d91dd7848",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/sottomarino_giramondo/audio/fr/sub_title.wav.extracted.wav",
+    "output_sha256": "d984951a37900e5dad798e69e5a1e8a73e3fcd42e32ce717e3265b8e91b8a08c",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Exploration en sous-marin",
+      "locale": "fr",
+      "cue_id": "sottomarino_giramondo.title.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/sottomarino_giramondo/audio/fr/sub_title.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "4d396478ffa3707675858303e8584f98eb489e14607d503f63d1c3a8e9dc95c8"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "Exploration en sous-marin",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français. Exploration en sous-marin.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Exploration en sous-marin.",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.26
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.26,
+        "end_seconds": 0.5
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.5,
+        "end_seconds": 0.78
+      },
+      {
+        "word": "en",
+        "start_seconds": 0.78,
+        "end_seconds": 0.9
+      },
+      {
+        "word": "français",
+        "start_seconds": 0.9,
+        "end_seconds": 1.38
+      },
+      {
+        "word": "exploration",
+        "start_seconds": 2.96,
+        "end_seconds": 3.48
+      },
+      {
+        "word": "en",
+        "start_seconds": 3.48,
+        "end_seconds": 3.74
+      },
+      {
+        "word": "sous",
+        "start_seconds": 3.74,
+        "end_seconds": 3.96
+      },
+      {
+        "word": "marin",
+        "start_seconds": 3.96,
+        "end_seconds": 4.28
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "exploration",
+        "start_seconds": 0.8599999999999999,
+        "end_seconds": 1.42
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.42,
+        "end_seconds": 1.7
+      },
+      {
+        "word": "sous",
+        "start_seconds": 1.7,
+        "end_seconds": 1.92
+      },
+      {
+        "word": "marin",
+        "start_seconds": 1.92,
+        "end_seconds": 2.24
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.4216183110287315,
+        "no_speech_prob": 0.010862287133932114,
+        "compression_ratio": 0.9047619047619048,
+        "word_probabilities": [
+          0.751953125,
+          0.98388671875,
+          0.958984375,
+          0.95849609375,
+          0.95361328125
+        ]
+      },
+      {
+        "avg_logprob": -0.4216183110287315,
+        "no_speech_prob": 0.010862287133932114,
+        "compression_ratio": 0.9047619047619048,
+        "word_probabilities": [
+          0.916015625,
+          0.9912109375,
+          0.54248046875,
+          0.8076171875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.45850667086514557,
+        "no_speech_prob": 0.30929192900657654,
+        "compression_ratio": 0.7647058823529411,
+        "word_probabilities": [
+          0.8876953125,
+          0.98291015625,
+          0.61962890625,
+          0.82763671875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 133,
+    "extracted_voiced_seconds": 1.33,
+    "unremoved_raw_target_tokens": [
+      "exploration",
+      "en",
+      "sous",
+      "marin"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "exploration",
+      "en",
+      "sous",
+      "marin"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 4.480181405895691,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.38,
+      "search_end_seconds": 2.96,
+      "prefix_last_word_end_seconds": 1.38,
+      "target_first_word_start_seconds": 2.96,
+      "gap_seconds": 1.217233560090703,
+      "verified_silence_start_seconds": 1.4398639455782314,
+      "verified_silence_end_seconds": 2.657097505668934,
+      "gap_rms_dbfs": -66.678,
+      "gap_peak_dbfs": -41.151,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.0484807256235826,
+      "cut_sample": 45169,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 11215,
+      "removed_seconds": 0.5086167800453515,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 56384,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/sottomarino_giramondo/audio/fr/sub_title.wav.delivery.wav",
+      "sha256": "f0e86b9716b9f39326f2158e2807c6ba250e5d0593abf0e74325a0a343c0d3ef"
+    }
+  },
   "output": {
     "path": "activities/sottomarino_giramondo/audio/fr/sub_title.wav",
-    "bytes": 112982,
-    "sha256": "ab218bccdc6df29f3c54e01650e4c7294382519a9faeae08be4bf61cd2b84340"
+    "sha256": "0967b5b8a25f86f26dbdfb1d4af3458e919f3af85d19ff861111d82837c81b25",
+    "bytes": 84886
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "990f3e4e2020165bf2448e4e5789585afed279809042096a0b6365e1285a5c55",
+    "original_sha256": "e12f760cd2d095156d70303dcd7cb59fb9fbcf77a3dca0e7a5583445793fdabf",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

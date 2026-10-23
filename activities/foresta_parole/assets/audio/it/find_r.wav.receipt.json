@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:33:22.504045+00:00",
+  "created_utc": "2026-10-21T16:25:42.087759+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "R come Rana",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. R come Rana",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "R come Rana",
+    "cue_id": "foresta_parole.find_r",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "R come Rana",
     "cue_id": "foresta_parole.find_r",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/foresta_parole/assets/audio/it/find_r.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-143314-96fdaf6e",
-    "idempotency_key": "greia-d11b2fb6c69a46a8ab6a86ed911dc97f",
+    "job_id": "20261021-182521-7750555d",
+    "idempotency_key": "greia-92b1b42a828a4483ad62fbfed8007c8a",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,221 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3813635264,
+    "script_seed": 191805114,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1531476227,
-        "sha256": "073d1b0dba14642e95bdb1c59d49c0035ec4f65ec9866ce68f5941464ca658b9",
+        "seed": 3769812212,
+        "sha256": "1ea632c61e044b5f548fd258d5ee519ae3c0342ed532b8b0181068af550840b6",
         "generation": {
-          "elapsed_seconds": 7.155625750019681,
+          "elapsed_seconds": 20.240254916992853,
           "model_load_seconds": 0.0,
-          "rtf": 5.589604804077345,
-          "peak_memory_gb": 8.44494914
+          "rtf": 4.685063442843916,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8551,
+    "transcript": "Er come rana?",
+    "metrics": {
+      "duration_seconds": 1.2074829931972788,
+      "rms_dbfs": -33.33,
+      "peak": 0.17838,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.06,
+      "trailing_silence_seconds": 0.08,
+      "longest_internal_pause_seconds": 0.02
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v1",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/foresta_parole/assets/audio/it/find_r.wav.raw.wav",
+    "sha256": "f73eb776faa2ff99787639cca401dcdfddb55dceb078aa84aa9a6c4841e00e20",
+    "receipt_sha256": "e361cc703dbef56035e4ddcce2070c830861f69257f68e433979ec0f53549528"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/foresta_parole/assets/audio/it/find_r.wav.extracted.wav",
+    "sha256": "5e82d3ccaef6f5976d2acbb885189dd475793070aaccdfba4a698517c49bcfd1"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/foresta_parole/assets/audio/it/find_r.wav.delivery.wav",
+    "sha256": "5e82d3ccaef6f5976d2acbb885189dd475793070aaccdfba4a698517c49bcfd1"
+  },
+  "extraction": {
+    "schema_version": 1,
+    "algorithm_version": "greia-spoken-carrier-extractor-v7",
+    "comparison_policy": "locale-number-tokens-v1",
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-raw/activities/foresta_parole/assets/audio/it/find_r.wav.raw.wav",
+    "source_sha256": "f73eb776faa2ff99787639cca401dcdfddb55dceb078aa84aa9a6c4841e00e20",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/foresta_parole/assets/audio/it/find_r.wav.extracted.wav",
+    "output_sha256": "5e82d3ccaef6f5976d2acbb885189dd475793070aaccdfba4a698517c49bcfd1",
+    "output_bytes": 53294,
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "R come Rana",
+    "remove_first_words": 5,
+    "ignore_accents": true,
+    "target_verification_requested": "warn",
+    "target_verification_policy": "warn",
+    "target_comparison_score": 0.8551,
+    "target_word_count_matches": true,
+    "target_numbers_match": true,
+    "target_comparison_flags": [],
+    "target_transcript_warning": true,
+    "recognizer": "mlx-whisper-base",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extracted_transcript": "Er come rana?",
+    "expected_target_tokens": [
+      "r",
+      "come",
+      "rana"
+    ],
+    "extracted_target_tokens": [
+      "er",
+      "come",
+      "rana"
+    ],
+    "extracted_target_exact_match": false,
+    "transcription_settings": {
+      "language": "it",
+      "initial_prompt": null,
+      "word_timestamps": true,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "sample_rate": 22050,
+    "duration_seconds": 4.320181405895692,
+    "boundary": {
+      "search_strategy": "target-only-global-quiet-run-v7",
+      "verified_silence_start_seconds": 2.54421768707483,
+      "verified_silence_end_seconds": 3.212698412698413,
+      "verified_silence_duration_seconds": 0.6684807256235827,
+      "cut_sample": 68635,
+      "cut_time_seconds": 3.1126984126984127,
+      "padding_seconds": 0.1,
+      "quiet_run_start_sample": 56100,
+      "quiet_run_end_sample": 70840,
+      "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+    },
+    "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/foresta_parole/assets/audio/it/find_r.wav.extracted.wav.search/4a2407f819cc419fa0df37dd3d388914",
+    "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/foresta_parole/assets/audio/it/find_r.wav.extracted.wav.search/4a2407f819cc419fa0df37dd3d388914/search.json",
+    "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-raw/activities/foresta_parole/assets/audio/it/find_r.wav.raw.wav.receipt.json",
+    "source_provider_receipt_sha256": "e361cc703dbef56035e4ddcce2070c830861f69257f68e433979ec0f53549528",
+    "candidate_sha256": "5e82d3ccaef6f5976d2acbb885189dd475793070aaccdfba4a698517c49bcfd1",
+    "candidate_id": "candidate-02",
+    "candidate_count": 2,
+    "qualifying_quiet_run_count": 2,
+    "candidate_results": [
+      {
+        "candidate_id": "candidate-01",
+        "quiet_run": {
+          "start_sample": 15180,
+          "end_sample": 27500,
+          "start_seconds": 0.6884353741496598,
+          "end_seconds": 1.2471655328798186,
+          "duration_seconds": 0.5587301587301587
+        },
+        "cut_sample": 25295,
+        "cut_time_seconds": 1.1471655328798185,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/foresta_parole/assets/audio/it/find_r.wav.extracted.wav.search/4a2407f819cc419fa0df37dd3d388914/candidate-01.wav",
+        "preceding_voiced_seconds": 0.44,
+        "retained_voiced_seconds": 1.92,
+        "retained_duration_seconds": 3.173015873015873,
+        "candidate_sha256": "b3fabd88451a731febda1be2295f56fac649776cf14668b4f7eda30551909531",
+        "extracted_transcript": "questa frase in italiano, Erko Merana",
+        "canonical_transcript_tokens": [
+          "questa",
+          "frase",
+          "in",
+          "italiano",
+          "erko",
+          "merana"
+        ],
+        "exact_target_match": false,
+        "target_comparison_score": 0.2489,
+        "target_word_count_matches": false,
+        "target_numbers_match": true,
+        "target_comparison_flags": [
+          "TARGET_WORD_COUNT_MISMATCH"
+        ],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": false,
+        "asr_segment_count": 1
+      },
+      {
+        "candidate_id": "candidate-02",
+        "quiet_run": {
+          "start_sample": 56100,
+          "end_sample": 70840,
+          "start_seconds": 2.54421768707483,
+          "end_seconds": 3.212698412698413,
+          "duration_seconds": 0.6684807256235827
+        },
+        "cut_sample": 68635,
+        "cut_time_seconds": 3.1126984126984127,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/foresta_parole/assets/audio/it/find_r.wav.extracted.wav.search/4a2407f819cc419fa0df37dd3d388914/candidate-02.wav",
+        "preceding_voiced_seconds": 1.49,
+        "retained_voiced_seconds": 0.86,
+        "retained_duration_seconds": 1.2074829931972788,
+        "candidate_sha256": "5e82d3ccaef6f5976d2acbb885189dd475793070aaccdfba4a698517c49bcfd1",
+        "extracted_transcript": "Er come rana?",
+        "canonical_transcript_tokens": [
+          "er",
+          "come",
+          "rana"
+        ],
+        "exact_target_match": false,
+        "target_comparison_score": 0.8551,
+        "target_word_count_matches": true,
+        "target_numbers_match": true,
+        "target_comparison_flags": [],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": true,
+        "asr_segment_count": 1
+      }
+    ],
+    "human_review": "PENDING",
+    "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+    "target_verification_effective_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+    "target_verification_warning": true,
+    "saved_recovery_policy": "target-only-v7-saved-v1",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 0,
+      "removed_seconds": 0.0,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 68635,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/foresta_parole/assets/audio/it/find_r.wav.delivery.wav",
+      "sha256": "5e82d3ccaef6f5976d2acbb885189dd475793070aaccdfba4a698517c49bcfd1"
+    }
+  },
   "output": {
     "path": "activities/foresta_parole/assets/audio/it/find_r.wav",
-    "bytes": 56534,
-    "sha256": "817f0255ddf0c9d3b5ca27c13d6a3eecae4304f26cdd6e1a1f2a6d6ff5686d53"
+    "sha256": "55e13926c637374682840bc9c6af66fffbc05a36ca0de38c50f91824fd61812f",
+    "bytes": 53328
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "3fa10dea5099cf38355781f32d3505e9ef2932e88df55d7b18d51cf15d7ffc5f",
+    "original_sha256": "817f0255ddf0c9d3b5ca27c13d6a3eecae4304f26cdd6e1a1f2a6d6ff5686d53",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T23:22:55.809489+00:00",
+  "created_utc": "2026-10-21T15:33:49.576119+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "Dov'è la lettera M?",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. Dov'è la lettera M?",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Dov'è la lettera M?",
+    "cue_id": "alfabeto_leo.ask_M",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Dov'è la lettera M?",
     "cue_id": "alfabeto_leo.ask_M",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/alfabeto_leo/assets/audio/it/ask_M.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-012246-7462f379",
-    "idempotency_key": "greia-f8c62da5438943e8900adb9edaa3b77c",
+    "job_id": "20261021-173332-9553bb5a",
+    "idempotency_key": "greia-354b6a3176ed4415b2916ce64480572d",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,233 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3434041746,
+    "script_seed": 3918640473,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
-    "effective_delivery": "Speak naturally in Italian. Leo, a warm, curious cartoon guide. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 284446423,
-        "sha256": "6a181439b186a229eb9482b965fc07316a874e5ea96b5693864fac2bdfe4eeb2",
+        "seed": 2639590830,
+        "sha256": "136bb7d0cc19420c3cba533a81cb15dc3498b92a2beddc7fc407c6307e4ba800",
         "generation": {
-          "elapsed_seconds": 8.509711166960187,
+          "elapsed_seconds": 16.941710500002955,
           "model_load_seconds": 0.0,
-          "rtf": 6.6473463093036225,
-          "peak_memory_gb": 8.21220922
+          "rtf": 4.072363406915497,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " dove la lettera M.",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/alfabeto_leo/assets/audio/it/ask_M.wav.raw.wav",
+    "sha256": "7512e7b870df252a4526dd8c419cca6b8c79238bb39d1a9895bd7e9405d792a2",
+    "receipt_sha256": "312a3ac160458b5392df924d161fc4bfbe8fedf4dca4a8595cc9c7793d73022b"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/assets/audio/it/ask_M.wav.extracted.wav",
+    "sha256": "fcbe38220f1a6c31bd48adfafe5c893cea15f48b1e420581c8134a9164a8e001"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/alfabeto_leo/assets/audio/it/ask_M.wav.raw.wav",
+    "source_sha256": "7512e7b870df252a4526dd8c419cca6b8c79238bb39d1a9895bd7e9405d792a2",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/alfabeto_leo/assets/audio/it/ask_M.wav.extracted.wav",
+    "output_sha256": "fcbe38220f1a6c31bd48adfafe5c893cea15f48b1e420581c8134a9164a8e001",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Dov'è la lettera M?",
+      "locale": "it",
+      "cue_id": "alfabeto_leo.ask_M",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/alfabeto_leo/assets/audio/it/ask_M.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "312a3ac160458b5392df924d161fc4bfbe8fedf4dca4a8595cc9c7793d73022b"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "Dov'è la lettera M?",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " ascolta questa frase in italiano, dove la letter M.",
+    "extracted_transcript": " dove la lettera M.",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.68
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.68,
+        "end_seconds": 0.96
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.96,
+        "end_seconds": 1.3
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.3,
+        "end_seconds": 1.46
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.46,
+        "end_seconds": 1.94
+      },
+      {
+        "word": "dove",
+        "start_seconds": 2.62,
+        "end_seconds": 2.8
+      },
+      {
+        "word": "la",
+        "start_seconds": 2.8,
+        "end_seconds": 3.08
+      },
+      {
+        "word": "letter",
+        "start_seconds": 3.08,
+        "end_seconds": 3.36
+      },
+      {
+        "word": "m",
+        "start_seconds": 3.36,
+        "end_seconds": 3.88
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "dove",
+        "start_seconds": 0.0,
+        "end_seconds": 0.58
+      },
+      {
+        "word": "la",
+        "start_seconds": 0.58,
+        "end_seconds": 0.82
+      },
+      {
+        "word": "lettera",
+        "start_seconds": 0.82,
+        "end_seconds": 1.38
+      },
+      {
+        "word": "m",
+        "start_seconds": 1.38,
+        "end_seconds": 1.62
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5249584913253784,
+        "no_speech_prob": 0.000859441701322794,
+        "compression_ratio": 0.8947368421052632,
+        "word_probabilities": [
+          0.70947265625,
+          0.9677734375,
+          0.82861328125,
+          0.75,
+          0.9560546875,
+          0.8662109375,
+          0.8173828125,
+          0.578125,
+          0.06976318359375
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.5482909944322374,
+        "no_speech_prob": 0.05844973772764206,
+        "compression_ratio": 0.6923076923076923,
+        "word_probabilities": [
+          0.6171875,
+          0.8818359375,
+          0.71484375,
+          0.440673828125
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 112,
+    "extracted_voiced_seconds": 1.12,
+    "unremoved_raw_target_tokens": [
+      "dove",
+      "la",
+      "letter",
+      "m"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "dove",
+      "la",
+      "letter",
+      "m"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 4.160181405895692,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.94,
+      "target_first_word_start_seconds": 2.62,
+      "gap_seconds": 0.5287981859410431,
+      "verified_silence_start_seconds": 1.9998639455782312,
+      "verified_silence_end_seconds": 2.5286621315192743,
+      "gap_rms_dbfs": -57.264,
+      "gap_peak_dbfs": -36.941,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.2642630385487528,
+      "cut_sample": 49927,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/it/ask_M.wav",
-    "bytes": 56534,
-    "sha256": "caf6fe0bcb2c36661039b13d5b2b576fe5189bf52b603a6be606bd3d00825c0b"
+    "sha256": "2a212af6415958dabfc5e09e66db3e77f84eb5119feed55f3c48ff5be4bdab98",
+    "bytes": 83688
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "7c718aac97be811f4841b99a99f8991f035e34179a15b8a84cbbbf56b9c26a7d",
+    "original_sha256": "caf6fe0bcb2c36661039b13d5b2b576fe5189bf52b603a6be606bd3d00825c0b",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

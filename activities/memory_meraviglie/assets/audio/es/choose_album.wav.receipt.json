@@ -1,24 +1,66 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T13:13:43.152426+00:00",
+  "created_utc": "2026-10-22T17:25:20.709094+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Vamos a hablar con calma.",
+    "prefix_word_count": 5,
+    "target": "¡Elige un álbum!",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Vamos a hablar con calma.\n\n¡Elige un álbum!",
+    "composite_delivery_prompt": "Lectura cálida y tranquila. Pronunciación clara y natural.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "lilli",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "¡Elige un álbum!",
+    "cue_id": "memory_meraviglie.choose_album",
+    "delivery_prompt": "Lectura cálida y tranquila. Pronunciación clara y natural.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null
+  },
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "¡Elige un álbum!",
-    "cue_id": "greia.requested.choose_album.es",
+    "cue_id": "memory_meraviglie.choose_album",
+    "delivery_prompt": "Lectura cálida y tranquila. Pronunciación clara y natural.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
     "output": "activities/memory_meraviglie/assets/audio/es/choose_album.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.lilli.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "job_id": "20261020-151336-bd650ab9",
-    "idempotency_key": "greia-39983f2b87b846e6bfe39c8bd3a17bf4",
+    "job_id": "20261022-192508-e00b19a6",
+    "idempotency_key": "greia-92acc55e98bc4c9ebc6511b559462bfc",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +83,186 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 11267841,
-    "language_direction": "Spanish",
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in Spanish. Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "script_seed": 314159,
+    "language_direction": "native_text_only",
+    "delivery_prompt": "warm, calm, clear speech",
+    "effective_delivery": "warm, calm, clear speech",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3294318703,
-        "sha256": "2404e4267ed8e640f424b56563d155d3a5bc129edb090dc57ebb0ee45008b54d",
+        "seed": 3526808665,
+        "sha256": "26ad17ae7fec175e1d1b23856146ba4afed47cb4bd78edbae4ab292892fe26e7",
         "generation": {
-          "elapsed_seconds": 5.922395417001098,
+          "elapsed_seconds": 12.103179500001715,
           "model_load_seconds": 0.0,
-          "rtf": 4.626269040750761,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.438240471569068,
+          "peak_memory_gb": 9.453068756
         }
       }
-    ]
+    ],
+    "planned_effective_delivery": "Speak in Spanish. Lectura cálida y tranquila. Pronunciación clara y natural.",
+    "experimental_direction_override": true
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8593,
+    "transcript": " Elie, un álbum!",
+    "metrics": {
+      "duration_seconds": 1.2001814058956917,
+      "rms_dbfs": -22.89,
+      "peak": 0.40213,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.1,
+      "trailing_silence_seconds": 0.12,
+      "longest_internal_pause_seconds": 0.0
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v2",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/memory_meraviglie/assets/audio/es/choose_album.wav.raw.wav",
+    "sha256": "26ad17ae7fec175e1d1b23856146ba4afed47cb4bd78edbae4ab292892fe26e7",
+    "receipt_sha256": "ca636ddd4338b3cc8b83b361e50232ad0383f426089a3e3f308e9ad584a03e55"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/memory_meraviglie/assets/audio/es/choose_album.wav.extracted.wav",
+    "sha256": "f5335d2e6ffef9214313f116762b3e73238a232a6799a6c4ebeed9f7735ac7f7"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/memory_meraviglie/assets/audio/es/choose_album.wav.delivery.wav",
+    "sha256": "f5335d2e6ffef9214313f116762b3e73238a232a6799a6c4ebeed9f7735ac7f7"
+  },
+  "extraction": {
+    "schema_version": 1,
+    "algorithm_version": "greia-spoken-carrier-extractor-v7",
+    "comparison_policy": "locale-number-tokens-v2",
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/natural-album-recovery-v1/carrier-raw/activities/memory_meraviglie/assets/audio/es/choose_album.wav.raw.wav",
+    "source_sha256": "26ad17ae7fec175e1d1b23856146ba4afed47cb4bd78edbae4ab292892fe26e7",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/natural-album-recovery-v1/carrier-extracted/activities/memory_meraviglie/assets/audio/es/choose_album.wav.extracted.wav",
+    "output_sha256": "f5335d2e6ffef9214313f116762b3e73238a232a6799a6c4ebeed9f7735ac7f7",
+    "output_bytes": 115260,
+    "locale": "es",
+    "prefix": "Vamos a hablar con calma.",
+    "target": "¡Elige un álbum!",
+    "remove_first_words": 5,
+    "ignore_accents": true,
+    "target_verification_requested": "warn",
+    "target_verification_policy": "warn",
+    "target_comparison_score": 0.8593,
+    "target_word_count_matches": true,
+    "target_numbers_match": true,
+    "target_comparison_flags": [],
+    "target_transcript_warning": true,
+    "recognizer": "mlx-whisper-base",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extracted_transcript": "Elie, un álbum!",
+    "expected_target_tokens": [
+      "elige",
+      "un",
+      "album"
+    ],
+    "extracted_target_tokens": [
+      "elie",
+      "un",
+      "album"
+    ],
+    "extracted_target_exact_match": false,
+    "transcription_settings": {
+      "language": "es",
+      "initial_prompt": null,
+      "word_timestamps": true,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "sample_rate": 48000,
+    "duration_seconds": 3.520166666666667,
+    "boundary": {
+      "search_strategy": "target-only-global-quiet-run-v7",
+      "verified_silence_start_seconds": 2.05,
+      "verified_silence_end_seconds": 2.42,
+      "verified_silence_duration_seconds": 0.37,
+      "cut_sample": 111360,
+      "cut_time_seconds": 2.32,
+      "padding_seconds": 0.1,
+      "quiet_run_start_sample": 98400,
+      "quiet_run_end_sample": 116160,
+      "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+    },
+    "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/natural-album-recovery-v1/carrier-extracted/activities/memory_meraviglie/assets/audio/es/choose_album.wav.extracted.wav.search/f0edcdc12add4d85a0b221c1c849f54a",
+    "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/natural-album-recovery-v1/carrier-extracted/activities/memory_meraviglie/assets/audio/es/choose_album.wav.extracted.wav.search/f0edcdc12add4d85a0b221c1c849f54a/search.json",
+    "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/natural-album-recovery-v1/carrier-raw/activities/memory_meraviglie/assets/audio/es/choose_album.wav.raw.wav.receipt.json",
+    "source_provider_receipt_sha256": "ca636ddd4338b3cc8b83b361e50232ad0383f426089a3e3f308e9ad584a03e55",
+    "candidate_sha256": "f5335d2e6ffef9214313f116762b3e73238a232a6799a6c4ebeed9f7735ac7f7",
+    "candidate_id": "candidate-01",
+    "candidate_count": 1,
+    "qualifying_quiet_run_count": 1,
+    "candidate_results": [
+      {
+        "candidate_id": "candidate-01",
+        "quiet_run": {
+          "start_sample": 98400,
+          "end_sample": 116160,
+          "start_seconds": 2.05,
+          "end_seconds": 2.42,
+          "duration_seconds": 0.37
+        },
+        "cut_sample": 111360,
+        "cut_time_seconds": 2.32,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/natural-album-recovery-v1/carrier-extracted/activities/memory_meraviglie/assets/audio/es/choose_album.wav.extracted.wav.search/f0edcdc12add4d85a0b221c1c849f54a/candidate-01.wav",
+        "preceding_voiced_seconds": 1.57,
+        "retained_voiced_seconds": 0.99,
+        "retained_duration_seconds": 1.2001666666666666,
+        "candidate_sha256": "f5335d2e6ffef9214313f116762b3e73238a232a6799a6c4ebeed9f7735ac7f7",
+        "extracted_transcript": "Elie, un álbum!",
+        "canonical_transcript_tokens": [
+          "elie",
+          "un",
+          "album"
+        ],
+        "exact_target_match": false,
+        "target_comparison_score": 0.8593,
+        "target_word_count_matches": true,
+        "target_numbers_match": true,
+        "target_comparison_flags": [],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": true,
+        "asr_segment_count": 1
+      }
+    ],
+    "human_review": "PENDING",
+    "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+    "target_verification_effective_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+    "target_verification_warning": true,
+    "saved_recovery_policy": "target-only-v7-saved-v1",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 0,
+      "removed_seconds": 0.0,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 111360,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/natural-album-recovery-v1/carrier-extracted/activities/memory_meraviglie/assets/audio/es/choose_album.wav.delivery.wav",
+      "sha256": "f5335d2e6ffef9214313f116762b3e73238a232a6799a6c4ebeed9f7735ac7f7"
+    }
+  },
   "output": {
     "path": "activities/memory_meraviglie/assets/audio/es/choose_album.wav",
-    "bytes": 56534,
-    "sha256": "705ede6013ec0367f0f0ddc30430b9867df0618c315683f7f121089c86458187"
+    "sha256": "0be235b4a710759777c594ef87192970e130778426d7c3229908f7fa1fbc6654",
+    "bytes": 53006
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "bdaed637603a56a2f5ee04b0965bec1451b77c953d0cd903eca98c2bcda6bbf6",
+    "original_sha256": "705ede6013ec0367f0f0ddc30430b9867df0618c315683f7f121089c86458187",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

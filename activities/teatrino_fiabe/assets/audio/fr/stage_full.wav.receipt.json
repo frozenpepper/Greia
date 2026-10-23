@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T17:13:47.474588+00:00",
+  "created_utc": "2026-10-21T17:27:55.202858+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "La scène est pleine !",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. La scène est pleine !",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "lilli",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "La scène est pleine !",
+    "cue_id": "greia.requested.stage_full.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "La scène est pleine !",
     "cue_id": "greia.requested.stage_full.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/teatrino_fiabe/assets/audio/fr/stage_full.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. A happy celebration with the child: joyful, proud and warm. Lively but clear."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.lilli.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "job_id": "20261020-191339-e961c87d",
-    "idempotency_key": "greia-2fb68695de714f3ba9c985a1a6546fd4",
+    "job_id": "20261021-192740-4b4fcf30",
+    "idempotency_key": "greia-6160d937cc6d479eaa869a1e8da2a193",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,264 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3575216177,
+    "script_seed": 3906750900,
     "language_direction": "French",
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
-    "effective_delivery": "Speak in French. Lilli, a sparkly, affectionate storybook unicorn. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1719479937,
-        "sha256": "87b811127f60d0c3e01fdf1040939d193d259c5de8155aceec5cb241d624d496",
+        "seed": 1734006475,
+        "sha256": "9d1f453627d0af2369ace1356ccd421347e751441e75ad9499156991ca0c26f7",
         "generation": {
-          "elapsed_seconds": 7.35396999999648,
+          "elapsed_seconds": 13.49391900000046,
           "model_load_seconds": 0.0,
-          "rtf": 5.1063326003910285,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.3733391942003563,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " La scène est pleine!",
+    "metrics": {
+      "duration_seconds": 1.9164172335600906,
+      "rms_dbfs": -26.23,
+      "peak": 0.32007,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.26,
+      "trailing_silence_seconds": 0.24,
+      "longest_internal_pause_seconds": 0.1
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/teatrino_fiabe/assets/audio/fr/stage_full.wav.raw.wav",
+    "sha256": "e92483ffbd6ea56bd327b691706cc0fdfbe02b1358832dc55474035fad14ec9a",
+    "receipt_sha256": "3587e31ee2c2163ddd1cff642717a80268c407f6c06701b8ee6d616aa0503ef7"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/teatrino_fiabe/assets/audio/fr/stage_full.wav.extracted.wav",
+    "sha256": "aa740ac7e436feb33d7ca05f3107393c1e711b00afaa8a62f403fccb128f52cf"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/teatrino_fiabe/assets/audio/fr/stage_full.wav.raw.wav",
+    "source_sha256": "e92483ffbd6ea56bd327b691706cc0fdfbe02b1358832dc55474035fad14ec9a",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-extracted/activities/teatrino_fiabe/assets/audio/fr/stage_full.wav.extracted.wav",
+    "output_sha256": "aa740ac7e436feb33d7ca05f3107393c1e711b00afaa8a62f403fccb128f52cf",
+    "target_request": {
+      "speaker": "lilli",
+      "kind": "character_dialogue",
+      "text": "La scène est pleine !",
+      "locale": "fr",
+      "cue_id": "greia.requested.stage_full.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/teatrino_fiabe/assets/audio/fr/stage_full.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "3587e31ee2c2163ddd1cff642717a80268c407f6c06701b8ee6d616aa0503ef7"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "La scène est pleine !",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français ! La scène est pleine !",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " La scène est pleine!",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.36
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.36,
+        "end_seconds": 0.66
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.66,
+        "end_seconds": 0.94
+      },
+      {
+        "word": "en",
+        "start_seconds": 0.94,
+        "end_seconds": 1.06
+      },
+      {
+        "word": "français",
+        "start_seconds": 1.06,
+        "end_seconds": 1.54
+      },
+      {
+        "word": "la",
+        "start_seconds": 2.28,
+        "end_seconds": 2.46
+      },
+      {
+        "word": "scène",
+        "start_seconds": 2.46,
+        "end_seconds": 2.78
+      },
+      {
+        "word": "est",
+        "start_seconds": 2.78,
+        "end_seconds": 2.94
+      },
+      {
+        "word": "pleine",
+        "start_seconds": 2.94,
+        "end_seconds": 3.66
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "la",
+        "start_seconds": 0.0,
+        "end_seconds": 0.36
+      },
+      {
+        "word": "scène",
+        "start_seconds": 0.36,
+        "end_seconds": 0.72
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.72,
+        "end_seconds": 0.9
+      },
+      {
+        "word": "pleine",
+        "start_seconds": 0.9,
+        "end_seconds": 1.6
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.3916231323690975,
+        "no_speech_prob": 0.01706325262784958,
+        "compression_ratio": 0.9473684210526315,
+        "word_probabilities": [
+          0.84326171875,
+          0.9619140625,
+          0.97998046875,
+          0.89990234375,
+          0.966796875,
+          0.5986328125
+        ]
+      },
+      {
+        "avg_logprob": -0.3916231323690975,
+        "no_speech_prob": 0.01706325262784958,
+        "compression_ratio": 0.9473684210526315,
+        "word_probabilities": [
+          0.5927734375,
+          0.93505859375,
+          0.97998046875,
+          0.88427734375,
+          0.88623046875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.7991506788465712,
+        "no_speech_prob": 0.1788560450077057,
+        "compression_ratio": 0.7241379310344828,
+        "word_probabilities": [
+          0.1932373046875,
+          0.51171875,
+          0.83837890625,
+          0.63916015625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 118,
+    "extracted_voiced_seconds": 1.18,
+    "unremoved_raw_target_tokens": [
+      "la",
+      "scène",
+      "est",
+      "pleine"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "la",
+      "scène",
+      "est",
+      "pleine"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 4.000181405895692,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.54,
+      "search_end_seconds": 2.28,
+      "prefix_last_word_end_seconds": 1.54,
+      "target_first_word_start_seconds": 2.28,
+      "gap_seconds": 0.2893424036281179,
+      "verified_silence_start_seconds": 1.939092970521542,
+      "verified_silence_end_seconds": 2.22843537414966,
+      "gap_rms_dbfs": -54.15,
+      "gap_peak_dbfs": -34.804,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.083764172335601,
+      "cut_sample": 45947,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/teatrino_fiabe/assets/audio/fr/stage_full.wav",
-    "bytes": 63590,
-    "sha256": "64f6533934df7b19a9c6740105a63ffba895e1bc1d04748c0cf95d1162b184f9"
+    "sha256": "10b158de9a1d44a0f76de67a407c8a56acd99ffaefd4ac9e0efaed5957945c8d",
+    "bytes": 84592
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "109c0a21562cef6d9b8048572af159d8156e4348fc5d3744d4b2cfec81c78206",
+    "original_sha256": "64f6533934df7b19a9c6740105a63ffba895e1bc1d04748c0cf95d1162b184f9",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

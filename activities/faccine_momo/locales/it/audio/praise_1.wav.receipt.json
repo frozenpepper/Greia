@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T11:39:08.872620+00:00",
+  "created_utc": "2026-10-21T16:08:19.064935+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "Che meraviglia!",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. Che meraviglia!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "momo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Che meraviglia!",
+    "cue_id": "faccine_momo.praise_1",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Che meraviglia!",
     "cue_id": "faccine_momo.praise_1",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/faccine_momo/locales/it/audio/praise_1.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Warm, measured encouragement. Emphasize the successful action gently, at a relaxed conversational pace."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.momo.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261021-133901-1ff57b91",
-    "idempotency_key": "greia-c2d01496f7084c898ed76377ff81f66d",
+    "job_id": "20261021-180803-67b1d600",
+    "idempotency_key": "greia-961174eaf69447949d1df2183b84aac3",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,205 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2925937441,
+    "script_seed": 3892813514,
     "language_direction": "Italian",
-    "delivery_prompt": "Warm, measured encouragement. Emphasize the successful action gently, at a relaxed conversational pace.",
-    "effective_delivery": "Speak in Italian. Warm, measured encouragement. Emphasize the successful action gently, at a relaxed conversational pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1473443000,
-        "sha256": "13c4bd165e5fb29d920d2918b1d7dc17cc0e233264d059d2e5ef7f2acfaae3df",
+        "seed": 2998731380,
+        "sha256": "67308f1dcb3eb97b652cd6217d2e0298ba468c9b7954a279fcf6e1fd262b3f0d",
         "generation": {
-          "elapsed_seconds": 6.77281045899872,
+          "elapsed_seconds": 14.29396487500344,
           "model_load_seconds": 0.0,
-          "rtf": 3.527199266903248,
-          "peak_memory_gb": 7.648166916
+          "rtf": 4.466631386387201,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " che meraviglia.",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/faccine_momo/locales/it/audio/praise_1.wav.raw.wav",
+    "sha256": "d502deaf0c9a740a960ff4987252bfd86d8a05aa5b979c568d0586d64bbb6d3b",
+    "receipt_sha256": "76bd9c48541c9caedd32d9499400280e81c40c0c1a9756418e7f90e7e1d1810c"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/faccine_momo/locales/it/audio/praise_1.wav.extracted.wav",
+    "sha256": "d5077b10bae768b043b930e857d11b7bceb97603d595123199ee068b87e7d893"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/faccine_momo/locales/it/audio/praise_1.wav.raw.wav",
+    "source_sha256": "d502deaf0c9a740a960ff4987252bfd86d8a05aa5b979c568d0586d64bbb6d3b",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/faccine_momo/locales/it/audio/praise_1.wav.extracted.wav",
+    "output_sha256": "d5077b10bae768b043b930e857d11b7bceb97603d595123199ee068b87e7d893",
+    "target_request": {
+      "speaker": "momo",
+      "kind": "character_dialogue",
+      "text": "Che meraviglia!",
+      "locale": "it",
+      "cue_id": "faccine_momo.praise_1",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/faccine_momo/locales/it/audio/praise_1.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "76bd9c48541c9caedd32d9499400280e81c40c0c1a9756418e7f90e7e1d1810c"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "Che meraviglia!",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Ascolta questa frase in italiano, che meraviglia.",
+    "extracted_transcript": " che meraviglia.",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.56
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.56,
+        "end_seconds": 0.82
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.82,
+        "end_seconds": 1.22
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.22,
+        "end_seconds": 1.38
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.38,
+        "end_seconds": 1.8
+      },
+      {
+        "word": "che",
+        "start_seconds": 2.28,
+        "end_seconds": 2.38
+      },
+      {
+        "word": "meraviglia",
+        "start_seconds": 2.38,
+        "end_seconds": 3.02
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "che",
+        "start_seconds": 0.0,
+        "end_seconds": 0.3
+      },
+      {
+        "word": "meraviglia",
+        "start_seconds": 0.3,
+        "end_seconds": 0.96
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.3127151377060834,
+        "no_speech_prob": 0.007105591706931591,
+        "compression_ratio": 0.9074074074074074,
+        "word_probabilities": [
+          0.70947265625,
+          0.97314453125,
+          0.93896484375,
+          0.9169921875,
+          0.9697265625,
+          0.94482421875,
+          0.927734375
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.41622384389241535,
+        "no_speech_prob": 0.01920466311275959,
+        "compression_ratio": 0.6521739130434783,
+        "word_probabilities": [
+          0.82275390625,
+          0.92431640625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 80,
+    "extracted_voiced_seconds": 0.8,
+    "unremoved_raw_target_tokens": [
+      "che",
+      "meraviglia"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "che",
+      "meraviglia"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.2001814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.8,
+      "target_first_word_start_seconds": 2.28,
+      "gap_seconds": 0.2494331065759637,
+      "verified_silence_start_seconds": 1.9696145124716553,
+      "verified_silence_end_seconds": 2.219047619047619,
+      "gap_rms_dbfs": -56.177,
+      "gap_peak_dbfs": -39.304,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.0943310657596372,
+      "cut_sample": 46180,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/faccine_momo/locales/it/audio/praise_1.wav",
-    "bytes": 84758,
-    "sha256": "c66b0f406bd52e5fb368923bd4488334611be53b1daa16ae48de2287bb1b0f81"
+    "sha256": "17f52b4d0069506c5e1c4a1d13759b0938d745e54a7b5efebc8143b55e41a8ea",
+    "bytes": 48846
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "c97df77792efdca4b8b94d482639b3d3239acd4e766997b4b66bdf073124a284",
+    "original_sha256": "c66b0f406bd52e5fb368923bd4488334611be53b1daa16ae48de2287bb1b0f81",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

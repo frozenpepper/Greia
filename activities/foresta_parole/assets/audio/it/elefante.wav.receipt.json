@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:31:30.613863+00:00",
+  "created_utc": "2026-10-22T06:53:27.157872+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "Elefante",
+    "target_word_count": 1,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano...\n\nElefante",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Elefante",
+    "cue_id": "foresta_parole.elefante",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Elefante",
     "cue_id": "foresta_parole.elefante",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/foresta_parole/assets/audio/it/elefante.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-143124-12d5914d",
-    "idempotency_key": "greia-50dcf583a5fd4df28e1a31c50fcd67a9",
+    "job_id": "20261022-085313-ee709a35",
+    "idempotency_key": "greia-be20fc752c1a41579b6e023d312044d5",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,178 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1073011341,
+    "script_seed": 3360525671,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
-    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1817350093,
-        "sha256": "f28d9ee34939ed058e50891ffd95ff6bbf5996818eef0b0d8fba94a5006c392b",
+        "seed": 3654153472,
+        "sha256": "f7dfbfe82bf1cac8a3a7b01c3b983856c1069d724bea0d3533b1ef456f574f0f",
         "generation": {
-          "elapsed_seconds": 5.9229578750091605,
+          "elapsed_seconds": 12.91803204199823,
           "model_load_seconds": 0.0,
-          "rtf": 5.287568405007433,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.510175818667152,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": "Elefante",
+    "metrics": {
+      "duration_seconds": 0.9665759637188208,
+      "rms_dbfs": -36.62,
+      "peak": 0.11609,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.08,
+      "trailing_silence_seconds": 0.2,
+      "longest_internal_pause_seconds": 0.04
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v1",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/foresta_parole/assets/audio/it/elefante.wav.raw.wav",
+    "sha256": "f4a2fd4c45526ce35baaa889d9b863f7c62f39328b92d65b472bea05405922f9",
+    "receipt_sha256": "f8089d212801790df005e48b3e3cf6e7e54da0413fce6d903c98899e61cc4551"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/foresta_parole/assets/audio/it/elefante.wav.extracted.wav",
+    "sha256": "c81534f4aef1688acbb2c40ad6cb49128469ca11d8db07d8744b1af316dfb809"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/foresta_parole/assets/audio/it/elefante.wav.delivery.wav",
+    "sha256": "c81534f4aef1688acbb2c40ad6cb49128469ca11d8db07d8744b1af316dfb809"
+  },
+  "extraction": {
+    "schema_version": 1,
+    "algorithm_version": "greia-spoken-carrier-extractor-v7",
+    "comparison_policy": "locale-number-tokens-v1",
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-raw/activities/foresta_parole/assets/audio/it/elefante.wav.raw.wav",
+    "source_sha256": "f4a2fd4c45526ce35baaa889d9b863f7c62f39328b92d65b472bea05405922f9",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/foresta_parole/assets/audio/it/elefante.wav.extracted.wav",
+    "output_sha256": "c81534f4aef1688acbb2c40ad6cb49128469ca11d8db07d8744b1af316dfb809",
+    "output_bytes": 42670,
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "Elefante",
+    "remove_first_words": 5,
+    "ignore_accents": true,
+    "target_verification_requested": "warn",
+    "target_verification_policy": "warn",
+    "target_comparison_score": 1.0,
+    "target_word_count_matches": true,
+    "target_numbers_match": true,
+    "target_comparison_flags": [],
+    "target_transcript_warning": false,
+    "recognizer": "mlx-whisper-base",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extracted_transcript": "Elefante",
+    "expected_target_tokens": [
+      "elefante"
+    ],
+    "extracted_target_tokens": [
+      "elefante"
+    ],
+    "extracted_target_exact_match": true,
+    "transcription_settings": {
+      "language": "it",
+      "initial_prompt": null,
+      "word_timestamps": true,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "sample_rate": 22050,
+    "duration_seconds": 3.6801814058956914,
+    "boundary": {
+      "search_strategy": "target-only-global-quiet-run-v7",
+      "verified_silence_start_seconds": 1.6662131519274377,
+      "verified_silence_end_seconds": 2.8136054421768706,
+      "verified_silence_duration_seconds": 1.1473922902494331,
+      "cut_sample": 59835,
+      "cut_time_seconds": 2.713605442176871,
+      "padding_seconds": 0.1,
+      "quiet_run_start_sample": 36740,
+      "quiet_run_end_sample": 62040,
+      "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+    },
+    "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/foresta_parole/assets/audio/it/elefante.wav.extracted.wav.search/c9b1020b4a6e4aa4adbe04739156c8a4",
+    "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/foresta_parole/assets/audio/it/elefante.wav.extracted.wav.search/c9b1020b4a6e4aa4adbe04739156c8a4/search.json",
+    "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-raw/activities/foresta_parole/assets/audio/it/elefante.wav.raw.wav.receipt.json",
+    "source_provider_receipt_sha256": "f8089d212801790df005e48b3e3cf6e7e54da0413fce6d903c98899e61cc4551",
+    "candidate_sha256": "c81534f4aef1688acbb2c40ad6cb49128469ca11d8db07d8744b1af316dfb809",
+    "candidate_id": "candidate-01",
+    "candidate_count": 1,
+    "qualifying_quiet_run_count": 1,
+    "candidate_results": [
+      {
+        "candidate_id": "candidate-01",
+        "quiet_run": {
+          "start_sample": 36740,
+          "end_sample": 62040,
+          "start_seconds": 1.6662131519274377,
+          "end_seconds": 2.8136054421768706,
+          "duration_seconds": 1.1473922902494331
+        },
+        "cut_sample": 59835,
+        "cut_time_seconds": 2.713605442176871,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/foresta_parole/assets/audio/it/elefante.wav.extracted.wav.search/c9b1020b4a6e4aa4adbe04739156c8a4/candidate-01.wav",
+        "preceding_voiced_seconds": 1.24,
+        "retained_voiced_seconds": 0.54,
+        "retained_duration_seconds": 0.9665759637188208,
+        "candidate_sha256": "c81534f4aef1688acbb2c40ad6cb49128469ca11d8db07d8744b1af316dfb809",
+        "extracted_transcript": "Elefante",
+        "canonical_transcript_tokens": [
+          "elefante"
+        ],
+        "exact_target_match": true,
+        "target_comparison_score": 1.0,
+        "target_word_count_matches": true,
+        "target_numbers_match": true,
+        "target_comparison_flags": [],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": true,
+        "asr_segment_count": 1
+      }
+    ],
+    "human_review": "PENDING",
+    "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+    "target_verification_effective_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+    "target_verification_warning": false,
+    "saved_recovery_policy": "target-only-v7-saved-v1",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 0,
+      "removed_seconds": 0.0,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 59835,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/foresta_parole/assets/audio/it/elefante.wav.delivery.wav",
+      "sha256": "c81534f4aef1688acbb2c40ad6cb49128469ca11d8db07d8744b1af316dfb809"
+    }
+  },
   "output": {
     "path": "activities/foresta_parole/assets/audio/it/elefante.wav",
-    "bytes": 49478,
-    "sha256": "cb566ae32667439a71b66f54d6f5287d0f461d896495f2d198f7dc03aae743d3"
+    "sha256": "3052649577f85e07c955d08ac30c547f1776cef51382f7a858035301f4cd8055",
+    "bytes": 42704
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "beec1c985696779bd096affe400c288689142b94bd993cb79ad24f304a75697f",
+    "original_sha256": "cb566ae32667439a71b66f54d6f5287d0f461d896495f2d198f7dc03aae743d3",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:26:35.955674+00:00",
+  "created_utc": "2026-10-21T16:18:46.984710+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "Luna",
+    "target_word_count": 1,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. Luna",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "Luna",
+    "cue_id": "foresta_parole.luna",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "Luna",
     "cue_id": "foresta_parole.luna",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/foresta_parole/assets/audio/es/luna.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-142632-9c1a8f7a",
-    "idempotency_key": "greia-7b335962a97840afb279348767363c17",
+    "job_id": "20261021-181828-d45000c9",
+    "idempotency_key": "greia-33eef73f3c6140659586129b58701c16",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,233 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 4290729769,
+    "script_seed": 2063335136,
     "language_direction": "Spanish",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
-    "effective_delivery": "Speak in Spanish. Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2161662513,
-        "sha256": "3204618bf1a30b4d590c515cb43134be94826bb6a239288e6035aa7e9b5136b9",
+        "seed": 983590806,
+        "sha256": "97eab5f88d3478c12019d92b596426b1f3c21f17482ffe003d76417ed442e9db",
         "generation": {
-          "elapsed_seconds": 2.846791125019081,
+          "elapsed_seconds": 17.490783540997654,
           "model_load_seconds": 0.0,
-          "rtf": 4.446953072146442,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.904047514824074,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " Luna",
+    "metrics": {
+      "duration_seconds": 0.9229478458049887,
+      "rms_dbfs": -36.38,
+      "peak": 0.08301,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.32,
+      "trailing_silence_seconds": 0.18,
+      "longest_internal_pause_seconds": 0.0
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/foresta_parole/assets/audio/es/luna.wav.raw.wav",
+    "sha256": "231ce653b4220b7c84a79307da58a76cf89b6af3848d0b94bef329eea93b50a7",
+    "receipt_sha256": "f8b974a96e6a2a9e9687e92ecedb69599a702a4ec697cdb3b692c598226d8698"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/foresta_parole/assets/audio/es/luna.wav.extracted.wav",
+    "sha256": "3bd98aa792f9535f57a81516c2393c57a5614c6823d469acf689c3572c1d21c8"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/foresta_parole/assets/audio/es/luna.wav.delivery.wav",
+    "sha256": "04ad8f13d352144cf30d054a14bb811af63e08b0aa6da817a9dd91ade598a6d1"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/foresta_parole/assets/audio/es/luna.wav.raw.wav",
+    "source_sha256": "231ce653b4220b7c84a79307da58a76cf89b6af3848d0b94bef329eea93b50a7",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/foresta_parole/assets/audio/es/luna.wav.extracted.wav",
+    "output_sha256": "3bd98aa792f9535f57a81516c2393c57a5614c6823d469acf689c3572c1d21c8",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Luna",
+      "locale": "es",
+      "cue_id": "foresta_parole.luna",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/foresta_parole/assets/audio/es/luna.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "f8b974a96e6a2a9e9687e92ecedb69599a702a4ec697cdb3b692c598226d8698"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "Luna",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Escucha esta frase en español. Luna.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Luna",
+    "raw_word_alignment": [
+      {
+        "word": "escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.64
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.64,
+        "end_seconds": 1.1
+      },
+      {
+        "word": "frase",
+        "start_seconds": 1.1,
+        "end_seconds": 1.54
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.54,
+        "end_seconds": 1.92
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.92,
+        "end_seconds": 2.44
+      },
+      {
+        "word": "luna",
+        "start_seconds": 3.71,
+        "end_seconds": 4.16
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "luna",
+        "start_seconds": 0.0,
+        "end_seconds": 1.1
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.7031271798270089,
+        "no_speech_prob": 0.016644079238176346,
+        "compression_ratio": 0.8409090909090909,
+        "word_probabilities": [
+          0.91796875,
+          0.98583984375,
+          0.9931640625,
+          0.98193359375,
+          0.9873046875
+        ]
+      },
+      {
+        "avg_logprob": -0.7031271798270089,
+        "no_speech_prob": 0.016644079238176346,
+        "compression_ratio": 0.8409090909090909,
+        "word_probabilities": [
+          0.4921875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6116483211517334,
+        "no_speech_prob": 0.3413205146789551,
+        "compression_ratio": 0.3333333333333333,
+        "word_probabilities": [
+          0.70263671875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 36,
+    "extracted_voiced_seconds": 0.36,
+    "unremoved_raw_target_tokens": [
+      "luna"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "luna"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 4.480181405895691,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 2.44,
+      "search_end_seconds": 3.71,
+      "prefix_last_word_end_seconds": 2.44,
+      "target_first_word_start_seconds": 3.71,
+      "gap_seconds": 1.1573696145124717,
+      "verified_silence_start_seconds": 2.499863945578231,
+      "verified_silence_end_seconds": 3.657233560090703,
+      "gap_rms_dbfs": -64.161,
+      "gap_peak_dbfs": -39.86,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 3.0785487528344673,
+      "cut_sample": 67882,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 10555,
+      "removed_seconds": 0.4786848072562358,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 78437,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/foresta_parole/assets/audio/es/luna.wav.delivery.wav",
+      "sha256": "04ad8f13d352144cf30d054a14bb811af63e08b0aa6da817a9dd91ade598a6d1"
+    }
+  },
   "output": {
     "path": "activities/foresta_parole/assets/audio/es/luna.wav",
-    "bytes": 28310,
-    "sha256": "89b2d188807cf13f95dcd96033dabe1400099a95b2f6f33286396134dd31f308"
+    "sha256": "cd380b350786d987ac4c3c2dbcfe0c0c64306ea753bc006432335ef40744bf72",
+    "bytes": 40780
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "2fa43287347ba8100c2b5ae284e6e2cdc039298e890e9383942b0555061bd9f7",
+    "original_sha256": "49040709b7a196f87e0f657446c666632a748a737ecaaec304b6ad53bf8658e4",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

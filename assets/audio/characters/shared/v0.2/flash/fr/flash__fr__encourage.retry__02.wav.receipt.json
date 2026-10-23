@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T18:44:21.594541+00:00",
+  "created_utc": "2026-10-21T17:39:07.053739+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "Presque ! On essaie encore !",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. Presque ! On essaie encore !",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "flash",
+    "kind": "shared_character_utterance",
+    "locale": "fr",
+    "text": "Presque ! On essaie encore !",
+    "cue_id": "greia.shared.flash__fr__encourage.retry__02.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "flash",
     "kind": "shared_character_utterance",
     "locale": "fr",
     "text": "Presque ! On essaie encore !",
     "cue_id": "greia.shared.flash__fr__encourage.retry__02.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "assets/audio/characters/shared/v0.2/flash/fr/flash__fr__encourage.retry__02.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Flash, a springy, eager little rabbit. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.flash.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
   "generation_parameters": {
-    "job_id": "20261020-204404-580927f9",
-    "idempotency_key": "greia-7873042471a246739ca53e94a932d619",
+    "job_id": "20261021-193848-0809481a",
+    "idempotency_key": "greia-abe71ee489df49979bbd38230ca5f9fb",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,265 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 4189591189,
+    "script_seed": 1255921385,
     "language_direction": "French",
-    "delivery_prompt": "Flash, a springy, eager little rabbit. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
-    "effective_delivery": "Speak in French. Flash, a springy, eager little rabbit. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3757014752,
-        "sha256": "65d5f7678e6b3ba6365d80ac96547cd8d5f990993d78ec4d7e0e1b773de6a731",
+        "seed": 4043989805,
+        "sha256": "9c711324ddcc385d66d15b2edb93409db81b03b92a851e1c5bdb089d54dbb9f6",
         "generation": {
-          "elapsed_seconds": 16.022680625028443,
+          "elapsed_seconds": 17.94326391701179,
           "model_load_seconds": 0.0,
-          "rtf": 6.67565334005768,
-          "peak_memory_gb": 8.843167284
+          "rtf": 4.875666115758831,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8403,
+    "transcript": " Presque, on est encore !",
+    "metrics": {
+      "duration_seconds": 2.025986394557823,
+      "rms_dbfs": -30.52,
+      "peak": 0.2052,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.26,
+      "trailing_silence_seconds": 0.12,
+      "longest_internal_pause_seconds": 0.24
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/characters/shared/v0.2/flash/fr/flash__fr__encourage.retry__02.wav.raw.wav",
+    "sha256": "049e2e5cbca444d797d052f2e4c8117ac27311df55c20aa32068a0352aa4ae40",
+    "receipt_sha256": "a6d9e9ae6254d3f46d3b795a044a54b2224cf728cd8e674f41624e3576367783"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/characters/shared/v0.2/flash/fr/flash__fr__encourage.retry__02.wav.extracted.wav",
+    "sha256": "cd6b49fbb33d34355db849ef4ca500dcfccaf61138141be45caa5a416442ff09"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/assets/audio/characters/shared/v0.2/flash/fr/flash__fr__encourage.retry__02.wav.raw.wav",
+    "source_sha256": "049e2e5cbca444d797d052f2e4c8117ac27311df55c20aa32068a0352aa4ae40",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-extracted/assets/audio/characters/shared/v0.2/flash/fr/flash__fr__encourage.retry__02.wav.extracted.wav",
+    "output_sha256": "cd6b49fbb33d34355db849ef4ca500dcfccaf61138141be45caa5a416442ff09",
+    "target_request": {
+      "speaker": "flash",
+      "kind": "shared_character_utterance",
+      "text": "Presque ! On essaie encore !",
+      "locale": "fr",
+      "cue_id": "greia.shared.flash__fr__encourage.retry__02.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/assets/audio/characters/shared/v0.2/flash/fr/flash__fr__encourage.retry__02.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "a6d9e9ae6254d3f46d3b795a044a54b2224cf728cd8e674f41624e3576367783"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "Presque ! On essaie encore !",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français ! Présque, on essaye encore !",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Presque, on est encore !",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.3
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.3,
+        "end_seconds": 0.5
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.5,
+        "end_seconds": 0.76
+      },
+      {
+        "word": "en",
+        "start_seconds": 0.76,
+        "end_seconds": 0.88
+      },
+      {
+        "word": "français",
+        "start_seconds": 0.88,
+        "end_seconds": 1.3
+      },
+      {
+        "word": "présque",
+        "start_seconds": 1.88,
+        "end_seconds": 2.36
+      },
+      {
+        "word": "on",
+        "start_seconds": 2.56,
+        "end_seconds": 2.7
+      },
+      {
+        "word": "essaye",
+        "start_seconds": 2.7,
+        "end_seconds": 3.0
+      },
+      {
+        "word": "encore",
+        "start_seconds": 3.0,
+        "end_seconds": 3.3
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "presque",
+        "start_seconds": 0.0,
+        "end_seconds": 0.7
+      },
+      {
+        "word": "on",
+        "start_seconds": 0.94,
+        "end_seconds": 1.06
+      },
+      {
+        "word": "est",
+        "start_seconds": 1.06,
+        "end_seconds": 1.16
+      },
+      {
+        "word": "encore",
+        "start_seconds": 1.16,
+        "end_seconds": 1.52
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.6575313091278077,
+        "no_speech_prob": 0.041957128793001175,
+        "compression_ratio": 0.9090909090909091,
+        "word_probabilities": [
+          0.80126953125,
+          0.65185546875,
+          0.93212890625,
+          0.93310546875,
+          0.97705078125,
+          0.354248046875
+        ]
+      },
+      {
+        "avg_logprob": -0.6575313091278077,
+        "no_speech_prob": 0.041957128793001175,
+        "compression_ratio": 0.9090909090909091,
+        "word_probabilities": [
+          0.331298828125,
+          0.98681640625,
+          0.66845703125,
+          0.98388671875,
+          0.83349609375
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6036948204040528,
+        "no_speech_prob": 0.16291041672229767,
+        "compression_ratio": 0.75,
+        "word_probabilities": [
+          0.63525390625,
+          0.98828125,
+          0.476806640625,
+          0.197265625,
+          0.59228515625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 99,
+    "extracted_voiced_seconds": 0.99,
+    "unremoved_raw_target_tokens": [
+      "présque",
+      "on",
+      "essaye",
+      "encore"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "présque",
+      "on",
+      "essaye",
+      "encore"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.6801814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.3,
+      "search_end_seconds": 1.88,
+      "prefix_last_word_end_seconds": 1.3,
+      "target_first_word_start_seconds": 1.88,
+      "gap_seconds": 0.3492063492063492,
+      "verified_silence_start_seconds": 1.4795918367346939,
+      "verified_silence_end_seconds": 1.8287981859410432,
+      "gap_rms_dbfs": -56.281,
+      "gap_peak_dbfs": -35.677,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.6541950113378685,
+      "cut_sample": 36475,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "assets/audio/characters/shared/v0.2/flash/fr/flash__fr__encourage.retry__02.wav",
-    "bytes": 105926,
-    "sha256": "7ffb4ba62cc2c7b0251cd0e0cafbef1daf09e9929bea4c614a8261c19e73e300"
+    "sha256": "b50a6af42621c9dc6842e146bea16cab6e3e7fe7f60e8db81b3aa1bb8e55c883",
+    "bytes": 89424
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "71b8e5ea7564416e7065770aa56932dc42317bdda4ff6ce9c6111607640a0439",
+    "original_sha256": "7ffb4ba62cc2c7b0251cd0e0cafbef1daf09e9929bea4c614a8261c19e73e300",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

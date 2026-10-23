@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T13:59:41.016342+00:00",
+  "created_utc": "2026-10-21T16:56:48.550339+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "Peinture libre",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. Peinture libre",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Peinture libre",
+    "cue_id": "painting.title.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Peinture libre",
     "cue_id": "painting.title.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/painting/locales/fr/audio/activity-title.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-155932-f34b720e",
-    "idempotency_key": "greia-52351ec0202e4fe5b8808d571a6076c6",
+    "job_id": "20261021-185636-7be2cc6d",
+    "idempotency_key": "greia-36dbe5628c7a4fb7bdddedcde56f6b67",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,181 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2921705215,
+    "script_seed": 857902540,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1362981456,
-        "sha256": "8b58a10495c91253f153afc8d1b719dd3068c7d9a76fb16a57edd048c59abdec",
+        "seed": 1939994224,
+        "sha256": "548c49b08bc0d990f59c6005da35600796f7437ab0a7f69a6af6ef9341e26f91",
         "generation": {
-          "elapsed_seconds": 7.149020540993661,
+          "elapsed_seconds": 12.11057212499145,
           "model_load_seconds": 0.0,
-          "rtf": 5.584445156354897,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.440340549687453,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8009,
+    "transcript": "Pinture libre.",
+    "metrics": {
+      "duration_seconds": 1.115873015873016,
+      "rms_dbfs": -35.81,
+      "peak": 0.142,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.1,
+      "trailing_silence_seconds": 0.26,
+      "longest_internal_pause_seconds": 0.0
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v1",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/painting/locales/fr/audio/activity-title.wav.raw.wav",
+    "sha256": "6cc0ccbf5edcbebd0909787aaf6930cdd29f89adb592777660eb420af8008fb5",
+    "receipt_sha256": "1cdbaf0ce60c811de0efd2a7dac9db743ba09940326ba01977911a316d59b0e6"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/painting/locales/fr/audio/activity-title.wav.extracted.wav",
+    "sha256": "d98a2143e49dfa1413d3f5cf563eefb7bfbfb07c9dc3ac5ef0ab12134e6ba8fb"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/painting/locales/fr/audio/activity-title.wav.delivery.wav",
+    "sha256": "d98a2143e49dfa1413d3f5cf563eefb7bfbfb07c9dc3ac5ef0ab12134e6ba8fb"
+  },
+  "extraction": {
+    "schema_version": 1,
+    "algorithm_version": "greia-spoken-carrier-extractor-v7",
+    "comparison_policy": "locale-number-tokens-v1",
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-raw/activities/painting/locales/fr/audio/activity-title.wav.raw.wav",
+    "source_sha256": "6cc0ccbf5edcbebd0909787aaf6930cdd29f89adb592777660eb420af8008fb5",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/painting/locales/fr/audio/activity-title.wav.extracted.wav",
+    "output_sha256": "d98a2143e49dfa1413d3f5cf563eefb7bfbfb07c9dc3ac5ef0ab12134e6ba8fb",
+    "output_bytes": 49254,
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "Peinture libre",
+    "remove_first_words": 5,
+    "ignore_accents": true,
+    "target_verification_requested": "warn",
+    "target_verification_policy": "warn",
+    "target_comparison_score": 0.8009,
+    "target_word_count_matches": true,
+    "target_numbers_match": true,
+    "target_comparison_flags": [],
+    "target_transcript_warning": true,
+    "recognizer": "mlx-whisper-base",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extracted_transcript": "Pinture libre.",
+    "expected_target_tokens": [
+      "peinture",
+      "libre"
+    ],
+    "extracted_target_tokens": [
+      "pinture",
+      "libre"
+    ],
+    "extracted_target_exact_match": false,
+    "transcription_settings": {
+      "language": "fr",
+      "initial_prompt": null,
+      "word_timestamps": true,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "sample_rate": 22050,
+    "duration_seconds": 3.5201814058956917,
+    "boundary": {
+      "search_strategy": "target-only-global-quiet-run-v7",
+      "verified_silence_start_seconds": 1.6562358276643991,
+      "verified_silence_end_seconds": 2.504308390022676,
+      "verified_silence_duration_seconds": 0.8480725623582767,
+      "cut_sample": 53015,
+      "cut_time_seconds": 2.404308390022676,
+      "padding_seconds": 0.1,
+      "quiet_run_start_sample": 36520,
+      "quiet_run_end_sample": 55220,
+      "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+    },
+    "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/painting/locales/fr/audio/activity-title.wav.extracted.wav.search/00859cd08173403c957c0e9a801d2681",
+    "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/painting/locales/fr/audio/activity-title.wav.extracted.wav.search/00859cd08173403c957c0e9a801d2681/search.json",
+    "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-raw/activities/painting/locales/fr/audio/activity-title.wav.raw.wav.receipt.json",
+    "source_provider_receipt_sha256": "1cdbaf0ce60c811de0efd2a7dac9db743ba09940326ba01977911a316d59b0e6",
+    "candidate_sha256": "d98a2143e49dfa1413d3f5cf563eefb7bfbfb07c9dc3ac5ef0ab12134e6ba8fb",
+    "candidate_id": "candidate-01",
+    "candidate_count": 1,
+    "qualifying_quiet_run_count": 1,
+    "candidate_results": [
+      {
+        "candidate_id": "candidate-01",
+        "quiet_run": {
+          "start_sample": 36520,
+          "end_sample": 55220,
+          "start_seconds": 1.6562358276643991,
+          "end_seconds": 2.504308390022676,
+          "duration_seconds": 0.8480725623582767
+        },
+        "cut_sample": 53015,
+        "cut_time_seconds": 2.404308390022676,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/painting/locales/fr/audio/activity-title.wav.extracted.wav.search/00859cd08173403c957c0e9a801d2681/candidate-01.wav",
+        "preceding_voiced_seconds": 0.77,
+        "retained_voiced_seconds": 0.61,
+        "retained_duration_seconds": 1.115873015873016,
+        "candidate_sha256": "d98a2143e49dfa1413d3f5cf563eefb7bfbfb07c9dc3ac5ef0ab12134e6ba8fb",
+        "extracted_transcript": "Pinture libre.",
+        "canonical_transcript_tokens": [
+          "pinture",
+          "libre"
+        ],
+        "exact_target_match": false,
+        "target_comparison_score": 0.8009,
+        "target_word_count_matches": true,
+        "target_numbers_match": true,
+        "target_comparison_flags": [],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": true,
+        "asr_segment_count": 1
+      }
+    ],
+    "human_review": "PENDING",
+    "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+    "target_verification_effective_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+    "target_verification_warning": true,
+    "saved_recovery_policy": "target-only-v7-saved-v1",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 0,
+      "removed_seconds": 0.0,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 53015,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/painting/locales/fr/audio/activity-title.wav.delivery.wav",
+      "sha256": "d98a2143e49dfa1413d3f5cf563eefb7bfbfb07c9dc3ac5ef0ab12134e6ba8fb"
+    }
+  },
   "output": {
     "path": "activities/painting/locales/fr/audio/activity-title.wav",
-    "bytes": 56534,
-    "sha256": "5a4d167f7967629ebcb582a7f38fd2cea47692c67551e602bfce5d51d5b1d470"
+    "sha256": "a5b1db9d879d0222aa177988dabff748f93c94918a7c4702738c667136d53bfd",
+    "bytes": 49288
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "10ae9724f0c1e6bc4ab6accde9c2eda315673bb62e09bed320e9ff19c5870421",
+    "original_sha256": "4078075531ac8d70dc38ff0124ff18ca43894b05b2f3fa0510d7cc32cab46679",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

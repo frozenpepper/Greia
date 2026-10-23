@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T23:18:26.766171+00:00",
+  "created_utc": "2026-10-21T20:54:21.740919+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "S comme Soleil",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. S comme Soleil",
+    "composite_delivery_prompt": "Clear, natural conversational delivery. Say the first sentence, pause for about one second, then say the final phrase exactly as written. Do not add words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "S comme Soleil",
+    "cue_id": "alfabeto_leo.letter_S.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "S comme Soleil",
     "cue_id": "alfabeto_leo.letter_S.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/alfabeto_leo/assets/audio/fr/letter_S.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-011815-26e4ed75",
-    "idempotency_key": "greia-f78ccbd1e02942f2ac9d2256e57145c0",
+    "job_id": "20261021-225402-f5ff7bd6",
+    "idempotency_key": "greia-699970ed65b64b91a9f9f75b47d81bad",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,259 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3885372037,
+    "script_seed": 3138733545,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak naturally in French. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Clear, natural conversational delivery. Say the first sentence, pause for about one second, then say the final phrase exactly as written. Do not add words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery. Say the first sentence, pause for about one second, then say the final phrase exactly as written. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2905432916,
-        "sha256": "7dd20848dd65f705b84542fc851028ed0d57833109820c7450fc1fc3858003a1",
+        "seed": 3957393819,
+        "sha256": "b506657b5cdd0aba720eea26ab597dab3fb784051729df3471072f88793ee168",
         "generation": {
-          "elapsed_seconds": 10.309063541993964,
+          "elapsed_seconds": 17.492682249998325,
           "model_load_seconds": 0.0,
-          "rtf": 7.158243403768521,
-          "peak_memory_gb": 8.21220922
+          "rtf": 4.0490757879707555,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": "S comme soleil",
+    "metrics": {
+      "duration_seconds": 1.4469387755102041,
+      "rms_dbfs": -33.85,
+      "peak": 0.16028,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.08,
+      "trailing_silence_seconds": 0.2,
+      "longest_internal_pause_seconds": 0.04
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v1",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/alfabeto_leo/assets/audio/fr/letter_S.wav.raw.wav",
+    "sha256": "e092a2e796f25fb55ecc6768248d9a2eb9314cb59211936d56c40a2498157772",
+    "receipt_sha256": "aab433165f5a9f3fb287d7bb50afa32f0bdeaee46dc986035e30ba12062c8bd6"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/assets/audio/fr/letter_S.wav.extracted.wav",
+    "sha256": "49245f3285fbdf5daf5bac26c25d1423ebef906489e26bcfac1184124bba074e"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/assets/audio/fr/letter_S.wav.delivery.wav",
+    "sha256": "49245f3285fbdf5daf5bac26c25d1423ebef906489e26bcfac1184124bba074e"
+  },
+  "extraction": {
+    "schema_version": 1,
+    "algorithm_version": "greia-spoken-carrier-extractor-v7",
+    "comparison_policy": "locale-number-tokens-v1",
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-02/carrier-raw/activities/alfabeto_leo/assets/audio/fr/letter_S.wav.raw.wav",
+    "source_sha256": "e092a2e796f25fb55ecc6768248d9a2eb9314cb59211936d56c40a2498157772",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-02/carrier-extracted/activities/alfabeto_leo/assets/audio/fr/letter_S.wav.extracted.wav",
+    "output_sha256": "49245f3285fbdf5daf5bac26c25d1423ebef906489e26bcfac1184124bba074e",
+    "output_bytes": 63854,
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "S comme Soleil",
+    "remove_first_words": 5,
+    "ignore_accents": true,
+    "target_verification_requested": "warn",
+    "target_verification_policy": "warn",
+    "target_comparison_score": 1.0,
+    "target_word_count_matches": true,
+    "target_numbers_match": true,
+    "target_comparison_flags": [],
+    "target_transcript_warning": false,
+    "recognizer": "mlx-whisper-base",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extracted_transcript": "S comme soleil",
+    "expected_target_tokens": [
+      "s",
+      "comme",
+      "soleil"
+    ],
+    "extracted_target_tokens": [
+      "s",
+      "comme",
+      "soleil"
+    ],
+    "extracted_target_exact_match": true,
+    "transcription_settings": {
+      "language": "fr",
+      "initial_prompt": null,
+      "word_timestamps": true,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "sample_rate": 22050,
+    "duration_seconds": 4.320181405895692,
+    "boundary": {
+      "search_strategy": "target-only-global-quiet-run-v7",
+      "verified_silence_start_seconds": 2.214965986394558,
+      "verified_silence_end_seconds": 2.9732426303854878,
+      "verified_silence_duration_seconds": 0.7582766439909298,
+      "cut_sample": 63355,
+      "cut_time_seconds": 2.8732426303854877,
+      "padding_seconds": 0.1,
+      "quiet_run_start_sample": 48840,
+      "quiet_run_end_sample": 65560,
+      "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+    },
+    "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-02/carrier-extracted/activities/alfabeto_leo/assets/audio/fr/letter_S.wav.extracted.wav.search/2568e6d8c5cf4707a03886ab9f0ce7ad",
+    "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-02/carrier-extracted/activities/alfabeto_leo/assets/audio/fr/letter_S.wav.extracted.wav.search/2568e6d8c5cf4707a03886ab9f0ce7ad/search.json",
+    "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-02/carrier-raw/activities/alfabeto_leo/assets/audio/fr/letter_S.wav.raw.wav.receipt.json",
+    "source_provider_receipt_sha256": "aab433165f5a9f3fb287d7bb50afa32f0bdeaee46dc986035e30ba12062c8bd6",
+    "candidate_sha256": "49245f3285fbdf5daf5bac26c25d1423ebef906489e26bcfac1184124bba074e",
+    "candidate_id": "candidate-03",
+    "candidate_count": 3,
+    "qualifying_quiet_run_count": 3,
+    "candidate_results": [
+      {
+        "candidate_id": "candidate-01",
+        "quiet_run": {
+          "start_sample": 18480,
+          "end_sample": 23100,
+          "start_seconds": 0.8380952380952381,
+          "end_seconds": 1.0476190476190477,
+          "duration_seconds": 0.20952380952380953
+        },
+        "cut_sample": 20895,
+        "cut_time_seconds": 0.9476190476190476,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-02/carrier-extracted/activities/alfabeto_leo/assets/audio/fr/letter_S.wav.extracted.wav.search/2568e6d8c5cf4707a03886ab9f0ce7ad/candidate-01.wav",
+        "preceding_voiced_seconds": 0.6,
+        "retained_voiced_seconds": 1.61,
+        "retained_duration_seconds": 3.372562358276644,
+        "candidate_sha256": "794c4200d104735c2ca4b1a4a327fab0e091227a5e63c81587aafead4f2e62f3",
+        "extracted_transcript": "et en français. Est-ce comme soleil ?",
+        "canonical_transcript_tokens": [
+          "et",
+          "en",
+          "francais",
+          "est",
+          "ce",
+          "comme",
+          "soleil"
+        ],
+        "exact_target_match": false,
+        "target_comparison_score": 0.5192,
+        "target_word_count_matches": false,
+        "target_numbers_match": true,
+        "target_comparison_flags": [
+          "TARGET_WORD_COUNT_MISMATCH"
+        ],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": false,
+        "asr_segment_count": 1
+      },
+      {
+        "candidate_id": "candidate-02",
+        "quiet_run": {
+          "start_sample": 27280,
+          "end_sample": 34540,
+          "start_seconds": 1.23718820861678,
+          "end_seconds": 1.5664399092970522,
+          "duration_seconds": 0.3292517006802721
+        },
+        "cut_sample": 32335,
+        "cut_time_seconds": 1.4664399092970521,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-02/carrier-extracted/activities/alfabeto_leo/assets/audio/fr/letter_S.wav.extracted.wav.search/2568e6d8c5cf4707a03886ab9f0ce7ad/candidate-02.wav",
+        "preceding_voiced_seconds": 0.79,
+        "retained_voiced_seconds": 1.42,
+        "retained_duration_seconds": 2.8537414965986394,
+        "candidate_sha256": "30548e5aa708155ea1dc96b8a82522f85f6a1f374eb50c917e289bdd1f0aad8e",
+        "extracted_transcript": "en français. Est-ce comme soleil ?",
+        "canonical_transcript_tokens": [
+          "en",
+          "francais",
+          "est",
+          "ce",
+          "comme",
+          "soleil"
+        ],
+        "exact_target_match": false,
+        "target_comparison_score": 0.56,
+        "target_word_count_matches": false,
+        "target_numbers_match": true,
+        "target_comparison_flags": [
+          "TARGET_WORD_COUNT_MISMATCH"
+        ],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": false,
+        "asr_segment_count": 1
+      },
+      {
+        "candidate_id": "candidate-03",
+        "quiet_run": {
+          "start_sample": 48840,
+          "end_sample": 65560,
+          "start_seconds": 2.214965986394558,
+          "end_seconds": 2.9732426303854878,
+          "duration_seconds": 0.7582766439909298
+        },
+        "cut_sample": 63355,
+        "cut_time_seconds": 2.8732426303854877,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-02/carrier-extracted/activities/alfabeto_leo/assets/audio/fr/letter_S.wav.extracted.wav.search/2568e6d8c5cf4707a03886ab9f0ce7ad/candidate-03.wav",
+        "preceding_voiced_seconds": 1.2,
+        "retained_voiced_seconds": 1.01,
+        "retained_duration_seconds": 1.4469387755102041,
+        "candidate_sha256": "49245f3285fbdf5daf5bac26c25d1423ebef906489e26bcfac1184124bba074e",
+        "extracted_transcript": "S comme soleil",
+        "canonical_transcript_tokens": [
+          "s",
+          "comme",
+          "soleil"
+        ],
+        "exact_target_match": true,
+        "target_comparison_score": 1.0,
+        "target_word_count_matches": true,
+        "target_numbers_match": true,
+        "target_comparison_flags": [],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": true,
+        "asr_segment_count": 1
+      }
+    ],
+    "human_review": "PENDING",
+    "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+    "target_verification_effective_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+    "target_verification_warning": false,
+    "saved_recovery_policy": "target-only-v7-saved-v1",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 0,
+      "removed_seconds": 0.0,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 63355,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-02/carrier-extracted/activities/alfabeto_leo/assets/audio/fr/letter_S.wav.delivery.wav",
+      "sha256": "49245f3285fbdf5daf5bac26c25d1423ebef906489e26bcfac1184124bba074e"
+    }
+  },
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/fr/letter_S.wav",
-    "bytes": 63590,
-    "sha256": "2e48c43f1a3911ea004f716550468591e005ead6d44a03188b10f5934fee4c23"
+    "sha256": "861e48869a1ea4ca2129dd00c18fd7f2156422b7d5c6b892a18c9d9bde65b7d9",
+    "bytes": 63888
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "24956dcda8c17dc1dc3c91176a5d1c39e8efa9d07b4cac7724b65402ad8dee6b",
+    "original_sha256": "2e48c43f1a3911ea004f716550468591e005ead6d44a03188b10f5934fee4c23",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T19:02:19.123687+00:00",
+  "created_utc": "2026-10-21T17:51:10.399528+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "¡Muy bien hecho!",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. ¡Muy bien hecho!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "lilli",
+    "kind": "shared_character_utterance",
+    "locale": "es",
+    "text": "¡Muy bien hecho!",
+    "cue_id": "greia.shared.lilli__es__praise.general__03.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "lilli",
     "kind": "shared_character_utterance",
     "locale": "es",
     "text": "¡Muy bien hecho!",
     "cue_id": "greia.shared.lilli__es__praise.general__03.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "assets/audio/characters/shared/v0.2/lilli/es/lilli__es__praise.general__03.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.lilli.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "job_id": "20261020-210209-ae7be4a7",
-    "idempotency_key": "greia-c5c624aee02a4ff9ab006471d3d996bb",
+    "job_id": "20261021-195043-72cd6a61",
+    "idempotency_key": "greia-e3d14086fee9495b82a804085bb5a38e",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,184 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2684487882,
+    "script_seed": 4177724321,
     "language_direction": "Spanish",
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
-    "effective_delivery": "Speak in Spanish. Lilli, a sparkly, affectionate storybook unicorn. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3642698784,
-        "sha256": "bd901ea958e116f102994acc6ffa8aa5e6aee28128f955e18310995a1ca62916",
+        "seed": 36645957,
+        "sha256": "d523b3b9c9cfefd83a6c50cff83567c09a78595fdbf808453d42d27e25a24d6c",
         "generation": {
-          "elapsed_seconds": 7.588153832999524,
+          "elapsed_seconds": 25.35232795900083,
           "model_load_seconds": 0.0,
-          "rtf": 6.774129295937679,
-          "peak_memory_gb": 8.843167284
+          "rtf": 5.868368031866248,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8111,
+    "transcript": "Muy bien, Acho!",
+    "metrics": {
+      "duration_seconds": 1.5866213151927437,
+      "rms_dbfs": -23.35,
+      "peak": 0.28247,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.1,
+      "trailing_silence_seconds": 0.18,
+      "longest_internal_pause_seconds": 0.08
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v1",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/characters/shared/v0.2/lilli/es/lilli__es__praise.general__03.wav.raw.wav",
+    "sha256": "2682f2e46e1b91c9cce56b93c2b473073326c007dcd7b40be9058ce2581e76b9",
+    "receipt_sha256": "53b6b4552ec57881964752a72f17d155d0dc2a4126d41ecd52e22e1aadba5e07"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/characters/shared/v0.2/lilli/es/lilli__es__praise.general__03.wav.extracted.wav",
+    "sha256": "a6533d1a80334988a3466176b37d225c8350e55a07b180f4efb10dcd788f2382"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/assets/audio/characters/shared/v0.2/lilli/es/lilli__es__praise.general__03.wav.delivery.wav",
+    "sha256": "a6533d1a80334988a3466176b37d225c8350e55a07b180f4efb10dcd788f2382"
+  },
+  "extraction": {
+    "schema_version": 1,
+    "algorithm_version": "greia-spoken-carrier-extractor-v7",
+    "comparison_policy": "locale-number-tokens-v1",
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-raw/assets/audio/characters/shared/v0.2/lilli/es/lilli__es__praise.general__03.wav.raw.wav",
+    "source_sha256": "2682f2e46e1b91c9cce56b93c2b473073326c007dcd7b40be9058ce2581e76b9",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/assets/audio/characters/shared/v0.2/lilli/es/lilli__es__praise.general__03.wav.extracted.wav",
+    "output_sha256": "a6533d1a80334988a3466176b37d225c8350e55a07b180f4efb10dcd788f2382",
+    "output_bytes": 70014,
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "¡Muy bien hecho!",
+    "remove_first_words": 5,
+    "ignore_accents": true,
+    "target_verification_requested": "warn",
+    "target_verification_policy": "warn",
+    "target_comparison_score": 0.8111,
+    "target_word_count_matches": true,
+    "target_numbers_match": true,
+    "target_comparison_flags": [],
+    "target_transcript_warning": true,
+    "recognizer": "mlx-whisper-base",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extracted_transcript": "Muy bien, Acho!",
+    "expected_target_tokens": [
+      "muy",
+      "bien",
+      "hecho"
+    ],
+    "extracted_target_tokens": [
+      "muy",
+      "bien",
+      "acho"
+    ],
+    "extracted_target_exact_match": false,
+    "transcription_settings": {
+      "language": "es",
+      "initial_prompt": null,
+      "word_timestamps": true,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "sample_rate": 22050,
+    "duration_seconds": 4.320181405895692,
+    "boundary": {
+      "search_strategy": "target-only-global-quiet-run-v7",
+      "verified_silence_start_seconds": 2.005442176870748,
+      "verified_silence_end_seconds": 2.8335600907029477,
+      "verified_silence_duration_seconds": 0.8281179138321996,
+      "cut_sample": 60275,
+      "cut_time_seconds": 2.733560090702948,
+      "padding_seconds": 0.1,
+      "quiet_run_start_sample": 44220,
+      "quiet_run_end_sample": 62480,
+      "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+    },
+    "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/assets/audio/characters/shared/v0.2/lilli/es/lilli__es__praise.general__03.wav.extracted.wav.search/be5bc6a638f24a69b97c75aee91a90f2",
+    "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/assets/audio/characters/shared/v0.2/lilli/es/lilli__es__praise.general__03.wav.extracted.wav.search/be5bc6a638f24a69b97c75aee91a90f2/search.json",
+    "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-raw/assets/audio/characters/shared/v0.2/lilli/es/lilli__es__praise.general__03.wav.raw.wav.receipt.json",
+    "source_provider_receipt_sha256": "53b6b4552ec57881964752a72f17d155d0dc2a4126d41ecd52e22e1aadba5e07",
+    "candidate_sha256": "a6533d1a80334988a3466176b37d225c8350e55a07b180f4efb10dcd788f2382",
+    "candidate_id": "candidate-01",
+    "candidate_count": 1,
+    "qualifying_quiet_run_count": 1,
+    "candidate_results": [
+      {
+        "candidate_id": "candidate-01",
+        "quiet_run": {
+          "start_sample": 44220,
+          "end_sample": 62480,
+          "start_seconds": 2.005442176870748,
+          "end_seconds": 2.8335600907029477,
+          "duration_seconds": 0.8281179138321996
+        },
+        "cut_sample": 60275,
+        "cut_time_seconds": 2.733560090702948,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/assets/audio/characters/shared/v0.2/lilli/es/lilli__es__praise.general__03.wav.extracted.wav.search/be5bc6a638f24a69b97c75aee91a90f2/candidate-01.wav",
+        "preceding_voiced_seconds": 1.48,
+        "retained_voiced_seconds": 1.17,
+        "retained_duration_seconds": 1.5866213151927437,
+        "candidate_sha256": "a6533d1a80334988a3466176b37d225c8350e55a07b180f4efb10dcd788f2382",
+        "extracted_transcript": "Muy bien, Acho!",
+        "canonical_transcript_tokens": [
+          "muy",
+          "bien",
+          "acho"
+        ],
+        "exact_target_match": false,
+        "target_comparison_score": 0.8111,
+        "target_word_count_matches": true,
+        "target_numbers_match": true,
+        "target_comparison_flags": [],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": true,
+        "asr_segment_count": 1
+      }
+    ],
+    "human_review": "PENDING",
+    "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+    "target_verification_effective_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+    "target_verification_warning": true,
+    "saved_recovery_policy": "target-only-v7-saved-v1",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 0,
+      "removed_seconds": 0.0,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 60275,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/assets/audio/characters/shared/v0.2/lilli/es/lilli__es__praise.general__03.wav.delivery.wav",
+      "sha256": "a6533d1a80334988a3466176b37d225c8350e55a07b180f4efb10dcd788f2382"
+    }
+  },
   "output": {
     "path": "assets/audio/characters/shared/v0.2/lilli/es/lilli__es__praise.general__03.wav",
-    "bytes": 49478,
-    "sha256": "53c50b458505cd1f8ab981e4c2e79f1f1bc3d10ec433f3747f690a389dcf0f44"
+    "sha256": "e64c24edd58a4387b1eb63d5a1a0aa7e8d11fdcb10572227f23320209051c194",
+    "bytes": 70048
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "8cbaa9a63bb7d55674c745e75a683834eea14595a2c81c1b358069ea81248e38",
+    "original_sha256": "53c50b458505cd1f8ab981e4c2e79f1f1bc3d10ec433f3747f690a389dcf0f44",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

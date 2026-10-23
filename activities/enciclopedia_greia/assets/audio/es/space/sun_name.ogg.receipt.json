@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T08:07:03.750888+00:00",
+  "created_utc": "2026-10-21T16:03:37.688857+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "El Sol",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. El Sol",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "El Sol",
+    "cue_id": "encyclopedia.space.sun.name.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "El Sol",
     "cue_id": "encyclopedia.space.sun.name.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/enciclopedia_greia/assets/audio/es/space/sun_name.ogg",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Reveals the name of what we are looking at, like a friendly museum guide: clear, warm wonder, unhurried."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-100658-f3f51844",
-    "idempotency_key": "greia-4cf8da4bf31349359f979038f927421d",
+    "job_id": "20261021-180323-0cc8eddd",
+    "idempotency_key": "greia-7c2993d000074c5aa2a910ecbb47db9b",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,51 +72,205 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 703227939,
+    "script_seed": 1623445044,
     "language_direction": "Spanish",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Reveals the name of what we are looking at, like a friendly museum guide: clear, warm wonder, unhurried.",
-    "effective_delivery": "Speak naturally in Spanish. Leo, a warm, curious cartoon guide. Reveals the name of what we are looking at, like a friendly museum guide: clear, warm wonder, unhurried.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1901324473,
-        "sha256": "6551c482704e65b15963bc60b8803ef669a2d46d95c3093a7df9b86a9a250a75",
+        "seed": 1319203665,
+        "sha256": "67914e94126be268262cfdac68571574b4c1805a6c5d5d32c711fda69c1380bf",
         "generation": {
-          "elapsed_seconds": 4.313249958038796,
+          "elapsed_seconds": 14.020130541990511,
           "model_load_seconds": 0.0,
-          "rtf": 3.8505430364875424,
-          "peak_memory_gb": 7.648602244
+          "rtf": 3.809645543768084,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " el sol.",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/enciclopedia_greia/assets/audio/es/space/sun_name.ogg.raw.wav",
+    "sha256": "ac12966b6b753509d70ebe7aa77938e75b2621d22bcb45b06793ac5cf69afbe0",
+    "receipt_sha256": "40ef9a526c92a494b2862a803d50a83b629ea9bfed86b696b9b6ee51f3132ec5"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/enciclopedia_greia/assets/audio/es/space/sun_name.ogg.extracted.wav",
+    "sha256": "a605d7ae0148d5c0e4cec8145dd43748239533919036a698325c074a607b5881"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/enciclopedia_greia/assets/audio/es/space/sun_name.ogg.raw.wav",
+    "source_sha256": "ac12966b6b753509d70ebe7aa77938e75b2621d22bcb45b06793ac5cf69afbe0",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/enciclopedia_greia/assets/audio/es/space/sun_name.ogg.extracted.wav",
+    "output_sha256": "a605d7ae0148d5c0e4cec8145dd43748239533919036a698325c074a607b5881",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "El Sol",
+      "locale": "es",
+      "cue_id": "encyclopedia.space.sun.name.es",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/enciclopedia_greia/assets/audio/es/space/sun_name.ogg.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "40ef9a526c92a494b2862a803d50a83b629ea9bfed86b696b9b6ee51f3132ec5"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "El Sol",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " escucha esta frase en español. El sol.",
+    "extracted_transcript": " el sol.",
+    "raw_word_alignment": [
+      {
+        "word": "escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.64
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.64,
+        "end_seconds": 0.92
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.92,
+        "end_seconds": 1.32
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.32,
+        "end_seconds": 1.68
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.68,
+        "end_seconds": 2.18
+      },
+      {
+        "word": "el",
+        "start_seconds": 2.88,
+        "end_seconds": 3.16
+      },
+      {
+        "word": "sol",
+        "start_seconds": 3.16,
+        "end_seconds": 3.46
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "el",
+        "start_seconds": 0.0,
+        "end_seconds": 0.6
+      },
+      {
+        "word": "sol",
+        "start_seconds": 0.6,
+        "end_seconds": 0.9
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5404815673828125,
+        "no_speech_prob": 0.037311263382434845,
+        "compression_ratio": 0.8863636363636364,
+        "word_probabilities": [
+          0.75537109375,
+          0.947265625,
+          0.99365234375,
+          0.90869140625,
+          0.9873046875,
+          0.59716796875,
+          0.419189453125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6023432413736979,
+        "no_speech_prob": 0.544183075428009,
+        "compression_ratio": 0.4666666666666667,
+        "word_probabilities": [
+          0.482666015625,
+          0.7626953125
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 56,
+    "extracted_voiced_seconds": 0.56,
+    "unremoved_raw_target_tokens": [
+      "el",
+      "sol"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "el",
+      "sol"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.6801814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 2.18,
+      "target_first_word_start_seconds": 2.88,
+      "gap_seconds": 0.5886621315192744,
+      "verified_silence_start_seconds": 2.2398639455782314,
+      "verified_silence_end_seconds": 2.828526077097506,
+      "gap_rms_dbfs": -64.193,
+      "gap_peak_dbfs": -44.288,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.534195011337869,
+      "cut_sample": 55879,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/enciclopedia_greia/assets/audio/es/space/sun_name.ogg",
-    "bytes": 8669,
-    "sha256": "80fd313b0afc2723dceaaf4acf91330ea7b0fdabe46300d6aea8c42b5ca5f0b1"
+    "sha256": "dcbff68e4d72eb17208c1c6c7e6f6a0038b914fe8aee9e06bcee5409f251f18b",
+    "bytes": 10329
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "e72520d1bf40df99e6c80f6149ab246ebd80a8c7ebd0f53d56098f1f3d00b909",
-    "owner_authorization": "2026-10-19 corpus regeneration; listening pending",
-    "audio_repackaging": {
-      "pipeline": "AudioPipeline",
-      "codec": "libvorbis",
-      "quality": 3,
-      "sample_rate_hz": 22050,
-      "source_mix_sha256": "6551c482704e65b15963bc60b8803ef669a2d46d95c3093a7df9b86a9a250a75",
-      "source_job_id": "20261020-100658-f3f51844",
-      "repackaged_utc": "2026-10-20T22:30:10Z"
-    }
+    "original_sha256": "80fd313b0afc2723dceaaf4acf91330ea7b0fdabe46300d6aea8c42b5ca5f0b1",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

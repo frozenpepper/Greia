@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T14:50:52.427252+00:00",
+  "created_utc": "2026-10-21T17:09:26.460265+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Listen to this phrase in English.",
+    "prefix_word_count": 6,
+    "target": "Coral reef!",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Listen to this phrase in English. Coral reef!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Coral reef!",
+    "cue_id": "sub_creature_coral",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "Coral reef!",
     "cue_id": "sub_creature_coral",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/sottomarino_giramondo/audio/en/sub_creature_coral.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. A short, lively reaction: expressive and clear, one breath, no extra words."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-165033-d5453111",
-    "idempotency_key": "greia-3caef6d05c894ddd8683a7f48aea8271",
+    "job_id": "20261021-190913-3189e8d8",
+    "idempotency_key": "greia-0e913999d398420faa8e53b928fd5ab9",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,218 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 349831059,
+    "script_seed": 2399577014,
     "language_direction": "English",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. A short, lively reaction: expressive and clear, one breath, no extra words.",
-    "effective_delivery": "Speak in English. Leo, a warm, curious cartoon guide. A short, lively reaction: expressive and clear, one breath, no extra words.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in English. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1977242930,
-        "sha256": "17d3ed1d75e2ba1931d72be8a79187b50c8bbf4e59352aa3e927abe8672f7168",
+        "seed": 1211907277,
+        "sha256": "f2178ba4ac2075ceddaf195fec7dcc6f0d0ac6bfc284d7d4c7e2966da07719d8",
         "generation": {
-          "elapsed_seconds": 18.284777917026076,
+          "elapsed_seconds": 12.124992665994796,
           "model_load_seconds": 0.0,
-          "rtf": 11.426795906900995,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.988265774681694,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Kory Reef",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/sottomarino_giramondo/audio/en/sub_creature_coral.wav.raw.wav",
+    "sha256": "8ebe2fccbeeb3bdeeab986b585f1f24a6e10909d6980ce04801331af334ff47b",
+    "receipt_sha256": "2c1c2fe310a6684d65cf16fa165bd6a4165575587a13c2c5049190531428545a"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/sottomarino_giramondo/audio/en/sub_creature_coral.wav.extracted.wav",
+    "sha256": "1f8512cfc0d64a8acaf59f2c97c569363a72efe12d1f46eda8f1b60fd6be37e5"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/sottomarino_giramondo/audio/en/sub_creature_coral.wav.raw.wav",
+    "source_sha256": "8ebe2fccbeeb3bdeeab986b585f1f24a6e10909d6980ce04801331af334ff47b",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/sottomarino_giramondo/audio/en/sub_creature_coral.wav.extracted.wav",
+    "output_sha256": "1f8512cfc0d64a8acaf59f2c97c569363a72efe12d1f46eda8f1b60fd6be37e5",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Coral reef!",
+      "locale": "en",
+      "cue_id": "sub_creature_coral",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/sottomarino_giramondo/audio/en/sub_creature_coral.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "2c1c2fe310a6684d65cf16fa165bd6a4165575587a13c2c5049190531428545a"
+    },
+    "locale": "en",
+    "prefix": "Listen to this phrase in English.",
+    "target": "Coral reef!",
+    "remove_first_words": 6,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Listen to this phrase in English. Coral reef.",
+    "extracted_transcript": " Kory Reef",
+    "raw_word_alignment": [
+      {
+        "word": "listen",
+        "start_seconds": 0.0,
+        "end_seconds": 0.28
+      },
+      {
+        "word": "to",
+        "start_seconds": 0.28,
+        "end_seconds": 0.46
+      },
+      {
+        "word": "this",
+        "start_seconds": 0.46,
+        "end_seconds": 0.58
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.58,
+        "end_seconds": 0.86
+      },
+      {
+        "word": "in",
+        "start_seconds": 0.86,
+        "end_seconds": 1.04
+      },
+      {
+        "word": "english",
+        "start_seconds": 1.04,
+        "end_seconds": 1.42
+      },
+      {
+        "word": "coral",
+        "start_seconds": 1.86,
+        "end_seconds": 2.42
+      },
+      {
+        "word": "reef",
+        "start_seconds": 2.42,
+        "end_seconds": 2.76
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "kory",
+        "start_seconds": 0.0,
+        "end_seconds": 0.7
+      },
+      {
+        "word": "reef",
+        "start_seconds": 0.7,
+        "end_seconds": 1.26
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.4896100163459778,
+        "no_speech_prob": 0.0035542629193514585,
+        "compression_ratio": 0.8490566037735849,
+        "word_probabilities": [
+          0.8212890625,
+          0.9873046875,
+          0.966796875,
+          0.99267578125,
+          0.98095703125,
+          0.98583984375
+        ]
+      },
+      {
+        "avg_logprob": -0.4896100163459778,
+        "no_speech_prob": 0.0035542629193514585,
+        "compression_ratio": 0.8490566037735849,
+        "word_probabilities": [
+          0.53857421875,
+          0.380859375
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -1.0641192027500697,
+        "no_speech_prob": 0.22165624797344208,
+        "compression_ratio": 0.5294117647058824,
+        "word_probabilities": [
+          0.1341552734375,
+          0.60791015625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 59,
+    "extracted_voiced_seconds": 0.59,
+    "unremoved_raw_target_tokens": [
+      "coral",
+      "reef"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "coral",
+      "reef"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.0401814058956917,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.42,
+      "target_first_word_start_seconds": 1.86,
+      "gap_seconds": 0.3292517006802721,
+      "verified_silence_start_seconds": 1.4798639455782312,
+      "verified_silence_end_seconds": 1.8091156462585034,
+      "gap_rms_dbfs": -68.142,
+      "gap_peak_dbfs": -47.702,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.6444897959183673,
+      "cut_sample": 36261,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/sottomarino_giramondo/audio/en/sub_creature_coral.wav",
-    "bytes": 70646,
-    "sha256": "54faeb2308253a22fdbe0c4c5077704d6b1808b1fc6c2c57e9eade1672eb2e58"
+    "sha256": "597e68dd7dec9068e894e1ceac10556a881a48f69df8cbc30b368f042003c519",
+    "bytes": 61628
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "2bd66e212839068e3e0818e260afa5da1661ebbe48d06fb67c46388d7dcc461e",
+    "original_sha256": "54faeb2308253a22fdbe0c4c5077704d6b1808b1fc6c2c57e9eade1672eb2e58",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T08:42:24.190826+00:00",
+  "created_utc": "2026-10-21T15:52:59.388467+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Listen to this phrase in English.",
+    "prefix_word_count": 6,
+    "target": "All better! Bye bye!",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Listen to this phrase in English. All better! Bye bye!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "momo",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "All better! Bye bye!",
+    "cue_id": "greia.requested.all_better.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "All better! Bye bye!",
     "cue_id": "greia.requested.all_better.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/clinica_cuccioli/assets/audio/en/all_better.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.momo.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261021-104214-68576476",
-    "idempotency_key": "greia-e2ed9f9702904345a5313010e761a3c1",
+    "job_id": "20261021-175244-a3810fb3",
+    "idempotency_key": "greia-2107ec28d20e4545bb0d7b31fd1f50a0",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,288 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 4204145078,
+    "script_seed": 3344420806,
     "language_direction": "English",
-    "delivery_prompt": "Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace.",
-    "effective_delivery": "Speak in English. Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in English. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3897013912,
-        "sha256": "4ede40b7339c5c9107c226382de7bb38830c17bca9ee9ef586fcf1deaa8083ab",
+        "seed": 3682851135,
+        "sha256": "6cfd8a636a8eda6fae5b6500270e6b0e26a4d2f54ded7c6ed099a9baa028a83d",
         "generation": {
-          "elapsed_seconds": 8.798350250006479,
+          "elapsed_seconds": 14.184870749988477,
           "model_load_seconds": 0.0,
-          "rtf": 3.436631827357521,
-          "peak_memory_gb": 7.648166916
+          "rtf": 3.693816435915579,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " All better. Bye bye.",
+    "metrics": {
+      "duration_seconds": 2.0714739229024945,
+      "rms_dbfs": -30.36,
+      "peak": 0.25436,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.36,
+      "trailing_silence_seconds": 0.16,
+      "longest_internal_pause_seconds": 0.48
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/clinica_cuccioli/assets/audio/en/all_better.wav.raw.wav",
+    "sha256": "788f727b05205b7de3d4887560050c4ef8268d044a535a5e6e77a22fd37d942f",
+    "receipt_sha256": "924e7664455f44b84fee3426143aea91580f8c47327d793ab9624f71d49afb4a"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/clinica_cuccioli/assets/audio/en/all_better.wav.extracted.wav",
+    "sha256": "c4d342c2c65cf7852c3adfddec190e181d9850bc67d7fea6f2966ab06a9794a3"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/clinica_cuccioli/assets/audio/en/all_better.wav.delivery.wav",
+    "sha256": "2c4bfcf46fb9d923cb79450b5eeb5f000ed53e6e875fd0ea166a59e488a6aa61"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/clinica_cuccioli/assets/audio/en/all_better.wav.raw.wav",
+    "source_sha256": "788f727b05205b7de3d4887560050c4ef8268d044a535a5e6e77a22fd37d942f",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/clinica_cuccioli/assets/audio/en/all_better.wav.extracted.wav",
+    "output_sha256": "c4d342c2c65cf7852c3adfddec190e181d9850bc67d7fea6f2966ab06a9794a3",
+    "target_request": {
+      "speaker": "momo",
+      "kind": "character_dialogue",
+      "text": "All better! Bye bye!",
+      "locale": "en",
+      "cue_id": "greia.requested.all_better.en",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/clinica_cuccioli/assets/audio/en/all_better.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "924e7664455f44b84fee3426143aea91580f8c47327d793ab9624f71d49afb4a"
+    },
+    "locale": "en",
+    "prefix": "Listen to this phrase in English.",
+    "target": "All better! Bye bye!",
+    "remove_first_words": 6,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Listen to this phrase in English. All better. Bye-bye.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " All better. Bye bye.",
+    "raw_word_alignment": [
+      {
+        "word": "listen",
+        "start_seconds": 0.0,
+        "end_seconds": 0.22
+      },
+      {
+        "word": "to",
+        "start_seconds": 0.22,
+        "end_seconds": 0.42
+      },
+      {
+        "word": "this",
+        "start_seconds": 0.42,
+        "end_seconds": 0.58
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.58,
+        "end_seconds": 0.82
+      },
+      {
+        "word": "in",
+        "start_seconds": 0.82,
+        "end_seconds": 1.02
+      },
+      {
+        "word": "english",
+        "start_seconds": 1.02,
+        "end_seconds": 1.3
+      },
+      {
+        "word": "all",
+        "start_seconds": 1.92,
+        "end_seconds": 2.26
+      },
+      {
+        "word": "better",
+        "start_seconds": 2.26,
+        "end_seconds": 2.54
+      },
+      {
+        "word": "bye",
+        "start_seconds": 3.08,
+        "end_seconds": 3.32
+      },
+      {
+        "word": "bye",
+        "start_seconds": 3.32,
+        "end_seconds": 3.52
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "all",
+        "start_seconds": 0.0,
+        "end_seconds": 0.6
+      },
+      {
+        "word": "better",
+        "start_seconds": 0.6,
+        "end_seconds": 0.9
+      },
+      {
+        "word": "bye",
+        "start_seconds": 1.26,
+        "end_seconds": 1.66
+      },
+      {
+        "word": "bye",
+        "start_seconds": 1.66,
+        "end_seconds": 1.86
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.3897450764973958,
+        "no_speech_prob": 0.04442819207906723,
+        "compression_ratio": 0.8709677419354839,
+        "word_probabilities": [
+          0.9345703125,
+          0.998046875,
+          0.9970703125,
+          0.99609375,
+          0.9990234375,
+          0.9951171875
+        ]
+      },
+      {
+        "avg_logprob": -0.3897450764973958,
+        "no_speech_prob": 0.04442819207906723,
+        "compression_ratio": 0.8709677419354839,
+        "word_probabilities": [
+          0.97021484375,
+          0.98974609375
+        ]
+      },
+      {
+        "avg_logprob": -0.3897450764973958,
+        "no_speech_prob": 0.04442819207906723,
+        "compression_ratio": 0.8709677419354839,
+        "word_probabilities": [
+          0.96240234375,
+          0.7158203125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.5249760945638021,
+        "no_speech_prob": 0.18447287380695343,
+        "compression_ratio": 0.7142857142857143,
+        "word_probabilities": [
+          0.68408203125,
+          0.96337890625,
+          0.92822265625,
+          0.41796875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 6,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 100,
+    "extracted_voiced_seconds": 1.0,
+    "unremoved_raw_target_tokens": [
+      "all",
+      "better",
+      "bye",
+      "bye"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "all",
+      "better",
+      "bye",
+      "bye"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.8401814058956916,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.3,
+      "search_end_seconds": 1.92,
+      "prefix_last_word_end_seconds": 1.3,
+      "target_first_word_start_seconds": 1.92,
+      "gap_seconds": 0.39909297052154197,
+      "verified_silence_start_seconds": 1.4696145124716553,
+      "verified_silence_end_seconds": 1.8687074829931973,
+      "gap_rms_dbfs": -56.577,
+      "gap_peak_dbfs": -34.158,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.6691609977324262,
+      "cut_sample": 36805,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 2195,
+      "removed_seconds": 0.09954648526077098,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 39000,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/clinica_cuccioli/assets/audio/en/all_better.wav.delivery.wav",
+      "sha256": "2c4bfcf46fb9d923cb79450b5eeb5f000ed53e6e875fd0ea166a59e488a6aa61"
+    }
+  },
   "output": {
     "path": "activities/clinica_cuccioli/assets/audio/en/all_better.wav",
-    "bytes": 112982,
-    "sha256": "3136c095d25de24d2ad4c7179bc86802e3992ab2065287cdc7719865a9ed8392"
+    "sha256": "682407341a2185a3e40d08805bb1e9fbcaf12232c80adde588e8155eccaa50e2",
+    "bytes": 91430
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "5c4fbc7edce0396db180cebaa207e306e07f87eb51b826406fc9439bf63c3105",
+    "original_sha256": "316e7ec7db50208f0910dc8d068ddca94f715422e102a9a1e9e1c37b1295ea7b",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

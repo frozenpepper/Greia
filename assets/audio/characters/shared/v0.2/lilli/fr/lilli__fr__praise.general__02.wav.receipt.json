@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T19:06:35.541312+00:00",
+  "created_utc": "2026-10-22T10:53:07.435059+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "Super travail !",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français...\n\nSuper travail !",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "lilli",
+    "kind": "shared_character_utterance",
+    "locale": "fr",
+    "text": "Super travail !",
+    "cue_id": "greia.shared.lilli__fr__praise.general__02.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "lilli",
     "kind": "shared_character_utterance",
     "locale": "fr",
     "text": "Super travail !",
     "cue_id": "greia.shared.lilli__fr__praise.general__02.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "assets/audio/characters/shared/v0.2/lilli/fr/lilli__fr__praise.general__02.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.lilli.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "job_id": "20261020-210615-9d79195a",
-    "idempotency_key": "greia-0b4410e509924cb8b91313114d7215f1",
+    "job_id": "20261022-125250-21b141ca",
+    "idempotency_key": "greia-45edf863c8c34c5b903851d326eb2102",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,242 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3961756526,
+    "script_seed": 4038362530,
     "language_direction": "French",
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
-    "effective_delivery": "Speak in French. Lilli, a sparkly, affectionate storybook unicorn. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3984838820,
-        "sha256": "b919e6cf46c45e099f54c3363fcf7282dc0217ddd529c7cef2bf0bf84bde0203",
+        "seed": 215165161,
+        "sha256": "353bc1c7633c281b513441bc0c27b8eed86310084bf29d78bafa447ce44bdb6e",
         "generation": {
-          "elapsed_seconds": 18.924004291999154,
+          "elapsed_seconds": 16.32105358300032,
           "model_load_seconds": 0.0,
-          "rtf": 6.224660147579351,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.9231730098153887,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " Super travail !",
+    "metrics": {
+      "duration_seconds": 1.9913378684807257,
+      "rms_dbfs": -25.72,
+      "peak": 0.25104,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.22,
+      "trailing_silence_seconds": 0.28,
+      "longest_internal_pause_seconds": 0.08
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/characters/shared/v0.2/lilli/fr/lilli__fr__praise.general__02.wav.raw.wav",
+    "sha256": "3ba6740c12720b743e7367d24facd2632f067259f3b461d49fad3a0641596146",
+    "receipt_sha256": "b5664c8d4ad40516675513936c80f0ca8b9b4b149848c7240cd03423b40f6169"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/characters/shared/v0.2/lilli/fr/lilli__fr__praise.general__02.wav.extracted.wav",
+    "sha256": "fd674b88765b5eea7dd4c74dcab6829f08433b2df9537a01292cfeda97bb4edd"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/assets/audio/characters/shared/v0.2/lilli/fr/lilli__fr__praise.general__02.wav.delivery.wav",
+    "sha256": "b3089433bcdabba99dd4a5b18ece9c88c5fb0a2a4ecfdee7feac3711018b9c01"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/assets/audio/characters/shared/v0.2/lilli/fr/lilli__fr__praise.general__02.wav.raw.wav",
+    "source_sha256": "3ba6740c12720b743e7367d24facd2632f067259f3b461d49fad3a0641596146",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/assets/audio/characters/shared/v0.2/lilli/fr/lilli__fr__praise.general__02.wav.extracted.wav",
+    "output_sha256": "fd674b88765b5eea7dd4c74dcab6829f08433b2df9537a01292cfeda97bb4edd",
+    "target_request": {
+      "speaker": "lilli",
+      "kind": "shared_character_utterance",
+      "text": "Super travail !",
+      "locale": "fr",
+      "cue_id": "greia.shared.lilli__fr__praise.general__02.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/assets/audio/characters/shared/v0.2/lilli/fr/lilli__fr__praise.general__02.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "b5664c8d4ad40516675513936c80f0ca8b9b4b149848c7240cd03423b40f6169"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "Super travail !",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français. Super travail !",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Super travail !",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.38
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.38,
+        "end_seconds": 0.66
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.66,
+        "end_seconds": 1.02
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.02,
+        "end_seconds": 1.16
+      },
+      {
+        "word": "français",
+        "start_seconds": 1.16,
+        "end_seconds": 1.76
+      },
+      {
+        "word": "super",
+        "start_seconds": 2.32,
+        "end_seconds": 2.8
+      },
+      {
+        "word": "travail",
+        "start_seconds": 2.8,
+        "end_seconds": 3.48
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "super",
+        "start_seconds": 0.0,
+        "end_seconds": 0.74
+      },
+      {
+        "word": "travail",
+        "start_seconds": 0.74,
+        "end_seconds": 1.42
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.4869540532430013,
+        "no_speech_prob": 0.021346565335989,
+        "compression_ratio": 0.8518518518518519,
+        "word_probabilities": [
+          0.72412109375,
+          0.94677734375,
+          0.92724609375,
+          0.9638671875,
+          0.953125,
+          0.85888671875,
+          0.82080078125,
+          0.469970703125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.5625405311584473,
+        "no_speech_prob": 0.12786509096622467,
+        "compression_ratio": 0.6521739130434783,
+        "word_probabilities": [
+          0.609375,
+          0.8330078125,
+          0.57373046875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 104,
+    "extracted_voiced_seconds": 1.04,
+    "unremoved_raw_target_tokens": [
+      "super",
+      "travail"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "super",
+      "travail"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 4.160181405895692,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.76,
+      "search_end_seconds": 2.32,
+      "prefix_last_word_end_seconds": 1.76,
+      "target_first_word_start_seconds": 2.32,
+      "gap_seconds": 0.309297052154195,
+      "verified_silence_start_seconds": 1.959546485260771,
+      "verified_silence_end_seconds": 2.268843537414966,
+      "gap_rms_dbfs": -63.371,
+      "gap_peak_dbfs": -39.039,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.1141950113378685,
+      "cut_sample": 46618,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 1205,
+      "removed_seconds": 0.054648526077097505,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 47823,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/assets/audio/characters/shared/v0.2/lilli/fr/lilli__fr__praise.general__02.wav.delivery.wav",
+      "sha256": "b3089433bcdabba99dd4a5b18ece9c88c5fb0a2a4ecfdee7feac3711018b9c01"
+    }
+  },
   "output": {
     "path": "assets/audio/characters/shared/v0.2/lilli/fr/lilli__fr__praise.general__02.wav",
-    "bytes": 134150,
-    "sha256": "3d696ba38a7a7303ccf2a4fc799888fdec9a2c663f75ede49fd589917b82cdc5"
+    "sha256": "aadac85ccee52eb389f9d243cb25603dc7957677cb87fe33d2eaa8fc9e68c63e",
+    "bytes": 87896
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "fa291ae4df5de962986fc1dcd61f151e0c8da885a485b26396d227ded4c6e881",
+    "original_sha256": "3d696ba38a7a7303ccf2a4fc799888fdec9a2c663f75ede49fd589917b82cdc5",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

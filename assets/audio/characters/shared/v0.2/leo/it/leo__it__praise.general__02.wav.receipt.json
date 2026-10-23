@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T18:57:52.685567+00:00",
+  "created_utc": "2026-10-21T17:45:14.918475+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "Ottimo lavoro!",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. Ottimo lavoro!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "shared_character_utterance",
+    "locale": "it",
+    "text": "Ottimo lavoro!",
+    "cue_id": "shared.praise.general.02",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "shared_character_utterance",
     "locale": "it",
     "text": "Ottimo lavoro!",
     "cue_id": "shared.praise.general.02",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "assets/audio/characters/shared/v0.2/leo/it/leo__it__praise.general__02.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-205742-2c545137",
-    "idempotency_key": "greia-c485418e795d4575b5e79f789eae8ee8",
+    "job_id": "20261021-194454-b9d74046",
+    "idempotency_key": "greia-4a4b8b401bfe4253a63f3568ff504c74",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,218 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3857206773,
+    "script_seed": 688554243,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
-    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3713213999,
-        "sha256": "b057a41f14f3b1a986a5fe4eb2a4afbcb3f73b97ad4a5e179f10497a643d59f1",
+        "seed": 48114932,
+        "sha256": "c777619e7990a9358b1882504b9ea7e394268cd617ccd742cfd144e764988345",
         "generation": {
-          "elapsed_seconds": 9.251422333007213,
+          "elapsed_seconds": 20.35245095800201,
           "model_load_seconds": 0.0,
-          "rtf": 5.255992235398473,
-          "peak_memory_gb": 8.843167284
+          "rtf": 5.530306858747886,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " ho di molavoro",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/characters/shared/v0.2/leo/it/leo__it__praise.general__02.wav.raw.wav",
+    "sha256": "41537eb9731790285005fc98f7bced6057ba40528862e5af59409bdd8e3dbb12",
+    "receipt_sha256": "771c6e2c247c76dbb33e95a595aac853b5abc850a9e64cc4c2b3ba9dbc879b99"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/characters/shared/v0.2/leo/it/leo__it__praise.general__02.wav.extracted.wav",
+    "sha256": "cb90d80c99bafc48c7e6e473c2c71297b7b1af57d42a2676decddfccbbb57ec0"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/assets/audio/characters/shared/v0.2/leo/it/leo__it__praise.general__02.wav.raw.wav",
+    "source_sha256": "41537eb9731790285005fc98f7bced6057ba40528862e5af59409bdd8e3dbb12",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/assets/audio/characters/shared/v0.2/leo/it/leo__it__praise.general__02.wav.extracted.wav",
+    "output_sha256": "cb90d80c99bafc48c7e6e473c2c71297b7b1af57d42a2676decddfccbbb57ec0",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "shared_character_utterance",
+      "text": "Ottimo lavoro!",
+      "locale": "it",
+      "cue_id": "shared.praise.general.02",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/assets/audio/characters/shared/v0.2/leo/it/leo__it__praise.general__02.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "771c6e2c247c76dbb33e95a595aac853b5abc850a9e64cc4c2b3ba9dbc879b99"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "Ottimo lavoro!",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " ascolta questa frase in italiano. ottimo lavoro!",
+    "extracted_transcript": " ho di molavoro",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.62
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.62,
+        "end_seconds": 0.92
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.92,
+        "end_seconds": 1.22
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.22,
+        "end_seconds": 1.44
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.44,
+        "end_seconds": 1.9
+      },
+      {
+        "word": "ottimo",
+        "start_seconds": 2.7,
+        "end_seconds": 3.06
+      },
+      {
+        "word": "lavoro",
+        "start_seconds": 3.06,
+        "end_seconds": 3.38
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "ho",
+        "start_seconds": 0.0,
+        "end_seconds": 0.54
+      },
+      {
+        "word": "di",
+        "start_seconds": 0.54,
+        "end_seconds": 0.68
+      },
+      {
+        "word": "molavoro",
+        "start_seconds": 0.68,
+        "end_seconds": 1.34
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.6920584510354435,
+        "no_speech_prob": 0.007449713069945574,
+        "compression_ratio": 0.8888888888888888,
+        "word_probabilities": [
+          0.61865234375,
+          0.9560546875,
+          0.5087890625,
+          0.7939453125,
+          0.9560546875
+        ]
+      },
+      {
+        "avg_logprob": -0.6920584510354435,
+        "no_speech_prob": 0.007449713069945574,
+        "compression_ratio": 0.8888888888888888,
+        "word_probabilities": [
+          0.662109375,
+          0.978515625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -1.277348279953003,
+        "no_speech_prob": 0.13639435172080994,
+        "compression_ratio": 0.6363636363636364,
+        "word_probabilities": [
+          0.092529296875,
+          0.075927734375,
+          0.49169921875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 85,
+    "extracted_voiced_seconds": 0.85,
+    "unremoved_raw_target_tokens": [
+      "ottimo",
+      "lavoro"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "ottimo",
+      "lavoro"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.6801814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.9,
+      "target_first_word_start_seconds": 2.7,
+      "gap_seconds": 0.6884353741496598,
+      "verified_silence_start_seconds": 1.9598639455782314,
+      "verified_silence_end_seconds": 2.648299319727891,
+      "gap_rms_dbfs": -61.494,
+      "gap_peak_dbfs": -42.526,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.304081632653061,
+      "cut_sample": 50805,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "assets/audio/characters/shared/v0.2/leo/it/leo__it__praise.general__02.wav",
-    "bytes": 77702,
-    "sha256": "f9a5aef9b07758dab203b05a7182b536389758ed73ff61eeee4e00964af441a4"
+    "sha256": "ff177630fc7590d141f45101ffd457a24fe73eee1e5142048b3f73e32621b29f",
+    "bytes": 60764
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "9aaefd39b7cf63e2ec3858f718a41ab61e023831cf6840965b4359e489780e0f",
+    "original_sha256": "f9a5aef9b07758dab203b05a7182b536389758ed73ff61eeee4e00964af441a4",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

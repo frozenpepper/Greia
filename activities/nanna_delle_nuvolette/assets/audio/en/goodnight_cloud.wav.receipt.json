@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T12:03:43.560305+00:00",
+  "created_utc": "2026-10-21T16:46:50.624660+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Listen to this phrase in English.",
+    "prefix_word_count": 6,
+    "target": "Goodnight, little cloud",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Listen to this phrase in English. Goodnight, little cloud",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "momo",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Goodnight, little cloud",
+    "cue_id": "greia.requested.goodnight_cloud.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "Goodnight, little cloud",
     "cue_id": "greia.requested.goodnight_cloud.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/nanna_delle_nuvolette/assets/audio/en/goodnight_cloud.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Bedtime-quiet: soft, slow and soothing, almost a whisper, warm and calm."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.momo.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261021-140330-fbe6877e",
-    "idempotency_key": "greia-ebc9f3e27ab645699ba03cd7a7b26468",
+    "job_id": "20261021-184637-d5b1a762",
+    "idempotency_key": "greia-230f6e12387841a389bd3d7b40b71ba5",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,246 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3618400934,
+    "script_seed": 1428345755,
     "language_direction": "English",
-    "delivery_prompt": "Bedtime-quiet: soft, slow and soothing, almost a whisper, warm and calm.",
-    "effective_delivery": "Speak in English. Bedtime-quiet: soft, slow and soothing, almost a whisper, warm and calm.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in English. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 53206560,
-        "sha256": "a66faf69ecbf4bbb7cd28eb4651549c5d7dba4008781d789eca1e6a52ec29674",
+        "seed": 296385900,
+        "sha256": "35ab7ab7d6e19badc86db504eb4b6c764ba340d52854ea2fdfd5859fdb88f768",
         "generation": {
-          "elapsed_seconds": 12.895696291001514,
+          "elapsed_seconds": 12.947849250005675,
           "model_load_seconds": 0.0,
-          "rtf": 3.358108491211713,
-          "peak_memory_gb": 7.648166916
+          "rtf": 3.678192107382891,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Good night, little cloud.",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/nanna_delle_nuvolette/assets/audio/en/goodnight_cloud.wav.raw.wav",
+    "sha256": "f8d9c7b6b5baf0059390a69c664896513d981c8eab9937b87935a2df1d3ad33d",
+    "receipt_sha256": "5b2f5e5b430c15597be35e113351b04c4743dbf67fa595a75a2ec9b0a1c3d93d"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/nanna_delle_nuvolette/assets/audio/en/goodnight_cloud.wav.extracted.wav",
+    "sha256": "da33dc9ccdb41de389b1724e319d4293b39d9c765c8d76ea921e1fdd137de565"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/nanna_delle_nuvolette/assets/audio/en/goodnight_cloud.wav.raw.wav",
+    "source_sha256": "f8d9c7b6b5baf0059390a69c664896513d981c8eab9937b87935a2df1d3ad33d",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/nanna_delle_nuvolette/assets/audio/en/goodnight_cloud.wav.extracted.wav",
+    "output_sha256": "da33dc9ccdb41de389b1724e319d4293b39d9c765c8d76ea921e1fdd137de565",
+    "target_request": {
+      "speaker": "momo",
+      "kind": "character_dialogue",
+      "text": "Goodnight, little cloud",
+      "locale": "en",
+      "cue_id": "greia.requested.goodnight_cloud.en",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/nanna_delle_nuvolette/assets/audio/en/goodnight_cloud.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "5b2f5e5b430c15597be35e113351b04c4743dbf67fa595a75a2ec9b0a1c3d93d"
+    },
+    "locale": "en",
+    "prefix": "Listen to this phrase in English.",
+    "target": "Goodnight, little cloud",
+    "remove_first_words": 6,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Listen to this phrase in English. Good night, little cloud.",
+    "extracted_transcript": " Good night, little cloud.",
+    "raw_word_alignment": [
+      {
+        "word": "listen",
+        "start_seconds": 0.0,
+        "end_seconds": 0.36
+      },
+      {
+        "word": "to",
+        "start_seconds": 0.36,
+        "end_seconds": 0.62
+      },
+      {
+        "word": "this",
+        "start_seconds": 0.62,
+        "end_seconds": 0.8
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.8,
+        "end_seconds": 1.1
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.1,
+        "end_seconds": 1.3
+      },
+      {
+        "word": "english",
+        "start_seconds": 1.3,
+        "end_seconds": 1.7
+      },
+      {
+        "word": "good",
+        "start_seconds": 2.26,
+        "end_seconds": 2.3
+      },
+      {
+        "word": "night",
+        "start_seconds": 2.3,
+        "end_seconds": 2.62
+      },
+      {
+        "word": "little",
+        "start_seconds": 2.88,
+        "end_seconds": 3.0
+      },
+      {
+        "word": "cloud",
+        "start_seconds": 3.0,
+        "end_seconds": 3.34
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "good",
+        "start_seconds": 0.0,
+        "end_seconds": 0.36
+      },
+      {
+        "word": "night",
+        "start_seconds": 0.36,
+        "end_seconds": 0.68
+      },
+      {
+        "word": "little",
+        "start_seconds": 0.9,
+        "end_seconds": 1.02
+      },
+      {
+        "word": "cloud",
+        "start_seconds": 1.02,
+        "end_seconds": 1.38
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.38225968678792316,
+        "no_speech_prob": 0.004989263601601124,
+        "compression_ratio": 0.921875,
+        "word_probabilities": [
+          0.85400390625,
+          0.9912109375,
+          0.98779296875,
+          0.99755859375,
+          0.904296875,
+          0.9921875
+        ]
+      },
+      {
+        "avg_logprob": -0.38225968678792316,
+        "no_speech_prob": 0.004989263601601124,
+        "compression_ratio": 0.921875,
+        "word_probabilities": [
+          0.75537109375,
+          0.88232421875,
+          0.921875,
+          0.8466796875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.515735838148329,
+        "no_speech_prob": 0.052649129182100296,
+        "compression_ratio": 0.7575757575757576,
+        "word_probabilities": [
+          0.57177734375,
+          0.953125,
+          0.79931640625,
+          0.89306640625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 79,
+    "extracted_voiced_seconds": 0.79,
+    "unremoved_raw_target_tokens": [
+      "good",
+      "night",
+      "little",
+      "cloud"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "good",
+      "night",
+      "little",
+      "cloud"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.5201814058956917,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.7,
+      "target_first_word_start_seconds": 2.26,
+      "gap_seconds": 0.4090702947845805,
+      "verified_silence_start_seconds": 1.7598639455782312,
+      "verified_silence_end_seconds": 2.1689342403628116,
+      "gap_rms_dbfs": -60.546,
+      "gap_peak_dbfs": -39.159,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.9643990929705213,
+      "cut_sample": 43315,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/nanna_delle_nuvolette/assets/audio/en/goodnight_cloud.wav",
-    "bytes": 169430,
-    "sha256": "762f5fda6fec75e5ac38a11dafd2ebd015c63277eb0ecf04a70dc333238f60df"
+    "sha256": "990282f36f365be9907197b9c423ea531631bade7f5234aafad92a2d6e943c7d",
+    "bytes": 68688
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "69adb4597f3aed6de1feeca380bc45b27b78db9a3b0995223460c340619e1419",
+    "original_sha256": "762f5fda6fec75e5ac38a11dafd2ebd015c63277eb0ecf04a70dc333238f60df",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

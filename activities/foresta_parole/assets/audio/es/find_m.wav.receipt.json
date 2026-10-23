@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:25:35.398676+00:00",
+  "created_utc": "2026-10-21T16:17:05.446021+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "M de Manzana",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. M de Manzana",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "M de Manzana",
+    "cue_id": "foresta_parole.find_m",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "M de Manzana",
     "cue_id": "foresta_parole.find_m",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/foresta_parole/assets/audio/es/find_m.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-142526-b2637c61",
-    "idempotency_key": "greia-5dff23e6b9ed4d5d8c292c17ffac1796",
+    "job_id": "20261021-181649-583e6a00",
+    "idempotency_key": "greia-71c1ba1ad57b414682ee8d752b155e60",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,261 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 4288659687,
+    "script_seed": 475162235,
     "language_direction": "Spanish",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak in Spanish. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1052398837,
-        "sha256": "6dc0791d28a3db77eec6835e53ad3532d40a5848d42cf4666c411b1d5e162993",
+        "seed": 1001050699,
+        "sha256": "e85d276dd8271c6a5ece1cd52114a6156253cb0cb5de2c3c6e6a68f67f0fc4fd",
         "generation": {
-          "elapsed_seconds": 8.850815791985951,
+          "elapsed_seconds": 15.40824837499531,
           "model_load_seconds": 0.0,
-          "rtf": 3.9509630795265016,
-          "peak_memory_gb": 8.44494914
+          "rtf": 4.186834393821469,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " M. de Manzana.",
+    "metrics": {
+      "duration_seconds": 1.1519274376417235,
+      "rms_dbfs": -33.1,
+      "peak": 0.21576,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.16,
+      "trailing_silence_seconds": 0.04,
+      "longest_internal_pause_seconds": 0.0
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/foresta_parole/assets/audio/es/find_m.wav.raw.wav",
+    "sha256": "0f4785a54d38824d8c5c5c9a7a5e7915bf37f6a336f78ca0ad9248c27577b3ae",
+    "receipt_sha256": "48c39ec154dcc1a8d977c65e5a37c4a56df1b7b1ee8497915e391de7dfe2f5c7"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/foresta_parole/assets/audio/es/find_m.wav.extracted.wav",
+    "sha256": "d87a2974936ebb83230ccc593e3d0e5d0c24b1ff3392cc2d8e6b759202abbdc4"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/foresta_parole/assets/audio/es/find_m.wav.delivery.wav",
+    "sha256": "275aafd7fb33835af0f3947989b55412a54cab717b9d9d4448ffd6113c86b70f"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/foresta_parole/assets/audio/es/find_m.wav.raw.wav",
+    "source_sha256": "0f4785a54d38824d8c5c5c9a7a5e7915bf37f6a336f78ca0ad9248c27577b3ae",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/foresta_parole/assets/audio/es/find_m.wav.extracted.wav",
+    "output_sha256": "d87a2974936ebb83230ccc593e3d0e5d0c24b1ff3392cc2d8e6b759202abbdc4",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "M de Manzana",
+      "locale": "es",
+      "cue_id": "foresta_parole.find_m",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/foresta_parole/assets/audio/es/find_m.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "48c39ec154dcc1a8d977c65e5a37c4a56df1b7b1ee8497915e391de7dfe2f5c7"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "M de Manzana",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Escucha esta frase en español. M. de Manzana.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " M. de Manzana.",
+    "raw_word_alignment": [
+      {
+        "word": "escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.46
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.46,
+        "end_seconds": 0.76
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.76,
+        "end_seconds": 1.12
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.12,
+        "end_seconds": 1.44
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.44,
+        "end_seconds": 1.86
+      },
+      {
+        "word": "m",
+        "start_seconds": 2.68,
+        "end_seconds": 2.86
+      },
+      {
+        "word": "de",
+        "start_seconds": 3.0,
+        "end_seconds": 3.04
+      },
+      {
+        "word": "manzana",
+        "start_seconds": 3.04,
+        "end_seconds": 3.56
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "m",
+        "start_seconds": 0.4,
+        "end_seconds": 0.6
+      },
+      {
+        "word": "de",
+        "start_seconds": 0.7,
+        "end_seconds": 0.76
+      },
+      {
+        "word": "manzana",
+        "start_seconds": 0.76,
+        "end_seconds": 1.3
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.49037070023386103,
+        "no_speech_prob": 0.0730530172586441,
+        "compression_ratio": 0.8679245283018868,
+        "word_probabilities": [
+          0.919921875,
+          0.974609375,
+          0.99609375,
+          0.96875,
+          0.94921875
+        ]
+      },
+      {
+        "avg_logprob": -0.49037070023386103,
+        "no_speech_prob": 0.0730530172586441,
+        "compression_ratio": 0.8679245283018868,
+        "word_probabilities": [
+          0.349365234375,
+          0.58642578125,
+          0.8037109375
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6793871879577636,
+        "no_speech_prob": 0.36963436007499695,
+        "compression_ratio": 0.6363636363636364,
+        "word_probabilities": [
+          0.35302734375,
+          0.437744140625,
+          0.8251953125
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 81,
+    "extracted_voiced_seconds": 0.81,
+    "unremoved_raw_target_tokens": [
+      "m",
+      "de",
+      "manzana"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "m",
+      "de",
+      "manzana"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.6801814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.86,
+      "search_end_seconds": 2.68,
+      "prefix_last_word_end_seconds": 1.86,
+      "target_first_word_start_seconds": 2.68,
+      "gap_seconds": 0.7083900226757369,
+      "verified_silence_start_seconds": 1.9198639455782314,
+      "verified_silence_end_seconds": 2.628253968253968,
+      "gap_rms_dbfs": -62.917,
+      "gap_peak_dbfs": -43.54,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.2740589569161,
+      "cut_sample": 50143,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 5605,
+      "removed_seconds": 0.2541950113378685,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 55748,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/foresta_parole/assets/audio/es/find_m.wav.delivery.wav",
+      "sha256": "275aafd7fb33835af0f3947989b55412a54cab717b9d9d4448ffd6113c86b70f"
+    }
+  },
   "output": {
     "path": "activities/foresta_parole/assets/audio/es/find_m.wav",
-    "bytes": 98870,
-    "sha256": "1c4b0d19253dec7ae72478746adb1012cb54ab8f06892637f30d5c7c4338609e"
+    "sha256": "22bd813b0ade1ea1e5d271931f0d54e7579ae9c01edb84020512cfaacf0e6867",
+    "bytes": 50878
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "ec9de6417ba47ee404f1e6878fc178f415cbe11f7bf1990d739fe734179a2d52",
+    "original_sha256": "2f8380f8c70b33e8d36060c79340f290dff66a41003c9c87da05a0a3764a5937",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

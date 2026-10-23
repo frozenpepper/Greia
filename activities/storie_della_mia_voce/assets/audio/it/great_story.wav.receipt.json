@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T17:10:47.550626+00:00",
+  "created_utc": "2026-10-21T17:26:54.729153+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "Che bella storia!",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. Che bella storia!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v4",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "lilli",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Che bella storia!",
+    "cue_id": "greia.requested.great_story.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Che bella storia!",
     "cue_id": "greia.requested.great_story.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/storie_della_mia_voce/assets/audio/it/great_story.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. A happy celebration with the child: joyful, proud and warm. Lively but clear."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.lilli.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "job_id": "20261020-191038-7b520916",
-    "idempotency_key": "greia-12cabbfcb0d9487bbb506ad06978b9ff",
+    "job_id": "20261021-192640-5e6d397a",
+    "idempotency_key": "greia-c664fbfbe87a44ec87b0008cc016bb80",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,254 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2986556371,
+    "script_seed": 2205193704,
     "language_direction": "Italian",
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
-    "effective_delivery": "Speak in Italian. Lilli, a sparkly, affectionate storybook unicorn. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1771320226,
-        "sha256": "737f135fcaf6cde36d6232605f5e200e5215c226682bce54736c499558552e4f",
+        "seed": 4288643375,
+        "sha256": "7d7b87e031df9a7a240566773d7a7a3a9b5b6aed79324ca7595a13d589312b0d",
         "generation": {
-          "elapsed_seconds": 8.696878375019878,
+          "elapsed_seconds": 13.230073041995638,
           "model_load_seconds": 0.0,
-          "rtf": 4.940940275553382,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.5949657285437175,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Che bella storia!",
+    "score": 1.0,
+    "detail": "Exact raw/extracted target token checks; saved audio recovery only; human review pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/storie_della_mia_voce/assets/audio/it/great_story.wav.raw.wav",
+    "sha256": "8bbe8cc19c7186991d1240a92485888809c97e32f255425117e6c770e52c4905",
+    "receipt_sha256": "b3231049bcf38a686a3cabcf57464f94d019d3c5b5ca52a8933c3ca6b27b25ad"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/storie_della_mia_voce/assets/audio/it/great_story.wav.extracted.wav",
+    "sha256": "0747e8747eb0a71a51b6de8ddd2afa070725a67923d5a04373383f8d07ad6406"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v4",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/storie_della_mia_voce/assets/audio/it/great_story.wav.raw.wav",
+    "source_sha256": "8bbe8cc19c7186991d1240a92485888809c97e32f255425117e6c770e52c4905",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/parent-boundary-audit-v4/outputs/2b18d8bfcc4b2d2ec008e3416dfc8a3cea77420f21753174abe8feffb01e192b-proposed.wav",
+    "output_sha256": "0747e8747eb0a71a51b6de8ddd2afa070725a67923d5a04373383f8d07ad6406",
+    "target_request": {
+      "speaker": "lilli",
+      "kind": "character_dialogue",
+      "text": "Che bella storia!",
+      "locale": "it",
+      "cue_id": "greia.requested.great_story.it",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/storie_della_mia_voce/assets/audio/it/great_story.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "b3231049bcf38a686a3cabcf57464f94d019d3c5b5ca52a8933c3ca6b27b25ad"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "Che bella storia!",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " ascolta questa frase in italiano che bella storia",
+    "removed_prefix_transcript": " ascolta questa frase in italiano",
+    "removed_prefix_word_alignment": [
+      {
+        "word": " ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.6
+      },
+      {
+        "word": " questa",
+        "start_seconds": 0.6,
+        "end_seconds": 0.82
+      },
+      {
+        "word": " frase",
+        "start_seconds": 0.82,
+        "end_seconds": 1.2
+      },
+      {
+        "word": " in",
+        "start_seconds": 1.2,
+        "end_seconds": 1.36
+      },
+      {
+        "word": " italiano",
+        "start_seconds": 1.36,
+        "end_seconds": 1.72
+      }
+    ],
+    "extracted_transcript": " Che bella storia!",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.62
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.62,
+        "end_seconds": 0.84
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.84,
+        "end_seconds": 1.2
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.2,
+        "end_seconds": 1.36
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.36,
+        "end_seconds": 1.86
+      },
+      {
+        "word": "che",
+        "start_seconds": 1.86,
+        "end_seconds": 2.58
+      },
+      {
+        "word": "bella",
+        "start_seconds": 2.58,
+        "end_seconds": 2.86
+      },
+      {
+        "word": "storia",
+        "start_seconds": 2.86,
+        "end_seconds": 3.58
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "che",
+        "start_seconds": 0.0,
+        "end_seconds": 0.38
+      },
+      {
+        "word": "bella",
+        "start_seconds": 0.38,
+        "end_seconds": 0.64
+      },
+      {
+        "word": "storia",
+        "start_seconds": 0.64,
+        "end_seconds": 1.3
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5090962409973144,
+        "no_speech_prob": 0.004408391658216715,
+        "compression_ratio": 0.9423076923076923,
+        "word_probabilities": [
+          0.58544921875,
+          0.95751953125,
+          0.89111328125,
+          0.71044921875,
+          0.93212890625,
+          0.60595703125,
+          0.7587890625,
+          0.9345703125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6952477561102973,
+        "no_speech_prob": 0.031322941184043884,
+        "compression_ratio": 0.68,
+        "word_probabilities": [
+          0.438720703125,
+          0.4541015625,
+          0.93359375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 94,
+    "extracted_voiced_seconds": 0.94,
+    "unremoved_raw_target_tokens": [
+      "che",
+      "bella",
+      "storia"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "che",
+      "bella",
+      "storia"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.6801814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "coincident-first-target-span-dual-transcript",
+      "search_end_seconds": 2.58,
+      "prefix_last_word_end_seconds": 1.86,
+      "target_first_word_start_seconds": 1.86,
+      "gap_seconds": 0.4090702947845805,
+      "verified_silence_start_seconds": 2.0196371882086166,
+      "verified_silence_end_seconds": 2.428707482993197,
+      "gap_rms_dbfs": -54.645,
+      "gap_peak_dbfs": -32.545,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.224172335600907,
+      "cut_sample": 49043,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/storie_della_mia_voce/assets/audio/it/great_story.wav",
-    "bytes": 77702,
-    "sha256": "e7dde5fd3b2e12edeb9f13a8e848a8f7f2ea8332df81b0f193215cc41db8ce16"
+    "sha256": "2bbbfca2f597c5cc68809b5ffa02ac4d473a2145da81badc0cacb70800b64872",
+    "bytes": 64288
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "recovery_provenance": {
+    "audit": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/parent-boundary-audit-v4",
+    "no_new_synthesis": true,
+    "original_provider_receipt_sha256": "b3231049bcf38a686a3cabcf57464f94d019d3c5b5ca52a8933c3ca6b27b25ad"
+  },
   "corpus_replacement": {
-    "original_sha256": "136d1b2c3c38cbdae0a3cc8188e2bf8596c15d8694c71e631fee188db100f2f1",
+    "original_sha256": "e7dde5fd3b2e12edeb9f13a8e848a8f7f2ea8332df81b0f193215cc41db8ce16",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

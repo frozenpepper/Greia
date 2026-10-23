@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T08:43:30.968328+00:00",
+  "created_utc": "2026-10-23T01:14:08.113170+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
@@ -8,17 +8,22 @@
     "text": "Tout guéri ! Au revoir !",
     "cue_id": "greia.requested.all_better.fr",
     "output": "activities/clinica_cuccioli/assets/audio/fr/all_better.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace."
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic"
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.momo.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261021-104324-505726c6",
-    "idempotency_key": "greia-120fefb696624b688621caa8ecd758c2",
+    "job_id": "20261023-031353-4dfb499d",
+    "idempotency_key": "greia-1b9ddaa0343d4a62beeb6322ae352d15",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +46,405 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2918218289,
+    "script_seed": 4015269624,
     "language_direction": "French",
-    "delivery_prompt": "Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace.",
-    "effective_delivery": "Speak in French. Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace.",
+    "delivery_prompt": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "effective_delivery": "Speak in French. Lecture chaleureuse et calme. Diction claire et naturelle.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 782863816,
-        "sha256": "15b5b10323b4eee14ae777aa7a5e2fe12d94ff75b4e871cb6aefae250ba2e8da",
+        "seed": 385333394,
+        "sha256": "30410c67ad94470ed64c83da5ca9f9e5a585bf0c08aa49b7b3ae460b5f1150eb",
         "generation": {
-          "elapsed_seconds": 5.920208291994641,
+          "elapsed_seconds": 12.868337457999587,
           "model_load_seconds": 0.0,
-          "rtf": 3.699744792414107,
-          "peak_memory_gb": 7.648166916
+          "rtf": 3.829672374782874,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-audio-parakeet-tdt-v3",
+    "transcript": "Tout guérit. Au revoir.",
+    "score": 0.8966,
+    "detail": "Delivered target transcribed and screened; human listening remains pending",
+    "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+    "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+    "flags": [],
+    "metrics": {
+      "duration_seconds": 1.7201814058956917,
+      "rms_dbfs": -28.49,
+      "peak": 0.267,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.1,
+      "trailing_silence_seconds": 0.08,
+      "longest_internal_pause_seconds": 0.4
+    }
   },
   "attempts": 1,
   "output": {
     "path": "activities/clinica_cuccioli/assets/audio/fr/all_better.wav",
-    "bytes": 70646,
-    "sha256": "a0e2fb6121bf04aba28e557dd25c0cb7ccdb1dfa0e1638269301e51a6e5b2ff9"
+    "bytes": 75938,
+    "sha256": "9b6f4a8b5795f8c1eb59eed3c99b4e954eb319036d2ec6d070254c05315d39a2"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "short_phrase": {
+    "mode": "automatic-carrier",
+    "composition_policy": "natural-context-period-v1",
+    "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/8fabd83f90e840a081540ac3ced66f15",
+    "prefix": "Nous allons parler ensemble.",
+    "composite_text": "Nous allons parler ensemble.\n\nTout guéri ! Au revoir !",
+    "effective_delivery": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "extraction": {
+      "schema_version": 1,
+      "algorithm_version": "greia-spoken-carrier-extractor-v7",
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "status": "EXTRACTED_PENDING_LISTENING",
+      "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/8fabd83f90e840a081540ac3ced66f15/attempt-01/raw.wav",
+      "source_sha256": "30410c67ad94470ed64c83da5ca9f9e5a585bf0c08aa49b7b3ae460b5f1150eb",
+      "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/8fabd83f90e840a081540ac3ced66f15/attempt-01/target.wav",
+      "output_sha256": "058df71ecde04ae14b720ec4aecb2b08f1f1d79950c18c515781ccb568b469d1",
+      "output_bytes": 165180,
+      "locale": "fr",
+      "prefix": "Nous allons parler ensemble.",
+      "target": "Tout guéri ! Au revoir !",
+      "remove_first_words": 4,
+      "ignore_accents": true,
+      "target_verification_requested": "warn",
+      "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+      "target_comparison_score": 0.8966,
+      "target_word_count_matches": true,
+      "target_numbers_match": true,
+      "target_comparison_flags": [],
+      "target_transcript_warning": true,
+      "recognizer": "mlx-audio-parakeet-tdt-v3",
+      "recognizer_version": "0.5.0",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "extracted_transcript": "Tout guérit. Au revoir.",
+      "expected_target_tokens": [
+        "tout",
+        "gueri",
+        "au",
+        "revoir"
+      ],
+      "extracted_target_tokens": [
+        "tout",
+        "guerit",
+        "au",
+        "revoir"
+      ],
+      "extracted_target_exact_match": false,
+      "transcription_settings": {
+        "language_detection": "automatic",
+        "expected_text_prompt": null,
+        "timestamps": "model-provided-token-timestamps"
+      },
+      "sample_rate": 48000,
+      "duration_seconds": 3.3601666666666667,
+      "boundary": {
+        "search_strategy": "target-only-global-quiet-run-v7",
+        "verified_silence_start_seconds": 1.25,
+        "verified_silence_end_seconds": 1.74,
+        "verified_silence_duration_seconds": 0.49,
+        "cut_sample": 78720,
+        "cut_time_seconds": 1.64,
+        "padding_seconds": 0.1,
+        "quiet_run_start_sample": 60000,
+        "quiet_run_end_sample": 83520,
+        "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+      },
+      "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/8fabd83f90e840a081540ac3ced66f15/attempt-01/target.wav.search/86e94d772b6940bebeedfbe0ac0c9f53",
+      "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/8fabd83f90e840a081540ac3ced66f15/attempt-01/target.wav.search/86e94d772b6940bebeedfbe0ac0c9f53/search.json",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/8fabd83f90e840a081540ac3ced66f15/attempt-01/raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "8da9d893a802c6c8bb18bb8e61af67d3e76a43490e25faecc00ee3ce6e3d9444",
+      "candidate_sha256": "058df71ecde04ae14b720ec4aecb2b08f1f1d79950c18c515781ccb568b469d1",
+      "candidate_id": "candidate-01",
+      "candidate_count": 2,
+      "qualifying_quiet_run_count": 2,
+      "candidate_results": [
+        {
+          "candidate_id": "candidate-01",
+          "quiet_run": {
+            "start_sample": 60000,
+            "end_sample": 83520,
+            "start_seconds": 1.25,
+            "end_seconds": 1.74,
+            "duration_seconds": 0.49
+          },
+          "cut_sample": 78720,
+          "cut_time_seconds": 1.64,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/8fabd83f90e840a081540ac3ced66f15/attempt-01/target.wav.search/86e94d772b6940bebeedfbe0ac0c9f53/candidate-01.wav",
+          "preceding_voiced_seconds": 1.18,
+          "retained_voiced_seconds": 1.01,
+          "retained_duration_seconds": 1.7201666666666666,
+          "candidate_sha256": "058df71ecde04ae14b720ec4aecb2b08f1f1d79950c18c515781ccb568b469d1",
+          "extracted_transcript": "Tout guérit. Au revoir.",
+          "canonical_transcript_tokens": [
+            "tout",
+            "guerit",
+            "au",
+            "revoir"
+          ],
+          "exact_target_match": false,
+          "target_comparison_score": 0.8966,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": true,
+          "asr_segment_count": 2
+        },
+        {
+          "candidate_id": "candidate-02",
+          "quiet_run": {
+            "start_sample": 110880,
+            "end_sample": 132000,
+            "start_seconds": 2.31,
+            "end_seconds": 2.75,
+            "duration_seconds": 0.44
+          },
+          "cut_sample": 127200,
+          "cut_time_seconds": 2.65,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/8fabd83f90e840a081540ac3ced66f15/attempt-01/target.wav.search/86e94d772b6940bebeedfbe0ac0c9f53/candidate-02.wav",
+          "preceding_voiced_seconds": 1.74,
+          "retained_voiced_seconds": 0.45,
+          "retained_duration_seconds": 0.7101666666666666,
+          "candidate_sha256": "af120c2c9f5e89474dcb4329f1728ce910d7dbcfb30527ba459579b1c676eec2",
+          "extracted_transcript": "Au revoir.",
+          "canonical_transcript_tokens": [
+            "au",
+            "revoir"
+          ],
+          "exact_target_match": false,
+          "target_comparison_score": 0.6368,
+          "target_word_count_matches": false,
+          "target_numbers_match": true,
+          "target_comparison_flags": [
+            "TARGET_WORD_COUNT_MISMATCH"
+          ],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": false,
+          "asr_segment_count": 1
+        }
+      ],
+      "human_review": "PENDING",
+      "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+      "delivery": {
+        "policy": "verified-carrier-gap-delivery-v1",
+        "removed_frames": 0,
+        "removed_seconds": 0.0,
+        "retained_verified_quiet_seconds": 0.1,
+        "raw_delivery_start_sample": 78720,
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/8fabd83f90e840a081540ac3ced66f15/attempt-01/delivery-target.wav",
+        "sha256": "058df71ecde04ae14b720ec4aecb2b08f1f1d79950c18c515781ccb568b469d1"
+      }
+    },
+    "quality": {
+      "disposition": "PASS",
+      "score": 0.8966,
+      "transcript": "Tout guérit. Au revoir.",
+      "metrics": {
+        "duration_seconds": 1.7201814058956917,
+        "rms_dbfs": -28.49,
+        "peak": 0.267,
+        "clipped_fraction": 0.0,
+        "leading_silence_seconds": 0.1,
+        "trailing_silence_seconds": 0.08,
+        "longest_internal_pause_seconds": 0.4
+      },
+      "flags": [],
+      "ignore_accents": true,
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "detail": "Delivered target transcribed and screened; human listening remains pending"
+    },
+    "history": [
+      {
+        "attempt": 1,
+        "status": "PASS",
+        "quality": {
+          "disposition": "PASS",
+          "score": 0.8966,
+          "transcript": "Tout guérit. Au revoir.",
+          "metrics": {
+            "duration_seconds": 1.7201814058956917,
+            "rms_dbfs": -28.49,
+            "peak": 0.267,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.1,
+            "trailing_silence_seconds": 0.08,
+            "longest_internal_pause_seconds": 0.4
+          },
+          "flags": [],
+          "ignore_accents": true,
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "detail": "Delivered target transcribed and screened; human listening remains pending"
+        },
+        "extraction": {
+          "schema_version": 1,
+          "algorithm_version": "greia-spoken-carrier-extractor-v7",
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "status": "EXTRACTED_PENDING_LISTENING",
+          "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/8fabd83f90e840a081540ac3ced66f15/attempt-01/raw.wav",
+          "source_sha256": "30410c67ad94470ed64c83da5ca9f9e5a585bf0c08aa49b7b3ae460b5f1150eb",
+          "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/8fabd83f90e840a081540ac3ced66f15/attempt-01/target.wav",
+          "output_sha256": "058df71ecde04ae14b720ec4aecb2b08f1f1d79950c18c515781ccb568b469d1",
+          "output_bytes": 165180,
+          "locale": "fr",
+          "prefix": "Nous allons parler ensemble.",
+          "target": "Tout guéri ! Au revoir !",
+          "remove_first_words": 4,
+          "ignore_accents": true,
+          "target_verification_requested": "warn",
+          "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+          "target_comparison_score": 0.8966,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_transcript_warning": true,
+          "recognizer": "mlx-audio-parakeet-tdt-v3",
+          "recognizer_version": "0.5.0",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "extracted_transcript": "Tout guérit. Au revoir.",
+          "expected_target_tokens": [
+            "tout",
+            "gueri",
+            "au",
+            "revoir"
+          ],
+          "extracted_target_tokens": [
+            "tout",
+            "guerit",
+            "au",
+            "revoir"
+          ],
+          "extracted_target_exact_match": false,
+          "transcription_settings": {
+            "language_detection": "automatic",
+            "expected_text_prompt": null,
+            "timestamps": "model-provided-token-timestamps"
+          },
+          "sample_rate": 48000,
+          "duration_seconds": 3.3601666666666667,
+          "boundary": {
+            "search_strategy": "target-only-global-quiet-run-v7",
+            "verified_silence_start_seconds": 1.25,
+            "verified_silence_end_seconds": 1.74,
+            "verified_silence_duration_seconds": 0.49,
+            "cut_sample": 78720,
+            "cut_time_seconds": 1.64,
+            "padding_seconds": 0.1,
+            "quiet_run_start_sample": 60000,
+            "quiet_run_end_sample": 83520,
+            "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+          },
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/8fabd83f90e840a081540ac3ced66f15/attempt-01/target.wav.search/86e94d772b6940bebeedfbe0ac0c9f53",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/8fabd83f90e840a081540ac3ced66f15/attempt-01/target.wav.search/86e94d772b6940bebeedfbe0ac0c9f53/search.json",
+          "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/8fabd83f90e840a081540ac3ced66f15/attempt-01/raw.wav.receipt.json",
+          "source_provider_receipt_sha256": "8da9d893a802c6c8bb18bb8e61af67d3e76a43490e25faecc00ee3ce6e3d9444",
+          "candidate_sha256": "058df71ecde04ae14b720ec4aecb2b08f1f1d79950c18c515781ccb568b469d1",
+          "candidate_id": "candidate-01",
+          "candidate_count": 2,
+          "qualifying_quiet_run_count": 2,
+          "candidate_results": [
+            {
+              "candidate_id": "candidate-01",
+              "quiet_run": {
+                "start_sample": 60000,
+                "end_sample": 83520,
+                "start_seconds": 1.25,
+                "end_seconds": 1.74,
+                "duration_seconds": 0.49
+              },
+              "cut_sample": 78720,
+              "cut_time_seconds": 1.64,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/8fabd83f90e840a081540ac3ced66f15/attempt-01/target.wav.search/86e94d772b6940bebeedfbe0ac0c9f53/candidate-01.wav",
+              "preceding_voiced_seconds": 1.18,
+              "retained_voiced_seconds": 1.01,
+              "retained_duration_seconds": 1.7201666666666666,
+              "candidate_sha256": "058df71ecde04ae14b720ec4aecb2b08f1f1d79950c18c515781ccb568b469d1",
+              "extracted_transcript": "Tout guérit. Au revoir.",
+              "canonical_transcript_tokens": [
+                "tout",
+                "guerit",
+                "au",
+                "revoir"
+              ],
+              "exact_target_match": false,
+              "target_comparison_score": 0.8966,
+              "target_word_count_matches": true,
+              "target_numbers_match": true,
+              "target_comparison_flags": [],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": true,
+              "asr_segment_count": 2
+            },
+            {
+              "candidate_id": "candidate-02",
+              "quiet_run": {
+                "start_sample": 110880,
+                "end_sample": 132000,
+                "start_seconds": 2.31,
+                "end_seconds": 2.75,
+                "duration_seconds": 0.44
+              },
+              "cut_sample": 127200,
+              "cut_time_seconds": 2.65,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/8fabd83f90e840a081540ac3ced66f15/attempt-01/target.wav.search/86e94d772b6940bebeedfbe0ac0c9f53/candidate-02.wav",
+              "preceding_voiced_seconds": 1.74,
+              "retained_voiced_seconds": 0.45,
+              "retained_duration_seconds": 0.7101666666666666,
+              "candidate_sha256": "af120c2c9f5e89474dcb4329f1728ce910d7dbcfb30527ba459579b1c676eec2",
+              "extracted_transcript": "Au revoir.",
+              "canonical_transcript_tokens": [
+                "au",
+                "revoir"
+              ],
+              "exact_target_match": false,
+              "target_comparison_score": 0.6368,
+              "target_word_count_matches": false,
+              "target_numbers_match": true,
+              "target_comparison_flags": [
+                "TARGET_WORD_COUNT_MISMATCH"
+              ],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": false,
+              "asr_segment_count": 1
+            }
+          ],
+          "human_review": "PENDING",
+          "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+          "delivery": {
+            "policy": "verified-carrier-gap-delivery-v1",
+            "removed_frames": 0,
+            "removed_seconds": 0.0,
+            "retained_verified_quiet_seconds": 0.1,
+            "raw_delivery_start_sample": 78720,
+            "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/8fabd83f90e840a081540ac3ced66f15/attempt-01/delivery-target.wav",
+            "sha256": "058df71ecde04ae14b720ec4aecb2b08f1f1d79950c18c515781ccb568b469d1"
+          }
+        },
+        "candidate": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/8fabd83f90e840a081540ac3ced66f15/attempt-01/candidate.wav"
+      }
+    ]
+  },
   "corpus_replacement": {
-    "original_sha256": "553e54c0f6e32f36f9926d33cd9fd30f1e5674d1842c03b25a695a41ba5f2768",
+    "original_sha256": "af55d3a7dab89243d2ec2d734a08423c63f587be0fda7a50354f443572f2aca8",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

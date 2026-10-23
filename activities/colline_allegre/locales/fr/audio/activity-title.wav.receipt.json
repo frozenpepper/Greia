@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T08:45:37.266315+00:00",
+  "created_utc": "2026-10-23T03:54:45.154116+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
@@ -8,17 +8,22 @@
     "text": "Collines rigolotes",
     "cue_id": "colline_allegre.title.fr",
     "output": "activities/colline_allegre/locales/fr/audio/activity-title.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic"
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.tito.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261021-104532-7a810847",
-    "idempotency_key": "greia-d98117fdac8e48019cdfe06df43a9057",
+    "job_id": "20261023-031500-999b72be",
+    "idempotency_key": "greia-45f5c8857bf441c284dc53a5d2b47fb7",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +46,95 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3243228701,
+    "script_seed": 2917378587,
     "language_direction": "French",
-    "delivery_prompt": "Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "effective_delivery": "Speak in French. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "delivery_prompt": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "effective_delivery": "Speak in French. Lecture chaleureuse et calme. Diction claire et naturelle.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 708851321,
-        "sha256": "df930df175b4d5dfc4f5f2c4cabff86368a66d243caf075446fca5bcc40cb460",
+        "seed": 3934746313,
+        "sha256": "729afe131d2b3f8e2374b4ca3d91b08b028aaac60b01a86be43acc5639c1ab12",
         "generation": {
-          "elapsed_seconds": 4.268882958000177,
+          "elapsed_seconds": 14.22736916600843,
           "model_load_seconds": 0.0,
-          "rtf": 3.8109355375689713,
-          "peak_memory_gb": 7.648166916
+          "rtf": 3.8659578368756207,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "FAIL",
+    "verifier_id": "mlx-audio-parakeet-tdt-v3",
+    "transcript": "Collin rigolot.",
+    "score": 0.5687,
+    "detail": "Candidate extraction screening only; not packaged acceptance. Human listening pending.",
+    "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+    "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+    "flags": [],
+    "metrics": {
+      "automated_status": "FAIL",
+      "takeboard_kind": "extracted_target_candidate"
+    }
   },
-  "attempts": 1,
+  "attempts": 2,
   "output": {
     "path": "activities/colline_allegre/locales/fr/audio/activity-title.wav",
-    "bytes": 49478,
-    "sha256": "1e953df97ba3c53ba7adb13ed00b355dae3287395e570ad65b3934e5f5d14a37"
+    "bytes": 60062,
+    "sha256": "17ac85eb7b72b9ca32ce3fdd33196f121f49c34eaecf708c4dceebe93d5cc243"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
-  "corpus_replacement": {
-    "original_sha256": "440ee6e9cce3d23cea27efb5878f69341b06f747fd2ed466e0faad566ae0884b",
-    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by owner in Takeboard batch 8818; saved state and exact selected target retained.",
+  "human_review_provenance": {
+    "batch_id": "greia-natural-parakeet-full237-2026-10-23-v1",
+    "review_file": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/takeboard-listening.reviewed.json",
+    "review_file_sha256": "1b5499b5d84eca9091a3d876f5bda4e01da18438878be6ba9b7b1759bf401d85",
+    "record_id": "5e89fffc5514-a02-cut-candidate-01",
+    "decision": "approved",
+    "reviewer": "",
+    "score": null,
+    "notes": "",
+    "updated_at": "2026-10-23T03:54:45.154116+00:00",
+    "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/8429bfa6dc694990b69ead0c25094a24/attempt-02/target.wav.search/3dbd320e93dc486ea7c9c90d15060652/candidate-01.wav",
+    "candidate_sha256": "2149677ffb8de5556c31b9ec3d7ee06af6d2675a1d081577a387fe5b0de2457b",
+    "candidate_kind": "extracted_target_candidate",
+    "source_raw_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/8429bfa6dc694990b69ead0c25094a24/attempt-02/raw.wav",
+    "source_raw_sha256": "729afe131d2b3f8e2374b4ca3d91b08b028aaac60b01a86be43acc5639c1ab12",
+    "source_raw_receipt_sha256": "fcf5f9d9a109a936a2df2d80c27234b62f2f64e9c7bca65f2b9764570d430068",
+    "job_id": "20261023-031500-999b72be",
+    "parakeet_model": "mlx-community/parakeet-tdt-0.6b-v3",
+    "parakeet_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+    "automated_status": "FAIL",
+    "automated_transcript": "Collin rigolot.",
+    "automated_score": 0.5687,
+    "automated_flags": []
+  },
+  "source_generation": {
+    "request_text": "Nous allons parler ensemble.\n\nCollines rigolotes",
+    "semantic_target": "Collines rigolotes",
+    "carrier_prefix": "Nous allons parler ensemble.",
+    "candidate_id": "candidate-01",
+    "candidate_kind": "extracted_target_candidate",
+    "search_witness_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/8429bfa6dc694990b69ead0c25094a24/attempt-02/target.wav.search/3dbd320e93dc486ea7c9c90d15060652/search.json",
+    "search_witness_sha256": "2c73af4f475cd966f4cee945250bcf7b0b3edc5f515930599da0e4ab85ca4b4e",
+    "raw_audio_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/8429bfa6dc694990b69ead0c25094a24/attempt-02/raw.wav",
+    "raw_audio_sha256": "729afe131d2b3f8e2374b4ca3d91b08b028aaac60b01a86be43acc5639c1ab12",
+    "raw_receipt_sha256": "fcf5f9d9a109a936a2df2d80c27234b62f2f64e9c7bca65f2b9764570d430068"
+  },
+  "delivery_format_normalization": {
+    "policy": "approved-source-to-canonical-pcm-v1",
+    "source_audio_sha256": "2149677ffb8de5556c31b9ec3d7ee06af6d2675a1d081577a387fe5b0de2457b",
+    "source_sample_rate_hz": 48000,
+    "target_sample_rate_hz": 22050,
+    "channels": 1,
+    "sample_width_bits": 16,
+    "packaged_utc": "2026-10-23T14:48:46.015496+00:00",
+    "original_generation_and_review_unchanged": true,
+    "prior_machine_verification_applies_to_source_audio_sha256": "2149677ffb8de5556c31b9ec3d7ee06af6d2675a1d081577a387fe5b0de2457b",
+    "no_synthesis_or_asr": true
   }
 }

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:55:20.429402+00:00",
+  "created_utc": "2026-10-23T01:42:41.533935+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
@@ -8,17 +8,22 @@
     "text": "Laberinto mágico",
     "cue_id": "labirinto_magico.title.es",
     "output": "activities/labirinto_magico/locales/es/audio/activity-title.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Lectura cálida y tranquila. Pronunciación clara y natural.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic"
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-145509-a07cbd2f",
-    "idempotency_key": "greia-9ce161372524490a8cdf9ba88cb6a6d3",
+    "job_id": "20261023-034228-14786254",
+    "idempotency_key": "greia-6930148709704e5c8bc8ca97645c5a6e",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +46,327 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1540977445,
+    "script_seed": 3104371885,
     "language_direction": "Spanish",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "effective_delivery": "Speak in Spanish. Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "delivery_prompt": "Lectura cálida y tranquila. Pronunciación clara y natural.",
+    "effective_delivery": "Speak in Spanish. Lectura cálida y tranquila. Pronunciación clara y natural.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1057944668,
-        "sha256": "6c972859aade5bff86c884a9fdec03322e06d8d525b36c2a5b8967b23b0a338f",
+        "seed": 3876560565,
+        "sha256": "f47eb9ce6034a38eb09d0be1e8858aadcc84fe2891ceaf8b33c928883667d83d",
         "generation": {
-          "elapsed_seconds": 8.952669374994002,
+          "elapsed_seconds": 11.854554917023052,
           "model_load_seconds": 0.0,
-          "rtf": 6.2164120182807565,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.704355476388642,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-audio-parakeet-tdt-v3",
+    "transcript": "Laberinto mágico.",
+    "score": 1.0,
+    "detail": "Delivered target transcribed and screened; human listening remains pending",
+    "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+    "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+    "flags": [],
+    "metrics": {
+      "duration_seconds": 1.650204081632653,
+      "rms_dbfs": -36.0,
+      "peak": 0.11487,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.1,
+      "trailing_silence_seconds": 0.16,
+      "longest_internal_pause_seconds": 0.06
+    }
   },
   "attempts": 1,
   "output": {
     "path": "activities/labirinto_magico/locales/es/audio/activity-title.wav",
-    "bytes": 63590,
-    "sha256": "d8fe3bc1ca75e743464de26859f4754eb4f00253fd67e67df8d6f6290546291d"
+    "bytes": 72852,
+    "sha256": "444a7262037a1d2b39ffb3f54a4e57c994f0c10090645bd5a0fb3867d343b0ed"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "short_phrase": {
+    "mode": "automatic-carrier",
+    "composition_policy": "natural-context-period-v1",
+    "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0c0e4405ab00428d82ff3394ef0d6b3b",
+    "prefix": "Vamos a hablar con calma.",
+    "composite_text": "Vamos a hablar con calma.\n\nLaberinto mágico",
+    "effective_delivery": "Lectura cálida y tranquila. Pronunciación clara y natural.",
+    "extraction": {
+      "schema_version": 1,
+      "algorithm_version": "greia-spoken-carrier-extractor-v7",
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "status": "EXTRACTED_PENDING_LISTENING",
+      "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0c0e4405ab00428d82ff3394ef0d6b3b/attempt-01/raw.wav",
+      "source_sha256": "f47eb9ce6034a38eb09d0be1e8858aadcc84fe2891ceaf8b33c928883667d83d",
+      "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0c0e4405ab00428d82ff3394ef0d6b3b/attempt-01/target.wav",
+      "output_sha256": "c19d9b58bc5b165840f36d23a83bb4b2e9dfd478f220de0ad20c2f4253737242",
+      "output_bytes": 158460,
+      "locale": "es",
+      "prefix": "Vamos a hablar con calma.",
+      "target": "Laberinto mágico",
+      "remove_first_words": 5,
+      "ignore_accents": true,
+      "target_verification_requested": "warn",
+      "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+      "target_comparison_score": 1.0,
+      "target_word_count_matches": true,
+      "target_numbers_match": true,
+      "target_comparison_flags": [],
+      "target_transcript_warning": false,
+      "recognizer": "mlx-audio-parakeet-tdt-v3",
+      "recognizer_version": "0.5.0",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "extracted_transcript": "Laberinto mágico.",
+      "expected_target_tokens": [
+        "laberinto",
+        "magiko"
+      ],
+      "extracted_target_tokens": [
+        "laberinto",
+        "magiko"
+      ],
+      "extracted_target_exact_match": true,
+      "transcription_settings": {
+        "language_detection": "automatic",
+        "expected_text_prompt": null,
+        "timestamps": "model-provided-token-timestamps"
+      },
+      "sample_rate": 48000,
+      "duration_seconds": 3.2001666666666666,
+      "boundary": {
+        "search_strategy": "target-only-global-quiet-run-v7",
+        "verified_silence_start_seconds": 1.13,
+        "verified_silence_end_seconds": 1.65,
+        "verified_silence_duration_seconds": 0.52,
+        "cut_sample": 74400,
+        "cut_time_seconds": 1.55,
+        "padding_seconds": 0.1,
+        "quiet_run_start_sample": 54240,
+        "quiet_run_end_sample": 79200,
+        "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+      },
+      "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0c0e4405ab00428d82ff3394ef0d6b3b/attempt-01/target.wav.search/9f2e21bbf1dc483493725ab6f4d3a111",
+      "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0c0e4405ab00428d82ff3394ef0d6b3b/attempt-01/target.wav.search/9f2e21bbf1dc483493725ab6f4d3a111/search.json",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0c0e4405ab00428d82ff3394ef0d6b3b/attempt-01/raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "b17c41361906fb392e92431afbdd339acca3c7527b0cf10552365566e323b5ac",
+      "candidate_sha256": "c19d9b58bc5b165840f36d23a83bb4b2e9dfd478f220de0ad20c2f4253737242",
+      "candidate_id": "candidate-01",
+      "candidate_count": 1,
+      "qualifying_quiet_run_count": 1,
+      "candidate_results": [
+        {
+          "candidate_id": "candidate-01",
+          "quiet_run": {
+            "start_sample": 54240,
+            "end_sample": 79200,
+            "start_seconds": 1.13,
+            "end_seconds": 1.65,
+            "duration_seconds": 0.52
+          },
+          "cut_sample": 74400,
+          "cut_time_seconds": 1.55,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0c0e4405ab00428d82ff3394ef0d6b3b/attempt-01/target.wav.search/9f2e21bbf1dc483493725ab6f4d3a111/candidate-01.wav",
+          "preceding_voiced_seconds": 0.89,
+          "retained_voiced_seconds": 1.04,
+          "retained_duration_seconds": 1.6501666666666666,
+          "candidate_sha256": "c19d9b58bc5b165840f36d23a83bb4b2e9dfd478f220de0ad20c2f4253737242",
+          "extracted_transcript": "Laberinto mágico.",
+          "canonical_transcript_tokens": [
+            "laberinto",
+            "magiko"
+          ],
+          "exact_target_match": true,
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": true,
+          "asr_segment_count": 1
+        }
+      ],
+      "human_review": "PENDING",
+      "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+      "delivery": {
+        "policy": "verified-carrier-gap-delivery-v1",
+        "removed_frames": 0,
+        "removed_seconds": 0.0,
+        "retained_verified_quiet_seconds": 0.1,
+        "raw_delivery_start_sample": 74400,
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0c0e4405ab00428d82ff3394ef0d6b3b/attempt-01/delivery-target.wav",
+        "sha256": "c19d9b58bc5b165840f36d23a83bb4b2e9dfd478f220de0ad20c2f4253737242"
+      }
+    },
+    "quality": {
+      "disposition": "PASS",
+      "score": 1.0,
+      "transcript": "Laberinto mágico.",
+      "metrics": {
+        "duration_seconds": 1.650204081632653,
+        "rms_dbfs": -36.0,
+        "peak": 0.11487,
+        "clipped_fraction": 0.0,
+        "leading_silence_seconds": 0.1,
+        "trailing_silence_seconds": 0.16,
+        "longest_internal_pause_seconds": 0.06
+      },
+      "flags": [],
+      "ignore_accents": true,
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "detail": "Delivered target transcribed and screened; human listening remains pending"
+    },
+    "history": [
+      {
+        "attempt": 1,
+        "status": "PASS",
+        "quality": {
+          "disposition": "PASS",
+          "score": 1.0,
+          "transcript": "Laberinto mágico.",
+          "metrics": {
+            "duration_seconds": 1.650204081632653,
+            "rms_dbfs": -36.0,
+            "peak": 0.11487,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.1,
+            "trailing_silence_seconds": 0.16,
+            "longest_internal_pause_seconds": 0.06
+          },
+          "flags": [],
+          "ignore_accents": true,
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "detail": "Delivered target transcribed and screened; human listening remains pending"
+        },
+        "extraction": {
+          "schema_version": 1,
+          "algorithm_version": "greia-spoken-carrier-extractor-v7",
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "status": "EXTRACTED_PENDING_LISTENING",
+          "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0c0e4405ab00428d82ff3394ef0d6b3b/attempt-01/raw.wav",
+          "source_sha256": "f47eb9ce6034a38eb09d0be1e8858aadcc84fe2891ceaf8b33c928883667d83d",
+          "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0c0e4405ab00428d82ff3394ef0d6b3b/attempt-01/target.wav",
+          "output_sha256": "c19d9b58bc5b165840f36d23a83bb4b2e9dfd478f220de0ad20c2f4253737242",
+          "output_bytes": 158460,
+          "locale": "es",
+          "prefix": "Vamos a hablar con calma.",
+          "target": "Laberinto mágico",
+          "remove_first_words": 5,
+          "ignore_accents": true,
+          "target_verification_requested": "warn",
+          "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_transcript_warning": false,
+          "recognizer": "mlx-audio-parakeet-tdt-v3",
+          "recognizer_version": "0.5.0",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "extracted_transcript": "Laberinto mágico.",
+          "expected_target_tokens": [
+            "laberinto",
+            "magiko"
+          ],
+          "extracted_target_tokens": [
+            "laberinto",
+            "magiko"
+          ],
+          "extracted_target_exact_match": true,
+          "transcription_settings": {
+            "language_detection": "automatic",
+            "expected_text_prompt": null,
+            "timestamps": "model-provided-token-timestamps"
+          },
+          "sample_rate": 48000,
+          "duration_seconds": 3.2001666666666666,
+          "boundary": {
+            "search_strategy": "target-only-global-quiet-run-v7",
+            "verified_silence_start_seconds": 1.13,
+            "verified_silence_end_seconds": 1.65,
+            "verified_silence_duration_seconds": 0.52,
+            "cut_sample": 74400,
+            "cut_time_seconds": 1.55,
+            "padding_seconds": 0.1,
+            "quiet_run_start_sample": 54240,
+            "quiet_run_end_sample": 79200,
+            "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+          },
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0c0e4405ab00428d82ff3394ef0d6b3b/attempt-01/target.wav.search/9f2e21bbf1dc483493725ab6f4d3a111",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0c0e4405ab00428d82ff3394ef0d6b3b/attempt-01/target.wav.search/9f2e21bbf1dc483493725ab6f4d3a111/search.json",
+          "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0c0e4405ab00428d82ff3394ef0d6b3b/attempt-01/raw.wav.receipt.json",
+          "source_provider_receipt_sha256": "b17c41361906fb392e92431afbdd339acca3c7527b0cf10552365566e323b5ac",
+          "candidate_sha256": "c19d9b58bc5b165840f36d23a83bb4b2e9dfd478f220de0ad20c2f4253737242",
+          "candidate_id": "candidate-01",
+          "candidate_count": 1,
+          "qualifying_quiet_run_count": 1,
+          "candidate_results": [
+            {
+              "candidate_id": "candidate-01",
+              "quiet_run": {
+                "start_sample": 54240,
+                "end_sample": 79200,
+                "start_seconds": 1.13,
+                "end_seconds": 1.65,
+                "duration_seconds": 0.52
+              },
+              "cut_sample": 74400,
+              "cut_time_seconds": 1.55,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0c0e4405ab00428d82ff3394ef0d6b3b/attempt-01/target.wav.search/9f2e21bbf1dc483493725ab6f4d3a111/candidate-01.wav",
+              "preceding_voiced_seconds": 0.89,
+              "retained_voiced_seconds": 1.04,
+              "retained_duration_seconds": 1.6501666666666666,
+              "candidate_sha256": "c19d9b58bc5b165840f36d23a83bb4b2e9dfd478f220de0ad20c2f4253737242",
+              "extracted_transcript": "Laberinto mágico.",
+              "canonical_transcript_tokens": [
+                "laberinto",
+                "magiko"
+              ],
+              "exact_target_match": true,
+              "target_comparison_score": 1.0,
+              "target_word_count_matches": true,
+              "target_numbers_match": true,
+              "target_comparison_flags": [],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": true,
+              "asr_segment_count": 1
+            }
+          ],
+          "human_review": "PENDING",
+          "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+          "delivery": {
+            "policy": "verified-carrier-gap-delivery-v1",
+            "removed_frames": 0,
+            "removed_seconds": 0.0,
+            "retained_verified_quiet_seconds": 0.1,
+            "raw_delivery_start_sample": 74400,
+            "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0c0e4405ab00428d82ff3394ef0d6b3b/attempt-01/delivery-target.wav",
+            "sha256": "c19d9b58bc5b165840f36d23a83bb4b2e9dfd478f220de0ad20c2f4253737242"
+          }
+        },
+        "candidate": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0c0e4405ab00428d82ff3394ef0d6b3b/attempt-01/candidate.wav"
+      }
+    ]
+  },
   "corpus_replacement": {
-    "original_sha256": "dae4bf47b39b5b6818c4501d9f4a4bf553ef4400498747f20c7f6e6473f8bba1",
+    "original_sha256": "1ab99b79cf890db52db271a25480d956940b0ae79858ae7eea2177015f081c5a",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

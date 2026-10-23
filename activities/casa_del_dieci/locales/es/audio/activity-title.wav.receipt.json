@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T02:48:36.403770+00:00",
+  "created_utc": "2026-10-22T04:25:25.444809+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "La casa del diez",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español...\n\nLa casa del diez",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "La casa del diez",
+    "cue_id": "greia.titles.activity-title.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "La casa del diez",
     "cue_id": "greia.titles.activity-title.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/casa_del_dieci/locales/es/audio/activity-title.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-044824-403f9c02",
-    "idempotency_key": "greia-c170954c6cd043049b2d1853d39426d7",
+    "job_id": "20261022-062456-5e26c7fd",
+    "idempotency_key": "greia-eca5e92a466b41108c1ecff3816b87a0",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,223 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3392104879,
+    "script_seed": 868139342,
     "language_direction": "Spanish",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "effective_delivery": "Speak naturally in Spanish. Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2017891416,
-        "sha256": "90a378ed74384e604ac788daf65691df098b2e777d980158968de5c13ffbb8a4",
+        "seed": 2413163381,
+        "sha256": "f2ff2d5582405fcf17c65d185e0cd5f74f677e0fba5ad2925ce5e67716de0bf5",
         "generation": {
-          "elapsed_seconds": 10.15095066698268,
+          "elapsed_seconds": 26.783165667002322,
           "model_load_seconds": 0.0,
-          "rtf": 7.048455503054749,
-          "peak_memory_gb": 6.4672804
+          "rtf": 4.9232252076227425,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": "la casa del 10",
+    "metrics": {
+      "duration_seconds": 1.3995918367346938,
+      "rms_dbfs": -39.06,
+      "peak": 0.08762,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.1,
+      "trailing_silence_seconds": 0.14,
+      "longest_internal_pause_seconds": 0.02
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v1",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/casa_del_dieci/locales/es/audio/activity-title.wav.raw.wav",
+    "sha256": "a7f44e0b0ce032fdd9f29f5b6427776bb40baaf12c1aa820107d519dc9671482",
+    "receipt_sha256": "38f760ef57a026af6a2e4d71b754d303fcdf65a496cec81bc1db63334e6f2a25"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/casa_del_dieci/locales/es/audio/activity-title.wav.extracted.wav",
+    "sha256": "ee2b1d8abf4e9a996d40d30e7f5a7d83d744c0cd5922e44a6309a1687d1bb1f6"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/casa_del_dieci/locales/es/audio/activity-title.wav.delivery.wav",
+    "sha256": "ee2b1d8abf4e9a996d40d30e7f5a7d83d744c0cd5922e44a6309a1687d1bb1f6"
+  },
+  "extraction": {
+    "schema_version": 1,
+    "algorithm_version": "greia-spoken-carrier-extractor-v7",
+    "comparison_policy": "locale-number-tokens-v1",
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-raw/activities/casa_del_dieci/locales/es/audio/activity-title.wav.raw.wav",
+    "source_sha256": "a7f44e0b0ce032fdd9f29f5b6427776bb40baaf12c1aa820107d519dc9671482",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/casa_del_dieci/locales/es/audio/activity-title.wav.extracted.wav",
+    "output_sha256": "ee2b1d8abf4e9a996d40d30e7f5a7d83d744c0cd5922e44a6309a1687d1bb1f6",
+    "output_bytes": 61766,
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "La casa del diez",
+    "remove_first_words": 5,
+    "ignore_accents": true,
+    "target_verification_requested": "warn",
+    "target_verification_policy": "warn",
+    "target_comparison_score": 1.0,
+    "target_word_count_matches": true,
+    "target_numbers_match": true,
+    "target_comparison_flags": [],
+    "target_transcript_warning": false,
+    "recognizer": "mlx-whisper-base",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extracted_transcript": "la casa del 10",
+    "expected_target_tokens": [
+      "la",
+      "casa",
+      "del",
+      "<num:10>"
+    ],
+    "extracted_target_tokens": [
+      "la",
+      "casa",
+      "del",
+      "<num:10>"
+    ],
+    "extracted_target_exact_match": true,
+    "transcription_settings": {
+      "language": "es",
+      "initial_prompt": null,
+      "word_timestamps": true,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "sample_rate": 22050,
+    "duration_seconds": 5.440181405895691,
+    "boundary": {
+      "search_strategy": "target-only-global-quiet-run-v7",
+      "verified_silence_start_seconds": 3.5619047619047617,
+      "verified_silence_end_seconds": 4.140589569160998,
+      "verified_silence_duration_seconds": 0.5786848072562358,
+      "cut_sample": 89095,
+      "cut_time_seconds": 4.040589569160998,
+      "padding_seconds": 0.1,
+      "quiet_run_start_sample": 78540,
+      "quiet_run_end_sample": 91300,
+      "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+    },
+    "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/casa_del_dieci/locales/es/audio/activity-title.wav.extracted.wav.search/5686024293814e84ae72cc39d5eb881f",
+    "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/casa_del_dieci/locales/es/audio/activity-title.wav.extracted.wav.search/5686024293814e84ae72cc39d5eb881f/search.json",
+    "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-raw/activities/casa_del_dieci/locales/es/audio/activity-title.wav.raw.wav.receipt.json",
+    "source_provider_receipt_sha256": "38f760ef57a026af6a2e4d71b754d303fcdf65a496cec81bc1db63334e6f2a25",
+    "candidate_sha256": "ee2b1d8abf4e9a996d40d30e7f5a7d83d744c0cd5922e44a6309a1687d1bb1f6",
+    "candidate_id": "candidate-02",
+    "candidate_count": 2,
+    "qualifying_quiet_run_count": 2,
+    "candidate_results": [
+      {
+        "candidate_id": "candidate-01",
+        "quiet_run": {
+          "start_sample": 46860,
+          "end_sample": 65120,
+          "start_seconds": 2.1251700680272108,
+          "end_seconds": 2.95328798185941,
+          "duration_seconds": 0.8281179138321996
+        },
+        "cut_sample": 62915,
+        "cut_time_seconds": 2.8532879818594106,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/casa_del_dieci/locales/es/audio/activity-title.wav.extracted.wav.search/5686024293814e84ae72cc39d5eb881f/candidate-01.wav",
+        "preceding_voiced_seconds": 1.51,
+        "retained_voiced_seconds": 1.28,
+        "retained_duration_seconds": 2.586893424036281,
+        "candidate_sha256": "b234752bb949b6bf35807596ae66d21335eac68c815a5e629771754dd5001a0e",
+        "extracted_transcript": "lex la casa del 10",
+        "canonical_transcript_tokens": [
+          "lex",
+          "la",
+          "casa",
+          "del",
+          "<num:10>"
+        ],
+        "exact_target_match": false,
+        "target_comparison_score": 0.9032,
+        "target_word_count_matches": false,
+        "target_numbers_match": true,
+        "target_comparison_flags": [
+          "TARGET_WORD_COUNT_MISMATCH"
+        ],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": false,
+        "asr_segment_count": 1
+      },
+      {
+        "candidate_id": "candidate-02",
+        "quiet_run": {
+          "start_sample": 78540,
+          "end_sample": 91300,
+          "start_seconds": 3.5619047619047617,
+          "end_seconds": 4.140589569160998,
+          "duration_seconds": 0.5786848072562358
+        },
+        "cut_sample": 89095,
+        "cut_time_seconds": 4.040589569160998,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/casa_del_dieci/locales/es/audio/activity-title.wav.extracted.wav.search/5686024293814e84ae72cc39d5eb881f/candidate-02.wav",
+        "preceding_voiced_seconds": 2.01,
+        "retained_voiced_seconds": 0.78,
+        "retained_duration_seconds": 1.3995918367346938,
+        "candidate_sha256": "ee2b1d8abf4e9a996d40d30e7f5a7d83d744c0cd5922e44a6309a1687d1bb1f6",
+        "extracted_transcript": "la casa del 10",
+        "canonical_transcript_tokens": [
+          "la",
+          "casa",
+          "del",
+          "<num:10>"
+        ],
+        "exact_target_match": true,
+        "target_comparison_score": 1.0,
+        "target_word_count_matches": true,
+        "target_numbers_match": true,
+        "target_comparison_flags": [],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": true,
+        "asr_segment_count": 1
+      }
+    ],
+    "human_review": "PENDING",
+    "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+    "target_verification_effective_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+    "target_verification_warning": false,
+    "saved_recovery_policy": "target-only-v7-saved-v1",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 0,
+      "removed_seconds": 0.0,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 89095,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/casa_del_dieci/locales/es/audio/activity-title.wav.delivery.wav",
+      "sha256": "ee2b1d8abf4e9a996d40d30e7f5a7d83d744c0cd5922e44a6309a1687d1bb1f6"
+    }
+  },
   "output": {
     "path": "activities/casa_del_dieci/locales/es/audio/activity-title.wav",
-    "bytes": 63590,
-    "sha256": "47d3812cd28d5fba7b90b92f4f8bce1c94c2fb8db9bd0be4ba1c54bbbb6415c5"
+    "sha256": "5d43abefe270cec93d2abe954d949eb9a8ee115989393c3ee503dacad69e2cb5",
+    "bytes": 61800
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "31c57688c18be897476faba23f814bb122b5015b656e76653ce32a72acc42354",
+    "original_sha256": "47d3812cd28d5fba7b90b92f4f8bce1c94c2fb8db9bd0be4ba1c54bbbb6415c5",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

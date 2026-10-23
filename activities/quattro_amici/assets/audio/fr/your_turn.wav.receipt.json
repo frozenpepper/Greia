@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T14:17:16.719377+00:00",
+  "created_utc": "2026-10-21T17:04:45.640007+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "À toi !",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. À toi !",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "À toi !",
+    "cue_id": "greia.requested.your_turn.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "À toi !",
     "cue_id": "greia.requested.your_turn.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/quattro_amici/assets/audio/fr/your_turn.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. A short, lively reaction: expressive and clear, one breath, no extra words."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-161710-5acf4914",
-    "idempotency_key": "greia-8e298c2c6a194002998da5fe4f7902fb",
+    "job_id": "20261021-190436-977c53d2",
+    "idempotency_key": "greia-5b365eaa9ee84cc9b213b1a74dbee3fd",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,228 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1200513943,
+    "script_seed": 1604488863,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. A short, lively reaction: expressive and clear, one breath, no extra words.",
-    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. A short, lively reaction: expressive and clear, one breath, no extra words.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3370509642,
-        "sha256": "64f228351b0076eb161cdb1cbb5f517e02b24161e90c432b5b55f254382ed86e",
+        "seed": 4227988721,
+        "sha256": "afc91ec3d285d3e725335d12e9b57b08ac6a59b506c33783cf1f689b4ae2d7d9",
         "generation": {
-          "elapsed_seconds": 5.529681832995266,
+          "elapsed_seconds": 8.396726999999373,
           "model_load_seconds": 0.0,
-          "rtf": 4.936481326881653,
-          "peak_memory_gb": 8.44494914
+          "rtf": 4.372915719121278,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " à toi.",
+    "metrics": {
+      "duration_seconds": 0.6463492063492063,
+      "rms_dbfs": -34.57,
+      "peak": 0.13354,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.1,
+      "trailing_silence_seconds": 0.16,
+      "longest_internal_pause_seconds": 0.02
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/quattro_amici/assets/audio/fr/your_turn.wav.raw.wav",
+    "sha256": "73abd62f8a158bf679eef4484058b01da0cd60bb7b8e54d5cfccbb08071ce8a0",
+    "receipt_sha256": "102edb1b91fd163e35095a47b3f0261537e60fbe645a1f1726b34e970803c906"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/quattro_amici/assets/audio/fr/your_turn.wav.extracted.wav",
+    "sha256": "ccb8480b52396d1d0f310d866d5964e1cfa741d7dfeb38315935ac5c75f4d72e"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/quattro_amici/assets/audio/fr/your_turn.wav.raw.wav",
+    "source_sha256": "73abd62f8a158bf679eef4484058b01da0cd60bb7b8e54d5cfccbb08071ce8a0",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-extracted/activities/quattro_amici/assets/audio/fr/your_turn.wav.extracted.wav",
+    "output_sha256": "ccb8480b52396d1d0f310d866d5964e1cfa741d7dfeb38315935ac5c75f4d72e",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "À toi !",
+      "locale": "fr",
+      "cue_id": "greia.requested.your_turn.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/quattro_amici/assets/audio/fr/your_turn.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "102edb1b91fd163e35095a47b3f0261537e60fbe645a1f1726b34e970803c906"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "À toi !",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français, à toi !",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " à toi.",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.2
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.2,
+        "end_seconds": 0.44
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.44,
+        "end_seconds": 0.62
+      },
+      {
+        "word": "en",
+        "start_seconds": 0.62,
+        "end_seconds": 0.76
+      },
+      {
+        "word": "français",
+        "start_seconds": 0.76,
+        "end_seconds": 1.12
+      },
+      {
+        "word": "à",
+        "start_seconds": 1.36,
+        "end_seconds": 1.46
+      },
+      {
+        "word": "toi",
+        "start_seconds": 1.46,
+        "end_seconds": 1.64
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "à",
+        "start_seconds": 0.0,
+        "end_seconds": 0.18
+      },
+      {
+        "word": "toi",
+        "start_seconds": 0.18,
+        "end_seconds": 0.36
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.3980051676432292,
+        "no_speech_prob": 0.01011414360255003,
+        "compression_ratio": 0.8297872340425532,
+        "word_probabilities": [
+          0.87109375,
+          0.98486328125,
+          0.6982421875,
+          0.935546875,
+          0.97412109375,
+          0.94384765625,
+          0.93359375,
+          0.54296875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.632147471110026,
+        "no_speech_prob": 0.08278863877058029,
+        "compression_ratio": 0.4666666666666667,
+        "word_probabilities": [
+          0.320068359375,
+          0.970703125
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 28,
+    "extracted_voiced_seconds": 0.28,
+    "unremoved_raw_target_tokens": [
+      "à",
+      "toi"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "à",
+      "toi"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 1.9201814058956916,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-expanded-boundary",
+      "search_start_seconds": 0.76,
+      "search_end_seconds": 1.46,
+      "prefix_last_word_end_seconds": 1.12,
+      "target_first_word_start_seconds": 1.36,
+      "gap_seconds": 0.20952380952380953,
+      "verified_silence_start_seconds": 1.1690702947845806,
+      "verified_silence_end_seconds": 1.37859410430839,
+      "gap_rms_dbfs": -51.371,
+      "gap_peak_dbfs": -32.534,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.2738321995464852,
+      "cut_sample": 28088,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/quattro_amici/assets/audio/fr/your_turn.wav",
-    "bytes": 49478,
-    "sha256": "eb74389aa3dc776f7a33f527a25d88bfdefc469375f41922e955010fe8c84e43"
+    "sha256": "71c4a0abf09a5d5a00f1f0c3091e0461ded09b20a5223f4884476623d9904f89",
+    "bytes": 28582
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "139a39cdb7e9da4e46f4777f37a1541f36f5f8cab3e4b6217c940385b8f14fcc",
+    "original_sha256": "eb74389aa3dc776f7a33f527a25d88bfdefc469375f41922e955010fe8c84e43",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

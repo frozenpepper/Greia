@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T19:02:57.938196+00:00",
+  "created_utc": "2026-10-21T17:53:15.269731+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "¿Todo listo? ¡Ya!",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. ¿Todo listo? ¡Ya!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "lilli",
+    "kind": "shared_character_utterance",
+    "locale": "es",
+    "text": "¿Todo listo? ¡Ya!",
+    "cue_id": "greia.shared.lilli__es__ready.go__02.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "lilli",
     "kind": "shared_character_utterance",
     "locale": "es",
     "text": "¿Todo listo? ¡Ya!",
     "cue_id": "greia.shared.lilli__es__ready.go__02.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "assets/audio/characters/shared/v0.2/lilli/es/lilli__es__ready.go__02.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.lilli.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "job_id": "20261020-210239-b6eea576",
-    "idempotency_key": "greia-c5507b435b57448abab22e701c7b0663",
+    "job_id": "20261021-195119-eed397a5",
+    "idempotency_key": "greia-af3a8a2689174cd695e54bec34739bee",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,213 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2666924809,
+    "script_seed": 1451251159,
     "language_direction": "Spanish",
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in Spanish. Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1409277339,
-        "sha256": "f306374611834f333fd3c4e6d77e863f24ec7ecfd8b957941b5a4c612f83f306",
+        "seed": 3132833767,
+        "sha256": "91a16c28f3ab09f64c82d433625710aa98f66ce83690294ad3643ce3d68c54e8",
         "generation": {
-          "elapsed_seconds": 18.08612420799909,
+          "elapsed_seconds": 112.25767391700356,
           "model_load_seconds": 0.0,
-          "rtf": 8.073561881407228,
-          "peak_memory_gb": 8.843167284
+          "rtf": 22.631835069454027,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " ¡Todolisto! ¡Ya!",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/characters/shared/v0.2/lilli/es/lilli__es__ready.go__02.wav.raw.wav",
+    "sha256": "27d2a5e89e15a81ee52cbdfb768687e7764689d645f586bc9880b5d0c5c37bf4",
+    "receipt_sha256": "8dfc6e11e1bee5dbf53b6cea373dc4428bc4f841fee8e5ae4ff6d52f3ec62816"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/characters/shared/v0.2/lilli/es/lilli__es__ready.go__02.wav.extracted.wav",
+    "sha256": "1d95ac7a1593f11d752cc0510fa06c1cc3e502e95020c83597e00418a3b196de"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/assets/audio/characters/shared/v0.2/lilli/es/lilli__es__ready.go__02.wav.raw.wav",
+    "source_sha256": "27d2a5e89e15a81ee52cbdfb768687e7764689d645f586bc9880b5d0c5c37bf4",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/assets/audio/characters/shared/v0.2/lilli/es/lilli__es__ready.go__02.wav.extracted.wav",
+    "output_sha256": "1d95ac7a1593f11d752cc0510fa06c1cc3e502e95020c83597e00418a3b196de",
+    "target_request": {
+      "speaker": "lilli",
+      "kind": "shared_character_utterance",
+      "text": "¿Todo listo? ¡Ya!",
+      "locale": "es",
+      "cue_id": "greia.shared.lilli__es__ready.go__02.es",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/assets/audio/characters/shared/v0.2/lilli/es/lilli__es__ready.go__02.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "8dfc6e11e1bee5dbf53b6cea373dc4428bc4f841fee8e5ae4ff6d52f3ec62816"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "¿Todo listo? ¡Ya!",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Escucha esta frase, en español, todo listo, yaa!",
+    "extracted_transcript": " ¡Todolisto! ¡Ya!",
+    "raw_word_alignment": [
+      {
+        "word": "escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.6
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.6,
+        "end_seconds": 0.94
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.94,
+        "end_seconds": 1.36
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.46,
+        "end_seconds": 1.52
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.52,
+        "end_seconds": 2.16
+      },
+      {
+        "word": "todo",
+        "start_seconds": 2.54,
+        "end_seconds": 2.76
+      },
+      {
+        "word": "listo",
+        "start_seconds": 2.76,
+        "end_seconds": 3.52
+      },
+      {
+        "word": "yaa",
+        "start_seconds": 3.6,
+        "end_seconds": 4.5
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "todolisto",
+        "start_seconds": 0.0,
+        "end_seconds": 0.94
+      },
+      {
+        "word": "ya",
+        "start_seconds": 1.38,
+        "end_seconds": 1.88
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.7260784573025174,
+        "no_speech_prob": 0.24567505717277527,
+        "compression_ratio": 0.875,
+        "word_probabilities": [
+          0.5771484375,
+          0.5439453125,
+          0.95849609375,
+          0.139892578125,
+          0.947265625,
+          0.70751953125,
+          0.96484375,
+          0.4267578125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6259511311848959,
+        "no_speech_prob": 0.11469545215368271,
+        "compression_ratio": 0.6923076923076923,
+        "word_probabilities": [
+          0.51171875,
+          0.79150390625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 156,
+    "extracted_voiced_seconds": 1.56,
+    "unremoved_raw_target_tokens": [
+      "todo",
+      "listo",
+      "yaa"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "todo",
+      "listo",
+      "yaa"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 4.960181405895692,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 2.16,
+      "target_first_word_start_seconds": 2.54,
+      "gap_seconds": 0.2693877551020408,
+      "verified_silence_start_seconds": 2.2198639455782314,
+      "verified_silence_end_seconds": 2.489251700680272,
+      "gap_rms_dbfs": -89.903,
+      "gap_peak_dbfs": -57.054,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.3545578231292517,
+      "cut_sample": 51918,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "assets/audio/characters/shared/v0.2/lilli/es/lilli__es__ready.go__02.wav",
-    "bytes": 98870,
-    "sha256": "143f191eb052ffa6dd6622dce38f3ef861ee1458fdd7d12f06a3a3c6aed8170e"
+    "sha256": "7b2cbb34f18a419c02c13dfc667372935c4c75acc67981cb69e0fb82bc5f3c83",
+    "bytes": 114986
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "3d73c99760a424808a88514629d2ddfe5ec12529d41a650ca5761b1e987183d0",
+    "original_sha256": "143f191eb052ffa6dd6622dce38f3ef861ee1458fdd7d12f06a3a3c6aed8170e",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

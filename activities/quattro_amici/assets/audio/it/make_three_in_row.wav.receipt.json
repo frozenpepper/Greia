@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T14:18:07.217719+00:00",
+  "created_utc": "2026-10-21T17:05:04.275643+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "Fai tre in fila!",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. Fai tre in fila!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Fai tre in fila!",
+    "cue_id": "greia.requested.make_three_in_row.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Fai tre in fila!",
     "cue_id": "greia.requested.make_three_in_row.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/quattro_amici/assets/audio/it/make_three_in_row.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. A happy celebration with the child: joyful, proud and warm. Lively but clear."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-161758-cefeeaff",
-    "idempotency_key": "greia-d9d9e8f464054caea2a054717ae674c2",
+    "job_id": "20261021-190448-fee606ea",
+    "idempotency_key": "greia-893e76db00614d5f923698f4f2f79844",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,239 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2797456444,
+    "script_seed": 2417516162,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
-    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2161479293,
-        "sha256": "cfce5114183832078f88673577dea0a8e2b6039bb54cbad87da447eddc033349",
+        "seed": 1014309396,
+        "sha256": "7e3da93f98b4f411b6bcb0c63ad48667aa511d3e1a00a4d456233292a3c36fe9",
         "generation": {
-          "elapsed_seconds": 7.811566875025164,
+          "elapsed_seconds": 14.667285791991162,
           "model_load_seconds": 0.0,
-          "rtf": 4.437970007589337,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.819439900696453,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Fa i tre infi la",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/quattro_amici/assets/audio/it/make_three_in_row.wav.raw.wav",
+    "sha256": "0c018b19fd07d2ac6cbc2c3781e46738cf356aa170beef8fca0e1a5eeab503f0",
+    "receipt_sha256": "868ead1725cd2225e188a3220a628d06080186e4ff4212e455fb017b586d05dc"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/quattro_amici/assets/audio/it/make_three_in_row.wav.extracted.wav",
+    "sha256": "7591ab3a8a364eaf498743ed48aa3bd5a3ad4dcd822abd9199af8da0a5a46479"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/quattro_amici/assets/audio/it/make_three_in_row.wav.raw.wav",
+    "source_sha256": "0c018b19fd07d2ac6cbc2c3781e46738cf356aa170beef8fca0e1a5eeab503f0",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/quattro_amici/assets/audio/it/make_three_in_row.wav.extracted.wav",
+    "output_sha256": "7591ab3a8a364eaf498743ed48aa3bd5a3ad4dcd822abd9199af8da0a5a46479",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Fai tre in fila!",
+      "locale": "it",
+      "cue_id": "greia.requested.make_three_in_row.it",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/quattro_amici/assets/audio/it/make_three_in_row.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "868ead1725cd2225e188a3220a628d06080186e4ff4212e455fb017b586d05dc"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "Fai tre in fila!",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " ascolta questa frase in italiano, fa i tre infila.",
+    "extracted_transcript": " Fa i tre infi la",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.64
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.64,
+        "end_seconds": 0.92
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.92,
+        "end_seconds": 1.28
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.28,
+        "end_seconds": 1.44
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.44,
+        "end_seconds": 1.9
+      },
+      {
+        "word": "fa",
+        "start_seconds": 2.5,
+        "end_seconds": 2.78
+      },
+      {
+        "word": "i",
+        "start_seconds": 2.78,
+        "end_seconds": 2.88
+      },
+      {
+        "word": "tre",
+        "start_seconds": 2.88,
+        "end_seconds": 3.08
+      },
+      {
+        "word": "infila",
+        "start_seconds": 3.08,
+        "end_seconds": 3.58
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "fa",
+        "start_seconds": 0.0,
+        "end_seconds": 0.58
+      },
+      {
+        "word": "i",
+        "start_seconds": 0.58,
+        "end_seconds": 0.64
+      },
+      {
+        "word": "tre",
+        "start_seconds": 0.64,
+        "end_seconds": 0.88
+      },
+      {
+        "word": "infi",
+        "start_seconds": 0.88,
+        "end_seconds": 1.28
+      },
+      {
+        "word": "la",
+        "start_seconds": 1.28,
+        "end_seconds": 1.46
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.6128573137171128,
+        "no_speech_prob": 0.0010494872694835067,
+        "compression_ratio": 0.9259259259259259,
+        "word_probabilities": [
+          0.60205078125,
+          0.97802734375,
+          0.826171875,
+          0.8662109375,
+          0.96240234375,
+          0.320068359375,
+          0.529296875,
+          0.72802734375,
+          0.5087890625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.7788606219821506,
+        "no_speech_prob": 0.08620286732912064,
+        "compression_ratio": 0.6666666666666666,
+        "word_probabilities": [
+          0.16455078125,
+          0.358154296875,
+          0.69140625,
+          0.61328125,
+          0.344482421875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 98,
+    "extracted_voiced_seconds": 0.98,
+    "unremoved_raw_target_tokens": [
+      "fa",
+      "i",
+      "tre",
+      "infila"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "fa",
+      "i",
+      "tre",
+      "infila"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.8401814058956916,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.9,
+      "target_first_word_start_seconds": 2.5,
+      "gap_seconds": 0.47891156462585033,
+      "verified_silence_start_seconds": 1.96984126984127,
+      "verified_silence_end_seconds": 2.44875283446712,
+      "gap_rms_dbfs": -53.124,
+      "gap_peak_dbfs": -33.174,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.209297052154195,
+      "cut_sample": 48715,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/quattro_amici/assets/audio/it/make_three_in_row.wav",
-    "bytes": 77702,
-    "sha256": "b3723e3e1fc5c2aa116898425f65a1777f643ce1540f72221e34c2088e6de937"
+    "sha256": "02d5b7d7f3d098f86d1c3dd5d6619c26b16fb0ce37ddf94f3c7d62855435f08c",
+    "bytes": 72000
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "1156950a7ce4ea328ace2e25f1d11174a827dd43bfa875f9801ac538130fd8fe",
+    "original_sha256": "b3723e3e1fc5c2aa116898425f65a1777f643ce1540f72221e34c2088e6de937",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T17:01:14.105071+00:00",
+  "created_utc": "2026-10-21T17:24:57.294619+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "Due!",
+    "target_word_count": 1,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. Due!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Due!",
+    "cue_id": "greia.wired.count_2.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Due!",
     "cue_id": "greia.wired.count_2.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/stelle_incantate/assets/audio/it/count_2.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-190107-7e646261",
-    "idempotency_key": "greia-e8dc15e5bd304ab7ab420b504648516b",
+    "job_id": "20261021-192444-301c2281",
+    "idempotency_key": "greia-46065cc3cb764c5bb55baaf7f88d931d",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,220 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3436868754,
+    "script_seed": 1790039817,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words.",
-    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2550638007,
-        "sha256": "90d4949343bd052ac9c96bea221174760fb9274f43a018ac99e79d3e142c72ac",
+        "seed": 4266532643,
+        "sha256": "688b24ae43acca099922bfc05e4410742655fea397faf5d599068fc954344c4c",
         "generation": {
-          "elapsed_seconds": 5.650892666948494,
+          "elapsed_seconds": 11.5052848750056,
           "model_load_seconds": 0.0,
-          "rtf": 4.414185132364401,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.5952142726958805,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " Due",
+    "metrics": {
+      "duration_seconds": 1.036235827664399,
+      "rms_dbfs": -33.84,
+      "peak": 0.10654,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.34,
+      "trailing_silence_seconds": 0.16,
+      "longest_internal_pause_seconds": 0.0
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/stelle_incantate/assets/audio/it/count_2.wav.raw.wav",
+    "sha256": "7b868236aae218630ef928bd066eeaa2020b89456c2a42f8a63b3f0b529435ce",
+    "receipt_sha256": "86511ea2e621caefd13c78021ad46a9950f2b62cf68bcf6f3d52be84be6de1fc"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/stelle_incantate/assets/audio/it/count_2.wav.extracted.wav",
+    "sha256": "e1a313bd27f56ca93460a35b8bb7383468dba7c873f8cec86c12f06549078e0b"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/stelle_incantate/assets/audio/it/count_2.wav.raw.wav",
+    "source_sha256": "7b868236aae218630ef928bd066eeaa2020b89456c2a42f8a63b3f0b529435ce",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-extracted/activities/stelle_incantate/assets/audio/it/count_2.wav.extracted.wav",
+    "output_sha256": "e1a313bd27f56ca93460a35b8bb7383468dba7c873f8cec86c12f06549078e0b",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Due!",
+      "locale": "it",
+      "cue_id": "greia.wired.count_2.it",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/stelle_incantate/assets/audio/it/count_2.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "86511ea2e621caefd13c78021ad46a9950f2b62cf68bcf6f3d52be84be6de1fc"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "Due!",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Ascolta questa frase in italiano. Due.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Due",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.48
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.48,
+        "end_seconds": 0.78
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.78,
+        "end_seconds": 1.06
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.06,
+        "end_seconds": 1.26
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.26,
+        "end_seconds": 1.7
+      },
+      {
+        "word": "due",
+        "start_seconds": 2.58,
+        "end_seconds": 2.8
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "due",
+        "start_seconds": 0.0,
+        "end_seconds": 0.66
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.6905372619628907,
+        "no_speech_prob": 0.009508812800049782,
+        "compression_ratio": 0.8636363636363636,
+        "word_probabilities": [
+          0.6591796875,
+          0.9814453125,
+          0.828125,
+          0.89697265625,
+          0.99267578125
+        ]
+      },
+      {
+        "avg_logprob": -0.6905372619628907,
+        "no_speech_prob": 0.009508812800049782,
+        "compression_ratio": 0.8636363636363636,
+        "word_probabilities": [
+          0.68017578125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6253876686096191,
+        "no_speech_prob": 0.3667120933532715,
+        "compression_ratio": 0.2727272727272727,
+        "word_probabilities": [
+          0.387451171875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 43,
+    "extracted_voiced_seconds": 0.43,
+    "unremoved_raw_target_tokens": [
+      "due"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "due"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.2001814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.7,
+      "search_end_seconds": 2.58,
+      "prefix_last_word_end_seconds": 1.7,
+      "target_first_word_start_seconds": 2.58,
+      "gap_seconds": 0.728344671201814,
+      "verified_silence_start_seconds": 1.7997732426303854,
+      "verified_silence_end_seconds": 2.5281179138321996,
+      "gap_rms_dbfs": -56.708,
+      "gap_peak_dbfs": -37.782,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.1639455782312926,
+      "cut_sample": 47715,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/stelle_incantate/assets/audio/it/count_2.wav",
-    "bytes": 56534,
-    "sha256": "943d9d791b19e2557218f6a3bc588868a3cb93a8dd18c3a7424223bfc5269f3f"
+    "sha256": "209862192e95d9ce9245b7576740787787faeceae80a735e7d16e8cc93e7ae4e",
+    "bytes": 45776
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "f4ddb672cd8bad3abb315b7bd13711d1b64392009278022803bba297f6e70537",
+    "original_sha256": "943d9d791b19e2557218f6a3bc588868a3cb93a8dd18c3a7424223bfc5269f3f",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

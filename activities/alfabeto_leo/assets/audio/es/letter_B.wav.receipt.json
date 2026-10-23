@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T20:52:23.488547+00:00",
+  "created_utc": "2026-10-21T15:15:52.534326+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "B de Barco",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. B de Barco",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "B de Barco",
+    "cue_id": "alfabeto_leo.letter_B.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "B de Barco",
     "cue_id": "alfabeto_leo.letter_B.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/alfabeto_leo/assets/audio/es/letter_B.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261019-225213-902de3bb",
-    "idempotency_key": "greia-73da058ec8a1477080fc60f0d6a486b1",
+    "job_id": "20261021-171533-99bffebb",
+    "idempotency_key": "greia-6de794d6eced4f23bf971e7de0bd64d6",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,226 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 330039790,
+    "script_seed": 3556079881,
     "language_direction": "Spanish",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak naturally in Spanish. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 327240052,
-        "sha256": "b50270df117710892be2c29f856178e2c961cb834f78bfb4f2bc64efe6b49f9a",
+        "seed": 174928898,
+        "sha256": "c62ba0bc976bf95ae2315f1c61eb44a27814585e0237617044c31df080cd21e4",
         "generation": {
-          "elapsed_seconds": 9.586221249948721,
+          "elapsed_seconds": 18.647850082998048,
           "model_load_seconds": 0.0,
-          "rtf": 3.993981494319306,
-          "peak_memory_gb": 8.21220922
+          "rtf": 4.1623116884784155,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " B de barco",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/alfabeto_leo/assets/audio/es/letter_B.wav.raw.wav",
+    "sha256": "39bd0f0af47f684c23b6021e812be7a8530ddb3f1f63d5f2cbb1c8a8a1634b25",
+    "receipt_sha256": "5e5cd0a4c7b9ad64c53fea4ef032171b09feb61e3111b79db3575348b5aeac8e"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/assets/audio/es/letter_B.wav.extracted.wav",
+    "sha256": "5c9cfb3184d0901e4e413f00d7d5f654adc83e6d87bbbf254fe5ea2906e715d2"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/alfabeto_leo/assets/audio/es/letter_B.wav.raw.wav",
+    "source_sha256": "39bd0f0af47f684c23b6021e812be7a8530ddb3f1f63d5f2cbb1c8a8a1634b25",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/alfabeto_leo/assets/audio/es/letter_B.wav.extracted.wav",
+    "output_sha256": "5c9cfb3184d0901e4e413f00d7d5f654adc83e6d87bbbf254fe5ea2906e715d2",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "B de Barco",
+      "locale": "es",
+      "cue_id": "alfabeto_leo.letter_B.es",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/alfabeto_leo/assets/audio/es/letter_B.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "5e5cd0a4c7b9ad64c53fea4ef032171b09feb61e3111b79db3575348b5aeac8e"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "B de Barco",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Escucha esta frase en español. ¡B de barco!",
+    "extracted_transcript": " B de barco",
+    "raw_word_alignment": [
+      {
+        "word": "escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.7
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.7,
+        "end_seconds": 1.12
+      },
+      {
+        "word": "frase",
+        "start_seconds": 1.12,
+        "end_seconds": 1.5
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.5,
+        "end_seconds": 1.84
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.84,
+        "end_seconds": 2.4
+      },
+      {
+        "word": "b",
+        "start_seconds": 3.26,
+        "end_seconds": 3.42
+      },
+      {
+        "word": "de",
+        "start_seconds": 3.42,
+        "end_seconds": 3.88
+      },
+      {
+        "word": "barco",
+        "start_seconds": 3.88,
+        "end_seconds": 4.3
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "b",
+        "start_seconds": 0.0,
+        "end_seconds": 0.68
+      },
+      {
+        "word": "de",
+        "start_seconds": 0.68,
+        "end_seconds": 1.08
+      },
+      {
+        "word": "barco",
+        "start_seconds": 1.08,
+        "end_seconds": 1.54
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.6794938511318631,
+        "no_speech_prob": 0.006837161257863045,
+        "compression_ratio": 0.8653846153846154,
+        "word_probabilities": [
+          0.6142578125,
+          0.830078125,
+          0.9931640625,
+          0.98046875,
+          0.9873046875
+        ]
+      },
+      {
+        "avg_logprob": -0.6794938511318631,
+        "no_speech_prob": 0.006837161257863045,
+        "compression_ratio": 0.8653846153846154,
+        "word_probabilities": [
+          0.3798828125,
+          0.22265625,
+          0.919921875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.5428109850202288,
+        "no_speech_prob": 0.22621771693229675,
+        "compression_ratio": 0.5555555555555556,
+        "word_probabilities": [
+          0.376708984375,
+          0.5615234375,
+          0.8916015625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 77,
+    "extracted_voiced_seconds": 0.77,
+    "unremoved_raw_target_tokens": [
+      "b",
+      "de",
+      "barco"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "b",
+      "de",
+      "barco"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 4.480181405895691,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 2.4,
+      "target_first_word_start_seconds": 3.26,
+      "gap_seconds": 0.728344671201814,
+      "verified_silence_start_seconds": 2.459863945578231,
+      "verified_silence_end_seconds": 3.188208616780045,
+      "gap_rms_dbfs": -54.273,
+      "gap_peak_dbfs": -36.141,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.824036281179138,
+      "cut_sample": 62270,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/es/letter_B.wav",
-    "bytes": 105926,
-    "sha256": "dd978587f9fe47bc3d7bb0672a3116fd9e71b7ff6505ffbb7fdae97cff5df16c"
+    "sha256": "8fee892e627e42bbb61464274fe8e81828cce568f4a10b432c1e706ccbb388a4",
+    "bytes": 73114
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "411498d417e1839c2a9233050f0831b48c3fc1827e5cbb81843eeeaa4d10d6f6",
+    "original_sha256": "dd978587f9fe47bc3d7bb0672a3116fd9e71b7ff6505ffbb7fdae97cff5df16c",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

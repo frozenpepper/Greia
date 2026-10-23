@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T14:42:05.278813+00:00",
+  "created_utc": "2026-10-23T04:52:55.828120+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
@@ -8,17 +8,22 @@
     "text": "pera",
     "cue_id": "sillabe_magiche.word_pera.es",
     "output": "activities/sillabe_magiche/assets/audio/es/word_pera.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Say it naturally as one whole word, with a gentle steady rhythm."
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Lectura cálida y tranquila. Pronunciación clara y natural.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "comparison_policy": "locale-number-tokens-v4-spoken-target-v1"
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-164154-8f51e316",
-    "idempotency_key": "greia-72090a8e8b4c4391864b8bef4cad9dee",
+    "job_id": "20261023-065243-639b6e6c",
+    "idempotency_key": "greia-0cc2999311af4db6821b5e4b333a7fb1",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +46,350 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 4159304982,
+    "script_seed": 3654326696,
     "language_direction": "Spanish",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Say it naturally as one whole word, with a gentle steady rhythm.",
-    "effective_delivery": "Speak in Spanish. Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Say it naturally as one whole word, with a gentle steady rhythm.",
+    "delivery_prompt": "Lectura cálida y tranquila. Pronunciación clara y natural.",
+    "effective_delivery": "Speak in Spanish. Lectura cálida y tranquila. Pronunciación clara y natural.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1609400358,
-        "sha256": "305c74846fe9b625c7e152f7a953605ceb49ef07e9a1b81322b5c90834a1725e",
+        "seed": 4264939695,
+        "sha256": "1813870c49f1233e7ce95f10a5150ea02a3fc719deaed76acd15018466f92650",
         "generation": {
-          "elapsed_seconds": 8.94513199996436,
+          "elapsed_seconds": 10.53588983300142,
           "model_load_seconds": 0.0,
-          "rtf": 13.973129914029201,
-          "peak_memory_gb": 8.44494914
+          "rtf": 4.115314041924909,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-audio-parakeet-tdt-v3",
+    "transcript": "Pera.",
+    "score": 1.0,
+    "detail": "Delivered target transcribed and screened; human listening remains pending",
+    "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+    "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v4-spoken-target-v1",
+    "flags": [],
+    "metrics": {
+      "duration_seconds": 0.48018140589569164,
+      "rms_dbfs": -35.33,
+      "peak": 0.12988,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.1,
+      "trailing_silence_seconds": 0.12,
+      "longest_internal_pause_seconds": 0.0
+    }
   },
-  "attempts": 1,
+  "attempts": 3,
   "output": {
     "path": "activities/sillabe_magiche/assets/audio/es/word_pera.wav",
-    "bytes": 28310,
-    "sha256": "ec19417a44dacbe92c589a914a987555d0e3e82f636f913992d9a6acf8a9f0b6"
+    "bytes": 21254,
+    "sha256": "6d3ec804740195ef2768514c4f6ca215b99e60eef030d23f0b39babc0e2d4e9b"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "short_phrase": {
+    "mode": "automatic-carrier",
+    "composition_policy": "natural-context-period-v1",
+    "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/b3a5bd71fe254442acedfbb94c268a83",
+    "prefix": "Vamos a hablar con calma.",
+    "composite_text": "Vamos a hablar con calma.\n\npera",
+    "effective_delivery": "Lectura cálida y tranquila. Pronunciación clara y natural.",
+    "semantic_target": "pera",
+    "spoken_target": "pera",
+    "spoken_target_policy": "locale-spoken-letter-and-cardinal-v1",
+    "extraction": {
+      "schema_version": 1,
+      "algorithm_version": "greia-spoken-carrier-extractor-v7",
+      "comparison_policy": "locale-number-tokens-v4-spoken-target-v1",
+      "status": "EXTRACTED_PENDING_LISTENING",
+      "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/b3a5bd71fe254442acedfbb94c268a83/attempt-03/raw.wav",
+      "source_sha256": "1813870c49f1233e7ce95f10a5150ea02a3fc719deaed76acd15018466f92650",
+      "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/b3a5bd71fe254442acedfbb94c268a83/attempt-03/target.wav",
+      "output_sha256": "fa25cf94b56b1aa419a5e17142a1499846096a4588ffd361f4de049e78621f66",
+      "output_bytes": 46140,
+      "locale": "es",
+      "prefix": "Vamos a hablar con calma.",
+      "target": "pera",
+      "remove_first_words": 5,
+      "ignore_accents": true,
+      "target_verification_requested": "warn",
+      "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+      "target_comparison_score": 1.0,
+      "target_word_count_matches": true,
+      "target_numbers_match": true,
+      "target_comparison_flags": [],
+      "target_transcript_warning": false,
+      "recognizer": "mlx-audio-parakeet-tdt-v3",
+      "recognizer_version": "0.5.0",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "extracted_transcript": "Pera.",
+      "expected_target_tokens": [
+        "pera"
+      ],
+      "extracted_target_tokens": [
+        "pera"
+      ],
+      "extracted_target_exact_match": true,
+      "transcription_settings": {
+        "language_detection": "automatic",
+        "expected_text_prompt": null,
+        "timestamps": "model-provided-token-timestamps"
+      },
+      "sample_rate": 48000,
+      "duration_seconds": 2.5601666666666665,
+      "boundary": {
+        "search_strategy": "target-only-global-quiet-run-v7",
+        "verified_silence_start_seconds": 1.14,
+        "verified_silence_end_seconds": 2.18,
+        "verified_silence_duration_seconds": 1.04,
+        "cut_sample": 99840,
+        "cut_time_seconds": 2.08,
+        "padding_seconds": 0.1,
+        "quiet_run_start_sample": 54720,
+        "quiet_run_end_sample": 104640,
+        "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+      },
+      "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/b3a5bd71fe254442acedfbb94c268a83/attempt-03/target.wav.search/a41574f63ac34104a3fcb8f5c8727e91",
+      "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/b3a5bd71fe254442acedfbb94c268a83/attempt-03/target.wav.search/a41574f63ac34104a3fcb8f5c8727e91/search.json",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/b3a5bd71fe254442acedfbb94c268a83/attempt-03/raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "2fb3ae7e49f15be8b3759601f95097c55dbc0996667d9eeca88b629e567684f5",
+      "candidate_sha256": "fa25cf94b56b1aa419a5e17142a1499846096a4588ffd361f4de049e78621f66",
+      "candidate_id": "candidate-01",
+      "candidate_count": 1,
+      "qualifying_quiet_run_count": 1,
+      "candidate_results": [
+        {
+          "candidate_id": "candidate-01",
+          "quiet_run": {
+            "start_sample": 54720,
+            "end_sample": 104640,
+            "start_seconds": 1.14,
+            "end_seconds": 2.18,
+            "duration_seconds": 1.04
+          },
+          "cut_sample": 99840,
+          "cut_time_seconds": 2.08,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/b3a5bd71fe254442acedfbb94c268a83/attempt-03/target.wav.search/a41574f63ac34104a3fcb8f5c8727e91/candidate-01.wav",
+          "preceding_voiced_seconds": 0.85,
+          "retained_voiced_seconds": 0.25,
+          "retained_duration_seconds": 0.4801666666666667,
+          "candidate_sha256": "fa25cf94b56b1aa419a5e17142a1499846096a4588ffd361f4de049e78621f66",
+          "extracted_transcript": "Pera.",
+          "canonical_transcript_tokens": [
+            "pera"
+          ],
+          "exact_target_match": true,
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": true,
+          "asr_segment_count": 1
+        }
+      ],
+      "human_review": "PENDING",
+      "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+      "delivery": {
+        "policy": "verified-carrier-gap-delivery-v1",
+        "removed_frames": 0,
+        "removed_seconds": 0.0,
+        "retained_verified_quiet_seconds": 0.1,
+        "raw_delivery_start_sample": 99840,
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/b3a5bd71fe254442acedfbb94c268a83/attempt-03/delivery-target.wav",
+        "sha256": "fa25cf94b56b1aa419a5e17142a1499846096a4588ffd361f4de049e78621f66"
+      }
+    },
+    "quality": {
+      "disposition": "PASS",
+      "score": 1.0,
+      "transcript": "Pera.",
+      "metrics": {
+        "duration_seconds": 0.48018140589569164,
+        "rms_dbfs": -35.33,
+        "peak": 0.12988,
+        "clipped_fraction": 0.0,
+        "leading_silence_seconds": 0.1,
+        "trailing_silence_seconds": 0.12,
+        "longest_internal_pause_seconds": 0.0
+      },
+      "flags": [],
+      "ignore_accents": true,
+      "comparison_policy": "locale-number-tokens-v4-spoken-target-v1",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "detail": "Delivered target transcribed and screened; human listening remains pending"
+    },
+    "history": [
+      {
+        "attempt": 1,
+        "status": "REJECTED_CUT",
+        "error": "no candidate suffix meets target verification policy",
+        "evidence": {
+          "candidate_transcripts": [
+            "But"
+          ],
+          "matching_candidate_ids": [],
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/b3a5bd71fe254442acedfbb94c268a83/attempt-01/target.wav.search/87fe093c04754da0932773c1f6b794aa",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/b3a5bd71fe254442acedfbb94c268a83/attempt-01/target.wav.search/87fe093c04754da0932773c1f6b794aa/search.json"
+        }
+      },
+      {
+        "attempt": 2,
+        "status": "REJECTED_CUT",
+        "error": "no candidate suffix meets target verification policy",
+        "evidence": {
+          "candidate_transcripts": [
+            "Yeah."
+          ],
+          "matching_candidate_ids": [],
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/b3a5bd71fe254442acedfbb94c268a83/attempt-02/target.wav.search/7d8e8c360295498690399e628622d427",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/b3a5bd71fe254442acedfbb94c268a83/attempt-02/target.wav.search/7d8e8c360295498690399e628622d427/search.json"
+        }
+      },
+      {
+        "attempt": 3,
+        "status": "PASS",
+        "quality": {
+          "disposition": "PASS",
+          "score": 1.0,
+          "transcript": "Pera.",
+          "metrics": {
+            "duration_seconds": 0.48018140589569164,
+            "rms_dbfs": -35.33,
+            "peak": 0.12988,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.1,
+            "trailing_silence_seconds": 0.12,
+            "longest_internal_pause_seconds": 0.0
+          },
+          "flags": [],
+          "ignore_accents": true,
+          "comparison_policy": "locale-number-tokens-v4-spoken-target-v1",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "detail": "Delivered target transcribed and screened; human listening remains pending"
+        },
+        "extraction": {
+          "schema_version": 1,
+          "algorithm_version": "greia-spoken-carrier-extractor-v7",
+          "comparison_policy": "locale-number-tokens-v4-spoken-target-v1",
+          "status": "EXTRACTED_PENDING_LISTENING",
+          "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/b3a5bd71fe254442acedfbb94c268a83/attempt-03/raw.wav",
+          "source_sha256": "1813870c49f1233e7ce95f10a5150ea02a3fc719deaed76acd15018466f92650",
+          "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/b3a5bd71fe254442acedfbb94c268a83/attempt-03/target.wav",
+          "output_sha256": "fa25cf94b56b1aa419a5e17142a1499846096a4588ffd361f4de049e78621f66",
+          "output_bytes": 46140,
+          "locale": "es",
+          "prefix": "Vamos a hablar con calma.",
+          "target": "pera",
+          "remove_first_words": 5,
+          "ignore_accents": true,
+          "target_verification_requested": "warn",
+          "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_transcript_warning": false,
+          "recognizer": "mlx-audio-parakeet-tdt-v3",
+          "recognizer_version": "0.5.0",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "extracted_transcript": "Pera.",
+          "expected_target_tokens": [
+            "pera"
+          ],
+          "extracted_target_tokens": [
+            "pera"
+          ],
+          "extracted_target_exact_match": true,
+          "transcription_settings": {
+            "language_detection": "automatic",
+            "expected_text_prompt": null,
+            "timestamps": "model-provided-token-timestamps"
+          },
+          "sample_rate": 48000,
+          "duration_seconds": 2.5601666666666665,
+          "boundary": {
+            "search_strategy": "target-only-global-quiet-run-v7",
+            "verified_silence_start_seconds": 1.14,
+            "verified_silence_end_seconds": 2.18,
+            "verified_silence_duration_seconds": 1.04,
+            "cut_sample": 99840,
+            "cut_time_seconds": 2.08,
+            "padding_seconds": 0.1,
+            "quiet_run_start_sample": 54720,
+            "quiet_run_end_sample": 104640,
+            "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+          },
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/b3a5bd71fe254442acedfbb94c268a83/attempt-03/target.wav.search/a41574f63ac34104a3fcb8f5c8727e91",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/b3a5bd71fe254442acedfbb94c268a83/attempt-03/target.wav.search/a41574f63ac34104a3fcb8f5c8727e91/search.json",
+          "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/b3a5bd71fe254442acedfbb94c268a83/attempt-03/raw.wav.receipt.json",
+          "source_provider_receipt_sha256": "2fb3ae7e49f15be8b3759601f95097c55dbc0996667d9eeca88b629e567684f5",
+          "candidate_sha256": "fa25cf94b56b1aa419a5e17142a1499846096a4588ffd361f4de049e78621f66",
+          "candidate_id": "candidate-01",
+          "candidate_count": 1,
+          "qualifying_quiet_run_count": 1,
+          "candidate_results": [
+            {
+              "candidate_id": "candidate-01",
+              "quiet_run": {
+                "start_sample": 54720,
+                "end_sample": 104640,
+                "start_seconds": 1.14,
+                "end_seconds": 2.18,
+                "duration_seconds": 1.04
+              },
+              "cut_sample": 99840,
+              "cut_time_seconds": 2.08,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/b3a5bd71fe254442acedfbb94c268a83/attempt-03/target.wav.search/a41574f63ac34104a3fcb8f5c8727e91/candidate-01.wav",
+              "preceding_voiced_seconds": 0.85,
+              "retained_voiced_seconds": 0.25,
+              "retained_duration_seconds": 0.4801666666666667,
+              "candidate_sha256": "fa25cf94b56b1aa419a5e17142a1499846096a4588ffd361f4de049e78621f66",
+              "extracted_transcript": "Pera.",
+              "canonical_transcript_tokens": [
+                "pera"
+              ],
+              "exact_target_match": true,
+              "target_comparison_score": 1.0,
+              "target_word_count_matches": true,
+              "target_numbers_match": true,
+              "target_comparison_flags": [],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": true,
+              "asr_segment_count": 1
+            }
+          ],
+          "human_review": "PENDING",
+          "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+          "delivery": {
+            "policy": "verified-carrier-gap-delivery-v1",
+            "removed_frames": 0,
+            "removed_seconds": 0.0,
+            "retained_verified_quiet_seconds": 0.1,
+            "raw_delivery_start_sample": 99840,
+            "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/b3a5bd71fe254442acedfbb94c268a83/attempt-03/delivery-target.wav",
+            "sha256": "fa25cf94b56b1aa419a5e17142a1499846096a4588ffd361f4de049e78621f66"
+          }
+        },
+        "candidate": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/b3a5bd71fe254442acedfbb94c268a83/attempt-03/candidate.wav"
+      }
+    ]
+  },
   "corpus_replacement": {
-    "original_sha256": "52e953180e496eebdbca2f9d60f93bb67812153003465199226d6b1ceda9d3ff",
+    "original_sha256": "ec19417a44dacbe92c589a914a987555d0e3e82f636f913992d9a6acf8a9f0b6",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

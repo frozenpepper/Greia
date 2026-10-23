@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:32:14.231688+00:00",
+  "created_utc": "2026-10-22T16:02:46.825457+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
@@ -8,17 +8,21 @@
     "text": "E come Elefante",
     "cue_id": "foresta_parole.find_e",
     "output": "activities/foresta_parole/assets/audio/it/find_e.wav",
-    "verification": "off",
+    "verification": "required",
     "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "delivery_prompt": "Read clearly in a warm, calm tone. Pronounce every word carefully and naturally.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-143203-9f51250c",
-    "idempotency_key": "greia-8c48418be0d641b895f835ef6694421d",
+    "job_id": "20261022-180228-b506435a",
+    "idempotency_key": "greia-b3890055ec144d5a83c3e397c744d89d",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +45,326 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2617391815,
+    "script_seed": 3152286722,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Read clearly in a warm, calm tone. Pronounce every word carefully and naturally. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "effective_delivery": "Speak in Italian. Read clearly in a warm, calm tone. Pronounce every word carefully and naturally. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2832280265,
-        "sha256": "5a8ae1c6fbfab018da02255b1f20d0eb4785eb559172372ab578bad3ffd8dc29",
+        "seed": 2047803347,
+        "sha256": "ccba520a7f707777f4723b0c8174bde000178c09288856de2f94be7285275b2d",
         "generation": {
-          "elapsed_seconds": 9.838183584040962,
+          "elapsed_seconds": 16.175826999999117,
           "model_load_seconds": 0.0,
-          "rtf": 5.123609192278949,
-          "peak_memory_gb": 8.44494914
+          "rtf": 4.043788258822328,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-base",
+    "transcript": " e come elefante.",
+    "score": 1.0,
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "ignore_accents": true
   },
   "attempts": 1,
   "output": {
     "path": "activities/foresta_parole/assets/audio/it/find_e.wav",
-    "bytes": 84758,
-    "sha256": "45b3bf3f47c1c03a41dc09c942d9ed6daf635f2b68f8e45d4e57b401f5144543"
+    "bytes": 64032,
+    "sha256": "17a9db66a18356842b768b413e9c5faca3aacd5ed63293b2262a9abba4e0922a"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "short_phrase": {
+    "mode": "automatic-carrier",
+    "composition_policy": "period-separated-intro-v1",
+    "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/d749cbfb4f32477e93f8cb2302d27d9e",
+    "prefix": "Ascolta questa frase in italiano.",
+    "composite_text": "Ascolta questa frase in italiano.\n\nE come Elefante",
+    "effective_delivery": "Read clearly in a warm, calm tone. Pronounce every word carefully and naturally. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "extraction": {
+      "schema_version": 1,
+      "algorithm_version": "greia-spoken-carrier-extractor-v7",
+      "comparison_policy": "locale-number-tokens-v1",
+      "status": "EXTRACTED_PENDING_LISTENING",
+      "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/d749cbfb4f32477e93f8cb2302d27d9e/attempt-01/raw.wav",
+      "source_sha256": "ccba520a7f707777f4723b0c8174bde000178c09288856de2f94be7285275b2d",
+      "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/d749cbfb4f32477e93f8cb2302d27d9e/attempt-01/target.wav",
+      "output_sha256": "9e35eacba35763f90f2aa0d397ef7c61c0fbdd27fbd67e0ef3f510626aee8b71",
+      "output_bytes": 139260,
+      "locale": "it",
+      "prefix": "Ascolta questa frase in italiano.",
+      "target": "E come Elefante",
+      "remove_first_words": 5,
+      "ignore_accents": true,
+      "target_verification_requested": "warn",
+      "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+      "target_comparison_score": 1.0,
+      "target_word_count_matches": true,
+      "target_numbers_match": true,
+      "target_comparison_flags": [],
+      "target_transcript_warning": false,
+      "recognizer": "mlx-whisper-base",
+      "recognizer_version": "0.4.3",
+      "model_id": "mlx-community/whisper-base-mlx",
+      "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+      "extracted_transcript": "e come elefante.",
+      "expected_target_tokens": [
+        "e",
+        "come",
+        "elefante"
+      ],
+      "extracted_target_tokens": [
+        "e",
+        "come",
+        "elefante"
+      ],
+      "extracted_target_exact_match": true,
+      "transcription_settings": {
+        "language": "it",
+        "initial_prompt": null,
+        "word_timestamps": true,
+        "temperature": 0.0,
+        "condition_on_previous_text": false
+      },
+      "sample_rate": 48000,
+      "duration_seconds": 4.000166666666667,
+      "boundary": {
+        "search_strategy": "target-only-global-quiet-run-v7",
+        "verified_silence_start_seconds": 1.81,
+        "verified_silence_end_seconds": 2.65,
+        "verified_silence_duration_seconds": 0.84,
+        "cut_sample": 122400,
+        "cut_time_seconds": 2.55,
+        "padding_seconds": 0.1,
+        "quiet_run_start_sample": 86880,
+        "quiet_run_end_sample": 127200,
+        "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+      },
+      "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/d749cbfb4f32477e93f8cb2302d27d9e/attempt-01/target.wav.search/5f93d0a156e24022b03cb2ad9468f781",
+      "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/d749cbfb4f32477e93f8cb2302d27d9e/attempt-01/target.wav.search/5f93d0a156e24022b03cb2ad9468f781/search.json",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/d749cbfb4f32477e93f8cb2302d27d9e/attempt-01/raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "906c9910b8543de8f4bf19deb5bbbd214a1cef5747821ac0a5382cf5168fc17c",
+      "candidate_sha256": "9e35eacba35763f90f2aa0d397ef7c61c0fbdd27fbd67e0ef3f510626aee8b71",
+      "candidate_id": "candidate-01",
+      "candidate_count": 1,
+      "qualifying_quiet_run_count": 1,
+      "candidate_results": [
+        {
+          "candidate_id": "candidate-01",
+          "quiet_run": {
+            "start_sample": 86880,
+            "end_sample": 127200,
+            "start_seconds": 1.81,
+            "end_seconds": 2.65,
+            "duration_seconds": 0.84
+          },
+          "cut_sample": 122400,
+          "cut_time_seconds": 2.55,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/d749cbfb4f32477e93f8cb2302d27d9e/attempt-01/target.wav.search/5f93d0a156e24022b03cb2ad9468f781/candidate-01.wav",
+          "preceding_voiced_seconds": 1.21,
+          "retained_voiced_seconds": 0.81,
+          "retained_duration_seconds": 1.4501666666666666,
+          "candidate_sha256": "9e35eacba35763f90f2aa0d397ef7c61c0fbdd27fbd67e0ef3f510626aee8b71",
+          "extracted_transcript": "e come elefante.",
+          "canonical_transcript_tokens": [
+            "e",
+            "come",
+            "elefante"
+          ],
+          "exact_target_match": true,
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": true,
+          "asr_segment_count": 1
+        }
+      ],
+      "human_review": "PENDING",
+      "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+      "delivery": {
+        "policy": "verified-carrier-gap-delivery-v1",
+        "removed_frames": 0,
+        "removed_seconds": 0.0,
+        "retained_verified_quiet_seconds": 0.1,
+        "raw_delivery_start_sample": 122400,
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/d749cbfb4f32477e93f8cb2302d27d9e/attempt-01/delivery-target.wav",
+        "sha256": "9e35eacba35763f90f2aa0d397ef7c61c0fbdd27fbd67e0ef3f510626aee8b71"
+      }
+    },
+    "quality": {
+      "disposition": "PASS",
+      "score": 1.0,
+      "transcript": " e come elefante.",
+      "metrics": {
+        "duration_seconds": 1.4502040816326531,
+        "rms_dbfs": -33.03,
+        "peak": 0.16257,
+        "clipped_fraction": 0.0,
+        "leading_silence_seconds": 0.1,
+        "trailing_silence_seconds": 0.1,
+        "longest_internal_pause_seconds": 0.06
+      },
+      "flags": [],
+      "ignore_accents": true,
+      "comparison_policy": "locale-number-tokens-v1",
+      "model_id": "mlx-community/whisper-base-mlx",
+      "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+      "detail": "Packaged target scored with Base; human listening remains pending"
+    },
+    "history": [
+      {
+        "attempt": 1,
+        "status": "PASS",
+        "quality": {
+          "disposition": "PASS",
+          "score": 1.0,
+          "transcript": " e come elefante.",
+          "metrics": {
+            "duration_seconds": 1.4502040816326531,
+            "rms_dbfs": -33.03,
+            "peak": 0.16257,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.1,
+            "trailing_silence_seconds": 0.1,
+            "longest_internal_pause_seconds": 0.06
+          },
+          "flags": [],
+          "ignore_accents": true,
+          "comparison_policy": "locale-number-tokens-v1",
+          "model_id": "mlx-community/whisper-base-mlx",
+          "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+          "detail": "Packaged target scored with Base; human listening remains pending"
+        },
+        "extraction": {
+          "schema_version": 1,
+          "algorithm_version": "greia-spoken-carrier-extractor-v7",
+          "comparison_policy": "locale-number-tokens-v1",
+          "status": "EXTRACTED_PENDING_LISTENING",
+          "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/d749cbfb4f32477e93f8cb2302d27d9e/attempt-01/raw.wav",
+          "source_sha256": "ccba520a7f707777f4723b0c8174bde000178c09288856de2f94be7285275b2d",
+          "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/d749cbfb4f32477e93f8cb2302d27d9e/attempt-01/target.wav",
+          "output_sha256": "9e35eacba35763f90f2aa0d397ef7c61c0fbdd27fbd67e0ef3f510626aee8b71",
+          "output_bytes": 139260,
+          "locale": "it",
+          "prefix": "Ascolta questa frase in italiano.",
+          "target": "E come Elefante",
+          "remove_first_words": 5,
+          "ignore_accents": true,
+          "target_verification_requested": "warn",
+          "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_transcript_warning": false,
+          "recognizer": "mlx-whisper-base",
+          "recognizer_version": "0.4.3",
+          "model_id": "mlx-community/whisper-base-mlx",
+          "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+          "extracted_transcript": "e come elefante.",
+          "expected_target_tokens": [
+            "e",
+            "come",
+            "elefante"
+          ],
+          "extracted_target_tokens": [
+            "e",
+            "come",
+            "elefante"
+          ],
+          "extracted_target_exact_match": true,
+          "transcription_settings": {
+            "language": "it",
+            "initial_prompt": null,
+            "word_timestamps": true,
+            "temperature": 0.0,
+            "condition_on_previous_text": false
+          },
+          "sample_rate": 48000,
+          "duration_seconds": 4.000166666666667,
+          "boundary": {
+            "search_strategy": "target-only-global-quiet-run-v7",
+            "verified_silence_start_seconds": 1.81,
+            "verified_silence_end_seconds": 2.65,
+            "verified_silence_duration_seconds": 0.84,
+            "cut_sample": 122400,
+            "cut_time_seconds": 2.55,
+            "padding_seconds": 0.1,
+            "quiet_run_start_sample": 86880,
+            "quiet_run_end_sample": 127200,
+            "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+          },
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/d749cbfb4f32477e93f8cb2302d27d9e/attempt-01/target.wav.search/5f93d0a156e24022b03cb2ad9468f781",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/d749cbfb4f32477e93f8cb2302d27d9e/attempt-01/target.wav.search/5f93d0a156e24022b03cb2ad9468f781/search.json",
+          "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/d749cbfb4f32477e93f8cb2302d27d9e/attempt-01/raw.wav.receipt.json",
+          "source_provider_receipt_sha256": "906c9910b8543de8f4bf19deb5bbbd214a1cef5747821ac0a5382cf5168fc17c",
+          "candidate_sha256": "9e35eacba35763f90f2aa0d397ef7c61c0fbdd27fbd67e0ef3f510626aee8b71",
+          "candidate_id": "candidate-01",
+          "candidate_count": 1,
+          "qualifying_quiet_run_count": 1,
+          "candidate_results": [
+            {
+              "candidate_id": "candidate-01",
+              "quiet_run": {
+                "start_sample": 86880,
+                "end_sample": 127200,
+                "start_seconds": 1.81,
+                "end_seconds": 2.65,
+                "duration_seconds": 0.84
+              },
+              "cut_sample": 122400,
+              "cut_time_seconds": 2.55,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/d749cbfb4f32477e93f8cb2302d27d9e/attempt-01/target.wav.search/5f93d0a156e24022b03cb2ad9468f781/candidate-01.wav",
+              "preceding_voiced_seconds": 1.21,
+              "retained_voiced_seconds": 0.81,
+              "retained_duration_seconds": 1.4501666666666666,
+              "candidate_sha256": "9e35eacba35763f90f2aa0d397ef7c61c0fbdd27fbd67e0ef3f510626aee8b71",
+              "extracted_transcript": "e come elefante.",
+              "canonical_transcript_tokens": [
+                "e",
+                "come",
+                "elefante"
+              ],
+              "exact_target_match": true,
+              "target_comparison_score": 1.0,
+              "target_word_count_matches": true,
+              "target_numbers_match": true,
+              "target_comparison_flags": [],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": true,
+              "asr_segment_count": 1
+            }
+          ],
+          "human_review": "PENDING",
+          "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+          "delivery": {
+            "policy": "verified-carrier-gap-delivery-v1",
+            "removed_frames": 0,
+            "removed_seconds": 0.0,
+            "retained_verified_quiet_seconds": 0.1,
+            "raw_delivery_start_sample": 122400,
+            "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/d749cbfb4f32477e93f8cb2302d27d9e/attempt-01/delivery-target.wav",
+            "sha256": "9e35eacba35763f90f2aa0d397ef7c61c0fbdd27fbd67e0ef3f510626aee8b71"
+          }
+        },
+        "candidate": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/d749cbfb4f32477e93f8cb2302d27d9e/attempt-01/candidate.wav"
+      }
+    ]
+  },
   "corpus_replacement": {
-    "original_sha256": "408cc8f1bbb681ce9dded18ceab9ae88b1f601163e752a0fb727b39c9454086d",
+    "original_sha256": "45b3bf3f47c1c03a41dc09c942d9ed6daf635f2b68f8e45d4e57b401f5144543",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

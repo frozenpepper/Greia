@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T13:16:48.562361+00:00",
+  "created_utc": "2026-10-21T16:43:38.085659+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "¡Bien hecho!",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. ¡Bien hecho!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "flash",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "¡Bien hecho!",
+    "cue_id": "mondo_contrari.praise_2.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "flash",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "¡Bien hecho!",
     "cue_id": "mondo_contrari.praise_2.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/mondo_contrari/assets/audio/es/praise_2.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Flash, a springy, eager little rabbit. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.flash.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
   "generation_parameters": {
-    "job_id": "20261020-151643-780b3e5f",
-    "idempotency_key": "greia-0c907ab31dea462cadb209d8dcb7314f",
+    "job_id": "20261021-184322-9eb3d58d",
+    "idempotency_key": "greia-3e4e3aed95c24307b3c1e62ad89e4ba9",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,205 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1948727078,
+    "script_seed": 2617203368,
     "language_direction": "Spanish",
-    "delivery_prompt": "Flash, a springy, eager little rabbit. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
-    "effective_delivery": "Speak in Spanish. Flash, a springy, eager little rabbit. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1863785131,
-        "sha256": "8ffdcd7f5e890eeddecf45894658136b784705166ecc408d1d16f97516c3ec31",
+        "seed": 3044772911,
+        "sha256": "67affacc54bfe47f857c42f8b6c1bcb1ee971b3de78c389946291f33dd535f12",
         "generation": {
-          "elapsed_seconds": 4.665545666997787,
+          "elapsed_seconds": 14.613899457996013,
           "model_load_seconds": 0.0,
-          "rtf": 5.830717350965782,
-          "peak_memory_gb": 8.44494914
+          "rtf": 4.151479416124998,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Bien hecho!",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/mondo_contrari/assets/audio/es/praise_2.wav.raw.wav",
+    "sha256": "8c42e35b549d7dd21a8ae87a3ddb7cc28197b1ab97616723dd629fe33224707c",
+    "receipt_sha256": "e778c7988bc459cd4b47e3617dc13b988a316e70ed327c833da902ca82b14ead"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/mondo_contrari/assets/audio/es/praise_2.wav.extracted.wav",
+    "sha256": "b534fe9303ca1cb31c31e55dfcbc600885c8adc4bfc8544afce1306fe80f8bde"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/mondo_contrari/assets/audio/es/praise_2.wav.raw.wav",
+    "source_sha256": "8c42e35b549d7dd21a8ae87a3ddb7cc28197b1ab97616723dd629fe33224707c",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/mondo_contrari/assets/audio/es/praise_2.wav.extracted.wav",
+    "output_sha256": "b534fe9303ca1cb31c31e55dfcbc600885c8adc4bfc8544afce1306fe80f8bde",
+    "target_request": {
+      "speaker": "flash",
+      "kind": "character_dialogue",
+      "text": "¡Bien hecho!",
+      "locale": "es",
+      "cue_id": "mondo_contrari.praise_2.es",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/mondo_contrari/assets/audio/es/praise_2.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "e778c7988bc459cd4b47e3617dc13b988a316e70ed327c833da902ca82b14ead"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "¡Bien hecho!",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Escucha esta frase en español, bien hecho!",
+    "extracted_transcript": " Bien hecho!",
+    "raw_word_alignment": [
+      {
+        "word": "escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.56
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.56,
+        "end_seconds": 0.9
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.9,
+        "end_seconds": 1.26
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.26,
+        "end_seconds": 1.5
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.5,
+        "end_seconds": 2.1
+      },
+      {
+        "word": "bien",
+        "start_seconds": 2.54,
+        "end_seconds": 2.8
+      },
+      {
+        "word": "hecho",
+        "start_seconds": 2.8,
+        "end_seconds": 3.14
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "bien",
+        "start_seconds": 0.0,
+        "end_seconds": 0.44
+      },
+      {
+        "word": "hecho",
+        "start_seconds": 0.44,
+        "end_seconds": 0.82
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.49851446885329026,
+        "no_speech_prob": 0.008713162504136562,
+        "compression_ratio": 0.8958333333333334,
+        "word_probabilities": [
+          0.5615234375,
+          0.912109375,
+          0.9453125,
+          0.64501953125,
+          0.9814453125,
+          0.89453125,
+          0.9384765625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.7136265436808268,
+        "no_speech_prob": 0.14227166771888733,
+        "compression_ratio": 0.5789473684210527,
+        "word_probabilities": [
+          0.66943359375,
+          0.908203125
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 69,
+    "extracted_voiced_seconds": 0.69,
+    "unremoved_raw_target_tokens": [
+      "bien",
+      "hecho"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "bien",
+      "hecho"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.5201814058956917,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 2.1,
+      "target_first_word_start_seconds": 2.54,
+      "gap_seconds": 0.3292517006802721,
+      "verified_silence_start_seconds": 2.1598639455782314,
+      "verified_silence_end_seconds": 2.4891156462585036,
+      "gap_rms_dbfs": -59.052,
+      "gap_peak_dbfs": -43.15,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.3244897959183675,
+      "cut_sample": 51255,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/mondo_contrari/assets/audio/es/praise_2.wav",
-    "bytes": 35366,
-    "sha256": "efc6ce917f7a5c4db30dd26ce9d663b40a2b7aa17389b1ab2520f517e86a3922"
+    "sha256": "1f1c54edc8672e98dea0beed27b1156212356e9acd4ffc874a0ffc63c714015d",
+    "bytes": 52808
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "c5eb4ca568cade71a359cf91b51ab607ee7562c9b978f17d3bd7e5eb250ffb10",
+    "original_sha256": "efc6ce917f7a5c4db30dd26ce9d663b40a2b7aa17389b1ab2520f517e86a3922",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

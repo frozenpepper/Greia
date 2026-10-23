@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T23:28:04.600283+00:00",
+  "created_utc": "2026-10-23T04:26:32.635866+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
@@ -8,17 +8,22 @@
     "text": "M come Mela",
     "cue_id": "alfabeto_leo.letter_M.it",
     "output": "activities/alfabeto_leo/assets/audio/it/letter_M.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "comparison_policy": "locale-number-tokens-v4-spoken-target-v1"
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-012749-9d3231c7",
-    "idempotency_key": "greia-8c7a1ccf6c504f949c6cee1958c4865b",
+    "job_id": "20261023-062618-7972e104",
+    "idempotency_key": "greia-3e5330c9e62b4486a316500670bfdf0c",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +46,496 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3745810277,
+    "script_seed": 1381746746,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak naturally in Italian. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "effective_delivery": "Speak in Italian. Voce calda e calma. Pronuncia chiara e naturale.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3602252426,
-        "sha256": "3fdf00ec8b128ac8d6c028e8b9bdab54ca6059c270392b1e89cdbbce7f0c248c",
+        "seed": 2611789847,
+        "sha256": "f514d19d0c75be1028e02b1e9f1151e558cd62023a1547c88bf6e17d78446a92",
         "generation": {
-          "elapsed_seconds": 14.118938667001203,
+          "elapsed_seconds": 13.051323125022464,
           "model_load_seconds": 0.0,
-          "rtf": 7.35297560993032,
-          "peak_memory_gb": 8.21220922
+          "rtf": 3.7075867028140133,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-audio-parakeet-tdt-v3",
+    "transcript": "Emme come mela.",
+    "score": 1.0,
+    "detail": "Delivered target transcribed and screened; human listening remains pending",
+    "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+    "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v4-spoken-target-v1",
+    "flags": [],
+    "metrics": {
+      "duration_seconds": 1.1902040816326531,
+      "rms_dbfs": -39.92,
+      "peak": 0.11725,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.06,
+      "trailing_silence_seconds": 0.06,
+      "longest_internal_pause_seconds": 0.06
+    }
   },
-  "attempts": 1,
+  "attempts": 3,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/it/letter_M.wav",
-    "bytes": 84758,
-    "sha256": "fc6ff180fcb1c9445bef0a1828e9f454a79200a8b5b54045a88c1b66cfea818d"
+    "bytes": 52566,
+    "sha256": "265991e00d0c2b56f66c0868cbcd2decce98233007a19f183a0dd71f708fe198"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "short_phrase": {
+    "mode": "automatic-carrier",
+    "composition_policy": "natural-context-period-v1",
+    "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/23255dd30f9241b4b9759ce0f5f96005",
+    "prefix": "Guardiamo insieme le lettere.",
+    "composite_text": "Guardiamo insieme le lettere.\n\nemme come Mela",
+    "effective_delivery": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "semantic_target": "M come Mela",
+    "spoken_target": "emme come Mela",
+    "spoken_target_policy": "locale-spoken-letter-and-cardinal-v1",
+    "extraction": {
+      "schema_version": 1,
+      "algorithm_version": "greia-spoken-carrier-extractor-v7",
+      "comparison_policy": "locale-number-tokens-v4-spoken-target-v1",
+      "status": "EXTRACTED_PENDING_LISTENING",
+      "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/23255dd30f9241b4b9759ce0f5f96005/attempt-03/raw.wav",
+      "source_sha256": "f514d19d0c75be1028e02b1e9f1151e558cd62023a1547c88bf6e17d78446a92",
+      "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/23255dd30f9241b4b9759ce0f5f96005/attempt-03/target.wav",
+      "output_sha256": "6e15790cea79c760b4505ab9eceb3c4f23ea4df05a1b9aa953c454d4cbd48141",
+      "output_bytes": 114300,
+      "locale": "it",
+      "prefix": "Guardiamo insieme le lettere.",
+      "target": "emme come Mela",
+      "remove_first_words": 4,
+      "ignore_accents": true,
+      "target_verification_requested": "warn",
+      "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+      "target_comparison_score": 1.0,
+      "target_word_count_matches": true,
+      "target_numbers_match": true,
+      "target_comparison_flags": [],
+      "target_transcript_warning": false,
+      "recognizer": "mlx-audio-parakeet-tdt-v3",
+      "recognizer_version": "0.5.0",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "extracted_transcript": "Emme come mela.",
+      "expected_target_tokens": [
+        "<letter:M>",
+        "kome",
+        "mela"
+      ],
+      "extracted_target_tokens": [
+        "<letter:M>",
+        "kome",
+        "mela"
+      ],
+      "extracted_target_exact_match": true,
+      "transcription_settings": {
+        "language_detection": "automatic",
+        "expected_text_prompt": null,
+        "timestamps": "model-provided-token-timestamps"
+      },
+      "sample_rate": 48000,
+      "duration_seconds": 3.520166666666667,
+      "boundary": {
+        "search_strategy": "target-only-global-quiet-run-v7",
+        "verified_silence_start_seconds": 1.49,
+        "verified_silence_end_seconds": 2.43,
+        "verified_silence_duration_seconds": 0.94,
+        "cut_sample": 111840,
+        "cut_time_seconds": 2.33,
+        "padding_seconds": 0.1,
+        "quiet_run_start_sample": 71520,
+        "quiet_run_end_sample": 116640,
+        "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+      },
+      "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/23255dd30f9241b4b9759ce0f5f96005/attempt-03/target.wav.search/be74822f63fb454fa39e9bd67e2b987b",
+      "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/23255dd30f9241b4b9759ce0f5f96005/attempt-03/target.wav.search/be74822f63fb454fa39e9bd67e2b987b/search.json",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/23255dd30f9241b4b9759ce0f5f96005/attempt-03/raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "7129da61aa89aaa4edfc4418882f024c59edc576c5ca48879707d20b41cb540a",
+      "candidate_sha256": "6e15790cea79c760b4505ab9eceb3c4f23ea4df05a1b9aa953c454d4cbd48141",
+      "candidate_id": "candidate-02",
+      "candidate_count": 3,
+      "qualifying_quiet_run_count": 3,
+      "candidate_results": [
+        {
+          "candidate_id": "candidate-01",
+          "quiet_run": {
+            "start_sample": 52800,
+            "end_sample": 67200,
+            "start_seconds": 1.1,
+            "end_seconds": 1.4,
+            "duration_seconds": 0.3
+          },
+          "cut_sample": 62400,
+          "cut_time_seconds": 1.3,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/23255dd30f9241b4b9759ce0f5f96005/attempt-03/target.wav.search/be74822f63fb454fa39e9bd67e2b987b/candidate-01.wav",
+          "preceding_voiced_seconds": 0.69,
+          "retained_voiced_seconds": 0.42,
+          "retained_duration_seconds": 2.2201666666666666,
+          "candidate_sha256": "0542397db96aef10e0374a3844b7b8b1dace0b68c89a052381306f716f625413",
+          "extracted_transcript": "Emma come mela.",
+          "canonical_transcript_tokens": [
+            "emma",
+            "kome",
+            "mela"
+          ],
+          "exact_target_match": false,
+          "target_comparison_score": 0.6875,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [
+            "TARGET_LETTER_MISMATCH"
+          ],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": false,
+          "asr_segment_count": 1
+        },
+        {
+          "candidate_id": "candidate-02",
+          "quiet_run": {
+            "start_sample": 71520,
+            "end_sample": 116640,
+            "start_seconds": 1.49,
+            "end_seconds": 2.43,
+            "duration_seconds": 0.94
+          },
+          "cut_sample": 111840,
+          "cut_time_seconds": 2.33,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/23255dd30f9241b4b9759ce0f5f96005/attempt-03/target.wav.search/be74822f63fb454fa39e9bd67e2b987b/candidate-02.wav",
+          "preceding_voiced_seconds": 0.69,
+          "retained_voiced_seconds": 0.42,
+          "retained_duration_seconds": 1.1901666666666666,
+          "candidate_sha256": "6e15790cea79c760b4505ab9eceb3c4f23ea4df05a1b9aa953c454d4cbd48141",
+          "extracted_transcript": "Emme come mela.",
+          "canonical_transcript_tokens": [
+            "<letter:M>",
+            "kome",
+            "mela"
+          ],
+          "exact_target_match": true,
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": true,
+          "asr_segment_count": 1
+        },
+        {
+          "candidate_id": "candidate-03",
+          "quiet_run": {
+            "start_sample": 130560,
+            "end_sample": 148800,
+            "start_seconds": 2.72,
+            "end_seconds": 3.1,
+            "duration_seconds": 0.38
+          },
+          "cut_sample": 144000,
+          "cut_time_seconds": 3.0,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/23255dd30f9241b4b9759ce0f5f96005/attempt-03/target.wav.search/be74822f63fb454fa39e9bd67e2b987b/candidate-03.wav",
+          "preceding_voiced_seconds": 0.8,
+          "retained_voiced_seconds": 0.31,
+          "retained_duration_seconds": 0.5201666666666667,
+          "candidate_sha256": "867b0b8ad4d19fe44366008d39b9e3076b4dbacdcd5742aff70de07fc06e31df",
+          "extracted_transcript": "Mela.",
+          "canonical_transcript_tokens": [
+            "mela"
+          ],
+          "exact_target_match": false,
+          "target_comparison_score": 0.3764,
+          "target_word_count_matches": false,
+          "target_numbers_match": true,
+          "target_comparison_flags": [
+            "TARGET_LETTER_MISMATCH",
+            "TARGET_WORD_COUNT_MISMATCH"
+          ],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": false,
+          "asr_segment_count": 1
+        }
+      ],
+      "human_review": "PENDING",
+      "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+      "delivery": {
+        "policy": "verified-carrier-gap-delivery-v1",
+        "removed_frames": 0,
+        "removed_seconds": 0.0,
+        "retained_verified_quiet_seconds": 0.1,
+        "raw_delivery_start_sample": 111840,
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/23255dd30f9241b4b9759ce0f5f96005/attempt-03/delivery-target.wav",
+        "sha256": "6e15790cea79c760b4505ab9eceb3c4f23ea4df05a1b9aa953c454d4cbd48141"
+      }
+    },
+    "quality": {
+      "disposition": "PASS",
+      "score": 1.0,
+      "transcript": "Emme come mela.",
+      "metrics": {
+        "duration_seconds": 1.1902040816326531,
+        "rms_dbfs": -39.92,
+        "peak": 0.11725,
+        "clipped_fraction": 0.0,
+        "leading_silence_seconds": 0.06,
+        "trailing_silence_seconds": 0.06,
+        "longest_internal_pause_seconds": 0.06
+      },
+      "flags": [],
+      "ignore_accents": true,
+      "comparison_policy": "locale-number-tokens-v4-spoken-target-v1",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "detail": "Delivered target transcribed and screened; human listening remains pending"
+    },
+    "history": [
+      {
+        "attempt": 1,
+        "status": "REJECTED_CUT",
+        "error": "no candidate suffix meets target verification policy",
+        "evidence": {
+          "candidate_transcripts": [
+            "L'etter è me come mela"
+          ],
+          "matching_candidate_ids": [],
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/23255dd30f9241b4b9759ce0f5f96005/attempt-01/target.wav.search/525cb78dec044c11a34a64898ad23ea7",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/23255dd30f9241b4b9759ce0f5f96005/attempt-01/target.wav.search/525cb78dec044c11a34a64898ad23ea7/search.json"
+        }
+      },
+      {
+        "attempt": 2,
+        "status": "REJECTED_CUT",
+        "error": "no candidate suffix meets target verification policy",
+        "evidence": {
+          "candidate_transcripts": [
+            "Lettere m come mela."
+          ],
+          "matching_candidate_ids": [],
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/23255dd30f9241b4b9759ce0f5f96005/attempt-02/target.wav.search/026225627c4d49b1b735d78e4446be6b",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/23255dd30f9241b4b9759ce0f5f96005/attempt-02/target.wav.search/026225627c4d49b1b735d78e4446be6b/search.json"
+        }
+      },
+      {
+        "attempt": 3,
+        "status": "PASS",
+        "quality": {
+          "disposition": "PASS",
+          "score": 1.0,
+          "transcript": "Emme come mela.",
+          "metrics": {
+            "duration_seconds": 1.1902040816326531,
+            "rms_dbfs": -39.92,
+            "peak": 0.11725,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.06,
+            "trailing_silence_seconds": 0.06,
+            "longest_internal_pause_seconds": 0.06
+          },
+          "flags": [],
+          "ignore_accents": true,
+          "comparison_policy": "locale-number-tokens-v4-spoken-target-v1",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "detail": "Delivered target transcribed and screened; human listening remains pending"
+        },
+        "extraction": {
+          "schema_version": 1,
+          "algorithm_version": "greia-spoken-carrier-extractor-v7",
+          "comparison_policy": "locale-number-tokens-v4-spoken-target-v1",
+          "status": "EXTRACTED_PENDING_LISTENING",
+          "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/23255dd30f9241b4b9759ce0f5f96005/attempt-03/raw.wav",
+          "source_sha256": "f514d19d0c75be1028e02b1e9f1151e558cd62023a1547c88bf6e17d78446a92",
+          "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/23255dd30f9241b4b9759ce0f5f96005/attempt-03/target.wav",
+          "output_sha256": "6e15790cea79c760b4505ab9eceb3c4f23ea4df05a1b9aa953c454d4cbd48141",
+          "output_bytes": 114300,
+          "locale": "it",
+          "prefix": "Guardiamo insieme le lettere.",
+          "target": "emme come Mela",
+          "remove_first_words": 4,
+          "ignore_accents": true,
+          "target_verification_requested": "warn",
+          "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_transcript_warning": false,
+          "recognizer": "mlx-audio-parakeet-tdt-v3",
+          "recognizer_version": "0.5.0",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "extracted_transcript": "Emme come mela.",
+          "expected_target_tokens": [
+            "<letter:M>",
+            "kome",
+            "mela"
+          ],
+          "extracted_target_tokens": [
+            "<letter:M>",
+            "kome",
+            "mela"
+          ],
+          "extracted_target_exact_match": true,
+          "transcription_settings": {
+            "language_detection": "automatic",
+            "expected_text_prompt": null,
+            "timestamps": "model-provided-token-timestamps"
+          },
+          "sample_rate": 48000,
+          "duration_seconds": 3.520166666666667,
+          "boundary": {
+            "search_strategy": "target-only-global-quiet-run-v7",
+            "verified_silence_start_seconds": 1.49,
+            "verified_silence_end_seconds": 2.43,
+            "verified_silence_duration_seconds": 0.94,
+            "cut_sample": 111840,
+            "cut_time_seconds": 2.33,
+            "padding_seconds": 0.1,
+            "quiet_run_start_sample": 71520,
+            "quiet_run_end_sample": 116640,
+            "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+          },
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/23255dd30f9241b4b9759ce0f5f96005/attempt-03/target.wav.search/be74822f63fb454fa39e9bd67e2b987b",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/23255dd30f9241b4b9759ce0f5f96005/attempt-03/target.wav.search/be74822f63fb454fa39e9bd67e2b987b/search.json",
+          "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/23255dd30f9241b4b9759ce0f5f96005/attempt-03/raw.wav.receipt.json",
+          "source_provider_receipt_sha256": "7129da61aa89aaa4edfc4418882f024c59edc576c5ca48879707d20b41cb540a",
+          "candidate_sha256": "6e15790cea79c760b4505ab9eceb3c4f23ea4df05a1b9aa953c454d4cbd48141",
+          "candidate_id": "candidate-02",
+          "candidate_count": 3,
+          "qualifying_quiet_run_count": 3,
+          "candidate_results": [
+            {
+              "candidate_id": "candidate-01",
+              "quiet_run": {
+                "start_sample": 52800,
+                "end_sample": 67200,
+                "start_seconds": 1.1,
+                "end_seconds": 1.4,
+                "duration_seconds": 0.3
+              },
+              "cut_sample": 62400,
+              "cut_time_seconds": 1.3,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/23255dd30f9241b4b9759ce0f5f96005/attempt-03/target.wav.search/be74822f63fb454fa39e9bd67e2b987b/candidate-01.wav",
+              "preceding_voiced_seconds": 0.69,
+              "retained_voiced_seconds": 0.42,
+              "retained_duration_seconds": 2.2201666666666666,
+              "candidate_sha256": "0542397db96aef10e0374a3844b7b8b1dace0b68c89a052381306f716f625413",
+              "extracted_transcript": "Emma come mela.",
+              "canonical_transcript_tokens": [
+                "emma",
+                "kome",
+                "mela"
+              ],
+              "exact_target_match": false,
+              "target_comparison_score": 0.6875,
+              "target_word_count_matches": true,
+              "target_numbers_match": true,
+              "target_comparison_flags": [
+                "TARGET_LETTER_MISMATCH"
+              ],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": false,
+              "asr_segment_count": 1
+            },
+            {
+              "candidate_id": "candidate-02",
+              "quiet_run": {
+                "start_sample": 71520,
+                "end_sample": 116640,
+                "start_seconds": 1.49,
+                "end_seconds": 2.43,
+                "duration_seconds": 0.94
+              },
+              "cut_sample": 111840,
+              "cut_time_seconds": 2.33,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/23255dd30f9241b4b9759ce0f5f96005/attempt-03/target.wav.search/be74822f63fb454fa39e9bd67e2b987b/candidate-02.wav",
+              "preceding_voiced_seconds": 0.69,
+              "retained_voiced_seconds": 0.42,
+              "retained_duration_seconds": 1.1901666666666666,
+              "candidate_sha256": "6e15790cea79c760b4505ab9eceb3c4f23ea4df05a1b9aa953c454d4cbd48141",
+              "extracted_transcript": "Emme come mela.",
+              "canonical_transcript_tokens": [
+                "<letter:M>",
+                "kome",
+                "mela"
+              ],
+              "exact_target_match": true,
+              "target_comparison_score": 1.0,
+              "target_word_count_matches": true,
+              "target_numbers_match": true,
+              "target_comparison_flags": [],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": true,
+              "asr_segment_count": 1
+            },
+            {
+              "candidate_id": "candidate-03",
+              "quiet_run": {
+                "start_sample": 130560,
+                "end_sample": 148800,
+                "start_seconds": 2.72,
+                "end_seconds": 3.1,
+                "duration_seconds": 0.38
+              },
+              "cut_sample": 144000,
+              "cut_time_seconds": 3.0,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/23255dd30f9241b4b9759ce0f5f96005/attempt-03/target.wav.search/be74822f63fb454fa39e9bd67e2b987b/candidate-03.wav",
+              "preceding_voiced_seconds": 0.8,
+              "retained_voiced_seconds": 0.31,
+              "retained_duration_seconds": 0.5201666666666667,
+              "candidate_sha256": "867b0b8ad4d19fe44366008d39b9e3076b4dbacdcd5742aff70de07fc06e31df",
+              "extracted_transcript": "Mela.",
+              "canonical_transcript_tokens": [
+                "mela"
+              ],
+              "exact_target_match": false,
+              "target_comparison_score": 0.3764,
+              "target_word_count_matches": false,
+              "target_numbers_match": true,
+              "target_comparison_flags": [
+                "TARGET_LETTER_MISMATCH",
+                "TARGET_WORD_COUNT_MISMATCH"
+              ],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": false,
+              "asr_segment_count": 1
+            }
+          ],
+          "human_review": "PENDING",
+          "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+          "delivery": {
+            "policy": "verified-carrier-gap-delivery-v1",
+            "removed_frames": 0,
+            "removed_seconds": 0.0,
+            "retained_verified_quiet_seconds": 0.1,
+            "raw_delivery_start_sample": 111840,
+            "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/23255dd30f9241b4b9759ce0f5f96005/attempt-03/delivery-target.wav",
+            "sha256": "6e15790cea79c760b4505ab9eceb3c4f23ea4df05a1b9aa953c454d4cbd48141"
+          }
+        },
+        "candidate": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/23255dd30f9241b4b9759ce0f5f96005/attempt-03/candidate.wav"
+      }
+    ]
+  },
   "corpus_replacement": {
-    "original_sha256": "1303f6194406dca8c0e555d445f1dc6c604910d10aac76f144101c5ef191cde7",
+    "original_sha256": "fc6ff180fcb1c9445bef0a1828e9f454a79200a8b5b54045a88c1b66cfea818d",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

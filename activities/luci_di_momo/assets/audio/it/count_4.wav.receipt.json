@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T11:59:50.017229+00:00",
+  "created_utc": "2026-10-21T16:37:11.418253+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "Quattro lucciole!",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. Quattro lucciole!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "momo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Quattro lucciole!",
+    "cue_id": "activities/luci_di_momo/assets/audio/it/count_4.wav",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Quattro lucciole!",
     "cue_id": "activities/luci_di_momo/assets/audio/it/count_4.wav",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/luci_di_momo/assets/audio/it/count_4.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Counts aloud with a child: one crisp, clear number, bright and steady, no extra words."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.momo.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261021-135942-692f3292",
-    "idempotency_key": "greia-72d5bb44852b462ab0c9296cfd29b704",
+    "job_id": "20261021-183653-3109fd70",
+    "idempotency_key": "greia-ae58dd994a654c7f899d724e6e7f53b6",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,181 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 4044593554,
+    "script_seed": 4159859767,
     "language_direction": "Italian",
-    "delivery_prompt": "Counts aloud with a child: one crisp, clear number, bright and steady, no extra words.",
-    "effective_delivery": "Speak in Italian. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 72170654,
-        "sha256": "72af445cd768192006e0d8e7b8a5463a9408b2ed946f6e73fa00dedc0cb8da7e",
+        "seed": 3161408994,
+        "sha256": "437bc601a054d4e79be086601a24ac5801ba3aaead05e4bf2c3a1fa40da19a81",
         "generation": {
-          "elapsed_seconds": 6.231114333000733,
+          "elapsed_seconds": 17.16167216699978,
           "model_load_seconds": 0.0,
-          "rtf": 3.5400706370613007,
-          "peak_memory_gb": 7.648166916
+          "rtf": 5.107387183274573,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8593,
+    "transcript": "4 luciole",
+    "metrics": {
+      "duration_seconds": 1.085578231292517,
+      "rms_dbfs": -28.17,
+      "peak": 0.23828,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.06,
+      "trailing_silence_seconds": 0.16,
+      "longest_internal_pause_seconds": 0.08
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v1",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/luci_di_momo/assets/audio/it/count_4.wav.raw.wav",
+    "sha256": "7e11385f372e42ea7e06504a12d318af0f08a921c83840c77cd8efc01588d33e",
+    "receipt_sha256": "8d7c602d89b90b7dfc610d007aa7ffbe8a0a7811eb7da8f86607a4ef18283112"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/luci_di_momo/assets/audio/it/count_4.wav.extracted.wav",
+    "sha256": "d73f4a7190fe2a02ae3d2c7aaaa2f5510a8157ebeaf8083522367e66ee539471"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/luci_di_momo/assets/audio/it/count_4.wav.delivery.wav",
+    "sha256": "d73f4a7190fe2a02ae3d2c7aaaa2f5510a8157ebeaf8083522367e66ee539471"
+  },
+  "extraction": {
+    "schema_version": 1,
+    "algorithm_version": "greia-spoken-carrier-extractor-v7",
+    "comparison_policy": "locale-number-tokens-v1",
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-raw/activities/luci_di_momo/assets/audio/it/count_4.wav.raw.wav",
+    "source_sha256": "7e11385f372e42ea7e06504a12d318af0f08a921c83840c77cd8efc01588d33e",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/luci_di_momo/assets/audio/it/count_4.wav.extracted.wav",
+    "output_sha256": "d73f4a7190fe2a02ae3d2c7aaaa2f5510a8157ebeaf8083522367e66ee539471",
+    "output_bytes": 47918,
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "Quattro lucciole!",
+    "remove_first_words": 5,
+    "ignore_accents": true,
+    "target_verification_requested": "warn",
+    "target_verification_policy": "warn",
+    "target_comparison_score": 0.8593,
+    "target_word_count_matches": true,
+    "target_numbers_match": true,
+    "target_comparison_flags": [],
+    "target_transcript_warning": true,
+    "recognizer": "mlx-whisper-base",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extracted_transcript": "4 luciole",
+    "expected_target_tokens": [
+      "<num:4>",
+      "lucciole"
+    ],
+    "extracted_target_tokens": [
+      "<num:4>",
+      "luciole"
+    ],
+    "extracted_target_exact_match": false,
+    "transcription_settings": {
+      "language": "it",
+      "initial_prompt": null,
+      "word_timestamps": true,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "sample_rate": 22050,
+    "duration_seconds": 3.3601814058956916,
+    "boundary": {
+      "search_strategy": "target-only-global-quiet-run-v7",
+      "verified_silence_start_seconds": 1.8258503401360544,
+      "verified_silence_end_seconds": 2.3746031746031746,
+      "verified_silence_duration_seconds": 0.5487528344671202,
+      "cut_sample": 50155,
+      "cut_time_seconds": 2.2746031746031745,
+      "padding_seconds": 0.1,
+      "quiet_run_start_sample": 40260,
+      "quiet_run_end_sample": 52360,
+      "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+    },
+    "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/luci_di_momo/assets/audio/it/count_4.wav.extracted.wav.search/5410a7cc3c374d2f8e57fab09e3c066a",
+    "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/luci_di_momo/assets/audio/it/count_4.wav.extracted.wav.search/5410a7cc3c374d2f8e57fab09e3c066a/search.json",
+    "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-raw/activities/luci_di_momo/assets/audio/it/count_4.wav.raw.wav.receipt.json",
+    "source_provider_receipt_sha256": "8d7c602d89b90b7dfc610d007aa7ffbe8a0a7811eb7da8f86607a4ef18283112",
+    "candidate_sha256": "d73f4a7190fe2a02ae3d2c7aaaa2f5510a8157ebeaf8083522367e66ee539471",
+    "candidate_id": "candidate-01",
+    "candidate_count": 1,
+    "qualifying_quiet_run_count": 1,
+    "candidate_results": [
+      {
+        "candidate_id": "candidate-01",
+        "quiet_run": {
+          "start_sample": 40260,
+          "end_sample": 52360,
+          "start_seconds": 1.8258503401360544,
+          "end_seconds": 2.3746031746031746,
+          "duration_seconds": 0.5487528344671202
+        },
+        "cut_sample": 50155,
+        "cut_time_seconds": 2.2746031746031745,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/luci_di_momo/assets/audio/it/count_4.wav.extracted.wav.search/5410a7cc3c374d2f8e57fab09e3c066a/candidate-01.wav",
+        "preceding_voiced_seconds": 1.36,
+        "retained_voiced_seconds": 0.63,
+        "retained_duration_seconds": 1.085578231292517,
+        "candidate_sha256": "d73f4a7190fe2a02ae3d2c7aaaa2f5510a8157ebeaf8083522367e66ee539471",
+        "extracted_transcript": "4 luciole",
+        "canonical_transcript_tokens": [
+          "<num:4>",
+          "luciole"
+        ],
+        "exact_target_match": false,
+        "target_comparison_score": 0.8593,
+        "target_word_count_matches": true,
+        "target_numbers_match": true,
+        "target_comparison_flags": [],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": true,
+        "asr_segment_count": 1
+      }
+    ],
+    "human_review": "PENDING",
+    "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+    "target_verification_effective_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+    "target_verification_warning": true,
+    "saved_recovery_policy": "target-only-v7-saved-v1",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 0,
+      "removed_seconds": 0.0,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 50155,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/luci_di_momo/assets/audio/it/count_4.wav.delivery.wav",
+      "sha256": "d73f4a7190fe2a02ae3d2c7aaaa2f5510a8157ebeaf8083522367e66ee539471"
+    }
+  },
   "output": {
     "path": "activities/luci_di_momo/assets/audio/it/count_4.wav",
-    "bytes": 77702,
-    "sha256": "45fbe4a0d49c3aea54a63b80164e675b0e5adf1a06a0b55a673c79c9ba6b2815"
+    "sha256": "659c8a2b13defee8f70d9e805ebe603373454e143e0c7411565391774f4a0e90",
+    "bytes": 47952
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "f38c1d4caf62caba72041a5d781e84f113b6ff59cb742a00e67c9eb46946f6c7",
+    "original_sha256": "1ce2195be89b9b0a1e0c47b08b85a1dff892eddaa9ebc28ef034a5396e56d80e",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

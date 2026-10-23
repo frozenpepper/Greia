@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:29:58.379935+00:00",
+  "created_utc": "2026-10-21T16:22:07.158671+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "T comme Tortue",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. T comme Tortue",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "T comme Tortue",
+    "cue_id": "foresta_parole.find_t",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "T comme Tortue",
     "cue_id": "foresta_parole.find_t",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/foresta_parole/assets/audio/fr/find_t.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-142949-8df67d3e",
-    "idempotency_key": "greia-87cc0ec284ca41c29f95132ce17b3d39",
+    "job_id": "20261021-182151-efb5302d",
+    "idempotency_key": "greia-21f9b3aa1d2f4c4f9fb930d12da4383a",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,184 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 678859925,
+    "script_seed": 3724127252,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 523365274,
-        "sha256": "0538795d62489085d5a831a4d23c3927b1d65046f09a8e49c29e2e114caa36c0",
+        "seed": 1672218902,
+        "sha256": "df05e51e79619e7ed90144eff7c12c1bdd51382dfd57ddf62d49670150533755",
         "generation": {
-          "elapsed_seconds": 8.62693012499949,
+          "elapsed_seconds": 14.737701625010232,
           "model_load_seconds": 0.0,
-          "rtf": 4.492802773196505,
-          "peak_memory_gb": 8.44494914
+          "rtf": 4.186648821081453,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8871,
+    "transcript": "T'es comme tortue.",
+    "metrics": {
+      "duration_seconds": 1.4351473922902493,
+      "rms_dbfs": -35.05,
+      "peak": 0.13071,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.1,
+      "trailing_silence_seconds": 0.16,
+      "longest_internal_pause_seconds": 0.1
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v1",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/foresta_parole/assets/audio/fr/find_t.wav.raw.wav",
+    "sha256": "e944b04a7b205d0e12e5660382639eec2519277de052593ba328e37cc5140444",
+    "receipt_sha256": "64f9d2d19c2251e739b7d3b638251eed9a34e43cb0cab3f2ed3f3a42b463d639"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/foresta_parole/assets/audio/fr/find_t.wav.extracted.wav",
+    "sha256": "af3cc5ff905313e86fdc7ea789bef2a43e63e931605fd644c73cc370bccbe7b3"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/foresta_parole/assets/audio/fr/find_t.wav.delivery.wav",
+    "sha256": "af3cc5ff905313e86fdc7ea789bef2a43e63e931605fd644c73cc370bccbe7b3"
+  },
+  "extraction": {
+    "schema_version": 1,
+    "algorithm_version": "greia-spoken-carrier-extractor-v7",
+    "comparison_policy": "locale-number-tokens-v1",
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-raw/activities/foresta_parole/assets/audio/fr/find_t.wav.raw.wav",
+    "source_sha256": "e944b04a7b205d0e12e5660382639eec2519277de052593ba328e37cc5140444",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/foresta_parole/assets/audio/fr/find_t.wav.extracted.wav",
+    "output_sha256": "af3cc5ff905313e86fdc7ea789bef2a43e63e931605fd644c73cc370bccbe7b3",
+    "output_bytes": 63334,
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "T comme Tortue",
+    "remove_first_words": 5,
+    "ignore_accents": true,
+    "target_verification_requested": "warn",
+    "target_verification_policy": "warn",
+    "target_comparison_score": 0.8871,
+    "target_word_count_matches": true,
+    "target_numbers_match": true,
+    "target_comparison_flags": [],
+    "target_transcript_warning": true,
+    "recognizer": "mlx-whisper-base",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extracted_transcript": "T'es comme tortue.",
+    "expected_target_tokens": [
+      "t",
+      "comme",
+      "tortue"
+    ],
+    "extracted_target_tokens": [
+      "t'es",
+      "comme",
+      "tortue"
+    ],
+    "extracted_target_exact_match": false,
+    "transcription_settings": {
+      "language": "fr",
+      "initial_prompt": null,
+      "word_timestamps": true,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "sample_rate": 22050,
+    "duration_seconds": 3.5201814058956917,
+    "boundary": {
+      "search_strategy": "target-only-global-quiet-run-v7",
+      "verified_silence_start_seconds": 1.4965986394557824,
+      "verified_silence_end_seconds": 2.185034013605442,
+      "verified_silence_duration_seconds": 0.6884353741496598,
+      "cut_sample": 45975,
+      "cut_time_seconds": 2.0850340136054424,
+      "padding_seconds": 0.1,
+      "quiet_run_start_sample": 33000,
+      "quiet_run_end_sample": 48180,
+      "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+    },
+    "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/foresta_parole/assets/audio/fr/find_t.wav.extracted.wav.search/6b6e45c1b4114593ab18ee64ea5309bd",
+    "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/foresta_parole/assets/audio/fr/find_t.wav.extracted.wav.search/6b6e45c1b4114593ab18ee64ea5309bd/search.json",
+    "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-raw/activities/foresta_parole/assets/audio/fr/find_t.wav.raw.wav.receipt.json",
+    "source_provider_receipt_sha256": "64f9d2d19c2251e739b7d3b638251eed9a34e43cb0cab3f2ed3f3a42b463d639",
+    "candidate_sha256": "af3cc5ff905313e86fdc7ea789bef2a43e63e931605fd644c73cc370bccbe7b3",
+    "candidate_id": "candidate-01",
+    "candidate_count": 1,
+    "qualifying_quiet_run_count": 1,
+    "candidate_results": [
+      {
+        "candidate_id": "candidate-01",
+        "quiet_run": {
+          "start_sample": 33000,
+          "end_sample": 48180,
+          "start_seconds": 1.4965986394557824,
+          "end_seconds": 2.185034013605442,
+          "duration_seconds": 0.6884353741496598
+        },
+        "cut_sample": 45975,
+        "cut_time_seconds": 2.0850340136054424,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/foresta_parole/assets/audio/fr/find_t.wav.extracted.wav.search/6b6e45c1b4114593ab18ee64ea5309bd/candidate-01.wav",
+        "preceding_voiced_seconds": 1.11,
+        "retained_voiced_seconds": 0.7,
+        "retained_duration_seconds": 1.4351473922902493,
+        "candidate_sha256": "af3cc5ff905313e86fdc7ea789bef2a43e63e931605fd644c73cc370bccbe7b3",
+        "extracted_transcript": "T'es comme tortue.",
+        "canonical_transcript_tokens": [
+          "t'es",
+          "comme",
+          "tortue"
+        ],
+        "exact_target_match": false,
+        "target_comparison_score": 0.8871,
+        "target_word_count_matches": true,
+        "target_numbers_match": true,
+        "target_comparison_flags": [],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": true,
+        "asr_segment_count": 1
+      }
+    ],
+    "human_review": "PENDING",
+    "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+    "target_verification_effective_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+    "target_verification_warning": true,
+    "saved_recovery_policy": "target-only-v7-saved-v1",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 0,
+      "removed_seconds": 0.0,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 45975,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/foresta_parole/assets/audio/fr/find_t.wav.delivery.wav",
+      "sha256": "af3cc5ff905313e86fdc7ea789bef2a43e63e931605fd644c73cc370bccbe7b3"
+    }
+  },
   "output": {
     "path": "activities/foresta_parole/assets/audio/fr/find_t.wav",
-    "bytes": 84758,
-    "sha256": "d39d38e65e5c9310b1dd4956a9102ecb7a045a3fdd7cce3951909329d3044d16"
+    "sha256": "fd57559d0f2ff93c91aaa10c787281ecb20151ad002d773f1a2a300cf51bec6f",
+    "bytes": 63368
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "62e12a78c403a7aae5069f703392ab2698750cd3d55136f5ca07dd40271eca6f",
+    "original_sha256": "d39d38e65e5c9310b1dd4956a9102ecb7a045a3fdd7cce3951909329d3044d16",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

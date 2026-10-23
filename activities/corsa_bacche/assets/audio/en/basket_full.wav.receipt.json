@@ -1,24 +1,66 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T08:45:49.348822+00:00",
+  "created_utc": "2026-10-22T17:48:31.418060+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Look at the basket over there. It is full of lovely berries now.",
+    "prefix_word_count": 13,
+    "target": "Basket full!",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Look at the basket over there. It is full of lovely berries now.\n\nBasket full!",
+    "composite_delivery_prompt": "Warm, calm, clear speech. Careful, natural pronunciation.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "momo",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Basket full!",
+    "cue_id": "corsa_bacche.basket_full",
+    "delivery_prompt": "Warm, calm, clear speech. Careful, natural pronunciation.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null
+  },
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "Basket full!",
-    "cue_id": "greia.requested.basket_full.en",
+    "cue_id": "corsa_bacche.basket_full",
+    "delivery_prompt": "Warm, calm, clear speech. Careful, natural pronunciation.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
     "output": "activities/corsa_bacche/assets/audio/en/basket_full.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.momo.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261021-104543-514b0bc3",
-    "idempotency_key": "greia-291eb5b8fe504e96a68cac619ee7dfa8",
+    "job_id": "20261022-194807-1858b39f",
+    "idempotency_key": "greia-2341b5c78b774c56a1bd66312be599ce",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +83,259 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3371983820,
+    "script_seed": 314159,
     "language_direction": "English",
-    "delivery_prompt": "Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace.",
-    "effective_delivery": "Speak in English. Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace.",
+    "delivery_prompt": "Warm, calm, clear speech. Careful, natural pronunciation.",
+    "effective_delivery": "Speak in English. Warm, calm, clear speech. Careful, natural pronunciation.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3477111961,
-        "sha256": "ac5f41a4944b526e52d2dec61e0d871553e4726ebcb8887f01b2ee3889facb67",
+        "seed": 3526808665,
+        "sha256": "8d06b74db670418065c41aa00f7f5ad479fedcffdad397fb70bc30bcea765087",
         "generation": {
-          "elapsed_seconds": 5.252818125001795,
+          "elapsed_seconds": 23.297350709006423,
           "model_load_seconds": 0.0,
-          "rtf": 3.6473682154855656,
-          "peak_memory_gb": 7.648166916
+          "rtf": 3.64011625358815,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " Basket full.",
+    "metrics": {
+      "duration_seconds": 1.150204081632653,
+      "rms_dbfs": -29.7,
+      "peak": 0.2468,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.1,
+      "trailing_silence_seconds": 0.12,
+      "longest_internal_pause_seconds": 0.12
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v2",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/corsa_bacche/assets/audio/en/basket_full.wav.raw.wav",
+    "sha256": "8d06b74db670418065c41aa00f7f5ad479fedcffdad397fb70bc30bcea765087",
+    "receipt_sha256": "9de61196207384063f198db81cd29a10e46b3539b3d8368d2fe767478f56e281"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/corsa_bacche/assets/audio/en/basket_full.wav.extracted.wav",
+    "sha256": "5c798fe6115c227df526506d534bbfffe83f351a11cc80b33b1f691c2ba96e72"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/corsa_bacche/assets/audio/en/basket_full.wav.delivery.wav",
+    "sha256": "5c798fe6115c227df526506d534bbfffe83f351a11cc80b33b1f691c2ba96e72"
+  },
+  "extraction": {
+    "schema_version": 1,
+    "algorithm_version": "greia-spoken-carrier-extractor-v7",
+    "comparison_policy": "locale-number-tokens-v2",
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/natural-basket-recovery-v1/carrier-raw/activities/corsa_bacche/assets/audio/en/basket_full.wav.raw.wav",
+    "source_sha256": "8d06b74db670418065c41aa00f7f5ad479fedcffdad397fb70bc30bcea765087",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/natural-basket-recovery-v1/carrier-extracted/activities/corsa_bacche/assets/audio/en/basket_full.wav.extracted.wav",
+    "output_sha256": "5c798fe6115c227df526506d534bbfffe83f351a11cc80b33b1f691c2ba96e72",
+    "output_bytes": 110460,
+    "locale": "en",
+    "prefix": "Look at the basket over there. It is full of lovely berries now.",
+    "target": "Basket full!",
+    "remove_first_words": 13,
+    "ignore_accents": true,
+    "target_verification_requested": "warn",
+    "target_verification_policy": "warn",
+    "target_comparison_score": 1.0,
+    "target_word_count_matches": true,
+    "target_numbers_match": true,
+    "target_comparison_flags": [],
+    "target_transcript_warning": false,
+    "recognizer": "mlx-whisper-base",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extracted_transcript": "Basket full.",
+    "expected_target_tokens": [
+      "basket",
+      "full"
+    ],
+    "extracted_target_tokens": [
+      "basket",
+      "full"
+    ],
+    "extracted_target_exact_match": true,
+    "transcription_settings": {
+      "language": "en",
+      "initial_prompt": null,
+      "word_timestamps": true,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "sample_rate": 48000,
+    "duration_seconds": 6.400166666666666,
+    "boundary": {
+      "search_strategy": "target-only-global-quiet-run-v7",
+      "verified_silence_start_seconds": 4.84,
+      "verified_silence_end_seconds": 5.35,
+      "verified_silence_duration_seconds": 0.51,
+      "cut_sample": 252000,
+      "cut_time_seconds": 5.25,
+      "padding_seconds": 0.1,
+      "quiet_run_start_sample": 232320,
+      "quiet_run_end_sample": 256800,
+      "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+    },
+    "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/natural-basket-recovery-v1/carrier-extracted/activities/corsa_bacche/assets/audio/en/basket_full.wav.extracted.wav.search/60a17233bce94ab683cc19ec9ffa3697",
+    "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/natural-basket-recovery-v1/carrier-extracted/activities/corsa_bacche/assets/audio/en/basket_full.wav.extracted.wav.search/60a17233bce94ab683cc19ec9ffa3697/search.json",
+    "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/natural-basket-recovery-v1/carrier-raw/activities/corsa_bacche/assets/audio/en/basket_full.wav.raw.wav.receipt.json",
+    "source_provider_receipt_sha256": "9de61196207384063f198db81cd29a10e46b3539b3d8368d2fe767478f56e281",
+    "candidate_sha256": "5c798fe6115c227df526506d534bbfffe83f351a11cc80b33b1f691c2ba96e72",
+    "candidate_id": "candidate-03",
+    "candidate_count": 3,
+    "qualifying_quiet_run_count": 3,
+    "candidate_results": [
+      {
+        "candidate_id": "candidate-01",
+        "quiet_run": {
+          "start_sample": 92640,
+          "end_sample": 119520,
+          "start_seconds": 1.93,
+          "end_seconds": 2.49,
+          "duration_seconds": 0.56
+        },
+        "cut_sample": 114720,
+        "cut_time_seconds": 2.39,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/natural-basket-recovery-v1/carrier-extracted/activities/corsa_bacche/assets/audio/en/basket_full.wav.extracted.wav.search/60a17233bce94ab683cc19ec9ffa3697/candidate-01.wav",
+        "preceding_voiced_seconds": 1.34,
+        "retained_voiced_seconds": 2.58,
+        "retained_duration_seconds": 4.010166666666667,
+        "candidate_sha256": "86cfe291661b4aa43b602a242b3b1634c87c467101387b531ed713c3b9d14744",
+        "extracted_transcript": "It is full of lovely berries now. Basket full.",
+        "canonical_transcript_tokens": [
+          "it",
+          "is",
+          "full",
+          "of",
+          "lovely",
+          "berries",
+          "now",
+          "basket",
+          "full"
+        ],
+        "exact_target_match": false,
+        "target_comparison_score": 0.4,
+        "target_word_count_matches": false,
+        "target_numbers_match": true,
+        "target_comparison_flags": [
+          "TARGET_WORD_COUNT_MISMATCH"
+        ],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": false,
+        "asr_segment_count": 2
+      },
+      {
+        "candidate_id": "candidate-02",
+        "quiet_run": {
+          "start_sample": 133920,
+          "end_sample": 143520,
+          "start_seconds": 2.79,
+          "end_seconds": 2.99,
+          "duration_seconds": 0.2
+        },
+        "cut_sample": 138720,
+        "cut_time_seconds": 2.89,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/natural-basket-recovery-v1/carrier-extracted/activities/corsa_bacche/assets/audio/en/basket_full.wav.extracted.wav.search/60a17233bce94ab683cc19ec9ffa3697/candidate-02.wav",
+        "preceding_voiced_seconds": 1.58,
+        "retained_voiced_seconds": 2.34,
+        "retained_duration_seconds": 3.5101666666666667,
+        "candidate_sha256": "0acd406b111714922346734f4e8779b603e995acb1481bb998aad1cd162f2af2",
+        "extracted_transcript": "Full of lovely berries now. Basket full.",
+        "canonical_transcript_tokens": [
+          "full",
+          "of",
+          "lovely",
+          "berries",
+          "now",
+          "basket",
+          "full"
+        ],
+        "exact_target_match": false,
+        "target_comparison_score": 0.4668,
+        "target_word_count_matches": false,
+        "target_numbers_match": true,
+        "target_comparison_flags": [
+          "TARGET_WORD_COUNT_MISMATCH"
+        ],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": false,
+        "asr_segment_count": 2
+      },
+      {
+        "candidate_id": "candidate-03",
+        "quiet_run": {
+          "start_sample": 232320,
+          "end_sample": 256800,
+          "start_seconds": 4.84,
+          "end_seconds": 5.35,
+          "duration_seconds": 0.51
+        },
+        "cut_sample": 252000,
+        "cut_time_seconds": 5.25,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/natural-basket-recovery-v1/carrier-extracted/activities/corsa_bacche/assets/audio/en/basket_full.wav.extracted.wav.search/60a17233bce94ab683cc19ec9ffa3697/candidate-03.wav",
+        "preceding_voiced_seconds": 3.3,
+        "retained_voiced_seconds": 0.62,
+        "retained_duration_seconds": 1.1501666666666666,
+        "candidate_sha256": "5c798fe6115c227df526506d534bbfffe83f351a11cc80b33b1f691c2ba96e72",
+        "extracted_transcript": "Basket full.",
+        "canonical_transcript_tokens": [
+          "basket",
+          "full"
+        ],
+        "exact_target_match": true,
+        "target_comparison_score": 1.0,
+        "target_word_count_matches": true,
+        "target_numbers_match": true,
+        "target_comparison_flags": [],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": true,
+        "asr_segment_count": 1
+      }
+    ],
+    "human_review": "PENDING",
+    "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+    "target_verification_effective_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+    "target_verification_warning": false,
+    "saved_recovery_policy": "target-only-v7-saved-v1",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 0,
+      "removed_seconds": 0.0,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 252000,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/natural-basket-recovery-v1/carrier-extracted/activities/corsa_bacche/assets/audio/en/basket_full.wav.delivery.wav",
+      "sha256": "5c798fe6115c227df526506d534bbfffe83f351a11cc80b33b1f691c2ba96e72"
+    }
+  },
   "output": {
     "path": "activities/corsa_bacche/assets/audio/en/basket_full.wav",
-    "bytes": 63590,
-    "sha256": "4b480f5c38c586d38ba7a9902af31bfa68ef06141357165acd101f5696e73c0b"
+    "sha256": "9bf40001080a84c5f845b4e57f6b3a50f45f89723f99cc46ecef724a31cd8be1",
+    "bytes": 50802
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "a27d81df87ae4e98933a6f723f9ba105cbb75da78fdb1fab408ef8a7e07a0a2a",
+    "original_sha256": "cf96a3ee7cafbaa14e3c7fbcb72dc16f8c405919bc20e38551890a7295e3c5cf",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

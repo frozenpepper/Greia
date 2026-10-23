@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T08:44:30.088767+00:00",
+  "created_utc": "2026-10-22T17:14:17.121357+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
@@ -8,17 +8,21 @@
     "text": "Dove ti fa male?",
     "cue_id": "greia.requested.where_hurt.it",
     "output": "activities/clinica_cuccioli/assets/audio/it/where_hurt.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think."
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.momo.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261021-104422-3739cab8",
-    "idempotency_key": "greia-6c58ed698f8340de907db2f877e79ef2",
+    "job_id": "20261022-191404-5a41d637",
+    "idempotency_key": "greia-1040c5c949324302b34418ec46c00154",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +45,345 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1357880869,
+    "script_seed": 160130713,
     "language_direction": "Italian",
-    "delivery_prompt": "Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
-    "effective_delivery": "Speak in Italian. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "delivery_prompt": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "effective_delivery": "Speak in Italian. Voce calda e calma. Pronuncia chiara e naturale.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1093199272,
-        "sha256": "9ce4cb397e68b0a6b100250588dc59e6b272e77480387cf72f0c4c542dc96009",
+        "seed": 3350648293,
+        "sha256": "bbabcc5c6a44db25479e4628b91121b62471bad9d74968ae0fdf7f57b0c358b2",
         "generation": {
-          "elapsed_seconds": 5.795713999999862,
+          "elapsed_seconds": 11.295980249997228,
           "model_load_seconds": 0.0,
-          "rtf": 3.6219439641703124,
-          "peak_memory_gb": 7.648166916
+          "rtf": 3.5298099838541415,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-base",
+    "transcript": " Dov' ti fa male?",
+    "score": 0.8901,
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "ignore_accents": true
   },
-  "attempts": 1,
+  "attempts": 2,
   "output": {
     "path": "activities/clinica_cuccioli/assets/audio/it/where_hurt.wav",
-    "bytes": 70646,
-    "sha256": "754a6addb9cd927af68937c6e5ae1c92a5487871c34d37ebea31f608b63dea30"
+    "bytes": 49920,
+    "sha256": "30aa4a56eaf81db7ec90d9e03388a5f3445486fea150e31c9d63735a0d19b5a5"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "short_phrase": {
+    "mode": "automatic-carrier",
+    "composition_policy": "natural-context-period-v1",
+    "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-v1/automatic-evidence/05280eca1e9f46be8979be988626b853",
+    "prefix": "Parliamo con calma insieme.",
+    "composite_text": "Parliamo con calma insieme.\n\nDove ti fa male?",
+    "effective_delivery": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "extraction": {
+      "schema_version": 1,
+      "algorithm_version": "greia-spoken-carrier-extractor-v7",
+      "comparison_policy": "locale-number-tokens-v2",
+      "status": "EXTRACTED_PENDING_LISTENING",
+      "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-v1/automatic-evidence/05280eca1e9f46be8979be988626b853/attempt-02/raw.wav",
+      "source_sha256": "bbabcc5c6a44db25479e4628b91121b62471bad9d74968ae0fdf7f57b0c358b2",
+      "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-v1/automatic-evidence/05280eca1e9f46be8979be988626b853/attempt-02/target.wav",
+      "output_sha256": "610a69b29b6eff67495bb2dad941d9946fad420e51f17a2f9e669ef72aff53d6",
+      "output_bytes": 108540,
+      "locale": "it",
+      "prefix": "Parliamo con calma insieme.",
+      "target": "Dove ti fa male?",
+      "remove_first_words": 4,
+      "ignore_accents": true,
+      "target_verification_requested": "warn",
+      "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+      "target_comparison_score": 0.8901,
+      "target_word_count_matches": true,
+      "target_numbers_match": true,
+      "target_comparison_flags": [],
+      "target_transcript_warning": true,
+      "recognizer": "mlx-whisper-base",
+      "recognizer_version": "0.4.3",
+      "model_id": "mlx-community/whisper-base-mlx",
+      "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+      "extracted_transcript": "Dov' ti fa male?",
+      "expected_target_tokens": [
+        "dove",
+        "ti",
+        "fa",
+        "male"
+      ],
+      "extracted_target_tokens": [
+        "dov",
+        "ti",
+        "fa",
+        "male"
+      ],
+      "extracted_target_exact_match": false,
+      "transcription_settings": {
+        "language": "it",
+        "initial_prompt": null,
+        "word_timestamps": true,
+        "temperature": 0.0,
+        "condition_on_previous_text": false
+      },
+      "sample_rate": 48000,
+      "duration_seconds": 3.2001666666666666,
+      "boundary": {
+        "search_strategy": "target-only-global-quiet-run-v7",
+        "verified_silence_start_seconds": 1.87,
+        "verified_silence_end_seconds": 2.17,
+        "verified_silence_duration_seconds": 0.3,
+        "cut_sample": 99360,
+        "cut_time_seconds": 2.07,
+        "padding_seconds": 0.1,
+        "quiet_run_start_sample": 89760,
+        "quiet_run_end_sample": 104160,
+        "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+      },
+      "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-v1/automatic-evidence/05280eca1e9f46be8979be988626b853/attempt-02/target.wav.search/7f510ee4ccf343adabe7797522f2092e",
+      "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-v1/automatic-evidence/05280eca1e9f46be8979be988626b853/attempt-02/target.wav.search/7f510ee4ccf343adabe7797522f2092e/search.json",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-v1/automatic-evidence/05280eca1e9f46be8979be988626b853/attempt-02/raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "4f35a23a469fe8f0195059858fa4492aae8e95a0c4dfa81df2f50a90cc7fdea0",
+      "candidate_sha256": "610a69b29b6eff67495bb2dad941d9946fad420e51f17a2f9e669ef72aff53d6",
+      "candidate_id": "candidate-01",
+      "candidate_count": 1,
+      "qualifying_quiet_run_count": 1,
+      "candidate_results": [
+        {
+          "candidate_id": "candidate-01",
+          "quiet_run": {
+            "start_sample": 89760,
+            "end_sample": 104160,
+            "start_seconds": 1.87,
+            "end_seconds": 2.17,
+            "duration_seconds": 0.3
+          },
+          "cut_sample": 99360,
+          "cut_time_seconds": 2.07,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-v1/automatic-evidence/05280eca1e9f46be8979be988626b853/attempt-02/target.wav.search/7f510ee4ccf343adabe7797522f2092e/candidate-01.wav",
+          "preceding_voiced_seconds": 1.63,
+          "retained_voiced_seconds": 0.76,
+          "retained_duration_seconds": 1.1301666666666668,
+          "candidate_sha256": "610a69b29b6eff67495bb2dad941d9946fad420e51f17a2f9e669ef72aff53d6",
+          "extracted_transcript": "Dov' ti fa male?",
+          "canonical_transcript_tokens": [
+            "dov",
+            "ti",
+            "fa",
+            "male"
+          ],
+          "exact_target_match": false,
+          "target_comparison_score": 0.8901,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": true,
+          "asr_segment_count": 1
+        }
+      ],
+      "human_review": "PENDING",
+      "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+      "delivery": {
+        "policy": "verified-carrier-gap-delivery-v1",
+        "removed_frames": 0,
+        "removed_seconds": 0.0,
+        "retained_verified_quiet_seconds": 0.1,
+        "raw_delivery_start_sample": 99360,
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-v1/automatic-evidence/05280eca1e9f46be8979be988626b853/attempt-02/delivery-target.wav",
+        "sha256": "610a69b29b6eff67495bb2dad941d9946fad420e51f17a2f9e669ef72aff53d6"
+      }
+    },
+    "quality": {
+      "disposition": "PASS",
+      "score": 0.8901,
+      "transcript": " Dov' ti fa male?",
+      "metrics": {
+        "duration_seconds": 1.130204081632653,
+        "rms_dbfs": -25.82,
+        "peak": 0.27136,
+        "clipped_fraction": 0.0,
+        "leading_silence_seconds": 0.1,
+        "trailing_silence_seconds": 0.1,
+        "longest_internal_pause_seconds": 0.08
+      },
+      "flags": [],
+      "ignore_accents": true,
+      "comparison_policy": "locale-number-tokens-v2",
+      "model_id": "mlx-community/whisper-base-mlx",
+      "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+      "detail": "Packaged target scored with Base; human listening remains pending"
+    },
+    "history": [
+      {
+        "attempt": 1,
+        "status": "REJECTED_CUT",
+        "error": "no candidate suffix meets target verification policy",
+        "evidence": {
+          "candidate_transcripts": [
+            "Dovete i famole?"
+          ],
+          "matching_candidate_ids": [],
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-v1/automatic-evidence/05280eca1e9f46be8979be988626b853/attempt-01/target.wav.search/66f0b8b197254c56902d08787574c6bb",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-v1/automatic-evidence/05280eca1e9f46be8979be988626b853/attempt-01/target.wav.search/66f0b8b197254c56902d08787574c6bb/search.json"
+        }
+      },
+      {
+        "attempt": 2,
+        "status": "PASS",
+        "quality": {
+          "disposition": "PASS",
+          "score": 0.8901,
+          "transcript": " Dov' ti fa male?",
+          "metrics": {
+            "duration_seconds": 1.130204081632653,
+            "rms_dbfs": -25.82,
+            "peak": 0.27136,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.1,
+            "trailing_silence_seconds": 0.1,
+            "longest_internal_pause_seconds": 0.08
+          },
+          "flags": [],
+          "ignore_accents": true,
+          "comparison_policy": "locale-number-tokens-v2",
+          "model_id": "mlx-community/whisper-base-mlx",
+          "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+          "detail": "Packaged target scored with Base; human listening remains pending"
+        },
+        "extraction": {
+          "schema_version": 1,
+          "algorithm_version": "greia-spoken-carrier-extractor-v7",
+          "comparison_policy": "locale-number-tokens-v2",
+          "status": "EXTRACTED_PENDING_LISTENING",
+          "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-v1/automatic-evidence/05280eca1e9f46be8979be988626b853/attempt-02/raw.wav",
+          "source_sha256": "bbabcc5c6a44db25479e4628b91121b62471bad9d74968ae0fdf7f57b0c358b2",
+          "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-v1/automatic-evidence/05280eca1e9f46be8979be988626b853/attempt-02/target.wav",
+          "output_sha256": "610a69b29b6eff67495bb2dad941d9946fad420e51f17a2f9e669ef72aff53d6",
+          "output_bytes": 108540,
+          "locale": "it",
+          "prefix": "Parliamo con calma insieme.",
+          "target": "Dove ti fa male?",
+          "remove_first_words": 4,
+          "ignore_accents": true,
+          "target_verification_requested": "warn",
+          "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+          "target_comparison_score": 0.8901,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_transcript_warning": true,
+          "recognizer": "mlx-whisper-base",
+          "recognizer_version": "0.4.3",
+          "model_id": "mlx-community/whisper-base-mlx",
+          "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+          "extracted_transcript": "Dov' ti fa male?",
+          "expected_target_tokens": [
+            "dove",
+            "ti",
+            "fa",
+            "male"
+          ],
+          "extracted_target_tokens": [
+            "dov",
+            "ti",
+            "fa",
+            "male"
+          ],
+          "extracted_target_exact_match": false,
+          "transcription_settings": {
+            "language": "it",
+            "initial_prompt": null,
+            "word_timestamps": true,
+            "temperature": 0.0,
+            "condition_on_previous_text": false
+          },
+          "sample_rate": 48000,
+          "duration_seconds": 3.2001666666666666,
+          "boundary": {
+            "search_strategy": "target-only-global-quiet-run-v7",
+            "verified_silence_start_seconds": 1.87,
+            "verified_silence_end_seconds": 2.17,
+            "verified_silence_duration_seconds": 0.3,
+            "cut_sample": 99360,
+            "cut_time_seconds": 2.07,
+            "padding_seconds": 0.1,
+            "quiet_run_start_sample": 89760,
+            "quiet_run_end_sample": 104160,
+            "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+          },
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-v1/automatic-evidence/05280eca1e9f46be8979be988626b853/attempt-02/target.wav.search/7f510ee4ccf343adabe7797522f2092e",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-v1/automatic-evidence/05280eca1e9f46be8979be988626b853/attempt-02/target.wav.search/7f510ee4ccf343adabe7797522f2092e/search.json",
+          "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-v1/automatic-evidence/05280eca1e9f46be8979be988626b853/attempt-02/raw.wav.receipt.json",
+          "source_provider_receipt_sha256": "4f35a23a469fe8f0195059858fa4492aae8e95a0c4dfa81df2f50a90cc7fdea0",
+          "candidate_sha256": "610a69b29b6eff67495bb2dad941d9946fad420e51f17a2f9e669ef72aff53d6",
+          "candidate_id": "candidate-01",
+          "candidate_count": 1,
+          "qualifying_quiet_run_count": 1,
+          "candidate_results": [
+            {
+              "candidate_id": "candidate-01",
+              "quiet_run": {
+                "start_sample": 89760,
+                "end_sample": 104160,
+                "start_seconds": 1.87,
+                "end_seconds": 2.17,
+                "duration_seconds": 0.3
+              },
+              "cut_sample": 99360,
+              "cut_time_seconds": 2.07,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-v1/automatic-evidence/05280eca1e9f46be8979be988626b853/attempt-02/target.wav.search/7f510ee4ccf343adabe7797522f2092e/candidate-01.wav",
+              "preceding_voiced_seconds": 1.63,
+              "retained_voiced_seconds": 0.76,
+              "retained_duration_seconds": 1.1301666666666668,
+              "candidate_sha256": "610a69b29b6eff67495bb2dad941d9946fad420e51f17a2f9e669ef72aff53d6",
+              "extracted_transcript": "Dov' ti fa male?",
+              "canonical_transcript_tokens": [
+                "dov",
+                "ti",
+                "fa",
+                "male"
+              ],
+              "exact_target_match": false,
+              "target_comparison_score": 0.8901,
+              "target_word_count_matches": true,
+              "target_numbers_match": true,
+              "target_comparison_flags": [],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": true,
+              "asr_segment_count": 1
+            }
+          ],
+          "human_review": "PENDING",
+          "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+          "delivery": {
+            "policy": "verified-carrier-gap-delivery-v1",
+            "removed_frames": 0,
+            "removed_seconds": 0.0,
+            "retained_verified_quiet_seconds": 0.1,
+            "raw_delivery_start_sample": 99360,
+            "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-v1/automatic-evidence/05280eca1e9f46be8979be988626b853/attempt-02/delivery-target.wav",
+            "sha256": "610a69b29b6eff67495bb2dad941d9946fad420e51f17a2f9e669ef72aff53d6"
+          }
+        },
+        "candidate": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-v1/automatic-evidence/05280eca1e9f46be8979be988626b853/attempt-02/candidate.wav"
+      }
+    ]
+  },
   "corpus_replacement": {
-    "original_sha256": "0e063de8e317d5fa92d51ad92be67c57d6d46ffd0b3febec5b0b460fb357c71e",
+    "original_sha256": "1a04c5d38160f7c9797b4a63eb5a03f8a012f4ac25f1b56f6d6c0bf8bf5b1e5e",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T08:21:33.337989+00:00",
+  "created_utc": "2026-10-21T15:51:27.304767+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Listen to this phrase in English.",
+    "prefix_word_count": 6,
+    "target": "Tap the taller parcel!",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Listen to this phrase in English. Tap the taller parcel!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "dani",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Tap the taller parcel!",
+    "cue_id": "activities/bottega_delle_misure/assets/audio/en/prompt_compare_taller.wav",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "dani",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "Tap the taller parcel!",
     "cue_id": "activities/bottega_delle_misure/assets/audio/en/prompt_compare_taller.wav",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/bottega_delle_misure/assets/audio/en/prompt_compare_taller.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.dani.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "f24f1e502bcbc21f1c2610f1b96b6e69b9d428d62c709835a94ebd8ce433ef34",
   "generation_parameters": {
-    "job_id": "20261021-102123-1a48c746",
-    "idempotency_key": "greia-e339e6e96f12419f8c691a794f4992d9",
+    "job_id": "20261021-175111-3c00d4fc",
+    "idempotency_key": "greia-ed826731db034295ac290f0bad250b65",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,281 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 4172035764,
+    "script_seed": 2473776110,
     "language_direction": "English",
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in English. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in English. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3088567585,
-        "sha256": "3ac8ca4fdb045d7d74cef9a9b73381dac4344a1f5a3fd803a694cf2d3f1b3704",
+        "seed": 1685007384,
+        "sha256": "817d17d2521623e92c74267b8c5becfb6f8560bcbfcaf66603ed7b20b5fd02a8",
         "generation": {
-          "elapsed_seconds": 9.789103292001528,
+          "elapsed_seconds": 14.508052000004682,
           "model_load_seconds": 0.0,
-          "rtf": 3.398797508940985,
-          "peak_memory_gb": 7.648166916
+          "rtf": 3.777974567077301,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " Tap the taller parcel.",
+    "metrics": {
+      "duration_seconds": 1.7317006802721089,
+      "rms_dbfs": -29.66,
+      "peak": 0.2569,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.34,
+      "trailing_silence_seconds": 0.1,
+      "longest_internal_pause_seconds": 0.16
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/bottega_delle_misure/assets/audio/en/prompt_compare_taller.wav.raw.wav",
+    "sha256": "107db0e5d04a847c2034df74e0a448f88c26b2e62c198d72508c90c6778718ee",
+    "receipt_sha256": "57d5d4cfcefb71e44c3025408496927592b3b524610e7a1d861a06d42d9c54f6"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/bottega_delle_misure/assets/audio/en/prompt_compare_taller.wav.extracted.wav",
+    "sha256": "fc5fca2c7796a8dd7f694e37768f747aebef312daa22054e0077dca4f378e209"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/bottega_delle_misure/assets/audio/en/prompt_compare_taller.wav.delivery.wav",
+    "sha256": "78670e5eebffb5a82ab75ac84a8bcf9ab6ae4eae773415489a6b57f25a34672d"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/bottega_delle_misure/assets/audio/en/prompt_compare_taller.wav.raw.wav",
+    "source_sha256": "107db0e5d04a847c2034df74e0a448f88c26b2e62c198d72508c90c6778718ee",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/bottega_delle_misure/assets/audio/en/prompt_compare_taller.wav.extracted.wav",
+    "output_sha256": "fc5fca2c7796a8dd7f694e37768f747aebef312daa22054e0077dca4f378e209",
+    "target_request": {
+      "speaker": "dani",
+      "kind": "character_dialogue",
+      "text": "Tap the taller parcel!",
+      "locale": "en",
+      "cue_id": "activities/bottega_delle_misure/assets/audio/en/prompt_compare_taller.wav",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/bottega_delle_misure/assets/audio/en/prompt_compare_taller.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "57d5d4cfcefb71e44c3025408496927592b3b524610e7a1d861a06d42d9c54f6"
+    },
+    "locale": "en",
+    "prefix": "Listen to this phrase in English.",
+    "target": "Tap the taller parcel!",
+    "remove_first_words": 6,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Listen to this phrase in English. Tap the taller parcel.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Tap the taller parcel.",
+    "raw_word_alignment": [
+      {
+        "word": "listen",
+        "start_seconds": 0.0,
+        "end_seconds": 0.3
+      },
+      {
+        "word": "to",
+        "start_seconds": 0.3,
+        "end_seconds": 0.52
+      },
+      {
+        "word": "this",
+        "start_seconds": 0.52,
+        "end_seconds": 0.72
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.72,
+        "end_seconds": 0.98
+      },
+      {
+        "word": "in",
+        "start_seconds": 0.98,
+        "end_seconds": 1.2
+      },
+      {
+        "word": "english",
+        "start_seconds": 1.2,
+        "end_seconds": 1.54
+      },
+      {
+        "word": "tap",
+        "start_seconds": 2.26,
+        "end_seconds": 2.64
+      },
+      {
+        "word": "the",
+        "start_seconds": 2.64,
+        "end_seconds": 2.88
+      },
+      {
+        "word": "taller",
+        "start_seconds": 2.88,
+        "end_seconds": 3.16
+      },
+      {
+        "word": "parcel",
+        "start_seconds": 3.16,
+        "end_seconds": 3.6
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "tap",
+        "start_seconds": 0.0,
+        "end_seconds": 0.72
+      },
+      {
+        "word": "the",
+        "start_seconds": 0.72,
+        "end_seconds": 0.92
+      },
+      {
+        "word": "taller",
+        "start_seconds": 0.92,
+        "end_seconds": 1.22
+      },
+      {
+        "word": "parcel",
+        "start_seconds": 1.22,
+        "end_seconds": 1.68
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.31429509555592255,
+        "no_speech_prob": 0.02507672645151615,
+        "compression_ratio": 0.8888888888888888,
+        "word_probabilities": [
+          0.88623046875,
+          0.99755859375,
+          0.99658203125,
+          0.99462890625,
+          0.9990234375,
+          0.99462890625
+        ]
+      },
+      {
+        "avg_logprob": -0.31429509555592255,
+        "no_speech_prob": 0.02507672645151615,
+        "compression_ratio": 0.8888888888888888,
+        "word_probabilities": [
+          0.9521484375,
+          0.98828125,
+          0.78076171875,
+          0.96240234375
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.44341588020324707,
+        "no_speech_prob": 0.1353573203086853,
+        "compression_ratio": 0.7333333333333333,
+        "word_probabilities": [
+          0.84228515625,
+          0.98779296875,
+          0.7255859375,
+          0.94873046875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 6,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 88,
+    "extracted_voiced_seconds": 0.88,
+    "unremoved_raw_target_tokens": [
+      "tap",
+      "the",
+      "taller",
+      "parcel"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "tap",
+      "the",
+      "taller",
+      "parcel"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.8401814058956916,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.54,
+      "search_end_seconds": 2.26,
+      "prefix_last_word_end_seconds": 1.54,
+      "target_first_word_start_seconds": 2.26,
+      "gap_seconds": 0.508843537414966,
+      "verified_silence_start_seconds": 1.6996371882086168,
+      "verified_silence_end_seconds": 2.2084807256235828,
+      "gap_rms_dbfs": -59.501,
+      "gap_peak_dbfs": -36.006,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.9540589569160998,
+      "cut_sample": 43087,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 3405,
+      "removed_seconds": 0.154421768707483,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 46492,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/bottega_delle_misure/assets/audio/en/prompt_compare_taller.wav.delivery.wav",
+      "sha256": "78670e5eebffb5a82ab75ac84a8bcf9ab6ae4eae773415489a6b57f25a34672d"
+    }
+  },
   "output": {
     "path": "activities/bottega_delle_misure/assets/audio/en/prompt_compare_taller.wav",
-    "bytes": 127094,
-    "sha256": "bbed25690857453aeeb6d5768bacd084951c2de9458cfceec2e76cdc8242405e"
+    "sha256": "bd88927a2ede5dd07f01773d51146ab653149511f20a10234afcc916f4ed3c4b",
+    "bytes": 76446
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "85c6a0fd5f997096100303af704ad99d8d20e644dd42e92cc95f4f5f3b7bb2dc",
+    "original_sha256": "e8ed5b1421f6b7da2ff15f32181152f79c7023202dd6c4d9253557b3577313b1",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

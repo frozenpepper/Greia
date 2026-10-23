@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T18:03:06.934973+00:00",
+  "created_utc": "2026-10-23T13:34:01.515302+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
@@ -10,73 +10,90 @@
     "output": "activities/workshop_settings/locales/fr/audio/activity-title.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
+    "delivery_prompt": "",
+    "ignore_accents": true,
+    "short_text_mode": "off",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "owner_authorization": "owner-2026-10-23-native-system-tts-missing-52",
+    "spoken_text": "Ma Greia"
   },
-  "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+  "provider_id": "macos-native-say",
+  "voice_id": "Thomas",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": null,
   "generation_parameters": {
-    "job_id": "20261020-200258-71ca5968",
-    "idempotency_key": "greia-f6ab12cb052849d0b89c37aedc742993",
-    "backend": {
-      "backend": "mlx",
-      "adapter_version": "0.1.0",
-      "model": "mlx-community/VoxCPM2-8bit",
-      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
-      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
-      "mlx": "0.32.1",
-      "tokenizer_loader": "PreTrainedTokenizerFast",
-      "mlx_audio": "0.5.0",
-      "quantization": "8bit",
-      "sample_rate": 48000,
-      "native_audio_streaming": false,
-      "reference_encoding_cache": 16,
-      "compiled_hot_paths": true
-    },
-    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
-    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
-    "settings": {
-      "steps": 10,
-      "cfg": 2.0,
-      "max_tokens": 300
-    },
-    "script_seed": 1524024431,
-    "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "mode": "reference",
-    "recordings": [
-      {
-        "file": "speech-001-take-01.wav",
-        "seed": 1754583388,
-        "sha256": "01ed505016b9016c9f7eac52f4abfd81a3e4d37444e1d11aab163fee41be31f3",
-        "generation": {
-          "elapsed_seconds": 7.35358150000684,
-          "model_load_seconds": 0.0,
-          "rtf": 6.564720874875916,
-          "peak_memory_gb": 8.843167284
-        }
-      }
-    ]
+    "voice": "Thomas",
+    "rate_wpm": 175,
+    "synthesis_text": "Ma Greia"
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
+    "disposition": "NOT_RUN",
+    "verifier_id": "owner-listening-review-waiver",
     "transcript": null,
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "owner waived ASR/listening review; audio format/integrity checks only",
+    "model_id": null,
+    "model_revision": null,
+    "ignore_accents": null,
+    "comparison_policy": null,
+    "flags": [],
+    "metrics": null
   },
   "attempts": 1,
   "output": {
     "path": "activities/workshop_settings/locales/fr/audio/activity-title.wav",
-    "bytes": 49478,
-    "sha256": "e31a6d11932eb455b962008635054d467174ea0e5c7c44bb5198664fde308586"
+    "bytes": 26074,
+    "sha256": "2ae7d946dc1a0af1c714923d2cd4cd3e9475c6626fc0c7e1e1265715d34874f8"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "human_review": "WAIVED_BY_OWNER",
+  "acceptance_note": "Owner explicitly waived listening review for this deterministic system-voice replacement; verification was not run and this is not a machine PASS.",
+  "owner_authorization": "owner-2026-10-23-native-system-tts-missing-52",
+  "generation_evidence": {
+    "path": "/Users/taio84/Library/Application Support/Greia/voice-production/generation-evidence/0cb363a9b1d24f288f961a1d07ea018b",
+    "history": "/Users/taio84/Library/Application Support/Greia/voice-production/generation-evidence/0cb363a9b1d24f288f961a1d07ea018b/history.json"
+  },
+  "semantic_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Ma Greia",
+    "cue_id": "workshop_settings.title.fr",
+    "output": null,
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "comparison_policy": "locale-number-tokens-v4-spoken-target-v1"
+  },
+  "system_tts_fallback": {
+    "policy": "deterministic-native-system-tts-owner-waived-v1",
+    "spoken_target_policy": "locale-spoken-letter-and-cardinal-v1",
+    "semantic_text": "Ma Greia",
+    "spoken_text": "Ma Greia",
+    "locale": "fr",
+    "native_voice": "Thomas",
+    "signal_metrics": {
+      "duration_seconds": 0.5894784580498866,
+      "rms_dbfs": -13.99,
+      "peak": 0.88867,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.0,
+      "trailing_silence_seconds": 0.04,
+      "longest_internal_pause_seconds": 0.0
+    },
+    "signal_flags": [],
+    "verification": "NOT_RUN",
+    "human_review": "WAIVED_BY_OWNER",
+    "authorization": "owner-2026-10-23-native-system-tts-missing-52"
+  },
   "corpus_replacement": {
-    "original_sha256": "507b4f473f7251a5d07dee8bf4a9f299b657be828922b0686a9c73f46623c238",
-    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+    "original_sha256": "0a968e14bb0679f0690b9009170ca72a74abcd4b1963d8984da900467046b442",
+    "owner_authorization": "owner-2026-10-23-native-system-tts-missing-52",
+    "human_review": "WAIVED_BY_OWNER",
+    "source_run": "natural-v4-run-02"
   }
 }

@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T14:16:26.611635+00:00",
+  "created_utc": "2026-10-22T09:06:57.947495+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "Leo réfléchit…",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français...\n\nLeo réfléchit…",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "flash",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Leo réfléchit…",
+    "cue_id": "greia.requested.leo_thinking.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "flash",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Leo réfléchit…",
     "cue_id": "greia.requested.leo_thinking.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/quattro_amici/assets/audio/fr/leo_thinking.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Flash, a springy, eager little rabbit. A short, lively reaction: expressive and clear, one breath, no extra words."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.flash.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
   "generation_parameters": {
-    "job_id": "20261020-161618-8170f365",
-    "idempotency_key": "greia-9acff66af78d443c8cc509b84e871718",
+    "job_id": "20261022-110643-172738c5",
+    "idempotency_key": "greia-15f8a88ca07f4aa8a1a7e6e6375c11cf",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,247 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2317630110,
+    "script_seed": 1803654740,
     "language_direction": "French",
-    "delivery_prompt": "Flash, a springy, eager little rabbit. A short, lively reaction: expressive and clear, one breath, no extra words.",
-    "effective_delivery": "Speak in French. Flash, a springy, eager little rabbit. A short, lively reaction: expressive and clear, one breath, no extra words.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2535770457,
-        "sha256": "0b66f468405131f126795302792c85ff2fa17780fdbaaed3fc9cd25bfb2e5abe",
+        "seed": 2830357850,
+        "sha256": "baa1fb1ed5cf2d18264adb35051a9fb1c374aa00eec845fc0c586abae7ab5c53",
         "generation": {
-          "elapsed_seconds": 7.278525084024295,
+          "elapsed_seconds": 13.866159458004404,
           "model_load_seconds": 0.0,
-          "rtf": 4.548604364560543,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.76780747013389,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " Leo réfléchit.",
+    "metrics": {
+      "duration_seconds": 1.571609977324263,
+      "rms_dbfs": -29.89,
+      "peak": 0.18753,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.12,
+      "trailing_silence_seconds": 0.22,
+      "longest_internal_pause_seconds": 0.04
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/quattro_amici/assets/audio/fr/leo_thinking.wav.raw.wav",
+    "sha256": "38d636efa5ef90ae915c07e037878542a88c9be4d9714c0dfb912866cf080f08",
+    "receipt_sha256": "4c8ea2418bccbcfb11a40535dedb2002af244da6dfcfe12ea43cb61d2675231d"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/quattro_amici/assets/audio/fr/leo_thinking.wav.extracted.wav",
+    "sha256": "bb81e01649a1a4e8711881ded40775305406f44c4c951102975cac3c3877f134"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/quattro_amici/assets/audio/fr/leo_thinking.wav.delivery.wav",
+    "sha256": "2e5d2687d876bb01eae86a18662ad7db1117146e22465faaa09786ced39a62ec"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/activities/quattro_amici/assets/audio/fr/leo_thinking.wav.raw.wav",
+    "source_sha256": "38d636efa5ef90ae915c07e037878542a88c9be4d9714c0dfb912866cf080f08",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/activities/quattro_amici/assets/audio/fr/leo_thinking.wav.extracted.wav",
+    "output_sha256": "bb81e01649a1a4e8711881ded40775305406f44c4c951102975cac3c3877f134",
+    "target_request": {
+      "speaker": "flash",
+      "kind": "character_dialogue",
+      "text": "Leo réfléchit…",
+      "locale": "fr",
+      "cue_id": "greia.requested.leo_thinking.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/activities/quattro_amici/assets/audio/fr/leo_thinking.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "4c8ea2418bccbcfb11a40535dedb2002af244da6dfcfe12ea43cb61d2675231d"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "Leo réfléchit…",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français. Leo réfléchit.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Leo réfléchit.",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.32
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.32,
+        "end_seconds": 0.64
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.64,
+        "end_seconds": 0.92
+      },
+      {
+        "word": "en",
+        "start_seconds": 0.92,
+        "end_seconds": 1.06
+      },
+      {
+        "word": "français",
+        "start_seconds": 1.06,
+        "end_seconds": 1.58
+      },
+      {
+        "word": "leo",
+        "start_seconds": 2.26,
+        "end_seconds": 2.66
+      },
+      {
+        "word": "réfléchit",
+        "start_seconds": 2.66,
+        "end_seconds": 3.46
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "leo",
+        "start_seconds": 0.0,
+        "end_seconds": 0.68
+      },
+      {
+        "word": "réfléchit",
+        "start_seconds": 0.68,
+        "end_seconds": 1.48
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.6583131902358111,
+        "no_speech_prob": 0.0542268231511116,
+        "compression_ratio": 0.8545454545454545,
+        "word_probabilities": [
+          0.89111328125,
+          0.97021484375,
+          0.83984375,
+          0.90966796875,
+          0.9609375
+        ]
+      },
+      {
+        "avg_logprob": -0.6583131902358111,
+        "no_speech_prob": 0.0542268231511116,
+        "compression_ratio": 0.8545454545454545,
+        "word_probabilities": [
+          0.300048828125,
+          0.8115234375
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.8473165300157335,
+        "no_speech_prob": 0.28547993302345276,
+        "compression_ratio": 0.6666666666666666,
+        "word_probabilities": [
+          0.322265625,
+          0.55615234375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 106,
+    "extracted_voiced_seconds": 1.06,
+    "unremoved_raw_target_tokens": [
+      "leo",
+      "réfléchit"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "leo",
+      "réfléchit"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.6801814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.58,
+      "search_end_seconds": 2.26,
+      "prefix_last_word_end_seconds": 1.58,
+      "target_first_word_start_seconds": 2.26,
+      "gap_seconds": 0.41904761904761906,
+      "verified_silence_start_seconds": 1.7895238095238095,
+      "verified_silence_end_seconds": 2.2085714285714286,
+      "gap_rms_dbfs": -57.598,
+      "gap_peak_dbfs": -35.726,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.999047619047619,
+      "cut_sample": 44079,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 2415,
+      "removed_seconds": 0.10952380952380952,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 46494,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/activities/quattro_amici/assets/audio/fr/leo_thinking.wav.delivery.wav",
+      "sha256": "2e5d2687d876bb01eae86a18662ad7db1117146e22465faaa09786ced39a62ec"
+    }
+  },
   "output": {
     "path": "activities/quattro_amici/assets/audio/fr/leo_thinking.wav",
-    "bytes": 70646,
-    "sha256": "607bd750629396f9bc4137081bb2b7b36d752e6314209f3fe4713a9735ada8d6"
+    "sha256": "47f62dc05d31e6bb4f9630ba36e61b281713237b0d80422d6b905f92c824d4f6",
+    "bytes": 69386
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "a56a4d2e328d9c743df13331ba5d49665492512f4eb1e3e17245e2590d92481a",
+    "original_sha256": "607bd750629396f9bc4137081bb2b7b36d752e6314209f3fe4713a9735ada8d6",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

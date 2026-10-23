@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:32:01.693577+00:00",
+  "created_utc": "2026-10-21T16:23:59.853267+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "D come Delfino",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. D come Delfino",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "D come Delfino",
+    "cue_id": "foresta_parole.find_d",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "D come Delfino",
     "cue_id": "foresta_parole.find_d",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/foresta_parole/assets/audio/it/find_d.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-143153-257bebd9",
-    "idempotency_key": "greia-209a450b25794bd0aaaa3003991f95b1",
+    "job_id": "20261021-182339-7b32d741",
+    "idempotency_key": "greia-c89924a692714c0e9b3cfb9059e002f4",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,261 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1968812816,
+    "script_seed": 2901109133,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 106665965,
-        "sha256": "dd433939a02f2857b3be138352611e0ab37fe7eef043ac835f62e7c3eab24662",
+        "seed": 3284061821,
+        "sha256": "402a9da383e6dbc233ee19c0dc7d4bd282e1c33855d0fc3c8f3e935eaf5cf6cd",
         "generation": {
-          "elapsed_seconds": 8.16918883298058,
+          "elapsed_seconds": 19.53869787500298,
           "model_load_seconds": 0.0,
-          "rtf": 4.641145061820233,
-          "peak_memory_gb": 8.44494914
+          "rtf": 4.522672244512862,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8276,
+    "transcript": " D come del fino.",
+    "metrics": {
+      "duration_seconds": 1.7760544217687075,
+      "rms_dbfs": -34.68,
+      "peak": 0.16437,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.26,
+      "trailing_silence_seconds": 0.22,
+      "longest_internal_pause_seconds": 0.02
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/foresta_parole/assets/audio/it/find_d.wav.raw.wav",
+    "sha256": "bee91566cd486fb987f7088f8f9d7091dd6a5d8cabc7cafcbf1c8aa19c415bd9",
+    "receipt_sha256": "37445c35e07a400e4f2912836853459f38cb53e72b0dc0993b898f660a3faa21"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/foresta_parole/assets/audio/it/find_d.wav.extracted.wav",
+    "sha256": "21e01c010bda6da0709596f302b83ba9864fdd574806b08f8743554e3c793419"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/foresta_parole/assets/audio/it/find_d.wav.raw.wav",
+    "source_sha256": "bee91566cd486fb987f7088f8f9d7091dd6a5d8cabc7cafcbf1c8aa19c415bd9",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-extracted/activities/foresta_parole/assets/audio/it/find_d.wav.extracted.wav",
+    "output_sha256": "21e01c010bda6da0709596f302b83ba9864fdd574806b08f8743554e3c793419",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "D come Delfino",
+      "locale": "it",
+      "cue_id": "foresta_parole.find_d",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/foresta_parole/assets/audio/it/find_d.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "37445c35e07a400e4f2912836853459f38cb53e72b0dc0993b898f660a3faa21"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "D come Delfino",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Ascolta questa frase in italiano. D come del fino.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " D come del fino.",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.64
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.64,
+        "end_seconds": 1.0
+      },
+      {
+        "word": "frase",
+        "start_seconds": 1.0,
+        "end_seconds": 1.38
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.38,
+        "end_seconds": 1.58
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.58,
+        "end_seconds": 2.16
+      },
+      {
+        "word": "d",
+        "start_seconds": 2.92,
+        "end_seconds": 2.96
+      },
+      {
+        "word": "come",
+        "start_seconds": 2.96,
+        "end_seconds": 3.34
+      },
+      {
+        "word": "del",
+        "start_seconds": 3.34,
+        "end_seconds": 3.62
+      },
+      {
+        "word": "fino",
+        "start_seconds": 3.62,
+        "end_seconds": 4.02
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "d",
+        "start_seconds": 0.0,
+        "end_seconds": 0.44
+      },
+      {
+        "word": "come",
+        "start_seconds": 0.44,
+        "end_seconds": 0.8
+      },
+      {
+        "word": "del",
+        "start_seconds": 0.8,
+        "end_seconds": 1.1
+      },
+      {
+        "word": "fino",
+        "start_seconds": 1.1,
+        "end_seconds": 1.46
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.7217630280388726,
+        "no_speech_prob": 0.0070853461511433125,
+        "compression_ratio": 0.9090909090909091,
+        "word_probabilities": [
+          0.771484375,
+          0.96435546875,
+          0.86572265625,
+          0.95947265625,
+          0.986328125
+        ]
+      },
+      {
+        "avg_logprob": -0.7217630280388726,
+        "no_speech_prob": 0.0070853461511433125,
+        "compression_ratio": 0.9090909090909091,
+        "word_probabilities": [
+          0.330322265625,
+          0.1260986328125,
+          0.5791015625,
+          0.87109375
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.7989773750305176,
+        "no_speech_prob": 0.11668595671653748,
+        "compression_ratio": 0.6666666666666666,
+        "word_probabilities": [
+          0.30224609375,
+          0.67431640625,
+          0.546875,
+          0.88671875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 97,
+    "extracted_voiced_seconds": 0.97,
+    "unremoved_raw_target_tokens": [
+      "come",
+      "del",
+      "fino"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "d",
+      "come",
+      "del",
+      "fino"
+    ],
+    "raw_transcript_alignment_suffix_match": false,
+    "duration_seconds": 4.320181405895692,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 2.16,
+      "search_end_seconds": 2.92,
+      "prefix_last_word_end_seconds": 2.16,
+      "target_first_word_start_seconds": 2.92,
+      "gap_seconds": 0.6485260770975056,
+      "verified_silence_start_seconds": 2.2198639455782314,
+      "verified_silence_end_seconds": 2.868390022675737,
+      "gap_rms_dbfs": -53.012,
+      "gap_peak_dbfs": -35.758,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.5441269841269842,
+      "cut_sample": 56098,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/foresta_parole/assets/audio/it/find_d.wav",
-    "bytes": 77702,
-    "sha256": "6f4617189dfe605bad8b0824e3d72beaf32c0c9f973d8714d2a0ab685e4a71f4"
+    "sha256": "09aedce77474833f44eaac315d9c328062c4abee2104a3d667ec380db661ba8b",
+    "bytes": 78402
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "da52f4e314052053881b1498412ae2db0cf6acbe5b924f5ff8d8a86b4de1436c",
+    "original_sha256": "1c0da9991261e54445cbe24099b54ef1dc9a20a664613150b2f7d630c50e7dd3",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

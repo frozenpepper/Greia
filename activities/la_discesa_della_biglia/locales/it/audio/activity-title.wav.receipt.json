@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:51:15.605668+00:00",
+  "created_utc": "2026-10-21T16:30:44.743786+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "La discesa della biglia",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. La discesa della biglia",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "La discesa della biglia",
+    "cue_id": "activity.title",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "La discesa della biglia",
     "cue_id": "activity.title",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/la_discesa_della_biglia/locales/it/audio/activity-title.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-145107-2dc4e8d0",
-    "idempotency_key": "greia-c9c7fd0cabcc4f2faf8b1125c898bc72",
+    "job_id": "20261021-183027-834fb7c4",
+    "idempotency_key": "greia-d8dc358aaa5546c49094e158caf4e96a",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,255 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1462518368,
+    "script_seed": 3122193758,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 324306017,
-        "sha256": "5480ad609490371be8f460799947a8f590fe96c4d3071f512b78aded6a33087b",
+        "seed": 3995825209,
+        "sha256": "2ed5db38bae91fcbec1ad263be352b9f92b2706286f88412cf9fa4d473b233d3",
         "generation": {
-          "elapsed_seconds": 7.38346325000748,
+          "elapsed_seconds": 16.219299582997337,
           "model_load_seconds": 0.0,
-          "rtf": 5.126811653748974,
-          "peak_memory_gb": 8.44494914
+          "rtf": 4.407218762645896,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8842,
+    "transcript": " la discesa della billia",
+    "metrics": {
+      "duration_seconds": 1.8160090702947846,
+      "rms_dbfs": -30.33,
+      "peak": 0.31421,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.36,
+      "trailing_silence_seconds": 0.18,
+      "longest_internal_pause_seconds": 0.0
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/la_discesa_della_biglia/locales/it/audio/activity-title.wav.raw.wav",
+    "sha256": "757b8e8ffe8a35abab85b30165d832356a729affbec255146ef5479d371e85cd",
+    "receipt_sha256": "b798c037c7314b479558f32dbe8c50b3fee586a4509593fe8b211f84e03c80e1"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/la_discesa_della_biglia/locales/it/audio/activity-title.wav.extracted.wav",
+    "sha256": "ae55142c316765d6aff3912567d6bc505afbdb3d2ffa548bb7900b1292954a2b"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/la_discesa_della_biglia/locales/it/audio/activity-title.wav.raw.wav",
+    "source_sha256": "757b8e8ffe8a35abab85b30165d832356a729affbec255146ef5479d371e85cd",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-extracted/activities/la_discesa_della_biglia/locales/it/audio/activity-title.wav.extracted.wav",
+    "output_sha256": "ae55142c316765d6aff3912567d6bc505afbdb3d2ffa548bb7900b1292954a2b",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "La discesa della biglia",
+      "locale": "it",
+      "cue_id": "activity.title",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/la_discesa_della_biglia/locales/it/audio/activity-title.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "b798c037c7314b479558f32dbe8c50b3fee586a4509593fe8b211f84e03c80e1"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "La discesa della biglia",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " ascolta questa frase in italiano. La discesa della billia",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " la discesa della billia",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.44
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.44,
+        "end_seconds": 0.7
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.7,
+        "end_seconds": 0.92
+      },
+      {
+        "word": "in",
+        "start_seconds": 0.92,
+        "end_seconds": 1.08
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.08,
+        "end_seconds": 1.5
+      },
+      {
+        "word": "la",
+        "start_seconds": 2.22,
+        "end_seconds": 2.3
+      },
+      {
+        "word": "discesa",
+        "start_seconds": 2.3,
+        "end_seconds": 2.76
+      },
+      {
+        "word": "della",
+        "start_seconds": 2.76,
+        "end_seconds": 2.92
+      },
+      {
+        "word": "billia",
+        "start_seconds": 2.92,
+        "end_seconds": 3.42
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "la",
+        "start_seconds": 0.0,
+        "end_seconds": 0.44
+      },
+      {
+        "word": "discesa",
+        "start_seconds": 0.44,
+        "end_seconds": 0.9
+      },
+      {
+        "word": "della",
+        "start_seconds": 0.9,
+        "end_seconds": 1.06
+      },
+      {
+        "word": "billia",
+        "start_seconds": 1.06,
+        "end_seconds": 1.58
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5190594991048177,
+        "no_speech_prob": 0.07377606630325317,
+        "compression_ratio": 0.95,
+        "word_probabilities": [
+          0.46533203125,
+          0.99462890625,
+          0.9599609375,
+          0.97802734375,
+          0.9931640625,
+          0.88671875,
+          0.763671875,
+          0.97314453125,
+          0.4443359375
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.5172420501708984,
+        "no_speech_prob": 0.1664491593837738,
+        "compression_ratio": 0.7931034482758621,
+        "word_probabilities": [
+          0.61865234375,
+          0.63037109375,
+          0.9697265625,
+          0.484375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 124,
+    "extracted_voiced_seconds": 1.24,
+    "unremoved_raw_target_tokens": [
+      "la",
+      "discesa",
+      "della",
+      "billia"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "la",
+      "discesa",
+      "della",
+      "billia"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.6801814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.5,
+      "search_end_seconds": 2.22,
+      "prefix_last_word_end_seconds": 1.5,
+      "target_first_word_start_seconds": 2.22,
+      "gap_seconds": 0.6086167800453515,
+      "verified_silence_start_seconds": 1.5598639455782313,
+      "verified_silence_end_seconds": 2.1684807256235827,
+      "gap_rms_dbfs": -54.764,
+      "gap_peak_dbfs": -35.161,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.864172335600907,
+      "cut_sample": 41105,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/la_discesa_della_biglia/locales/it/audio/activity-title.wav",
-    "bytes": 63590,
-    "sha256": "40a7a5f384d21a11c697617bdd648fc6b6824ed71bacc92bb41b8c5a420e4265"
+    "sha256": "629087acfdda5bf299ed98b23e0c7fd87794096bf901ea0511e65c9dc53043b4",
+    "bytes": 80164
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "78b81a705e376e1723fdf13ba111c27167c744751f6fb65ad3489b5f22105540",
+    "original_sha256": "40a7a5f384d21a11c697617bdd648fc6b6824ed71bacc92bb41b8c5a420e4265",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

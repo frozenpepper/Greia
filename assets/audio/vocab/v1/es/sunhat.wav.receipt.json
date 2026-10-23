@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T20:57:02.388955+00:00",
+  "created_utc": "2026-10-21T18:42:54.885687+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "Sombrero de paja",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. Sombrero de paja",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "Sombrero de paja",
+    "cue_id": "greia.vocab.sunhat.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "Sombrero de paja",
     "cue_id": "greia.vocab.sunhat.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "assets/audio/vocab/v1/es/sunhat.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-225653-484abefb",
-    "idempotency_key": "greia-2a6503b0684a4457b6047097f7e2bda9",
+    "job_id": "20261021-204239-0a58d21b",
+    "idempotency_key": "greia-053db176228c4764a83092bbcae14862",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,226 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3924570366,
+    "script_seed": 106289225,
     "language_direction": "Spanish",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
-    "effective_delivery": "Speak in Spanish. Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1595794471,
-        "sha256": "9112f626ed700963ae8b09a556ac046729fecb535edcac1a937774964b613e3f",
+        "seed": 1840309656,
+        "sha256": "7dbabb3142edf13055db6f3b91e89152ba22db99f19e3f1e2d291c83c586790b",
         "generation": {
-          "elapsed_seconds": 9.136673624976538,
+          "elapsed_seconds": 14.11983541600057,
           "model_load_seconds": 0.0,
-          "rtf": 4.392279604988321,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.529811778509371,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Sombrero de Paja",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/vocab/v1/es/sunhat.wav.raw.wav",
+    "sha256": "8438d7395aa63af2139e23542057b7d2b8439c01ee0406188d1b5a63c82c3be2",
+    "receipt_sha256": "7843942b968c1f2fcfc3a8581e04e839307895009fed22e4baeb42995588342e"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/vocab/v1/es/sunhat.wav.extracted.wav",
+    "sha256": "8cc13203a3f1f80e2972956d81fe04d2dc9cb1076acf4533107140f8a255d48a"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/assets/audio/vocab/v1/es/sunhat.wav.raw.wav",
+    "source_sha256": "8438d7395aa63af2139e23542057b7d2b8439c01ee0406188d1b5a63c82c3be2",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/assets/audio/vocab/v1/es/sunhat.wav.extracted.wav",
+    "output_sha256": "8cc13203a3f1f80e2972956d81fe04d2dc9cb1076acf4533107140f8a255d48a",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Sombrero de paja",
+      "locale": "es",
+      "cue_id": "greia.vocab.sunhat.es",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/assets/audio/vocab/v1/es/sunhat.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "7843942b968c1f2fcfc3a8581e04e839307895009fed22e4baeb42995588342e"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "Sombrero de paja",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Escucha esta frase en español. Sombrero de Paja.",
+    "extracted_transcript": " Sombrero de Paja",
+    "raw_word_alignment": [
+      {
+        "word": "escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.62
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.62,
+        "end_seconds": 1.0
+      },
+      {
+        "word": "frase",
+        "start_seconds": 1.0,
+        "end_seconds": 1.36
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.36,
+        "end_seconds": 1.68
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.68,
+        "end_seconds": 2.24
+      },
+      {
+        "word": "sombrero",
+        "start_seconds": 2.86,
+        "end_seconds": 3.36
+      },
+      {
+        "word": "de",
+        "start_seconds": 3.36,
+        "end_seconds": 3.58
+      },
+      {
+        "word": "paja",
+        "start_seconds": 3.58,
+        "end_seconds": 3.84
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "sombrero",
+        "start_seconds": 0.0,
+        "end_seconds": 0.82
+      },
+      {
+        "word": "de",
+        "start_seconds": 0.82,
+        "end_seconds": 1.0
+      },
+      {
+        "word": "paja",
+        "start_seconds": 1.0,
+        "end_seconds": 1.3
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5980975502415707,
+        "no_speech_prob": 0.005977068096399307,
+        "compression_ratio": 0.875,
+        "word_probabilities": [
+          0.68798828125,
+          0.86767578125,
+          0.98779296875,
+          0.97900390625,
+          0.98291015625
+        ]
+      },
+      {
+        "avg_logprob": -0.5980975502415707,
+        "no_speech_prob": 0.005977068096399307,
+        "compression_ratio": 0.875,
+        "word_probabilities": [
+          0.68359375,
+          0.984375,
+          0.7197265625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6211188634236654,
+        "no_speech_prob": 0.03932829946279526,
+        "compression_ratio": 0.6666666666666666,
+        "word_probabilities": [
+          0.6728515625,
+          0.98828125,
+          0.53369140625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 87,
+    "extracted_voiced_seconds": 0.87,
+    "unremoved_raw_target_tokens": [
+      "sombrero",
+      "de",
+      "paja"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "sombrero",
+      "de",
+      "paja"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 4.000181405895692,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 2.24,
+      "target_first_word_start_seconds": 2.86,
+      "gap_seconds": 0.508843537414966,
+      "verified_silence_start_seconds": 2.2998639455782315,
+      "verified_silence_end_seconds": 2.808707482993197,
+      "gap_rms_dbfs": -71.356,
+      "gap_peak_dbfs": -52.467,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.5542857142857143,
+      "cut_sample": 56322,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "assets/audio/vocab/v1/es/sunhat.wav",
-    "bytes": 91814,
-    "sha256": "c4023e8549c15e71df1e4fb392cb059c7fef08e95388ce63b53adaefb56316fb"
+    "sha256": "f29a60821e3b58fc18e3a146d9060419dfa453557925052a09399ec48368c634",
+    "bytes": 63842
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "efb599c313cf47e470e1fdc1e31d912b1e9822e336b0af1ec0e569a677f0bc1b",
+    "original_sha256": "c4023e8549c15e71df1e4fb392cb059c7fef08e95388ce63b53adaefb56316fb",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

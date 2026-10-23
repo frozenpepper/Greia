@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T14:03:11.398768+00:00",
+  "created_utc": "2026-10-21T16:57:05.804911+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "Disegno Libero",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. Disegno Libero",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Disegno Libero",
+    "cue_id": "activity.title",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Disegno Libero",
     "cue_id": "activity.title",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/painting/locales/it/audio/activity-title.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-160016-a61a7582",
-    "idempotency_key": "greia-046c9e15ce0a4ae3853b8af0bcd21de9",
+    "job_id": "20261021-185651-aef866ac",
+    "idempotency_key": "greia-ac2ed5ca345a46c59770cee66e6ccce5",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,212 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 317562543,
+    "script_seed": 3672728206,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1966400981,
-        "sha256": "23058ea17f0f992cebc61f9ac8ea341a4318f2c509ffee323fc469ba70d24e8c",
+        "seed": 2755627987,
+        "sha256": "54fb524df1f9a60ccb16f7a8df604b365e09e60137848a2d353d2ce4e7b74483",
         "generation": {
-          "elapsed_seconds": 7.195356709009502,
+          "elapsed_seconds": 13.962006249988917,
           "model_load_seconds": 0.0,
-          "rtf": 5.62064057467218,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.6357813245924007,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Disegno libero!",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/painting/locales/it/audio/activity-title.wav.raw.wav",
+    "sha256": "92dbac63bcfc0b81cb87e1e6f7c2b54bf9d3c6762e6d7a28ee58b316700e17ef",
+    "receipt_sha256": "c224c9a58eeaca13a9c267d79134e901f3f01ae7ddb790c6e6285b48d5eff9fd"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/painting/locales/it/audio/activity-title.wav.extracted.wav",
+    "sha256": "bdc605a86c818009e0b4162b82b7fa508cf9e927e6506798a6b681aa96af33ee"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/painting/locales/it/audio/activity-title.wav.raw.wav",
+    "source_sha256": "92dbac63bcfc0b81cb87e1e6f7c2b54bf9d3c6762e6d7a28ee58b316700e17ef",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/painting/locales/it/audio/activity-title.wav.extracted.wav",
+    "output_sha256": "bdc605a86c818009e0b4162b82b7fa508cf9e927e6506798a6b681aa96af33ee",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Disegno Libero",
+      "locale": "it",
+      "cue_id": "activity.title",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/painting/locales/it/audio/activity-title.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "c224c9a58eeaca13a9c267d79134e901f3f01ae7ddb790c6e6285b48d5eff9fd"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "Disegno Libero",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " ascolta questa frase in italiano. Disegno libro!",
+    "extracted_transcript": " Disegno libero!",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.66
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.66,
+        "end_seconds": 0.94
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.94,
+        "end_seconds": 1.36
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.36,
+        "end_seconds": 1.6
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.6,
+        "end_seconds": 2.04
+      },
+      {
+        "word": "disegno",
+        "start_seconds": 2.84,
+        "end_seconds": 3.22
+      },
+      {
+        "word": "libro",
+        "start_seconds": 3.22,
+        "end_seconds": 3.52
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "disegno",
+        "start_seconds": 0.0,
+        "end_seconds": 0.82
+      },
+      {
+        "word": "libero",
+        "start_seconds": 0.82,
+        "end_seconds": 1.28
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.6843437618679471,
+        "no_speech_prob": 0.00303347478620708,
+        "compression_ratio": 0.8888888888888888,
+        "word_probabilities": [
+          0.64208984375,
+          0.83251953125,
+          0.978515625,
+          0.96240234375,
+          0.91357421875
+        ]
+      },
+      {
+        "avg_logprob": -0.6843437618679471,
+        "no_speech_prob": 0.00303347478620708,
+        "compression_ratio": 0.8888888888888888,
+        "word_probabilities": [
+          0.8056640625,
+          0.256591796875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6939754486083984,
+        "no_speech_prob": 0.07283374667167664,
+        "compression_ratio": 0.6521739130434783,
+        "word_probabilities": [
+          0.67822265625,
+          0.61328125
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 91,
+    "extracted_voiced_seconds": 0.91,
+    "unremoved_raw_target_tokens": [
+      "disegno",
+      "libro"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "disegno",
+      "libro"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.8401814058956916,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 2.04,
+      "target_first_word_start_seconds": 2.84,
+      "gap_seconds": 0.6884353741496598,
+      "verified_silence_start_seconds": 2.0998639455782313,
+      "verified_silence_end_seconds": 2.788299319727891,
+      "gap_rms_dbfs": -56.592,
+      "gap_peak_dbfs": -38.945,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.444081632653061,
+      "cut_sample": 53892,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/painting/locales/it/audio/activity-title.wav",
-    "bytes": 56534,
-    "sha256": "d39d1704e07413f78c33631b7588f1e7f444d92dda5f69d45f66652014fae22a"
+    "sha256": "61a8739b370a7db4a8bb9ded3d49b5139409399619f3d1266ea3d5cc4db5c30b",
+    "bytes": 61646
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "1e4bdf1836e87d173697c2b57b9fb94e54dbf08fed74be3306ad96808c64eeb7",
+    "original_sha256": "d39d1704e07413f78c33631b7588f1e7f444d92dda5f69d45f66652014fae22a",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

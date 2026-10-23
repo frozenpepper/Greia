@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T17:17:22.240292+00:00",
+  "created_utc": "2026-10-21T17:29:44.850041+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "Torre de formas",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. Torre de formas",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "lilli",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "Torre de formas",
+    "cue_id": "torre_forme.title.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "Torre de formas",
     "cue_id": "torre_forme.title.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/torre_forme/locales/es/audio/activity-title.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.lilli.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "job_id": "20261020-191713-0bab42c8",
-    "idempotency_key": "greia-22e3a29dc8d04bf398988f5e60b4ac82",
+    "job_id": "20261021-192929-806f3903",
+    "idempotency_key": "greia-0887ef06a2414f65b057a5d3a833fb05",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,267 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 523953973,
+    "script_seed": 1577741397,
     "language_direction": "Spanish",
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "effective_delivery": "Speak in Spanish. Lilli, a sparkly, affectionate storybook unicorn. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2916543815,
-        "sha256": "ba2a64dfaa277d25526a88a1abae6b3d939fb60df25bf11171c841d3e720d135",
+        "seed": 3069629941,
+        "sha256": "85b789d1e689f8472d35d134ccc210f94da0168bbca7fa0addd4f3d32ec9220d",
         "generation": {
-          "elapsed_seconds": 7.5209100840147585,
+          "elapsed_seconds": 14.85075595798844,
           "model_load_seconds": 0.0,
-          "rtf": 5.874946036204732,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.867216516120422,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " Torre de formas.",
+    "metrics": {
+      "duration_seconds": 1.611156462585034,
+      "rms_dbfs": -26.12,
+      "peak": 0.33734,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.38,
+      "trailing_silence_seconds": 0.3,
+      "longest_internal_pause_seconds": 0.1
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/torre_forme/locales/es/audio/activity-title.wav.raw.wav",
+    "sha256": "574ee6eabd94f69f706ed0e9a6142fc9eedd06a40a1ba87e74d8c59a42787d07",
+    "receipt_sha256": "a783bb1a81edd307b6d1ec484114681bc8c46abacbcd134f3a729d040adf5ab6"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/torre_forme/locales/es/audio/activity-title.wav.extracted.wav",
+    "sha256": "60becac9b7ac984b6628c78e91416a92080e6784fbfce3207ef3515be8012229"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/torre_forme/locales/es/audio/activity-title.wav.delivery.wav",
+    "sha256": "43beb52e1bf0844e055bf80dd386808c1919c991f7513444cb4612bdf48541a0"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/torre_forme/locales/es/audio/activity-title.wav.raw.wav",
+    "source_sha256": "574ee6eabd94f69f706ed0e9a6142fc9eedd06a40a1ba87e74d8c59a42787d07",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/torre_forme/locales/es/audio/activity-title.wav.extracted.wav",
+    "output_sha256": "60becac9b7ac984b6628c78e91416a92080e6784fbfce3207ef3515be8012229",
+    "target_request": {
+      "speaker": "lilli",
+      "kind": "character_dialogue",
+      "text": "Torre de formas",
+      "locale": "es",
+      "cue_id": "torre_forme.title.es",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/torre_forme/locales/es/audio/activity-title.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "a783bb1a81edd307b6d1ec484114681bc8c46abacbcd134f3a729d040adf5ab6"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "Torre de formas",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Ete escutas de frase en español. Dore de formas.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Torre de formas.",
+    "raw_word_alignment": [
+      {
+        "word": "ete",
+        "start_seconds": 0.0,
+        "end_seconds": 0.26
+      },
+      {
+        "word": "escutas",
+        "start_seconds": 0.26,
+        "end_seconds": 0.76
+      },
+      {
+        "word": "de",
+        "start_seconds": 0.76,
+        "end_seconds": 0.9
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.9,
+        "end_seconds": 1.26
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.26,
+        "end_seconds": 1.42
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.42,
+        "end_seconds": 1.9
+      },
+      {
+        "word": "dore",
+        "start_seconds": 2.38,
+        "end_seconds": 2.88
+      },
+      {
+        "word": "de",
+        "start_seconds": 2.88,
+        "end_seconds": 3.06
+      },
+      {
+        "word": "formas",
+        "start_seconds": 3.06,
+        "end_seconds": 3.42
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "torre",
+        "start_seconds": 0.0,
+        "end_seconds": 0.74
+      },
+      {
+        "word": "de",
+        "start_seconds": 0.74,
+        "end_seconds": 0.86
+      },
+      {
+        "word": "formas",
+        "start_seconds": 0.86,
+        "end_seconds": 1.28
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.9458471298217773,
+        "no_speech_prob": 0.038331039249897,
+        "compression_ratio": 0.9423076923076923,
+        "word_probabilities": [
+          0.39892578125,
+          0.53759765625,
+          0.26806640625,
+          0.265625,
+          0.93505859375,
+          0.98193359375
+        ]
+      },
+      {
+        "avg_logprob": -0.9458471298217773,
+        "no_speech_prob": 0.038331039249897,
+        "compression_ratio": 0.9423076923076923,
+        "word_probabilities": [
+          0.112060546875,
+          0.765625,
+          0.845703125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.5233652591705322,
+        "no_speech_prob": 0.34610819816589355,
+        "compression_ratio": 0.6666666666666666,
+        "word_probabilities": [
+          0.66357421875,
+          0.98681640625,
+          0.76318359375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": false,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 6,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 76,
+    "extracted_voiced_seconds": 0.76,
+    "unremoved_raw_target_tokens": [
+      "dore",
+      "de",
+      "formas"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "dore",
+      "de",
+      "formas"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.8401814058956916,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.9,
+      "search_end_seconds": 2.38,
+      "prefix_last_word_end_seconds": 1.9,
+      "target_first_word_start_seconds": 2.38,
+      "gap_seconds": 0.31927437641723355,
+      "verified_silence_start_seconds": 2.009750566893424,
+      "verified_silence_end_seconds": 2.3290249433106576,
+      "gap_rms_dbfs": -63.723,
+      "gap_peak_dbfs": -44.245,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.169387755102041,
+      "cut_sample": 47835,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 1315,
+      "removed_seconds": 0.05963718820861678,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 49150,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/torre_forme/locales/es/audio/activity-title.wav.delivery.wav",
+      "sha256": "43beb52e1bf0844e055bf80dd386808c1919c991f7513444cb4612bdf48541a0"
+    }
+  },
   "output": {
     "path": "activities/torre_forme/locales/es/audio/activity-title.wav",
-    "bytes": 56534,
-    "sha256": "1feb61078771c9bf52f3c6e1baa5d669d379576886665c50089c126203dc76eb"
+    "sha256": "55a910e7ba5e0925ed02c1a9c488615e49b06cfaad0c96ec37810d1be15c5cf9",
+    "bytes": 71130
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "4052edbb97e0bf52522f472e6f58c76e9d2b987f5bdcd709c834be17a14d3b03",
+    "original_sha256": "1feb61078771c9bf52f3c6e1baa5d669d379576886665c50089c126203dc76eb",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

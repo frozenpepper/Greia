@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T20:16:05.190894+00:00",
+  "created_utc": "2026-10-21T18:30:10.328416+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "Construire",
+    "target_word_count": 1,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. Construire",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Construire",
+    "cue_id": "collection.building",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Construire",
     "cue_id": "collection.building",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "assets/audio/system/launcher-labels/fr/building.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names a menu button for a small child: friendly, clear and matter-of-fact, even pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-221555-a553f1c6",
-    "idempotency_key": "greia-4efe3defa0ea48e1a4c3d8a6bb57002c",
+    "job_id": "20261021-202957-037d1133",
+    "idempotency_key": "greia-3dce989696374db697fad21628b43fd2",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,213 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 40942210,
+    "script_seed": 1807113664,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names a menu button for a small child: friendly, clear and matter-of-fact, even pace.",
-    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. Names a menu button for a small child: friendly, clear and matter-of-fact, even pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1214895145,
-        "sha256": "4aaf956d1c6e235713613fb226108e6704e35f33510ef00f684570a8a80fa3cf",
+        "seed": 425362482,
+        "sha256": "64d4a12a34a1eb917a4f2d0f28ece49850c39eaae8f3eb60552be323c5db6887",
         "generation": {
-          "elapsed_seconds": 8.115807875001337,
+          "elapsed_seconds": 11.699234582993085,
           "model_load_seconds": 0.0,
-          "rtf": 3.9015180874936326,
-          "peak_memory_gb": 8.843167284
+          "rtf": 4.3009256478131555,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " construire",
+    "metrics": {
+      "duration_seconds": 0.8519274376417234,
+      "rms_dbfs": -37.09,
+      "peak": 0.11081,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.26,
+      "trailing_silence_seconds": 0.14,
+      "longest_internal_pause_seconds": 0.0
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/system/launcher-labels/fr/building.wav.raw.wav",
+    "sha256": "d3c6fedbb27066e8f0a181ab09d5f0b85dcffdb8ca268d4f2756164313288bb5",
+    "receipt_sha256": "238efe89c2607ddef513bf52c8e3cfd277af59e259ed674bf5b191ed07ede8da"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/system/launcher-labels/fr/building.wav.extracted.wav",
+    "sha256": "e6c095cb9f84cf3ce944d8187d7460e849f1eac7dfb51bd3564df24f5ffe3732"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/assets/audio/system/launcher-labels/fr/building.wav.raw.wav",
+    "source_sha256": "d3c6fedbb27066e8f0a181ab09d5f0b85dcffdb8ca268d4f2756164313288bb5",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-extracted/assets/audio/system/launcher-labels/fr/building.wav.extracted.wav",
+    "output_sha256": "e6c095cb9f84cf3ce944d8187d7460e849f1eac7dfb51bd3564df24f5ffe3732",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Construire",
+      "locale": "fr",
+      "cue_id": "collection.building",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/assets/audio/system/launcher-labels/fr/building.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "238efe89c2607ddef513bf52c8e3cfd277af59e259ed674bf5b191ed07ede8da"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "Construire",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " cette phrase est en français construit.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " construire",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.44
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.44,
+        "end_seconds": 0.74
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.74,
+        "end_seconds": 1.02
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.02,
+        "end_seconds": 1.1
+      },
+      {
+        "word": "français",
+        "start_seconds": 1.1,
+        "end_seconds": 1.54
+      },
+      {
+        "word": "construit",
+        "start_seconds": 1.54,
+        "end_seconds": 2.58
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "construire",
+        "start_seconds": 0.0,
+        "end_seconds": 0.74
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.6225521781227805,
+        "no_speech_prob": 0.2808431088924408,
+        "compression_ratio": 0.8333333333333334,
+        "word_probabilities": [
+          0.56884765625,
+          0.96435546875,
+          0.7080078125,
+          0.916015625,
+          0.96630859375,
+          0.6708984375
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.41852359771728515,
+        "no_speech_prob": 0.4141782820224762,
+        "compression_ratio": 0.5555555555555556,
+        "word_probabilities": [
+          0.662109375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 36,
+    "extracted_voiced_seconds": 0.36,
+    "unremoved_raw_target_tokens": [
+      "construit"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "construit"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 2.7201814058956915,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-expanded-boundary",
+      "search_start_seconds": 1.1,
+      "search_end_seconds": 2.58,
+      "prefix_last_word_end_seconds": 1.54,
+      "target_first_word_start_seconds": 1.54,
+      "gap_seconds": 0.5387755102040817,
+      "verified_silence_start_seconds": 1.5988662131519273,
+      "verified_silence_end_seconds": 2.137641723356009,
+      "gap_rms_dbfs": -53.096,
+      "gap_peak_dbfs": -30.197,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.8682539682539683,
+      "cut_sample": 41195,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "assets/audio/system/launcher-labels/fr/building.wav",
-    "bytes": 91814,
-    "sha256": "4e8ea8c33a5afbc8429a471478af0958ad90a490fa4d7fe6e640bdb8807fdcc8"
+    "sha256": "5e21e60944d4dc01e043b59bb23017363247f49806a2673cd1859be17485c58a",
+    "bytes": 37648
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "8360bf73f9ef1834e5d73ad6b28288a4d8877c3d85dc0ba10c9f0702d418594a",
+    "original_sha256": "4e8ea8c33a5afbc8429a471478af0958ad90a490fa4d7fe6e640bdb8807fdcc8",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

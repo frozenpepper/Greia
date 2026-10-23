@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T13:39:55.950511+00:00",
+  "created_utc": "2026-10-23T01:51:11.829997+00:00",
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
@@ -8,17 +8,22 @@
     "text": "Sotto la neve",
     "cue_id": "greia.requested.place_snow.it",
     "output": "activities/nascondino_bosco/assets/audio/it/place_snow.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic"
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.lilli.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "job_id": "20261020-153948-461dd6f8",
-    "idempotency_key": "greia-6c17ecc3a79845f292582c203a8aab16",
+    "job_id": "20261023-035049-2543ce2f",
+    "idempotency_key": "greia-7d9d3ad41cf6456fbd65f9fc721c7311",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +46,333 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1368947428,
+    "script_seed": 1949722651,
     "language_direction": "Italian",
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in Italian. Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "effective_delivery": "Speak in Italian. Voce calda e calma. Pronuncia chiara e naturale.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 4117740862,
-        "sha256": "c5f1410d71479af8d20e042319a948dd3c1d51645da6d7f6d1d066fc188909cb",
+        "seed": 746569479,
+        "sha256": "a768507358ba632e87700831e82c0b080e50ab9c63a4b5de71817ba5994f571d",
         "generation": {
-          "elapsed_seconds": 6.327167000039481,
+          "elapsed_seconds": 19.137028833007207,
           "model_load_seconds": 0.0,
-          "rtf": 5.648415711982872,
-          "peak_memory_gb": 8.44494914
+          "rtf": 4.9833849658453735,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-audio-parakeet-tdt-v3",
+    "transcript": "Sotto la neve!",
+    "score": 1.0,
+    "detail": "Delivered target transcribed and screened; human listening remains pending",
+    "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+    "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+    "flags": [],
+    "metrics": {
+      "duration_seconds": 1.2201814058956917,
+      "rms_dbfs": -25.87,
+      "peak": 0.25238,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.1,
+      "trailing_silence_seconds": 0.22,
+      "longest_internal_pause_seconds": 0.04
+    }
   },
   "attempts": 1,
   "output": {
     "path": "activities/nascondino_bosco/assets/audio/it/place_snow.wav",
-    "bytes": 49478,
-    "sha256": "f900ed3d41ffaf0d69a84b3a399f12626377e42ad1fef9246e34d6128d77ae55"
+    "bytes": 53888,
+    "sha256": "857d021c8af071e4d48d8e9fc0c26af0c7d3e6ae9a4a6fadd0798d4b0ca6a9fa"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "short_phrase": {
+    "mode": "automatic-carrier",
+    "composition_policy": "natural-context-period-v1",
+    "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/76280cfbd7194f0882073d6fdf492595",
+    "prefix": "Parliamo con calma insieme.",
+    "composite_text": "Parliamo con calma insieme.\n\nSotto la neve",
+    "effective_delivery": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "extraction": {
+      "schema_version": 1,
+      "algorithm_version": "greia-spoken-carrier-extractor-v7",
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "status": "EXTRACTED_PENDING_LISTENING",
+      "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/76280cfbd7194f0882073d6fdf492595/attempt-01/raw.wav",
+      "source_sha256": "a768507358ba632e87700831e82c0b080e50ab9c63a4b5de71817ba5994f571d",
+      "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/76280cfbd7194f0882073d6fdf492595/attempt-01/target.wav",
+      "output_sha256": "2c2c0afc8ae4e82e4784756b6d931b98473fa4ea8c9c96b04c87e03dbe4a11be",
+      "output_bytes": 117180,
+      "locale": "it",
+      "prefix": "Parliamo con calma insieme.",
+      "target": "Sotto la neve",
+      "remove_first_words": 4,
+      "ignore_accents": true,
+      "target_verification_requested": "warn",
+      "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+      "target_comparison_score": 1.0,
+      "target_word_count_matches": true,
+      "target_numbers_match": true,
+      "target_comparison_flags": [],
+      "target_transcript_warning": false,
+      "recognizer": "mlx-audio-parakeet-tdt-v3",
+      "recognizer_version": "0.5.0",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "extracted_transcript": "Sotto la neve!",
+      "expected_target_tokens": [
+        "sotto",
+        "la",
+        "neve"
+      ],
+      "extracted_target_tokens": [
+        "sotto",
+        "la",
+        "neve"
+      ],
+      "extracted_target_exact_match": true,
+      "transcription_settings": {
+        "language_detection": "automatic",
+        "expected_text_prompt": null,
+        "timestamps": "model-provided-token-timestamps"
+      },
+      "sample_rate": 48000,
+      "duration_seconds": 3.8401666666666667,
+      "boundary": {
+        "search_strategy": "target-only-global-quiet-run-v7",
+        "verified_silence_start_seconds": 2.21,
+        "verified_silence_end_seconds": 2.72,
+        "verified_silence_duration_seconds": 0.51,
+        "cut_sample": 125760,
+        "cut_time_seconds": 2.62,
+        "padding_seconds": 0.1,
+        "quiet_run_start_sample": 106080,
+        "quiet_run_end_sample": 130560,
+        "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+      },
+      "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/76280cfbd7194f0882073d6fdf492595/attempt-01/target.wav.search/f290de8c24964994b6f50c4458925915",
+      "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/76280cfbd7194f0882073d6fdf492595/attempt-01/target.wav.search/f290de8c24964994b6f50c4458925915/search.json",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/76280cfbd7194f0882073d6fdf492595/attempt-01/raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "fbe7b9ba1592b1c480c3f7a059d31c0c8482080df082bd67ffef829af1a9d052",
+      "candidate_sha256": "2c2c0afc8ae4e82e4784756b6d931b98473fa4ea8c9c96b04c87e03dbe4a11be",
+      "candidate_id": "candidate-01",
+      "candidate_count": 1,
+      "qualifying_quiet_run_count": 1,
+      "candidate_results": [
+        {
+          "candidate_id": "candidate-01",
+          "quiet_run": {
+            "start_sample": 106080,
+            "end_sample": 130560,
+            "start_seconds": 2.21,
+            "end_seconds": 2.72,
+            "duration_seconds": 0.51
+          },
+          "cut_sample": 125760,
+          "cut_time_seconds": 2.62,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/76280cfbd7194f0882073d6fdf492595/attempt-01/target.wav.search/f290de8c24964994b6f50c4458925915/candidate-01.wav",
+          "preceding_voiced_seconds": 1.89,
+          "retained_voiced_seconds": 0.87,
+          "retained_duration_seconds": 1.2201666666666666,
+          "candidate_sha256": "2c2c0afc8ae4e82e4784756b6d931b98473fa4ea8c9c96b04c87e03dbe4a11be",
+          "extracted_transcript": "Sotto la neve!",
+          "canonical_transcript_tokens": [
+            "sotto",
+            "la",
+            "neve"
+          ],
+          "exact_target_match": true,
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": true,
+          "asr_segment_count": 1
+        }
+      ],
+      "human_review": "PENDING",
+      "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+      "delivery": {
+        "policy": "verified-carrier-gap-delivery-v1",
+        "removed_frames": 0,
+        "removed_seconds": 0.0,
+        "retained_verified_quiet_seconds": 0.1,
+        "raw_delivery_start_sample": 125760,
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/76280cfbd7194f0882073d6fdf492595/attempt-01/delivery-target.wav",
+        "sha256": "2c2c0afc8ae4e82e4784756b6d931b98473fa4ea8c9c96b04c87e03dbe4a11be"
+      }
+    },
+    "quality": {
+      "disposition": "PASS",
+      "score": 1.0,
+      "transcript": "Sotto la neve!",
+      "metrics": {
+        "duration_seconds": 1.2201814058956917,
+        "rms_dbfs": -25.87,
+        "peak": 0.25238,
+        "clipped_fraction": 0.0,
+        "leading_silence_seconds": 0.1,
+        "trailing_silence_seconds": 0.22,
+        "longest_internal_pause_seconds": 0.04
+      },
+      "flags": [],
+      "ignore_accents": true,
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "detail": "Delivered target transcribed and screened; human listening remains pending"
+    },
+    "history": [
+      {
+        "attempt": 1,
+        "status": "PASS",
+        "quality": {
+          "disposition": "PASS",
+          "score": 1.0,
+          "transcript": "Sotto la neve!",
+          "metrics": {
+            "duration_seconds": 1.2201814058956917,
+            "rms_dbfs": -25.87,
+            "peak": 0.25238,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.1,
+            "trailing_silence_seconds": 0.22,
+            "longest_internal_pause_seconds": 0.04
+          },
+          "flags": [],
+          "ignore_accents": true,
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "detail": "Delivered target transcribed and screened; human listening remains pending"
+        },
+        "extraction": {
+          "schema_version": 1,
+          "algorithm_version": "greia-spoken-carrier-extractor-v7",
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "status": "EXTRACTED_PENDING_LISTENING",
+          "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/76280cfbd7194f0882073d6fdf492595/attempt-01/raw.wav",
+          "source_sha256": "a768507358ba632e87700831e82c0b080e50ab9c63a4b5de71817ba5994f571d",
+          "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/76280cfbd7194f0882073d6fdf492595/attempt-01/target.wav",
+          "output_sha256": "2c2c0afc8ae4e82e4784756b6d931b98473fa4ea8c9c96b04c87e03dbe4a11be",
+          "output_bytes": 117180,
+          "locale": "it",
+          "prefix": "Parliamo con calma insieme.",
+          "target": "Sotto la neve",
+          "remove_first_words": 4,
+          "ignore_accents": true,
+          "target_verification_requested": "warn",
+          "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_transcript_warning": false,
+          "recognizer": "mlx-audio-parakeet-tdt-v3",
+          "recognizer_version": "0.5.0",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "extracted_transcript": "Sotto la neve!",
+          "expected_target_tokens": [
+            "sotto",
+            "la",
+            "neve"
+          ],
+          "extracted_target_tokens": [
+            "sotto",
+            "la",
+            "neve"
+          ],
+          "extracted_target_exact_match": true,
+          "transcription_settings": {
+            "language_detection": "automatic",
+            "expected_text_prompt": null,
+            "timestamps": "model-provided-token-timestamps"
+          },
+          "sample_rate": 48000,
+          "duration_seconds": 3.8401666666666667,
+          "boundary": {
+            "search_strategy": "target-only-global-quiet-run-v7",
+            "verified_silence_start_seconds": 2.21,
+            "verified_silence_end_seconds": 2.72,
+            "verified_silence_duration_seconds": 0.51,
+            "cut_sample": 125760,
+            "cut_time_seconds": 2.62,
+            "padding_seconds": 0.1,
+            "quiet_run_start_sample": 106080,
+            "quiet_run_end_sample": 130560,
+            "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+          },
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/76280cfbd7194f0882073d6fdf492595/attempt-01/target.wav.search/f290de8c24964994b6f50c4458925915",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/76280cfbd7194f0882073d6fdf492595/attempt-01/target.wav.search/f290de8c24964994b6f50c4458925915/search.json",
+          "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/76280cfbd7194f0882073d6fdf492595/attempt-01/raw.wav.receipt.json",
+          "source_provider_receipt_sha256": "fbe7b9ba1592b1c480c3f7a059d31c0c8482080df082bd67ffef829af1a9d052",
+          "candidate_sha256": "2c2c0afc8ae4e82e4784756b6d931b98473fa4ea8c9c96b04c87e03dbe4a11be",
+          "candidate_id": "candidate-01",
+          "candidate_count": 1,
+          "qualifying_quiet_run_count": 1,
+          "candidate_results": [
+            {
+              "candidate_id": "candidate-01",
+              "quiet_run": {
+                "start_sample": 106080,
+                "end_sample": 130560,
+                "start_seconds": 2.21,
+                "end_seconds": 2.72,
+                "duration_seconds": 0.51
+              },
+              "cut_sample": 125760,
+              "cut_time_seconds": 2.62,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/76280cfbd7194f0882073d6fdf492595/attempt-01/target.wav.search/f290de8c24964994b6f50c4458925915/candidate-01.wav",
+              "preceding_voiced_seconds": 1.89,
+              "retained_voiced_seconds": 0.87,
+              "retained_duration_seconds": 1.2201666666666666,
+              "candidate_sha256": "2c2c0afc8ae4e82e4784756b6d931b98473fa4ea8c9c96b04c87e03dbe4a11be",
+              "extracted_transcript": "Sotto la neve!",
+              "canonical_transcript_tokens": [
+                "sotto",
+                "la",
+                "neve"
+              ],
+              "exact_target_match": true,
+              "target_comparison_score": 1.0,
+              "target_word_count_matches": true,
+              "target_numbers_match": true,
+              "target_comparison_flags": [],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": true,
+              "asr_segment_count": 1
+            }
+          ],
+          "human_review": "PENDING",
+          "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+          "delivery": {
+            "policy": "verified-carrier-gap-delivery-v1",
+            "removed_frames": 0,
+            "removed_seconds": 0.0,
+            "retained_verified_quiet_seconds": 0.1,
+            "raw_delivery_start_sample": 125760,
+            "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/76280cfbd7194f0882073d6fdf492595/attempt-01/delivery-target.wav",
+            "sha256": "2c2c0afc8ae4e82e4784756b6d931b98473fa4ea8c9c96b04c87e03dbe4a11be"
+          }
+        },
+        "candidate": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/76280cfbd7194f0882073d6fdf492595/attempt-01/candidate.wav"
+      }
+    ]
+  },
   "corpus_replacement": {
-    "original_sha256": "6c8a687efb4374c4259f03068f16420f3f447cc5a395923cc6e3536fd5f00187",
+    "original_sha256": "f900ed3d41ffaf0d69a84b3a399f12626377e42ad1fef9246e34d6128d77ae55",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

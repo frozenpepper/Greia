@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T08:47:44.608104+00:00",
+  "created_utc": "2026-10-23T01:15:54.448853+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
@@ -8,17 +8,22 @@
     "text": "Trouve toutes les baies !",
     "cue_id": "greia.requested.find_all_berries.fr",
     "output": "activities/corsa_bacche/assets/audio/fr/find_all_berries.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic"
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.momo.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261021-104738-781f0bb9",
-    "idempotency_key": "greia-d43b239196a34cc6800660486dd7b88d",
+    "job_id": "20261023-031531-cfab0c05",
+    "idempotency_key": "greia-4ead4219ad664ecc9a6a81562f880af7",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +46,339 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3002027513,
+    "script_seed": 2412455294,
     "language_direction": "French",
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in French. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "effective_delivery": "Speak in French. Lecture chaleureuse et calme. Diction claire et naturelle.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1970517661,
-        "sha256": "2251b9aab26a7097fea3f1aeeaf07de5430b8e3efd7076036c15d9fd36c35cd8",
+        "seed": 3592713657,
+        "sha256": "4e0d344b456ec1dc68a403b041114f8015f2e9646b688d1a4661bf6f8d3475d9",
         "generation": {
-          "elapsed_seconds": 5.255259958998067,
+          "elapsed_seconds": 21.596973374980735,
           "model_load_seconds": 0.0,
-          "rtf": 3.649063737297582,
-          "peak_memory_gb": 7.648166916
+          "rtf": 3.749366055666341,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-audio-parakeet-tdt-v3",
+    "transcript": "Trouve toutes les bailles.",
+    "score": 0.8854,
+    "detail": "Delivered target transcribed and screened; human listening remains pending",
+    "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+    "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+    "flags": [],
+    "metrics": {
+      "duration_seconds": 2.2001814058956914,
+      "rms_dbfs": -27.5,
+      "peak": 0.17142,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.1,
+      "trailing_silence_seconds": 0.12,
+      "longest_internal_pause_seconds": 0.06
+    }
   },
   "attempts": 1,
   "output": {
     "path": "activities/corsa_bacche/assets/audio/fr/find_all_berries.wav",
-    "bytes": 63590,
-    "sha256": "74f6d57cafe3c531feaf3e17e64c7e189dab3fa37bc4e92938a8c32aacff7bbb"
+    "bytes": 97106,
+    "sha256": "5a7078c497b3a5e8fc97613247432c904cc0f67dea66e595fdc79a71933e165c"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "short_phrase": {
+    "mode": "automatic-carrier",
+    "composition_policy": "natural-context-period-v1",
+    "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/5e4db29913df4c848ad7c4208049bf61",
+    "prefix": "Nous allons chercher ensemble.",
+    "composite_text": "Nous allons chercher ensemble.\n\nTrouve toutes les baies !",
+    "effective_delivery": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "extraction": {
+      "schema_version": 1,
+      "algorithm_version": "greia-spoken-carrier-extractor-v7",
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "status": "EXTRACTED_PENDING_LISTENING",
+      "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/5e4db29913df4c848ad7c4208049bf61/attempt-01/raw.wav",
+      "source_sha256": "4e0d344b456ec1dc68a403b041114f8015f2e9646b688d1a4661bf6f8d3475d9",
+      "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/5e4db29913df4c848ad7c4208049bf61/attempt-01/target.wav",
+      "output_sha256": "ecbfda67eef4014e5546def30d32bef31f738a5656aa2d51b62d18c349a3e5c6",
+      "output_bytes": 211260,
+      "locale": "fr",
+      "prefix": "Nous allons chercher ensemble.",
+      "target": "Trouve toutes les baies !",
+      "remove_first_words": 4,
+      "ignore_accents": true,
+      "target_verification_requested": "warn",
+      "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+      "target_comparison_score": 0.8854,
+      "target_word_count_matches": true,
+      "target_numbers_match": true,
+      "target_comparison_flags": [],
+      "target_transcript_warning": true,
+      "recognizer": "mlx-audio-parakeet-tdt-v3",
+      "recognizer_version": "0.5.0",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "extracted_transcript": "Trouve toutes les bailles.",
+      "expected_target_tokens": [
+        "trouve",
+        "toutes",
+        "les",
+        "baies"
+      ],
+      "extracted_target_tokens": [
+        "trouve",
+        "toutes",
+        "les",
+        "bailles"
+      ],
+      "extracted_target_exact_match": false,
+      "transcription_settings": {
+        "language_detection": "automatic",
+        "expected_text_prompt": null,
+        "timestamps": "model-provided-token-timestamps"
+      },
+      "sample_rate": 48000,
+      "duration_seconds": 5.760166666666667,
+      "boundary": {
+        "search_strategy": "target-only-global-quiet-run-v7",
+        "verified_silence_start_seconds": 2.76,
+        "verified_silence_end_seconds": 3.66,
+        "verified_silence_duration_seconds": 0.9,
+        "cut_sample": 170880,
+        "cut_time_seconds": 3.56,
+        "padding_seconds": 0.1,
+        "quiet_run_start_sample": 132480,
+        "quiet_run_end_sample": 175680,
+        "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+      },
+      "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/5e4db29913df4c848ad7c4208049bf61/attempt-01/target.wav.search/84e5f2be70874c5793172e39cc3dca35",
+      "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/5e4db29913df4c848ad7c4208049bf61/attempt-01/target.wav.search/84e5f2be70874c5793172e39cc3dca35/search.json",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/5e4db29913df4c848ad7c4208049bf61/attempt-01/raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "12841b899544213e0397b5ee7720f23a1e62ea38f54250b1420dbcea0348da53",
+      "candidate_sha256": "ecbfda67eef4014e5546def30d32bef31f738a5656aa2d51b62d18c349a3e5c6",
+      "candidate_id": "candidate-01",
+      "candidate_count": 1,
+      "qualifying_quiet_run_count": 1,
+      "candidate_results": [
+        {
+          "candidate_id": "candidate-01",
+          "quiet_run": {
+            "start_sample": 132480,
+            "end_sample": 175680,
+            "start_seconds": 2.76,
+            "end_seconds": 3.66,
+            "duration_seconds": 0.9
+          },
+          "cut_sample": 170880,
+          "cut_time_seconds": 3.56,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/5e4db29913df4c848ad7c4208049bf61/attempt-01/target.wav.search/84e5f2be70874c5793172e39cc3dca35/candidate-01.wav",
+          "preceding_voiced_seconds": 2.22,
+          "retained_voiced_seconds": 1.82,
+          "retained_duration_seconds": 2.2001666666666666,
+          "candidate_sha256": "ecbfda67eef4014e5546def30d32bef31f738a5656aa2d51b62d18c349a3e5c6",
+          "extracted_transcript": "Trouve toutes les bailles.",
+          "canonical_transcript_tokens": [
+            "trouve",
+            "toutes",
+            "les",
+            "bailles"
+          ],
+          "exact_target_match": false,
+          "target_comparison_score": 0.8854,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": true,
+          "asr_segment_count": 1
+        }
+      ],
+      "human_review": "PENDING",
+      "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+      "delivery": {
+        "policy": "verified-carrier-gap-delivery-v1",
+        "removed_frames": 0,
+        "removed_seconds": 0.0,
+        "retained_verified_quiet_seconds": 0.1,
+        "raw_delivery_start_sample": 170880,
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/5e4db29913df4c848ad7c4208049bf61/attempt-01/delivery-target.wav",
+        "sha256": "ecbfda67eef4014e5546def30d32bef31f738a5656aa2d51b62d18c349a3e5c6"
+      }
+    },
+    "quality": {
+      "disposition": "PASS",
+      "score": 0.8854,
+      "transcript": "Trouve toutes les bailles.",
+      "metrics": {
+        "duration_seconds": 2.2001814058956914,
+        "rms_dbfs": -27.5,
+        "peak": 0.17142,
+        "clipped_fraction": 0.0,
+        "leading_silence_seconds": 0.1,
+        "trailing_silence_seconds": 0.12,
+        "longest_internal_pause_seconds": 0.06
+      },
+      "flags": [],
+      "ignore_accents": true,
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "detail": "Delivered target transcribed and screened; human listening remains pending"
+    },
+    "history": [
+      {
+        "attempt": 1,
+        "status": "PASS",
+        "quality": {
+          "disposition": "PASS",
+          "score": 0.8854,
+          "transcript": "Trouve toutes les bailles.",
+          "metrics": {
+            "duration_seconds": 2.2001814058956914,
+            "rms_dbfs": -27.5,
+            "peak": 0.17142,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.1,
+            "trailing_silence_seconds": 0.12,
+            "longest_internal_pause_seconds": 0.06
+          },
+          "flags": [],
+          "ignore_accents": true,
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "detail": "Delivered target transcribed and screened; human listening remains pending"
+        },
+        "extraction": {
+          "schema_version": 1,
+          "algorithm_version": "greia-spoken-carrier-extractor-v7",
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "status": "EXTRACTED_PENDING_LISTENING",
+          "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/5e4db29913df4c848ad7c4208049bf61/attempt-01/raw.wav",
+          "source_sha256": "4e0d344b456ec1dc68a403b041114f8015f2e9646b688d1a4661bf6f8d3475d9",
+          "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/5e4db29913df4c848ad7c4208049bf61/attempt-01/target.wav",
+          "output_sha256": "ecbfda67eef4014e5546def30d32bef31f738a5656aa2d51b62d18c349a3e5c6",
+          "output_bytes": 211260,
+          "locale": "fr",
+          "prefix": "Nous allons chercher ensemble.",
+          "target": "Trouve toutes les baies !",
+          "remove_first_words": 4,
+          "ignore_accents": true,
+          "target_verification_requested": "warn",
+          "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+          "target_comparison_score": 0.8854,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_transcript_warning": true,
+          "recognizer": "mlx-audio-parakeet-tdt-v3",
+          "recognizer_version": "0.5.0",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "extracted_transcript": "Trouve toutes les bailles.",
+          "expected_target_tokens": [
+            "trouve",
+            "toutes",
+            "les",
+            "baies"
+          ],
+          "extracted_target_tokens": [
+            "trouve",
+            "toutes",
+            "les",
+            "bailles"
+          ],
+          "extracted_target_exact_match": false,
+          "transcription_settings": {
+            "language_detection": "automatic",
+            "expected_text_prompt": null,
+            "timestamps": "model-provided-token-timestamps"
+          },
+          "sample_rate": 48000,
+          "duration_seconds": 5.760166666666667,
+          "boundary": {
+            "search_strategy": "target-only-global-quiet-run-v7",
+            "verified_silence_start_seconds": 2.76,
+            "verified_silence_end_seconds": 3.66,
+            "verified_silence_duration_seconds": 0.9,
+            "cut_sample": 170880,
+            "cut_time_seconds": 3.56,
+            "padding_seconds": 0.1,
+            "quiet_run_start_sample": 132480,
+            "quiet_run_end_sample": 175680,
+            "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+          },
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/5e4db29913df4c848ad7c4208049bf61/attempt-01/target.wav.search/84e5f2be70874c5793172e39cc3dca35",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/5e4db29913df4c848ad7c4208049bf61/attempt-01/target.wav.search/84e5f2be70874c5793172e39cc3dca35/search.json",
+          "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/5e4db29913df4c848ad7c4208049bf61/attempt-01/raw.wav.receipt.json",
+          "source_provider_receipt_sha256": "12841b899544213e0397b5ee7720f23a1e62ea38f54250b1420dbcea0348da53",
+          "candidate_sha256": "ecbfda67eef4014e5546def30d32bef31f738a5656aa2d51b62d18c349a3e5c6",
+          "candidate_id": "candidate-01",
+          "candidate_count": 1,
+          "qualifying_quiet_run_count": 1,
+          "candidate_results": [
+            {
+              "candidate_id": "candidate-01",
+              "quiet_run": {
+                "start_sample": 132480,
+                "end_sample": 175680,
+                "start_seconds": 2.76,
+                "end_seconds": 3.66,
+                "duration_seconds": 0.9
+              },
+              "cut_sample": 170880,
+              "cut_time_seconds": 3.56,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/5e4db29913df4c848ad7c4208049bf61/attempt-01/target.wav.search/84e5f2be70874c5793172e39cc3dca35/candidate-01.wav",
+              "preceding_voiced_seconds": 2.22,
+              "retained_voiced_seconds": 1.82,
+              "retained_duration_seconds": 2.2001666666666666,
+              "candidate_sha256": "ecbfda67eef4014e5546def30d32bef31f738a5656aa2d51b62d18c349a3e5c6",
+              "extracted_transcript": "Trouve toutes les bailles.",
+              "canonical_transcript_tokens": [
+                "trouve",
+                "toutes",
+                "les",
+                "bailles"
+              ],
+              "exact_target_match": false,
+              "target_comparison_score": 0.8854,
+              "target_word_count_matches": true,
+              "target_numbers_match": true,
+              "target_comparison_flags": [],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": true,
+              "asr_segment_count": 1
+            }
+          ],
+          "human_review": "PENDING",
+          "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+          "delivery": {
+            "policy": "verified-carrier-gap-delivery-v1",
+            "removed_frames": 0,
+            "removed_seconds": 0.0,
+            "retained_verified_quiet_seconds": 0.1,
+            "raw_delivery_start_sample": 170880,
+            "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/5e4db29913df4c848ad7c4208049bf61/attempt-01/delivery-target.wav",
+            "sha256": "ecbfda67eef4014e5546def30d32bef31f738a5656aa2d51b62d18c349a3e5c6"
+          }
+        },
+        "candidate": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/5e4db29913df4c848ad7c4208049bf61/attempt-01/candidate.wav"
+      }
+    ]
+  },
   "corpus_replacement": {
-    "original_sha256": "aa086b6604cfb7586cf153ec62539bd79b33a193e064b4a025438a6f966da2a7",
+    "original_sha256": "9e83d6d7d31afb6a2701affc090bf033f9231750737ff82c6a7e96008c8f1c41",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

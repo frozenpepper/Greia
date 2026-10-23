@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T19:01:14.857200+00:00",
+  "created_utc": "2026-10-21T17:48:46.453398+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "¡Probemos otra vez!",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. ¡Probemos otra vez!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "lilli",
+    "kind": "shared_character_utterance",
+    "locale": "es",
+    "text": "¡Probemos otra vez!",
+    "cue_id": "greia.shared.lilli__es__encourage.retry__01.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "lilli",
     "kind": "shared_character_utterance",
     "locale": "es",
     "text": "¡Probemos otra vez!",
     "cue_id": "greia.shared.lilli__es__encourage.retry__01.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "assets/audio/characters/shared/v0.2/lilli/es/lilli__es__encourage.retry__01.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.lilli.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "job_id": "20261020-210107-6a37942e",
-    "idempotency_key": "greia-129040b5475945b890cb692616ea87a4",
+    "job_id": "20261021-194826-8f49a852",
+    "idempotency_key": "greia-1f91375ac5194c53a68b9651e3c1d8b5",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,267 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 37327763,
+    "script_seed": 879364760,
     "language_direction": "Spanish",
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
-    "effective_delivery": "Speak in Spanish. Lilli, a sparkly, affectionate storybook unicorn. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2927031025,
-        "sha256": "42655db9b06d14814d53b25cec28fd3a1c559ae26714a737dea9e96ee6465676",
+        "seed": 3757208077,
+        "sha256": "d2ae90a9103f02174d5020933b7d88fca5d943840a40bdfe4b983b650e37df0e",
         "generation": {
-          "elapsed_seconds": 6.942119374987669,
+          "elapsed_seconds": 19.291613499997766,
           "model_load_seconds": 0.0,
-          "rtf": 3.9440125224813953,
-          "peak_memory_gb": 8.843167284
+          "rtf": 5.242048865539903,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8451,
+    "transcript": " Provemos otra vez.",
+    "metrics": {
+      "duration_seconds": 1.7113378684807257,
+      "rms_dbfs": -23.84,
+      "peak": 0.36072,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.32,
+      "trailing_silence_seconds": 0.28,
+      "longest_internal_pause_seconds": 0.04
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/characters/shared/v0.2/lilli/es/lilli__es__encourage.retry__01.wav.raw.wav",
+    "sha256": "349dcb1c63b4bbb23a98c6dc4837c18afd13bd43704160b8bfaee0aa30cd9838",
+    "receipt_sha256": "16a54e2b7f5e39ae100e321bafcb280b36aa90871e6ff6de3bbcb752a64e96ea"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/characters/shared/v0.2/lilli/es/lilli__es__encourage.retry__01.wav.extracted.wav",
+    "sha256": "2cbf57c7d2c7c19e9f532d6c10b97e0dc5d288fbf5f6c04a71175bb25fc577a9"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/assets/audio/characters/shared/v0.2/lilli/es/lilli__es__encourage.retry__01.wav.delivery.wav",
+    "sha256": "0a31c3bf8e78c1d65615362be6043d1741a554ab02f1af39dbda58ef132fc315"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/assets/audio/characters/shared/v0.2/lilli/es/lilli__es__encourage.retry__01.wav.raw.wav",
+    "source_sha256": "349dcb1c63b4bbb23a98c6dc4837c18afd13bd43704160b8bfaee0aa30cd9838",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/assets/audio/characters/shared/v0.2/lilli/es/lilli__es__encourage.retry__01.wav.extracted.wav",
+    "output_sha256": "2cbf57c7d2c7c19e9f532d6c10b97e0dc5d288fbf5f6c04a71175bb25fc577a9",
+    "target_request": {
+      "speaker": "lilli",
+      "kind": "shared_character_utterance",
+      "text": "¡Probemos otra vez!",
+      "locale": "es",
+      "cue_id": "greia.shared.lilli__es__encourage.retry__01.es",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/assets/audio/characters/shared/v0.2/lilli/es/lilli__es__encourage.retry__01.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "16a54e2b7f5e39ae100e321bafcb280b36aa90871e6ff6de3bbcb752a64e96ea"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "¡Probemos otra vez!",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Es mucha esta frase en español. Provemos otra vez.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " ¡Probemos otra vez!",
+    "raw_word_alignment": [
+      {
+        "word": "es",
+        "start_seconds": 0.0,
+        "end_seconds": 0.14
+      },
+      {
+        "word": "mucha",
+        "start_seconds": 0.14,
+        "end_seconds": 0.44
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.44,
+        "end_seconds": 0.66
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.66,
+        "end_seconds": 0.92
+      },
+      {
+        "word": "en",
+        "start_seconds": 0.92,
+        "end_seconds": 1.12
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.12,
+        "end_seconds": 1.56
+      },
+      {
+        "word": "provemos",
+        "start_seconds": 2.12,
+        "end_seconds": 2.72
+      },
+      {
+        "word": "otra",
+        "start_seconds": 2.72,
+        "end_seconds": 3.04
+      },
+      {
+        "word": "vez",
+        "start_seconds": 3.04,
+        "end_seconds": 3.26
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "probemos",
+        "start_seconds": 0.0,
+        "end_seconds": 0.8
+      },
+      {
+        "word": "otra",
+        "start_seconds": 0.8,
+        "end_seconds": 1.14
+      },
+      {
+        "word": "vez",
+        "start_seconds": 1.14,
+        "end_seconds": 1.38
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.7171794043646919,
+        "no_speech_prob": 0.05606694892048836,
+        "compression_ratio": 0.8793103448275862,
+        "word_probabilities": [
+          0.166748046875,
+          0.595703125,
+          0.457763671875,
+          0.98681640625,
+          0.84912109375,
+          0.96728515625
+        ]
+      },
+      {
+        "avg_logprob": -0.7171794043646919,
+        "no_speech_prob": 0.05606694892048836,
+        "compression_ratio": 0.8793103448275862,
+        "word_probabilities": [
+          0.7158203125,
+          0.9951171875,
+          0.9990234375
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.49260587692260743,
+        "no_speech_prob": 0.20564322173595428,
+        "compression_ratio": 0.7142857142857143,
+        "word_probabilities": [
+          0.58251953125,
+          0.99462890625,
+          0.99951171875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": false,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 6,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 95,
+    "extracted_voiced_seconds": 0.95,
+    "unremoved_raw_target_tokens": [
+      "provemos",
+      "otra",
+      "vez"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "provemos",
+      "otra",
+      "vez"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.6801814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.56,
+      "search_end_seconds": 2.12,
+      "prefix_last_word_end_seconds": 1.56,
+      "target_first_word_start_seconds": 2.12,
+      "gap_seconds": 0.33922902494331064,
+      "verified_silence_start_seconds": 1.7296145124716553,
+      "verified_silence_end_seconds": 2.068843537414966,
+      "gap_rms_dbfs": -71.186,
+      "gap_peak_dbfs": -47.767,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.8992290249433106,
+      "cut_sample": 41878,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 1535,
+      "removed_seconds": 0.06961451247165533,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 43413,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/assets/audio/characters/shared/v0.2/lilli/es/lilli__es__encourage.retry__01.wav.delivery.wav",
+      "sha256": "0a31c3bf8e78c1d65615362be6043d1741a554ab02f1af39dbda58ef132fc315"
+    }
+  },
   "output": {
     "path": "assets/audio/characters/shared/v0.2/lilli/es/lilli__es__encourage.retry__01.wav",
-    "bytes": 77702,
-    "sha256": "b6b29e39ba0fed4f88b0847762815ef822a2c6e035d640b2209c5bfacb15f151"
+    "sha256": "be7de44ceac2b8cb7fadbd2e7731d12c9efb753cb520e9a6bec958591ced8d49",
+    "bytes": 75548
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "745ea6e5738ac674be5ecc5238677d43e97f51c08051cddd54f8d14f7664464a",
+    "original_sha256": "b6b29e39ba0fed4f88b0847762815ef822a2c6e035d640b2209c5bfacb15f151",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

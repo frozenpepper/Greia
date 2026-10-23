@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T20:46:24.061031+00:00",
+  "created_utc": "2026-10-21T15:13:26.184719+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Listen to this phrase in English.",
+    "prefix_word_count": 6,
+    "target": "O as Owl",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Listen to this phrase in English. O as Owl",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "O as Owl",
+    "cue_id": "alfabeto_leo.letter_O.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "O as Owl",
     "cue_id": "alfabeto_leo.letter_O.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/alfabeto_leo/assets/audio/en/letter_O.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261019-224617-ba087765",
-    "idempotency_key": "greia-ace5ed2f1b66416d912e37761d24402c",
+    "job_id": "20261021-171310-2bbb682d",
+    "idempotency_key": "greia-5dae2114c5b6465ca80ad812f1407922",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,232 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3847849380,
+    "script_seed": 3039495004,
     "language_direction": "English",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak naturally in English. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in English. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2628259736,
-        "sha256": "ae8068dfe762a485681be9e67bed04f86e93d31ac557e4a246961adbea91821e",
+        "seed": 2800287486,
+        "sha256": "66485207060cbfae441851ab26d0b04e2414e26a325464d37a7dece54c0d058e",
         "generation": {
-          "elapsed_seconds": 5.885371708020102,
+          "elapsed_seconds": 14.71400575000007,
           "model_load_seconds": 0.0,
-          "rtf": 3.6779741952005636,
-          "peak_memory_gb": 8.21220922
+          "rtf": 4.378951168096841,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " O is owl.",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/alfabeto_leo/assets/audio/en/letter_O.wav.raw.wav",
+    "sha256": "60ce64dbae96255b13af7fd3dd9341690b6f920989144fb7d5a902b53e83bbdd",
+    "receipt_sha256": "0454ad5e4396ce44d8eebe9490b62008bfd55f9e7494355acc6186c5ded4a996"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_O.wav.extracted.wav",
+    "sha256": "08c1a44bbcf477ee6b5163292a6d2035d7099550402d6490acbd366c9d2ea5d1"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/alfabeto_leo/assets/audio/en/letter_O.wav.raw.wav",
+    "source_sha256": "60ce64dbae96255b13af7fd3dd9341690b6f920989144fb7d5a902b53e83bbdd",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_O.wav.extracted.wav",
+    "output_sha256": "08c1a44bbcf477ee6b5163292a6d2035d7099550402d6490acbd366c9d2ea5d1",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "O as Owl",
+      "locale": "en",
+      "cue_id": "alfabeto_leo.letter_O.en",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/alfabeto_leo/assets/audio/en/letter_O.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "0454ad5e4396ce44d8eebe9490b62008bfd55f9e7494355acc6186c5ded4a996"
+    },
+    "locale": "en",
+    "prefix": "Listen to this phrase in English.",
+    "target": "O as Owl",
+    "remove_first_words": 6,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Listen to this phrase in English. Oh as owl.",
+    "extracted_transcript": " O is owl.",
+    "raw_word_alignment": [
+      {
+        "word": "listen",
+        "start_seconds": 0.0,
+        "end_seconds": 0.28
+      },
+      {
+        "word": "to",
+        "start_seconds": 0.28,
+        "end_seconds": 0.54
+      },
+      {
+        "word": "this",
+        "start_seconds": 0.54,
+        "end_seconds": 0.72
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.72,
+        "end_seconds": 1.0
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.0,
+        "end_seconds": 1.2
+      },
+      {
+        "word": "english",
+        "start_seconds": 1.2,
+        "end_seconds": 1.56
+      },
+      {
+        "word": "oh",
+        "start_seconds": 2.26,
+        "end_seconds": 2.32
+      },
+      {
+        "word": "as",
+        "start_seconds": 2.32,
+        "end_seconds": 2.62
+      },
+      {
+        "word": "owl",
+        "start_seconds": 2.62,
+        "end_seconds": 3.04
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "o",
+        "start_seconds": 0.0,
+        "end_seconds": 0.44
+      },
+      {
+        "word": "is",
+        "start_seconds": 0.44,
+        "end_seconds": 0.78
+      },
+      {
+        "word": "owl",
+        "start_seconds": 0.78,
+        "end_seconds": 1.16
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5138608813285828,
+        "no_speech_prob": 0.03320721909403801,
+        "compression_ratio": 0.8461538461538461,
+        "word_probabilities": [
+          0.472412109375,
+          0.97705078125,
+          0.97412109375,
+          0.99462890625,
+          0.9111328125,
+          0.982421875
+        ]
+      },
+      {
+        "avg_logprob": -0.5138608813285828,
+        "no_speech_prob": 0.03320721909403801,
+        "compression_ratio": 0.8461538461538461,
+        "word_probabilities": [
+          0.483154296875,
+          0.685546875,
+          0.7998046875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.9868984222412109,
+        "no_speech_prob": 0.09599619358778,
+        "compression_ratio": 0.5294117647058824,
+        "word_probabilities": [
+          0.3212890625,
+          0.595703125,
+          0.3154296875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 79,
+    "extracted_voiced_seconds": 0.79,
+    "unremoved_raw_target_tokens": [
+      "oh",
+      "as",
+      "owl"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "oh",
+      "as",
+      "owl"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.3601814058956916,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.56,
+      "target_first_word_start_seconds": 2.26,
+      "gap_seconds": 0.4988662131519274,
+      "verified_silence_start_seconds": 1.6198639455782313,
+      "verified_silence_end_seconds": 2.1187301587301586,
+      "gap_rms_dbfs": -57.932,
+      "gap_peak_dbfs": -36.141,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.869297052154195,
+      "cut_sample": 41218,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/en/letter_O.wav",
-    "bytes": 70646,
-    "sha256": "014dbee17d205886972f91c08892188fa7c165695edb8676cb68ba362dd746a8"
+    "sha256": "1ffddf1ca7f26c5ae978fae1165cb8418142db5b090b2a8e2dcbcf9b3bda8446",
+    "bytes": 65826
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "afa5a72519bf0c6acebfe260ba5a40ee2fed62220d8784141ff50a5cd617b5ab",
+    "original_sha256": "014dbee17d205886972f91c08892188fa7c165695edb8676cb68ba362dd746a8",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

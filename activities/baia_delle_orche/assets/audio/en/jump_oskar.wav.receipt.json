@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T07:50:09.879032+00:00",
+  "created_utc": "2026-10-21T14:53:56.905060+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Listen to this phrase in English.",
+    "prefix_word_count": 6,
+    "target": "Make Oskar jump",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Listen to this phrase in English. Make Oskar jump",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Make Oskar jump",
+    "cue_id": "greia.requested.jump_oskar.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "Make Oskar jump",
     "cue_id": "greia.requested.jump_oskar.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/baia_delle_orche/assets/audio/en/jump_oskar.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.tito.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261021-095003-ca479e95",
-    "idempotency_key": "greia-78a3ae3147cf49558b23ecc5d31c1a88",
+    "job_id": "20261021-165343-709368e2",
+    "idempotency_key": "greia-4cd6c7021be84298b3053bc3f1000288",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,232 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2807275173,
+    "script_seed": 2839749771,
     "language_direction": "English",
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in English. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in English. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2326017361,
-        "sha256": "ec7e41ea64ff70d035d5b65b7b72d5c2fee926ee38660f86629f861ba4bb189a",
+        "seed": 1700858709,
+        "sha256": "b3cb3d5ca48839783d27e4b05a1f532183f2d9486cb403ca0367f235d37b4367",
         "generation": {
-          "elapsed_seconds": 6.032629708999593,
+          "elapsed_seconds": 12.53993108299619,
           "model_load_seconds": 0.0,
-          "rtf": 3.77000085970186,
-          "peak_memory_gb": 7.648166916
+          "rtf": 3.9185243736251834,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Make Oscar jump.",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/baia_delle_orche/assets/audio/en/jump_oskar.wav.raw.wav",
+    "sha256": "b6506bc68735bb6315ca434241fffbef58533589e38fab7a2a631178c0d62154",
+    "receipt_sha256": "f6b80154ccb2ae35b2aff7f1fbf230b748d7b9b9d91a99f43abbde459a568bb0"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/baia_delle_orche/assets/audio/en/jump_oskar.wav.extracted.wav",
+    "sha256": "0b12b6800f0a3c453b6e2c3211e8a310e300426b41d76c8a484f3eb598050b50"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-corpus-v1/run/carrier-raw/activities/baia_delle_orche/assets/audio/en/jump_oskar.wav.raw.wav",
+    "source_sha256": "b6506bc68735bb6315ca434241fffbef58533589e38fab7a2a631178c0d62154",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-corpus-v1/run/carrier-extracted/activities/baia_delle_orche/assets/audio/en/jump_oskar.wav.extracted.wav",
+    "output_sha256": "0b12b6800f0a3c453b6e2c3211e8a310e300426b41d76c8a484f3eb598050b50",
+    "target_request": {
+      "speaker": "tito",
+      "kind": "character_dialogue",
+      "text": "Make Oskar jump",
+      "locale": "en",
+      "cue_id": "greia.requested.jump_oskar.en",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-corpus-v1/run/carrier-raw/activities/baia_delle_orche/assets/audio/en/jump_oskar.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "f6b80154ccb2ae35b2aff7f1fbf230b748d7b9b9d91a99f43abbde459a568bb0"
+    },
+    "locale": "en",
+    "prefix": "Listen to this phrase in English.",
+    "target": "Make Oskar jump",
+    "remove_first_words": 6,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Listen to this phrase in English. Make Oscar jump.",
+    "extracted_transcript": " Make Oscar jump.",
+    "raw_word_alignment": [
+      {
+        "word": "listen",
+        "start_seconds": 0.0,
+        "end_seconds": 0.38
+      },
+      {
+        "word": "to",
+        "start_seconds": 0.38,
+        "end_seconds": 0.6
+      },
+      {
+        "word": "this",
+        "start_seconds": 0.6,
+        "end_seconds": 0.76
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.76,
+        "end_seconds": 1.06
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.06,
+        "end_seconds": 1.3
+      },
+      {
+        "word": "english",
+        "start_seconds": 1.3,
+        "end_seconds": 1.7
+      },
+      {
+        "word": "make",
+        "start_seconds": 2.1,
+        "end_seconds": 2.3
+      },
+      {
+        "word": "oscar",
+        "start_seconds": 2.3,
+        "end_seconds": 2.76
+      },
+      {
+        "word": "jump",
+        "start_seconds": 2.76,
+        "end_seconds": 3.1
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "make",
+        "start_seconds": 0.0,
+        "end_seconds": 0.4
+      },
+      {
+        "word": "oscar",
+        "start_seconds": 0.4,
+        "end_seconds": 0.84
+      },
+      {
+        "word": "jump",
+        "start_seconds": 0.84,
+        "end_seconds": 1.2
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.471279501914978,
+        "no_speech_prob": 0.047717247158288956,
+        "compression_ratio": 0.8620689655172413,
+        "word_probabilities": [
+          0.8505859375,
+          0.98876953125,
+          0.97705078125,
+          0.99609375,
+          0.98681640625,
+          0.9833984375
+        ]
+      },
+      {
+        "avg_logprob": -0.471279501914978,
+        "no_speech_prob": 0.047717247158288956,
+        "compression_ratio": 0.8620689655172413,
+        "word_probabilities": [
+          0.89599609375,
+          0.8642578125,
+          0.418212890625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.8243519919259208,
+        "no_speech_prob": 0.16485176980495453,
+        "compression_ratio": 0.6666666666666666,
+        "word_probabilities": [
+          0.66064453125,
+          0.728515625,
+          0.37646484375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 76,
+    "extracted_voiced_seconds": 0.76,
+    "unremoved_raw_target_tokens": [
+      "make",
+      "oscar",
+      "jump"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "make",
+      "oscar",
+      "jump"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.2001814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.7,
+      "target_first_word_start_seconds": 2.1,
+      "gap_seconds": 0.2494331065759637,
+      "verified_silence_start_seconds": 1.7897959183673469,
+      "verified_silence_end_seconds": 2.0392290249433107,
+      "gap_rms_dbfs": -58.74,
+      "gap_peak_dbfs": -36.47,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.9145124716553288,
+      "cut_sample": 42215,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/baia_delle_orche/assets/audio/en/jump_oskar.wav",
-    "bytes": 70646,
-    "sha256": "403eb6682e5aec3fb68f3a0450872b0440943324733f3a5c05c8df665ed55e6a"
+    "sha256": "074ae7bf69a269119c37ddf74d8badea8f9b362e38bf730f4e3315682be156ce",
+    "bytes": 56776
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "e2c79411d1fde9c1f761603051e7928e6777c79813ac7f4343576cdd04f04ca4",
+    "original_sha256": "403eb6682e5aec3fb68f3a0450872b0440943324733f3a5c05c8df665ed55e6a",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

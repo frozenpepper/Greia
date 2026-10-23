@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T11:37:43.074704+00:00",
+  "created_utc": "2026-10-22T05:50:07.851042+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "Les grimaces de Momo",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français...\n\nLes grimaces de Momo",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "momo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Les grimaces de Momo",
+    "cue_id": "faccine_momo.title.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Les grimaces de Momo",
     "cue_id": "faccine_momo.title.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/faccine_momo/locales/fr/audio/activity-title.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.momo.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261021-133729-6501cf49",
-    "idempotency_key": "greia-f73aefbf75694bdf8b602627d54d76a7",
+    "job_id": "20261022-074950-94a2e0dd",
+    "idempotency_key": "greia-29d7f9bbbcdd44c88f9ab265a229d658",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,268 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3984944641,
+    "script_seed": 1068031021,
     "language_direction": "French",
-    "delivery_prompt": "Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "effective_delivery": "Speak in French. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3300082792,
-        "sha256": "511bb47816b34a28e7f58373f13f01dbe1973e5f57d6c679f7c653adb06749f0",
+        "seed": 514344831,
+        "sha256": "b3e9ad23e81363dae75d97b8442efd36b51dc63201d8effc7c65ee122dad405a",
         "generation": {
-          "elapsed_seconds": 12.54978837499948,
+          "elapsed_seconds": 17.136511624994455,
           "model_load_seconds": 0.0,
-          "rtf": 3.4101141365878758,
-          "peak_memory_gb": 7.648166916
+          "rtf": 4.656449877721423,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " Les grimaces de Momo.",
+    "metrics": {
+      "duration_seconds": 1.5714285714285714,
+      "rms_dbfs": -27.24,
+      "peak": 0.17517,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.26,
+      "trailing_silence_seconds": 0.1,
+      "longest_internal_pause_seconds": 0.04
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/faccine_momo/locales/fr/audio/activity-title.wav.raw.wav",
+    "sha256": "d64dca71caaf08e13cc35ad90a489f44cd5a22f120d296462ba3eecd23f16cab",
+    "receipt_sha256": "04617f0cb5478bd74e2b24d350bd931f3686c8d859cc9bed7cc9c3b2916f4c3b"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/faccine_momo/locales/fr/audio/activity-title.wav.extracted.wav",
+    "sha256": "8dd975012332d02678d63104c84f0e11db1bcbcd6c15edfbcc6cb38cf37135d2"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/faccine_momo/locales/fr/audio/activity-title.wav.delivery.wav",
+    "sha256": "6c8e75ae048c8eb78fa3160c697033a946ed40a4f3f248365d494a815290c463"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/activities/faccine_momo/locales/fr/audio/activity-title.wav.raw.wav",
+    "source_sha256": "d64dca71caaf08e13cc35ad90a489f44cd5a22f120d296462ba3eecd23f16cab",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/activities/faccine_momo/locales/fr/audio/activity-title.wav.extracted.wav",
+    "output_sha256": "8dd975012332d02678d63104c84f0e11db1bcbcd6c15edfbcc6cb38cf37135d2",
+    "target_request": {
+      "speaker": "momo",
+      "kind": "character_dialogue",
+      "text": "Les grimaces de Momo",
+      "locale": "fr",
+      "cue_id": "faccine_momo.title.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/activities/faccine_momo/locales/fr/audio/activity-title.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "04617f0cb5478bd74e2b24d350bd931f3686c8d859cc9bed7cc9c3b2916f4c3b"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "Les grimaces de Momo",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français, les grimaces de Momo.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Les grimaces de moment.",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.26
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.26,
+        "end_seconds": 0.6
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.6,
+        "end_seconds": 1.02
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.02,
+        "end_seconds": 1.18
+      },
+      {
+        "word": "français",
+        "start_seconds": 1.18,
+        "end_seconds": 1.66
+      },
+      {
+        "word": "les",
+        "start_seconds": 2.26,
+        "end_seconds": 2.5
+      },
+      {
+        "word": "grimaces",
+        "start_seconds": 2.5,
+        "end_seconds": 3.06
+      },
+      {
+        "word": "de",
+        "start_seconds": 3.06,
+        "end_seconds": 3.2
+      },
+      {
+        "word": "momo",
+        "start_seconds": 3.2,
+        "end_seconds": 3.38
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "les",
+        "start_seconds": 0.0,
+        "end_seconds": 0.52
+      },
+      {
+        "word": "grimaces",
+        "start_seconds": 0.52,
+        "end_seconds": 1.06
+      },
+      {
+        "word": "de",
+        "start_seconds": 1.06,
+        "end_seconds": 1.22
+      },
+      {
+        "word": "moment",
+        "start_seconds": 1.22,
+        "end_seconds": 1.4
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.3646211624145508,
+        "no_speech_prob": 0.020224524661898613,
+        "compression_ratio": 0.8813559322033898,
+        "word_probabilities": [
+          0.81640625,
+          0.98388671875,
+          0.98046875,
+          0.95654296875,
+          0.98095703125,
+          0.79541015625,
+          0.8173828125,
+          0.98388671875,
+          0.392333984375
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6306038962470161,
+        "no_speech_prob": 0.13092385232448578,
+        "compression_ratio": 0.7931034482758621,
+        "word_probabilities": [
+          0.7001953125,
+          0.697265625,
+          0.93359375,
+          0.1712646484375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 107,
+    "extracted_voiced_seconds": 1.07,
+    "unremoved_raw_target_tokens": [
+      "les",
+      "grimaces",
+      "de",
+      "momo"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "les",
+      "grimaces",
+      "de",
+      "momo"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.6801814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.66,
+      "search_end_seconds": 2.26,
+      "prefix_last_word_end_seconds": 1.66,
+      "target_first_word_start_seconds": 2.26,
+      "gap_seconds": 0.43900226757369615,
+      "verified_silence_start_seconds": 1.7697505668934241,
+      "verified_silence_end_seconds": 2.2087528344671203,
+      "gap_rms_dbfs": -59.459,
+      "gap_peak_dbfs": -36.523,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.9892517006802724,
+      "cut_sample": 43863,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 2635,
+      "removed_seconds": 0.11950113378684807,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 46498,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/activities/faccine_momo/locales/fr/audio/activity-title.wav.delivery.wav",
+      "sha256": "6c8e75ae048c8eb78fa3160c697033a946ed40a4f3f248365d494a815290c463"
+    }
+  },
   "output": {
     "path": "activities/faccine_momo/locales/fr/audio/activity-title.wav",
-    "bytes": 162374,
-    "sha256": "1dc4d1985b8ff2952de9462f60d02d9da2dd29647d9cc5c01e890a91e8867272"
+    "sha256": "8647254efd20dd07bb5b68eb0903f39cb8776738acfc38d115584d1926a489d1",
+    "bytes": 69378
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "2678eb6e9786e741b17107616a524ccfca98fdef5278d4982ec179ead417a061",
+    "original_sha256": "1dc4d1985b8ff2952de9462f60d02d9da2dd29647d9cc5c01e890a91e8867272",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

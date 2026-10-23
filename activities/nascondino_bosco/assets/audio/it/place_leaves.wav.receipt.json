@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T13:38:51.739083+00:00",
+  "created_utc": "2026-10-21T16:50:59.170921+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "Sotto le foglie",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. Sotto le foglie",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "lilli",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Sotto le foglie",
+    "cue_id": "greia.requested.place_leaves.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Sotto le foglie",
     "cue_id": "greia.requested.place_leaves.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/nascondino_bosco/assets/audio/it/place_leaves.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.lilli.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "job_id": "20261020-153843-a9a0a093",
-    "idempotency_key": "greia-f97bafeb51974f1692c36f240aac56a6",
+    "job_id": "20261021-185046-f17bc03f",
+    "idempotency_key": "greia-a67e2110b3c342d9beef8d26f1597fa2",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,248 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2280588387,
+    "script_seed": 3062435431,
     "language_direction": "Italian",
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in Italian. Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3333318077,
-        "sha256": "1e5d0add18130415baf4eb90b83f83fb657f9f337b946fae7b6b4d916b09cc60",
+        "seed": 459443445,
+        "sha256": "538d8164fa395ee12bfad7469d7e381114af775f88e290b20d6b9610ef90843d",
         "generation": {
-          "elapsed_seconds": 7.34282354201423,
+          "elapsed_seconds": 11.892894083008287,
           "model_load_seconds": 0.0,
-          "rtf": 5.7358340388081475,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.7163358417816634,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8161,
+    "transcript": " Sotto le folle!",
+    "metrics": {
+      "duration_seconds": 1.220907029478458,
+      "rms_dbfs": -23.0,
+      "peak": 0.38638,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.16,
+      "trailing_silence_seconds": 0.12,
+      "longest_internal_pause_seconds": 0.1
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/nascondino_bosco/assets/audio/it/place_leaves.wav.raw.wav",
+    "sha256": "54eff19dcad59646be25fb7786e55f6fc65b37106f626e27646c8ea3c7a489f6",
+    "receipt_sha256": "5782ba307bc08305f07fe9ec4cfea6fed5e7903a89e26647da90f5d9e02b36bd"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/nascondino_bosco/assets/audio/it/place_leaves.wav.extracted.wav",
+    "sha256": "d7382867af73b6e4776870fa4e4df017c5c9209c9a41291af6b0b1cf755a6492"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/nascondino_bosco/assets/audio/it/place_leaves.wav.raw.wav",
+    "source_sha256": "54eff19dcad59646be25fb7786e55f6fc65b37106f626e27646c8ea3c7a489f6",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-extracted/activities/nascondino_bosco/assets/audio/it/place_leaves.wav.extracted.wav",
+    "output_sha256": "d7382867af73b6e4776870fa4e4df017c5c9209c9a41291af6b0b1cf755a6492",
+    "target_request": {
+      "speaker": "lilli",
+      "kind": "character_dialogue",
+      "text": "Sotto le foglie",
+      "locale": "it",
+      "cue_id": "greia.requested.place_leaves.it",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/nascondino_bosco/assets/audio/it/place_leaves.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "5782ba307bc08305f07fe9ec4cfea6fed5e7903a89e26647da90f5d9e02b36bd"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "Sotto le foglie",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Ascolta questa frase in italiano. Sotto le foglie!",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Sotto le folle!",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.48
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.48,
+        "end_seconds": 0.76
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.76,
+        "end_seconds": 1.06
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.06,
+        "end_seconds": 1.22
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.22,
+        "end_seconds": 1.66
+      },
+      {
+        "word": "sotto",
+        "start_seconds": 2.24,
+        "end_seconds": 2.46
+      },
+      {
+        "word": "le",
+        "start_seconds": 2.46,
+        "end_seconds": 2.6
+      },
+      {
+        "word": "foglie",
+        "start_seconds": 2.6,
+        "end_seconds": 3.0
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "sotto",
+        "start_seconds": 0.0,
+        "end_seconds": 0.5
+      },
+      {
+        "word": "le",
+        "start_seconds": 0.5,
+        "end_seconds": 0.62
+      },
+      {
+        "word": "folle",
+        "start_seconds": 0.62,
+        "end_seconds": 0.98
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.42677583192524154,
+        "no_speech_prob": 0.03011533059179783,
+        "compression_ratio": 0.8928571428571429,
+        "word_probabilities": [
+          0.79052734375,
+          0.9794921875,
+          0.98291015625,
+          0.94921875,
+          0.99365234375
+        ]
+      },
+      {
+        "avg_logprob": -0.42677583192524154,
+        "no_speech_prob": 0.03011533059179783,
+        "compression_ratio": 0.8928571428571429,
+        "word_probabilities": [
+          0.876953125,
+          0.966796875,
+          0.9248046875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.692612542046441,
+        "no_speech_prob": 0.14333467185497284,
+        "compression_ratio": 0.6521739130434783,
+        "word_probabilities": [
+          0.47607421875,
+          0.7119140625,
+          0.6337890625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 64,
+    "extracted_voiced_seconds": 0.64,
+    "unremoved_raw_target_tokens": [
+      "sotto",
+      "le",
+      "foglie"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "sotto",
+      "le",
+      "foglie"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.2001814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.66,
+      "search_end_seconds": 2.24,
+      "prefix_last_word_end_seconds": 1.66,
+      "target_first_word_start_seconds": 2.24,
+      "gap_seconds": 0.41904761904761906,
+      "verified_silence_start_seconds": 1.7697505668934241,
+      "verified_silence_end_seconds": 2.1887981859410433,
+      "gap_rms_dbfs": -53.698,
+      "gap_peak_dbfs": -33.84,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.9792743764172336,
+      "cut_sample": 43643,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/nascondino_bosco/assets/audio/it/place_leaves.wav",
-    "bytes": 56534,
-    "sha256": "d50e7c2d43effb6672f474c9e00690b2a69e480f9462f4253c2998e504cebf4f"
+    "sha256": "87f1e2b2011594469735e071455209d430069a2bf707a159164e5ff35e1af269",
+    "bytes": 53920
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "b3143254b897609c42977c08f174498b661436ba5f4813702529afecd962faf9",
+    "original_sha256": "d50e7c2d43effb6672f474c9e00690b2a69e480f9462f4253c2998e504cebf4f",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

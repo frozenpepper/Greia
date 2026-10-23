@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T14:06:17.227918+00:00",
+  "created_utc": "2026-10-23T13:33:46.275877+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
@@ -10,73 +10,90 @@
     "output": "activities/pasticceria_magica/locales/it/audio/activity-title.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
+    "delivery_prompt": "",
+    "ignore_accents": true,
+    "short_text_mode": "off",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "owner_authorization": "owner-2026-10-23-native-system-tts-missing-52",
+    "spoken_text": "Pasticceria Magica"
   },
-  "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+  "provider_id": "macos-native-say",
+  "voice_id": "Alice",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": null,
   "generation_parameters": {
-    "job_id": "20261020-160601-2e87bac2",
-    "idempotency_key": "greia-8e3c5340a4294264ac81cd3f727ec0c7",
-    "backend": {
-      "backend": "mlx",
-      "adapter_version": "0.1.0",
-      "model": "mlx-community/VoxCPM2-8bit",
-      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
-      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
-      "mlx": "0.32.1",
-      "tokenizer_loader": "PreTrainedTokenizerFast",
-      "mlx_audio": "0.5.0",
-      "quantization": "8bit",
-      "sample_rate": 48000,
-      "native_audio_streaming": false,
-      "reference_encoding_cache": 16,
-      "compiled_hot_paths": true
-    },
-    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
-    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
-    "settings": {
-      "steps": 10,
-      "cfg": 2.0,
-      "max_tokens": 300
-    },
-    "script_seed": 545780555,
-    "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "mode": "reference",
-    "recordings": [
-      {
-        "file": "speech-001-take-01.wav",
-        "seed": 2369122294,
-        "sha256": "27cae955677c8111dce55757818b3b872f321a1624989727c0bd4e3e62ff4d62",
-        "generation": {
-          "elapsed_seconds": 14.284092292014975,
-          "model_load_seconds": 0.0,
-          "rtf": 4.463546364881509,
-          "peak_memory_gb": 8.44494914
-        }
-      }
-    ]
+    "voice": "Alice",
+    "rate_wpm": 175,
+    "synthesis_text": "Pasticceria Magica"
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
+    "disposition": "NOT_RUN",
+    "verifier_id": "owner-listening-review-waiver",
     "transcript": null,
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "owner waived ASR/listening review; audio format/integrity checks only",
+    "model_id": null,
+    "model_revision": null,
+    "ignore_accents": null,
+    "comparison_policy": null,
+    "flags": [],
+    "metrics": null
   },
   "attempts": 1,
   "output": {
     "path": "activities/pasticceria_magica/locales/it/audio/activity-title.wav",
-    "bytes": 141206,
-    "sha256": "2cca413f71a382d5e542cd260a9c1775159b44316760bb5fcf36a342f93406b2"
+    "bytes": 54296,
+    "sha256": "ae286719796e887268ce1974668f14a8cdaaf73118890950b8c04e4c083d99e6"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "human_review": "WAIVED_BY_OWNER",
+  "acceptance_note": "Owner explicitly waived listening review for this deterministic system-voice replacement; verification was not run and this is not a machine PASS.",
+  "owner_authorization": "owner-2026-10-23-native-system-tts-missing-52",
+  "generation_evidence": {
+    "path": "/Users/taio84/Library/Application Support/Greia/voice-production/generation-evidence/6b3a111c8b644f3894a673c15553ea1f",
+    "history": "/Users/taio84/Library/Application Support/Greia/voice-production/generation-evidence/6b3a111c8b644f3894a673c15553ea1f/history.json"
+  },
+  "semantic_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Pasticceria Magica",
+    "cue_id": "activity.title",
+    "output": null,
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "comparison_policy": "locale-number-tokens-v4-spoken-target-v1"
+  },
+  "system_tts_fallback": {
+    "policy": "deterministic-native-system-tts-owner-waived-v1",
+    "spoken_target_policy": "locale-spoken-letter-and-cardinal-v1",
+    "semantic_text": "Pasticceria Magica",
+    "spoken_text": "Pasticceria Magica",
+    "locale": "it",
+    "native_voice": "Alice",
+    "signal_metrics": {
+      "duration_seconds": 1.2294331065759636,
+      "rms_dbfs": -16.49,
+      "peak": 0.85251,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.0,
+      "trailing_silence_seconds": 0.08,
+      "longest_internal_pause_seconds": 0.02
+    },
+    "signal_flags": [],
+    "verification": "NOT_RUN",
+    "human_review": "WAIVED_BY_OWNER",
+    "authorization": "owner-2026-10-23-native-system-tts-missing-52"
+  },
   "corpus_replacement": {
-    "original_sha256": "ec1f82605c4c74cd59f5a6474c5babd5693333a628df339261c06411512a773a",
-    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+    "original_sha256": "96d97348a0c91ad07b1d9fb2b9527020b327bf29e87951d03c957f09e0f1f600",
+    "owner_authorization": "owner-2026-10-23-native-system-tts-missing-52",
+    "human_review": "WAIVED_BY_OWNER",
+    "source_run": "natural-v4-run-02"
   }
 }

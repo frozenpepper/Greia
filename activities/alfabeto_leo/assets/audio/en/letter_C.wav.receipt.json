@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T20:44:34.075242+00:00",
+  "created_utc": "2026-10-21T15:08:14.468816+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Listen to this phrase in English.",
+    "prefix_word_count": 6,
+    "target": "C as Cat",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Listen to this phrase in English. C as Cat",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "C as Cat",
+    "cue_id": "alfabeto_leo.letter_C.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "C as Cat",
     "cue_id": "alfabeto_leo.letter_C.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/alfabeto_leo/assets/audio/en/letter_C.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261019-224423-94010530",
-    "idempotency_key": "greia-d44468d6044e4142b016a51bdf0f4ed2",
+    "job_id": "20261021-170800-1501dfb1",
+    "idempotency_key": "greia-a23a2cdc8a574ca397718797a06c2cbd",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,184 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1063784133,
+    "script_seed": 2843491302,
     "language_direction": "English",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak naturally in English. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in English. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1694964419,
-        "sha256": "10fa57517a8b4d574047f3e3672420c8b41755bd5c63fe31bf2b23ea5568c1b8",
+        "seed": 260687205,
+        "sha256": "669c894a7eb10786cdb2ca76f787091162d02449993a4e16cc3adbf991ff1bae",
         "generation": {
-          "elapsed_seconds": 9.003377375018317,
+          "elapsed_seconds": 13.755518583006051,
           "model_load_seconds": 0.0,
-          "rtf": 5.115070944996677,
-          "peak_memory_gb": 8.21220922
+          "rtf": 4.093701279601027,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": "C as cat.",
+    "metrics": {
+      "duration_seconds": 1.1554195011337869,
+      "rms_dbfs": -37.55,
+      "peak": 0.10999,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.08,
+      "trailing_silence_seconds": 0.14,
+      "longest_internal_pause_seconds": 0.06
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v1",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/alfabeto_leo/assets/audio/en/letter_C.wav.raw.wav",
+    "sha256": "c411ba81091fe3104c94a7624872435d5a0637726ceef29d5070d1ceedf419fc",
+    "receipt_sha256": "ce0c7462631cefe1dcb8406f713a1dfb085c6fa0ed18f47265884e3cd19b18ca"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_C.wav.extracted.wav",
+    "sha256": "deeb51e23c99a78ed95234fdb038c4ca44b0b1a2e8f54ed9822f604cfd446fa9"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_C.wav.delivery.wav",
+    "sha256": "deeb51e23c99a78ed95234fdb038c4ca44b0b1a2e8f54ed9822f604cfd446fa9"
+  },
+  "extraction": {
+    "schema_version": 1,
+    "algorithm_version": "greia-spoken-carrier-extractor-v7",
+    "comparison_policy": "locale-number-tokens-v1",
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/held-reconciled-v7/carrier-raw/activities/alfabeto_leo/assets/audio/en/letter_C.wav.raw.wav",
+    "source_sha256": "c411ba81091fe3104c94a7624872435d5a0637726ceef29d5070d1ceedf419fc",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/held-reconciled-v7/carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_C.wav.extracted.wav",
+    "output_sha256": "deeb51e23c99a78ed95234fdb038c4ca44b0b1a2e8f54ed9822f604cfd446fa9",
+    "output_bytes": 50998,
+    "locale": "en",
+    "prefix": "Listen to this phrase in English.",
+    "target": "C as Cat",
+    "remove_first_words": 6,
+    "ignore_accents": true,
+    "target_verification_requested": "warn",
+    "target_verification_policy": "warn",
+    "target_comparison_score": 1.0,
+    "target_word_count_matches": true,
+    "target_numbers_match": true,
+    "target_comparison_flags": [],
+    "target_transcript_warning": false,
+    "recognizer": "mlx-whisper-base",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extracted_transcript": "C as cat.",
+    "expected_target_tokens": [
+      "c",
+      "as",
+      "cat"
+    ],
+    "extracted_target_tokens": [
+      "c",
+      "as",
+      "cat"
+    ],
+    "extracted_target_exact_match": true,
+    "transcription_settings": {
+      "language": "en",
+      "initial_prompt": null,
+      "word_timestamps": true,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "sample_rate": 22050,
+    "duration_seconds": 3.3601814058956916,
+    "boundary": {
+      "search_strategy": "target-only-global-quiet-run-v7",
+      "verified_silence_start_seconds": 1.7759637188208617,
+      "verified_silence_end_seconds": 2.3047619047619046,
+      "verified_silence_duration_seconds": 0.5287981859410431,
+      "cut_sample": 48615,
+      "cut_time_seconds": 2.204761904761905,
+      "padding_seconds": 0.1,
+      "quiet_run_start_sample": 39160,
+      "quiet_run_end_sample": 50820,
+      "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+    },
+    "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/held-reconciled-v7/carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_C.wav.extracted.wav.search/55b1dab491bd42d3b59673bfa70c9545",
+    "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/held-reconciled-v7/carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_C.wav.extracted.wav.search/55b1dab491bd42d3b59673bfa70c9545/search.json",
+    "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/held-reconciled-v7/carrier-raw/activities/alfabeto_leo/assets/audio/en/letter_C.wav.raw.wav.receipt.json",
+    "source_provider_receipt_sha256": "ce0c7462631cefe1dcb8406f713a1dfb085c6fa0ed18f47265884e3cd19b18ca",
+    "candidate_sha256": "deeb51e23c99a78ed95234fdb038c4ca44b0b1a2e8f54ed9822f604cfd446fa9",
+    "candidate_id": "candidate-01",
+    "candidate_count": 1,
+    "qualifying_quiet_run_count": 1,
+    "candidate_results": [
+      {
+        "candidate_id": "candidate-01",
+        "quiet_run": {
+          "start_sample": 39160,
+          "end_sample": 50820,
+          "start_seconds": 1.7759637188208617,
+          "end_seconds": 2.3047619047619046,
+          "duration_seconds": 0.5287981859410431
+        },
+        "cut_sample": 48615,
+        "cut_time_seconds": 2.204761904761905,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/held-reconciled-v7/carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_C.wav.extracted.wav.search/55b1dab491bd42d3b59673bfa70c9545/candidate-01.wav",
+        "preceding_voiced_seconds": 1.14,
+        "retained_voiced_seconds": 0.59,
+        "retained_duration_seconds": 1.1554195011337869,
+        "candidate_sha256": "deeb51e23c99a78ed95234fdb038c4ca44b0b1a2e8f54ed9822f604cfd446fa9",
+        "extracted_transcript": "C as cat.",
+        "canonical_transcript_tokens": [
+          "c",
+          "as",
+          "cat"
+        ],
+        "exact_target_match": true,
+        "target_comparison_score": 1.0,
+        "target_word_count_matches": true,
+        "target_numbers_match": true,
+        "target_comparison_flags": [],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": true,
+        "asr_segment_count": 1
+      }
+    ],
+    "human_review": "PENDING",
+    "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+    "target_verification_effective_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+    "target_verification_warning": false,
+    "saved_recovery_policy": "target-only-v7-saved-v1",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 0,
+      "removed_seconds": 0.0,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 48615,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/held-reconciled-v7/carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_C.wav.delivery.wav",
+      "sha256": "deeb51e23c99a78ed95234fdb038c4ca44b0b1a2e8f54ed9822f604cfd446fa9"
+    }
+  },
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/en/letter_C.wav",
-    "bytes": 77702,
-    "sha256": "0b2b210802b197399736b5d1605beeb2f9091b4d7f375a1a50c74a5b616e5c13"
+    "sha256": "1e9f5ee9f4c6c7a897a349a8965c8d36215e1f1134d83d76a73720c0d8e442a0",
+    "bytes": 51032
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "41b65c98fc2fc3b647859aecc6fd1cb1426263a8c714c6e2e9b01340b40121a5",
+    "original_sha256": "a09aee46ebf41890b9d4bb824345ee7dc5020ce7e0b59060db4b9bf38ee2135d",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

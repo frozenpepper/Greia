@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T14:16:42.790536+00:00",
+  "created_utc": "2026-10-21T17:04:17.522292+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "Aligne-en trois !",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. Aligne-en trois !",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Aligne-en trois !",
+    "cue_id": "greia.requested.make_three_in_row.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Aligne-en trois !",
     "cue_id": "greia.requested.make_three_in_row.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/quattro_amici/assets/audio/fr/make_three_in_row.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. A happy celebration with the child: joyful, proud and warm. Lively but clear."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-161635-7d6f017a",
-    "idempotency_key": "greia-ca88c7eb8ad44d8f8c99e31cc67be66b",
+    "job_id": "20261021-190404-32602651",
+    "idempotency_key": "greia-412629e265b048fd9d9232d49e71499e",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,220 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2054843553,
+    "script_seed": 4127010598,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
-    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 11274020,
-        "sha256": "e7a708fb2a28fb6666105755863d89d1aa75ffab06b8618322fa2609ebb1db22",
+        "seed": 3603707111,
+        "sha256": "59bfd69ae8683244d9726717cf8cba1c349765b3498564052ead69bf031ecbf5",
         "generation": {
-          "elapsed_seconds": 6.492950042011216,
+          "elapsed_seconds": 12.382944791999762,
           "model_load_seconds": 0.0,
-          "rtf": 4.508471270925506,
-          "peak_memory_gb": 8.44494914
+          "rtf": 4.299384801342432,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8719,
+    "transcript": "Allignez en 3.",
+    "metrics": {
+      "duration_seconds": 1.0146485260770974,
+      "rms_dbfs": -36.28,
+      "peak": 0.11969,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.08,
+      "trailing_silence_seconds": 0.08,
+      "longest_internal_pause_seconds": 0.08
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v1",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/quattro_amici/assets/audio/fr/make_three_in_row.wav.raw.wav",
+    "sha256": "b0eefd9ca58c02d3dbc50a31bd9aea02580ed5a3433a17687340886266555ced",
+    "receipt_sha256": "a46c41154c431607a2dc83db89d976dd9873a2753d174c70ecf369c7d680ca9e"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/quattro_amici/assets/audio/fr/make_three_in_row.wav.extracted.wav",
+    "sha256": "226fdb0d408b70854f900e78f6a22bb6ee40b3615df4d4de886d1e79dac9cbe4"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/quattro_amici/assets/audio/fr/make_three_in_row.wav.delivery.wav",
+    "sha256": "226fdb0d408b70854f900e78f6a22bb6ee40b3615df4d4de886d1e79dac9cbe4"
+  },
+  "extraction": {
+    "schema_version": 1,
+    "algorithm_version": "greia-spoken-carrier-extractor-v7",
+    "comparison_policy": "locale-number-tokens-v1",
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-raw/activities/quattro_amici/assets/audio/fr/make_three_in_row.wav.raw.wav",
+    "source_sha256": "b0eefd9ca58c02d3dbc50a31bd9aea02580ed5a3433a17687340886266555ced",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/quattro_amici/assets/audio/fr/make_three_in_row.wav.extracted.wav",
+    "output_sha256": "226fdb0d408b70854f900e78f6a22bb6ee40b3615df4d4de886d1e79dac9cbe4",
+    "output_bytes": 44790,
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "Aligne-en trois !",
+    "remove_first_words": 5,
+    "ignore_accents": true,
+    "target_verification_requested": "warn",
+    "target_verification_policy": "warn",
+    "target_comparison_score": 0.8719,
+    "target_word_count_matches": true,
+    "target_numbers_match": true,
+    "target_comparison_flags": [],
+    "target_transcript_warning": true,
+    "recognizer": "mlx-whisper-base",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extracted_transcript": "Allignez en 3.",
+    "expected_target_tokens": [
+      "aligne",
+      "en",
+      "<num:3>"
+    ],
+    "extracted_target_tokens": [
+      "allignez",
+      "en",
+      "<num:3>"
+    ],
+    "extracted_target_exact_match": false,
+    "transcription_settings": {
+      "language": "fr",
+      "initial_prompt": null,
+      "word_timestamps": true,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "sample_rate": 22050,
+    "duration_seconds": 2.8801814058956916,
+    "boundary": {
+      "search_strategy": "target-only-global-quiet-run-v7",
+      "verified_silence_start_seconds": 1.6462585034013606,
+      "verified_silence_end_seconds": 1.965532879818594,
+      "verified_silence_duration_seconds": 0.31927437641723355,
+      "cut_sample": 41135,
+      "cut_time_seconds": 1.8655328798185942,
+      "padding_seconds": 0.1,
+      "quiet_run_start_sample": 36300,
+      "quiet_run_end_sample": 43340,
+      "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+    },
+    "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/quattro_amici/assets/audio/fr/make_three_in_row.wav.extracted.wav.search/601ca2668d144b6c9b962c52ffb927e7",
+    "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/quattro_amici/assets/audio/fr/make_three_in_row.wav.extracted.wav.search/601ca2668d144b6c9b962c52ffb927e7/search.json",
+    "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-raw/activities/quattro_amici/assets/audio/fr/make_three_in_row.wav.raw.wav.receipt.json",
+    "source_provider_receipt_sha256": "a46c41154c431607a2dc83db89d976dd9873a2753d174c70ecf369c7d680ca9e",
+    "candidate_sha256": "226fdb0d408b70854f900e78f6a22bb6ee40b3615df4d4de886d1e79dac9cbe4",
+    "candidate_id": "candidate-02",
+    "candidate_count": 2,
+    "qualifying_quiet_run_count": 2,
+    "candidate_results": [
+      {
+        "candidate_id": "candidate-01",
+        "quiet_run": {
+          "start_sample": 18700,
+          "end_sample": 23540,
+          "start_seconds": 0.8480725623582767,
+          "end_seconds": 1.0675736961451248,
+          "duration_seconds": 0.21950113378684807
+        },
+        "cut_sample": 21335,
+        "cut_time_seconds": 0.9675736961451247,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/quattro_amici/assets/audio/fr/make_three_in_row.wav.extracted.wav.search/601ca2668d144b6c9b962c52ffb927e7/candidate-01.wav",
+        "preceding_voiced_seconds": 0.54,
+        "retained_voiced_seconds": 1.02,
+        "retained_duration_seconds": 1.912607709750567,
+        "candidate_sha256": "b33df436820b913bb67c346167481a312017a1c5966cc8ca5257ff4343fe92f8",
+        "extracted_transcript": "en français, aligne en trois.",
+        "canonical_transcript_tokens": [
+          "en",
+          "francais",
+          "aligne",
+          "en",
+          "<num:3>"
+        ],
+        "exact_target_match": false,
+        "target_comparison_score": 0.7754,
+        "target_word_count_matches": false,
+        "target_numbers_match": true,
+        "target_comparison_flags": [
+          "TARGET_WORD_COUNT_MISMATCH"
+        ],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": false,
+        "asr_segment_count": 1
+      },
+      {
+        "candidate_id": "candidate-02",
+        "quiet_run": {
+          "start_sample": 36300,
+          "end_sample": 43340,
+          "start_seconds": 1.6462585034013606,
+          "end_seconds": 1.965532879818594,
+          "duration_seconds": 0.31927437641723355
+        },
+        "cut_sample": 41135,
+        "cut_time_seconds": 1.8655328798185942,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/quattro_amici/assets/audio/fr/make_three_in_row.wav.extracted.wav.search/601ca2668d144b6c9b962c52ffb927e7/candidate-02.wav",
+        "preceding_voiced_seconds": 0.95,
+        "retained_voiced_seconds": 0.61,
+        "retained_duration_seconds": 1.0146485260770974,
+        "candidate_sha256": "226fdb0d408b70854f900e78f6a22bb6ee40b3615df4d4de886d1e79dac9cbe4",
+        "extracted_transcript": "Allignez en 3.",
+        "canonical_transcript_tokens": [
+          "allignez",
+          "en",
+          "<num:3>"
+        ],
+        "exact_target_match": false,
+        "target_comparison_score": 0.8719,
+        "target_word_count_matches": true,
+        "target_numbers_match": true,
+        "target_comparison_flags": [],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": true,
+        "asr_segment_count": 1
+      }
+    ],
+    "human_review": "PENDING",
+    "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+    "target_verification_effective_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+    "target_verification_warning": true,
+    "saved_recovery_policy": "target-only-v7-saved-v1",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 0,
+      "removed_seconds": 0.0,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 41135,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/quattro_amici/assets/audio/fr/make_three_in_row.wav.delivery.wav",
+      "sha256": "226fdb0d408b70854f900e78f6a22bb6ee40b3615df4d4de886d1e79dac9cbe4"
+    }
+  },
   "output": {
     "path": "activities/quattro_amici/assets/audio/fr/make_three_in_row.wav",
-    "bytes": 63590,
-    "sha256": "888f6e9f6f8194269cea12b13cd82ce7773924213e199563414972a162a04c95"
+    "sha256": "7b73d5e6ec5e4d32934e4624e931ef01ee51f1843596fbb7846923f5c7cb0119",
+    "bytes": 44824
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "24126366a5901983e70accf06dda6123a617a4ea998b8af11ed497fcff3e2fdb",
+    "original_sha256": "888f6e9f6f8194269cea12b13cd82ce7773924213e199563414972a162a04c95",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:30:07.540038+00:00",
+  "created_utc": "2026-10-23T01:39:23.248164+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
@@ -8,17 +8,22 @@
     "text": "V comme Vélo",
     "cue_id": "foresta_parole.find_v",
     "output": "activities/foresta_parole/assets/audio/fr/find_v.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic"
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-142959-b7008dfc",
-    "idempotency_key": "greia-e9bc7a38a0ef4ba0af16c057d362d846",
+    "job_id": "20261023-033909-018305a0",
+    "idempotency_key": "greia-552d93e2f5044262b9965d5ef71e76f0",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +46,359 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 241017258,
+    "script_seed": 1200878093,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "effective_delivery": "Speak in French. Lecture chaleureuse et calme. Diction claire et naturelle.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 4029350075,
-        "sha256": "a1bd59f4a9590c8eb0246083ca3850f41a769d5e4a1d4a15ec8ddaa287aa42fa",
+        "seed": 493772805,
+        "sha256": "59789e944ea0e5dbafd48b33dd9bb524e9d48c5f46c1f475f51805c8c2cf7a6c",
         "generation": {
-          "elapsed_seconds": 7.563928249990568,
+          "elapsed_seconds": 11.555593333003344,
           "model_load_seconds": 0.0,
-          "rtf": 3.9392040187434603,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.610934847040262,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-audio-parakeet-tdt-v3",
+    "transcript": "V comme vélo.",
+    "score": 1.0,
+    "detail": "Delivered target transcribed and screened; human listening remains pending",
+    "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+    "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+    "flags": [],
+    "metrics": {
+      "duration_seconds": 1.250204081632653,
+      "rms_dbfs": -34.43,
+      "peak": 0.14139,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.06,
+      "trailing_silence_seconds": 0.18,
+      "longest_internal_pause_seconds": 0.04
+    }
   },
-  "attempts": 1,
+  "attempts": 3,
   "output": {
     "path": "activities/foresta_parole/assets/audio/fr/find_v.wav",
-    "bytes": 84758,
-    "sha256": "0d8df87937e47b82ee712c9ee03f80849aebafab15818056d956d98b4eeea869"
+    "bytes": 55212,
+    "sha256": "1360ed1c7c934db47375f6034d3db2a3552fb267c462a657966d6c9371024376"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "short_phrase": {
+    "mode": "automatic-carrier",
+    "composition_policy": "natural-context-period-v1",
+    "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/1463cd42b4e7429c8656891916d9e2c8",
+    "prefix": "Regardons les lettres ensemble.",
+    "composite_text": "Regardons les lettres ensemble.\n\nV comme Vélo",
+    "effective_delivery": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "extraction": {
+      "schema_version": 1,
+      "algorithm_version": "greia-spoken-carrier-extractor-v7",
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "status": "EXTRACTED_PENDING_LISTENING",
+      "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/1463cd42b4e7429c8656891916d9e2c8/attempt-03/raw.wav",
+      "source_sha256": "59789e944ea0e5dbafd48b33dd9bb524e9d48c5f46c1f475f51805c8c2cf7a6c",
+      "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/1463cd42b4e7429c8656891916d9e2c8/attempt-03/target.wav",
+      "output_sha256": "871bbf1764b2b210ed8d19b6c3d07c54dd9be38836af8b1beb8e06583c16b161",
+      "output_bytes": 120060,
+      "locale": "fr",
+      "prefix": "Regardons les lettres ensemble.",
+      "target": "V comme Vélo",
+      "remove_first_words": 4,
+      "ignore_accents": true,
+      "target_verification_requested": "warn",
+      "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+      "target_comparison_score": 1.0,
+      "target_word_count_matches": true,
+      "target_numbers_match": true,
+      "target_comparison_flags": [],
+      "target_transcript_warning": false,
+      "recognizer": "mlx-audio-parakeet-tdt-v3",
+      "recognizer_version": "0.5.0",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "extracted_transcript": "V comme vélo.",
+      "expected_target_tokens": [
+        "v",
+        "komme",
+        "velo"
+      ],
+      "extracted_target_tokens": [
+        "v",
+        "komme",
+        "velo"
+      ],
+      "extracted_target_exact_match": true,
+      "transcription_settings": {
+        "language_detection": "automatic",
+        "expected_text_prompt": null,
+        "timestamps": "model-provided-token-timestamps"
+      },
+      "sample_rate": 48000,
+      "duration_seconds": 3.2001666666666666,
+      "boundary": {
+        "search_strategy": "target-only-global-quiet-run-v7",
+        "verified_silence_start_seconds": 1.56,
+        "verified_silence_end_seconds": 2.05,
+        "verified_silence_duration_seconds": 0.49,
+        "cut_sample": 93600,
+        "cut_time_seconds": 1.95,
+        "padding_seconds": 0.1,
+        "quiet_run_start_sample": 74880,
+        "quiet_run_end_sample": 98400,
+        "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+      },
+      "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/1463cd42b4e7429c8656891916d9e2c8/attempt-03/target.wav.search/8972e85a332c4e21aef20be6e82e373e",
+      "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/1463cd42b4e7429c8656891916d9e2c8/attempt-03/target.wav.search/8972e85a332c4e21aef20be6e82e373e/search.json",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/1463cd42b4e7429c8656891916d9e2c8/attempt-03/raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "174648ede9237a7a9923ef4bfb9b554b58d89db770a4d84d504a805510c6d918",
+      "candidate_sha256": "871bbf1764b2b210ed8d19b6c3d07c54dd9be38836af8b1beb8e06583c16b161",
+      "candidate_id": "candidate-01",
+      "candidate_count": 1,
+      "qualifying_quiet_run_count": 1,
+      "candidate_results": [
+        {
+          "candidate_id": "candidate-01",
+          "quiet_run": {
+            "start_sample": 74880,
+            "end_sample": 98400,
+            "start_seconds": 1.56,
+            "end_seconds": 2.05,
+            "duration_seconds": 0.49
+          },
+          "cut_sample": 93600,
+          "cut_time_seconds": 1.95,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/1463cd42b4e7429c8656891916d9e2c8/attempt-03/target.wav.search/8972e85a332c4e21aef20be6e82e373e/candidate-01.wav",
+          "preceding_voiced_seconds": 1.39,
+          "retained_voiced_seconds": 0.74,
+          "retained_duration_seconds": 1.2501666666666666,
+          "candidate_sha256": "871bbf1764b2b210ed8d19b6c3d07c54dd9be38836af8b1beb8e06583c16b161",
+          "extracted_transcript": "V comme vélo.",
+          "canonical_transcript_tokens": [
+            "v",
+            "komme",
+            "velo"
+          ],
+          "exact_target_match": true,
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": true,
+          "asr_segment_count": 1
+        }
+      ],
+      "human_review": "PENDING",
+      "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+      "delivery": {
+        "policy": "verified-carrier-gap-delivery-v1",
+        "removed_frames": 0,
+        "removed_seconds": 0.0,
+        "retained_verified_quiet_seconds": 0.1,
+        "raw_delivery_start_sample": 93600,
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/1463cd42b4e7429c8656891916d9e2c8/attempt-03/delivery-target.wav",
+        "sha256": "871bbf1764b2b210ed8d19b6c3d07c54dd9be38836af8b1beb8e06583c16b161"
+      }
+    },
+    "quality": {
+      "disposition": "PASS",
+      "score": 1.0,
+      "transcript": "V comme vélo.",
+      "metrics": {
+        "duration_seconds": 1.250204081632653,
+        "rms_dbfs": -34.43,
+        "peak": 0.14139,
+        "clipped_fraction": 0.0,
+        "leading_silence_seconds": 0.06,
+        "trailing_silence_seconds": 0.18,
+        "longest_internal_pause_seconds": 0.04
+      },
+      "flags": [],
+      "ignore_accents": true,
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "detail": "Delivered target transcribed and screened; human listening remains pending"
+    },
+    "history": [
+      {
+        "attempt": 1,
+        "status": "REJECTED_CUT",
+        "error": "no candidate suffix meets target verification policy",
+        "evidence": {
+          "candidate_transcripts": [
+            "Vecom Villo."
+          ],
+          "matching_candidate_ids": [],
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/1463cd42b4e7429c8656891916d9e2c8/attempt-01/target.wav.search/608e9e8afd734bc490ce53f26659201e",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/1463cd42b4e7429c8656891916d9e2c8/attempt-01/target.wav.search/608e9e8afd734bc490ce53f26659201e/search.json"
+        }
+      },
+      {
+        "attempt": 2,
+        "status": "REJECTED_CUT",
+        "error": "no candidate suffix meets target verification policy",
+        "evidence": {
+          "candidate_transcripts": [
+            "Willkommen Velo."
+          ],
+          "matching_candidate_ids": [],
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/1463cd42b4e7429c8656891916d9e2c8/attempt-02/target.wav.search/e35ebb46617e40019ad73c4be1734c8c",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/1463cd42b4e7429c8656891916d9e2c8/attempt-02/target.wav.search/e35ebb46617e40019ad73c4be1734c8c/search.json"
+        }
+      },
+      {
+        "attempt": 3,
+        "status": "PASS",
+        "quality": {
+          "disposition": "PASS",
+          "score": 1.0,
+          "transcript": "V comme vélo.",
+          "metrics": {
+            "duration_seconds": 1.250204081632653,
+            "rms_dbfs": -34.43,
+            "peak": 0.14139,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.06,
+            "trailing_silence_seconds": 0.18,
+            "longest_internal_pause_seconds": 0.04
+          },
+          "flags": [],
+          "ignore_accents": true,
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "detail": "Delivered target transcribed and screened; human listening remains pending"
+        },
+        "extraction": {
+          "schema_version": 1,
+          "algorithm_version": "greia-spoken-carrier-extractor-v7",
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "status": "EXTRACTED_PENDING_LISTENING",
+          "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/1463cd42b4e7429c8656891916d9e2c8/attempt-03/raw.wav",
+          "source_sha256": "59789e944ea0e5dbafd48b33dd9bb524e9d48c5f46c1f475f51805c8c2cf7a6c",
+          "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/1463cd42b4e7429c8656891916d9e2c8/attempt-03/target.wav",
+          "output_sha256": "871bbf1764b2b210ed8d19b6c3d07c54dd9be38836af8b1beb8e06583c16b161",
+          "output_bytes": 120060,
+          "locale": "fr",
+          "prefix": "Regardons les lettres ensemble.",
+          "target": "V comme Vélo",
+          "remove_first_words": 4,
+          "ignore_accents": true,
+          "target_verification_requested": "warn",
+          "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_transcript_warning": false,
+          "recognizer": "mlx-audio-parakeet-tdt-v3",
+          "recognizer_version": "0.5.0",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "extracted_transcript": "V comme vélo.",
+          "expected_target_tokens": [
+            "v",
+            "komme",
+            "velo"
+          ],
+          "extracted_target_tokens": [
+            "v",
+            "komme",
+            "velo"
+          ],
+          "extracted_target_exact_match": true,
+          "transcription_settings": {
+            "language_detection": "automatic",
+            "expected_text_prompt": null,
+            "timestamps": "model-provided-token-timestamps"
+          },
+          "sample_rate": 48000,
+          "duration_seconds": 3.2001666666666666,
+          "boundary": {
+            "search_strategy": "target-only-global-quiet-run-v7",
+            "verified_silence_start_seconds": 1.56,
+            "verified_silence_end_seconds": 2.05,
+            "verified_silence_duration_seconds": 0.49,
+            "cut_sample": 93600,
+            "cut_time_seconds": 1.95,
+            "padding_seconds": 0.1,
+            "quiet_run_start_sample": 74880,
+            "quiet_run_end_sample": 98400,
+            "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+          },
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/1463cd42b4e7429c8656891916d9e2c8/attempt-03/target.wav.search/8972e85a332c4e21aef20be6e82e373e",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/1463cd42b4e7429c8656891916d9e2c8/attempt-03/target.wav.search/8972e85a332c4e21aef20be6e82e373e/search.json",
+          "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/1463cd42b4e7429c8656891916d9e2c8/attempt-03/raw.wav.receipt.json",
+          "source_provider_receipt_sha256": "174648ede9237a7a9923ef4bfb9b554b58d89db770a4d84d504a805510c6d918",
+          "candidate_sha256": "871bbf1764b2b210ed8d19b6c3d07c54dd9be38836af8b1beb8e06583c16b161",
+          "candidate_id": "candidate-01",
+          "candidate_count": 1,
+          "qualifying_quiet_run_count": 1,
+          "candidate_results": [
+            {
+              "candidate_id": "candidate-01",
+              "quiet_run": {
+                "start_sample": 74880,
+                "end_sample": 98400,
+                "start_seconds": 1.56,
+                "end_seconds": 2.05,
+                "duration_seconds": 0.49
+              },
+              "cut_sample": 93600,
+              "cut_time_seconds": 1.95,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/1463cd42b4e7429c8656891916d9e2c8/attempt-03/target.wav.search/8972e85a332c4e21aef20be6e82e373e/candidate-01.wav",
+              "preceding_voiced_seconds": 1.39,
+              "retained_voiced_seconds": 0.74,
+              "retained_duration_seconds": 1.2501666666666666,
+              "candidate_sha256": "871bbf1764b2b210ed8d19b6c3d07c54dd9be38836af8b1beb8e06583c16b161",
+              "extracted_transcript": "V comme vélo.",
+              "canonical_transcript_tokens": [
+                "v",
+                "komme",
+                "velo"
+              ],
+              "exact_target_match": true,
+              "target_comparison_score": 1.0,
+              "target_word_count_matches": true,
+              "target_numbers_match": true,
+              "target_comparison_flags": [],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": true,
+              "asr_segment_count": 1
+            }
+          ],
+          "human_review": "PENDING",
+          "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+          "delivery": {
+            "policy": "verified-carrier-gap-delivery-v1",
+            "removed_frames": 0,
+            "removed_seconds": 0.0,
+            "retained_verified_quiet_seconds": 0.1,
+            "raw_delivery_start_sample": 93600,
+            "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/1463cd42b4e7429c8656891916d9e2c8/attempt-03/delivery-target.wav",
+            "sha256": "871bbf1764b2b210ed8d19b6c3d07c54dd9be38836af8b1beb8e06583c16b161"
+          }
+        },
+        "candidate": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/1463cd42b4e7429c8656891916d9e2c8/attempt-03/candidate.wav"
+      }
+    ]
+  },
   "corpus_replacement": {
-    "original_sha256": "9b61028666d58c2e02abb365aacc3b94cbf468d647e25abffb085cc440acc11e",
+    "original_sha256": "0d8df87937e47b82ee712c9ee03f80849aebafab15818056d956d98b4eeea869",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

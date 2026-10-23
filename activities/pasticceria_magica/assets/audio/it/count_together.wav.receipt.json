@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T14:05:14.258863+00:00",
+  "created_utc": "2026-10-21T16:58:13.308261+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "Contiamo insieme.",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. Contiamo insieme.",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "lilli",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Contiamo insieme.",
+    "cue_id": "greia.requested.count_together.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Contiamo insieme.",
     "cue_id": "greia.requested.count_together.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/pasticceria_magica/assets/audio/it/count_together.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. A short, lively reaction: expressive and clear, one breath, no extra words."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.lilli.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "job_id": "20261020-160508-449718b1",
-    "idempotency_key": "greia-fef7e52b7f574f19a2033dccc9b4b985",
+    "job_id": "20261021-185759-b0ae4aaa",
+    "idempotency_key": "greia-780b205f0f25473499cb6eb3236e0f95",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,218 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 622895683,
+    "script_seed": 2559991260,
     "language_direction": "Italian",
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. A short, lively reaction: expressive and clear, one breath, no extra words.",
-    "effective_delivery": "Speak in Italian. Lilli, a sparkly, affectionate storybook unicorn. A short, lively reaction: expressive and clear, one breath, no extra words.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2815029152,
-        "sha256": "c6c0a1a426597c845fdfd4b3773e803d73f4095db5fba6b707e4d2700bff3475",
+        "seed": 3707130437,
+        "sha256": "a701c984318dc35e1e8931ce0d60e62f95badacdcc2cd04cc3093f921b90ea95",
         "generation": {
-          "elapsed_seconds": 5.924505250004586,
+          "elapsed_seconds": 13.174744249990908,
           "model_load_seconds": 0.0,
-          "rtf": 4.627917133189365,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.7426478623145423,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " con diamo insieme",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/pasticceria_magica/assets/audio/it/count_together.wav.raw.wav",
+    "sha256": "6b80afaabf7066761048ae3bca6f03f1e34e3c092485e9c68392136c0183c3a7",
+    "receipt_sha256": "79dab221474e1a93b12ea94c5458e3b3ef61785b101366f1541e6683df79893e"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/pasticceria_magica/assets/audio/it/count_together.wav.extracted.wav",
+    "sha256": "748bb0f646fc3cbcd508d8e7e869ba702b070663abae527d1b6f10ae7bac253a"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/pasticceria_magica/assets/audio/it/count_together.wav.raw.wav",
+    "source_sha256": "6b80afaabf7066761048ae3bca6f03f1e34e3c092485e9c68392136c0183c3a7",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/pasticceria_magica/assets/audio/it/count_together.wav.extracted.wav",
+    "output_sha256": "748bb0f646fc3cbcd508d8e7e869ba702b070663abae527d1b6f10ae7bac253a",
+    "target_request": {
+      "speaker": "lilli",
+      "kind": "character_dialogue",
+      "text": "Contiamo insieme.",
+      "locale": "it",
+      "cue_id": "greia.requested.count_together.it",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/pasticceria_magica/assets/audio/it/count_together.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "79dab221474e1a93b12ea94c5458e3b3ef61785b101366f1541e6683df79893e"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "Contiamo insieme.",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Ascolta questa frase in italiano. Contiamo insieme.",
+    "extracted_transcript": " con diamo insieme",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.7
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.7,
+        "end_seconds": 0.92
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.92,
+        "end_seconds": 1.3
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.3,
+        "end_seconds": 1.42
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.42,
+        "end_seconds": 1.86
+      },
+      {
+        "word": "contiamo",
+        "start_seconds": 2.32,
+        "end_seconds": 2.84
+      },
+      {
+        "word": "insieme",
+        "start_seconds": 2.84,
+        "end_seconds": 3.3
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "con",
+        "start_seconds": 0.0,
+        "end_seconds": 0.48
+      },
+      {
+        "word": "diamo",
+        "start_seconds": 0.48,
+        "end_seconds": 0.82
+      },
+      {
+        "word": "insieme",
+        "start_seconds": 0.82,
+        "end_seconds": 1.16
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.6583766435322008,
+        "no_speech_prob": 0.00797832477837801,
+        "compression_ratio": 0.9107142857142857,
+        "word_probabilities": [
+          0.5283203125,
+          0.9609375,
+          0.97216796875,
+          0.53564453125,
+          0.9638671875
+        ]
+      },
+      {
+        "avg_logprob": -0.6583766435322008,
+        "no_speech_prob": 0.00797832477837801,
+        "compression_ratio": 0.9107142857142857,
+        "word_probabilities": [
+          0.68115234375,
+          0.876953125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.739786684513092,
+        "no_speech_prob": 0.21597012877464294,
+        "compression_ratio": 0.68,
+        "word_probabilities": [
+          0.280517578125,
+          0.59521484375,
+          0.6904296875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 90,
+    "extracted_voiced_seconds": 0.9,
+    "unremoved_raw_target_tokens": [
+      "contiamo",
+      "insieme"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "contiamo",
+      "insieme"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.5201814058956917,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.86,
+      "target_first_word_start_seconds": 2.32,
+      "gap_seconds": 0.23945578231292516,
+      "verified_silence_start_seconds": 2.0296145124716554,
+      "verified_silence_end_seconds": 2.2690702947845804,
+      "gap_rms_dbfs": -56.635,
+      "gap_peak_dbfs": -37.885,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.149342403628118,
+      "cut_sample": 47393,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/pasticceria_magica/assets/audio/it/count_together.wav",
-    "bytes": 56534,
-    "sha256": "549e578ed50a9c391ea45183a12fc33365ddb56c95a23c0e1fbce77f1297d315"
+    "sha256": "14dc682554d18e02063d1ffc734d2c27154f8917029575f8b97460651bdee1ac",
+    "bytes": 60532
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "39df2549b2efdc822786cd1e39c9cc863b88bd380b2d90de26c4a3759a53be1d",
+    "original_sha256": "549e578ed50a9c391ea45183a12fc33365ddb56c95a23c0e1fbce77f1297d315",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T19:01:34.545976+00:00",
+  "created_utc": "2026-10-22T10:37:52.421324+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "¡Una vez más!",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español...\n\n¡Una vez más!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "lilli",
+    "kind": "shared_character_utterance",
+    "locale": "es",
+    "text": "¡Una vez más!",
+    "cue_id": "greia.shared.lilli__es__encourage.retry__03.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "lilli",
     "kind": "shared_character_utterance",
     "locale": "es",
     "text": "¡Una vez más!",
     "cue_id": "greia.shared.lilli__es__encourage.retry__03.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "assets/audio/characters/shared/v0.2/lilli/es/lilli__es__encourage.retry__03.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.lilli.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "job_id": "20261020-210128-5ed161e7",
-    "idempotency_key": "greia-ceabff372f3c4c2c9af3e2f3cb0df88f",
+    "job_id": "20261022-123738-e1bd1b31",
+    "idempotency_key": "greia-bd0b6d1f112b4392b32ce062f2e1f95c",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,267 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3364722288,
+    "script_seed": 3505169874,
     "language_direction": "Spanish",
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
-    "effective_delivery": "Speak in Spanish. Lilli, a sparkly, affectionate storybook unicorn. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 769167653,
-        "sha256": "8835772506123a57b5bba54fb6b8b2f740e4ed9352a7bd0bbdbef91fd985ae56",
+        "seed": 1389226392,
+        "sha256": "6a248838ab3f0cbd2cbac0f518a4a307c779a643069470d9f2da52fb680ccce1",
         "generation": {
-          "elapsed_seconds": 5.697138999996241,
+          "elapsed_seconds": 13.800979042018298,
           "model_load_seconds": 0.0,
-          "rtf": 3.9558886702901805,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.750096202713183,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " Una vez más.",
+    "metrics": {
+      "duration_seconds": 1.2119274376417233,
+      "rms_dbfs": -25.6,
+      "peak": 0.26752,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.18,
+      "trailing_silence_seconds": 0.3,
+      "longest_internal_pause_seconds": 0.06
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/characters/shared/v0.2/lilli/es/lilli__es__encourage.retry__03.wav.raw.wav",
+    "sha256": "aec0c1695f7770de698d3f258412d8fc57c27cf619a15a6f7c40c8f1257a0bd1",
+    "receipt_sha256": "4848bc10c4ca2add26a133a7d7d384946d843901f2b6731262d7fb09908cbd4c"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/characters/shared/v0.2/lilli/es/lilli__es__encourage.retry__03.wav.extracted.wav",
+    "sha256": "b34d731db6282d563c475e3a30acb634fa7b734a58098e47ef01b096d23fe09a"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/assets/audio/characters/shared/v0.2/lilli/es/lilli__es__encourage.retry__03.wav.delivery.wav",
+    "sha256": "a8ec92c6cd7e2d8cdf591d9be6d913bf4f3d12613345c0c5840cc61a9ce73c2a"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/assets/audio/characters/shared/v0.2/lilli/es/lilli__es__encourage.retry__03.wav.raw.wav",
+    "source_sha256": "aec0c1695f7770de698d3f258412d8fc57c27cf619a15a6f7c40c8f1257a0bd1",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/assets/audio/characters/shared/v0.2/lilli/es/lilli__es__encourage.retry__03.wav.extracted.wav",
+    "output_sha256": "b34d731db6282d563c475e3a30acb634fa7b734a58098e47ef01b096d23fe09a",
+    "target_request": {
+      "speaker": "lilli",
+      "kind": "shared_character_utterance",
+      "text": "¡Una vez más!",
+      "locale": "es",
+      "cue_id": "greia.shared.lilli__es__encourage.retry__03.es",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/assets/audio/characters/shared/v0.2/lilli/es/lilli__es__encourage.retry__03.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "4848bc10c4ca2add26a133a7d7d384946d843901f2b6731262d7fb09908cbd4c"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "¡Una vez más!",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " ¡A escucha esta frase en español! Una vez más!",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Una vez más.",
+    "raw_word_alignment": [
+      {
+        "word": "a",
+        "start_seconds": 0.0,
+        "end_seconds": 0.12
+      },
+      {
+        "word": "escucha",
+        "start_seconds": 0.12,
+        "end_seconds": 0.58
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.58,
+        "end_seconds": 0.78
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.78,
+        "end_seconds": 1.02
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.02,
+        "end_seconds": 1.36
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.36,
+        "end_seconds": 1.8
+      },
+      {
+        "word": "una",
+        "start_seconds": 2.62,
+        "end_seconds": 2.86
+      },
+      {
+        "word": "vez",
+        "start_seconds": 2.86,
+        "end_seconds": 3.02
+      },
+      {
+        "word": "más",
+        "start_seconds": 3.02,
+        "end_seconds": 3.32
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "una",
+        "start_seconds": 0.0,
+        "end_seconds": 0.58
+      },
+      {
+        "word": "vez",
+        "start_seconds": 0.58,
+        "end_seconds": 0.8
+      },
+      {
+        "word": "más",
+        "start_seconds": 0.8,
+        "end_seconds": 1.04
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5401420593261719,
+        "no_speech_prob": 0.015573859214782715,
+        "compression_ratio": 0.8909090909090909,
+        "word_probabilities": [
+          0.3759765625,
+          0.775390625,
+          0.9873046875,
+          0.98828125,
+          0.951171875,
+          0.96435546875
+        ]
+      },
+      {
+        "avg_logprob": -0.5401420593261719,
+        "no_speech_prob": 0.015573859214782715,
+        "compression_ratio": 0.8909090909090909,
+        "word_probabilities": [
+          0.681640625,
+          0.9990234375,
+          0.9853515625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.5663645608084542,
+        "no_speech_prob": 0.04322156682610512,
+        "compression_ratio": 0.6190476190476191,
+        "word_probabilities": [
+          0.6943359375,
+          0.986328125,
+          0.92822265625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": false,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 6,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 62,
+    "extracted_voiced_seconds": 0.62,
+    "unremoved_raw_target_tokens": [
+      "una",
+      "vez",
+      "más"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "una",
+      "vez",
+      "más"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.6801814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.8,
+      "search_end_seconds": 2.62,
+      "prefix_last_word_end_seconds": 1.8,
+      "target_first_word_start_seconds": 2.62,
+      "gap_seconds": 0.5986394557823129,
+      "verified_silence_start_seconds": 1.9696145124716553,
+      "verified_silence_end_seconds": 2.5682539682539685,
+      "gap_rms_dbfs": -59.03,
+      "gap_peak_dbfs": -38.29,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.268934240362812,
+      "cut_sample": 50030,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 4395,
+      "removed_seconds": 0.19931972789115646,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 54425,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/assets/audio/characters/shared/v0.2/lilli/es/lilli__es__encourage.retry__03.wav.delivery.wav",
+      "sha256": "a8ec92c6cd7e2d8cdf591d9be6d913bf4f3d12613345c0c5840cc61a9ce73c2a"
+    }
+  },
   "output": {
     "path": "assets/audio/characters/shared/v0.2/lilli/es/lilli__es__encourage.retry__03.wav",
-    "bytes": 63590,
-    "sha256": "cee17089625e8a0bed7be537c64ca6f31e34f3981c685b6220aed0c99722fc34"
+    "sha256": "d5c7117d3426d64ea792bd4f7feb21195ceab831d076ee5d341fc2c74d68c810",
+    "bytes": 53524
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "3601f58358c747a9ed8f27a8f4933ac1dac8493aab925d76af0783e21fbe0503",
+    "original_sha256": "cee17089625e8a0bed7be537c64ca6f31e34f3981c685b6220aed0c99722fc34",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

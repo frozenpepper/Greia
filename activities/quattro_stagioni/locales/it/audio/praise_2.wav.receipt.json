@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T12:24:25.348338+00:00",
+  "created_utc": "2026-10-22T09:14:20.794657+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "Ottimo lavoro!",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano...\n\nOttimo lavoro!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Ottimo lavoro!",
+    "cue_id": "quattro_stagioni.praise_2",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Ottimo lavoro!",
     "cue_id": "quattro_stagioni.praise_2",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/quattro_stagioni/locales/it/audio/praise_2.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Warm, measured encouragement. Emphasize the successful action gently, at a relaxed conversational pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.tito.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261021-142419-c74fd96b",
-    "idempotency_key": "greia-f148a905d9454b0f86778f5d60e5520e",
+    "job_id": "20261022-111400-a2768bf3",
+    "idempotency_key": "greia-74bda1f679814a14b2c641ea8adfdc6f",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,252 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 472744425,
+    "script_seed": 1741962345,
     "language_direction": "Italian",
-    "delivery_prompt": "Warm, measured encouragement. Emphasize the successful action gently, at a relaxed conversational pace.",
-    "effective_delivery": "Speak in Italian. Warm, measured encouragement. Emphasize the successful action gently, at a relaxed conversational pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2631235524,
-        "sha256": "c90f110a6d807017527ffa6483b2c0ca9419e5390ee728a5571039a066f08d7b",
+        "seed": 276913022,
+        "sha256": "42537553ebcce94eeb5f679775f9c2808b587b005d26fe567834671133db2022",
         "generation": {
-          "elapsed_seconds": 5.817369750002399,
+          "elapsed_seconds": 19.94833916699281,
           "model_load_seconds": 0.0,
-          "rtf": 3.6354773981891877,
+          "rtf": 3.896033169556878,
           "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " Ottimo lavoro.",
+    "metrics": {
+      "duration_seconds": 1.2019954648526077,
+      "rms_dbfs": -28.6,
+      "peak": 0.20547,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.1,
+      "trailing_silence_seconds": 0.18,
+      "longest_internal_pause_seconds": 0.08
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/quattro_stagioni/locales/it/audio/praise_2.wav.raw.wav",
+    "sha256": "f6dea3ea0600679f70f799ce861c826071fbf42cf97d67096970084eb1ef2b2e",
+    "receipt_sha256": "e0e3eece4ff5f2bcfb98fe0fcad0755ec8ad01420a25b4a8fb6d54ab8ca5b6d8"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/quattro_stagioni/locales/it/audio/praise_2.wav.extracted.wav",
+    "sha256": "63d5a16fa955bf8961a134fe335b6a13fb8cb196d8fcca412cf5606f150a91e5"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/quattro_stagioni/locales/it/audio/praise_2.wav.delivery.wav",
+    "sha256": "2ee30ecb422b56089a598a7a34bc4097dc8c61e67a634232d64dfe004a26bc9b"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/activities/quattro_stagioni/locales/it/audio/praise_2.wav.raw.wav",
+    "source_sha256": "f6dea3ea0600679f70f799ce861c826071fbf42cf97d67096970084eb1ef2b2e",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/activities/quattro_stagioni/locales/it/audio/praise_2.wav.extracted.wav",
+    "output_sha256": "63d5a16fa955bf8961a134fe335b6a13fb8cb196d8fcca412cf5606f150a91e5",
+    "target_request": {
+      "speaker": "tito",
+      "kind": "character_dialogue",
+      "text": "Ottimo lavoro!",
+      "locale": "it",
+      "cue_id": "quattro_stagioni.praise_2",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/activities/quattro_stagioni/locales/it/audio/praise_2.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "e0e3eece4ff5f2bcfb98fe0fcad0755ec8ad01420a25b4a8fb6d54ab8ca5b6d8"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "Ottimo lavoro!",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Ascolta questa frase in italiano, Arali Adott, ottimo lavoro.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Ottimo lavoro.",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.64
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.64,
+        "end_seconds": 1.08
+      },
+      {
+        "word": "frase",
+        "start_seconds": 1.08,
+        "end_seconds": 1.56
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.56,
+        "end_seconds": 1.88
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.88,
+        "end_seconds": 2.44
+      },
+      {
+        "word": "arali",
+        "start_seconds": 2.94,
+        "end_seconds": 3.22
+      },
+      {
+        "word": "adott",
+        "start_seconds": 3.22,
+        "end_seconds": 3.56
+      },
+      {
+        "word": "ottimo",
+        "start_seconds": 3.96,
+        "end_seconds": 4.42
+      },
+      {
+        "word": "lavoro",
+        "start_seconds": 4.42,
+        "end_seconds": 4.72
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "ottimo",
+        "start_seconds": 0.0,
+        "end_seconds": 0.56
+      },
+      {
+        "word": "lavoro",
+        "start_seconds": 0.56,
+        "end_seconds": 0.88
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.39606189727783203,
+        "no_speech_prob": 0.01236377190798521,
+        "compression_ratio": 0.953125,
+        "word_probabilities": [
+          0.83056640625,
+          0.9072265625,
+          0.978515625,
+          0.98876953125,
+          0.98681640625,
+          0.39892578125,
+          0.48388671875,
+          0.8994140625,
+          0.99658203125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6558878762381417,
+        "no_speech_prob": 0.0004137489595450461,
+        "compression_ratio": 0.6363636363636364,
+        "word_probabilities": [
+          0.716796875,
+          0.9951171875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": false,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 7,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 81,
+    "extracted_voiced_seconds": 0.81,
+    "unremoved_raw_target_tokens": [
+      "ottimo",
+      "lavoro"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "ottimo",
+      "lavoro"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 5.120181405895692,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-expanded-boundary",
+      "search_start_seconds": 3.22,
+      "search_end_seconds": 4.42,
+      "prefix_last_word_end_seconds": 3.56,
+      "target_first_word_start_seconds": 3.96,
+      "gap_seconds": 0.29931972789115646,
+      "verified_silence_start_seconds": 3.7188662131519274,
+      "verified_silence_end_seconds": 4.018185941043084,
+      "gap_rms_dbfs": -60.103,
+      "gap_peak_dbfs": -39.016,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 3.868526077097506,
+      "cut_sample": 85301,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 1095,
+      "removed_seconds": 0.04965986394557823,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 86396,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/activities/quattro_stagioni/locales/it/audio/praise_2.wav.delivery.wav",
+      "sha256": "2ee30ecb422b56089a598a7a34bc4097dc8c61e67a634232d64dfe004a26bc9b"
+    }
+  },
   "output": {
     "path": "activities/quattro_stagioni/locales/it/audio/praise_2.wav",
-    "bytes": 70646,
-    "sha256": "63632e71d5029294e17e7ed43579e9011b40db155e937fa2e202b2930e1d6d9b"
+    "sha256": "05d2b738186a54072f171841216962d84785cd6b4aa28c280fe5c764150f8e74",
+    "bytes": 53086
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "3825f334f705fb35ccb0be941fc20f7fc3f1512ad09b990a6679b065e860dd7e",
+    "original_sha256": "77911215528dbf018aa2ee893b766570a9cbdd3b1f0b1bd6f88c817583e8420c",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

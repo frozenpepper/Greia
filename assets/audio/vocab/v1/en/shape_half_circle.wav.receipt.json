@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T20:36:35.446252+00:00",
+  "created_utc": "2026-10-21T18:38:13.000942+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Listen to this phrase in English.",
+    "prefix_word_count": 6,
+    "target": "Half circle",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Listen to this phrase in English. Half circle",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Half circle",
+    "cue_id": "greia.vocab.shape_half_circle.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "Half circle",
     "cue_id": "greia.vocab.shape_half_circle.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "assets/audio/vocab/v1/en/shape_half_circle.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-223629-825a5fbe",
-    "idempotency_key": "greia-b80cd8019baa4483be2e4e9d7c8d40cc",
+    "job_id": "20261021-203759-20be2c5b",
+    "idempotency_key": "greia-7e73e864b8904c2bb04d04711102581e",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,253 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 675456172,
+    "script_seed": 1950072608,
     "language_direction": "English",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
-    "effective_delivery": "Speak in English. Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in English. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1732526128,
-        "sha256": "5d90c52067b23f89b2ec20610066c61288d5a01d25af86f95d6ac2e5c01ec349",
+        "seed": 3629481256,
+        "sha256": "e50f8fca2fd4e0d57946adab2bbae2aedf7a59ffbc6aec16402fdd717cfed8ee",
         "generation": {
-          "elapsed_seconds": 6.039349084021524,
+          "elapsed_seconds": 12.542011541998363,
           "model_load_seconds": 0.0,
-          "rtf": 5.391473665247603,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.5629027627475107,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " half circle",
+    "metrics": {
+      "duration_seconds": 1.2914285714285714,
+      "rms_dbfs": -34.14,
+      "peak": 0.20645,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.38,
+      "trailing_silence_seconds": 0.08,
+      "longest_internal_pause_seconds": 0.02
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/vocab/v1/en/shape_half_circle.wav.raw.wav",
+    "sha256": "21a67a10bde3219c72599a3681004077b0589f27c8a0e7de5da3cc18aff80795",
+    "receipt_sha256": "cc2aaeede64b0a796e2bbdb83f479854e0974159657d659df640df4e78a0a91c"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/vocab/v1/en/shape_half_circle.wav.extracted.wav",
+    "sha256": "fb56aa3993f70237033f45a70e1d41af21856e21b9e9bc279d5dbff8b799768c"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/assets/audio/vocab/v1/en/shape_half_circle.wav.delivery.wav",
+    "sha256": "2008ba2e7b17c814d4e371891681186d7c85f58982ffb48a931f5b96e7040658"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/assets/audio/vocab/v1/en/shape_half_circle.wav.raw.wav",
+    "source_sha256": "21a67a10bde3219c72599a3681004077b0589f27c8a0e7de5da3cc18aff80795",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/assets/audio/vocab/v1/en/shape_half_circle.wav.extracted.wav",
+    "output_sha256": "fb56aa3993f70237033f45a70e1d41af21856e21b9e9bc279d5dbff8b799768c",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Half circle",
+      "locale": "en",
+      "cue_id": "greia.vocab.shape_half_circle.en",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/assets/audio/vocab/v1/en/shape_half_circle.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "cc2aaeede64b0a796e2bbdb83f479854e0974159657d659df640df4e78a0a91c"
+    },
+    "locale": "en",
+    "prefix": "Listen to this phrase in English.",
+    "target": "Half circle",
+    "remove_first_words": 6,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Listen to this phrase in English. Half-circle.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " half circle",
+    "raw_word_alignment": [
+      {
+        "word": "listen",
+        "start_seconds": 0.0,
+        "end_seconds": 0.52
+      },
+      {
+        "word": "to",
+        "start_seconds": 0.52,
+        "end_seconds": 0.74
+      },
+      {
+        "word": "this",
+        "start_seconds": 0.74,
+        "end_seconds": 0.94
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.94,
+        "end_seconds": 1.22
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.22,
+        "end_seconds": 1.46
+      },
+      {
+        "word": "english",
+        "start_seconds": 1.46,
+        "end_seconds": 1.78
+      },
+      {
+        "word": "half",
+        "start_seconds": 2.38,
+        "end_seconds": 2.86
+      },
+      {
+        "word": "circle",
+        "start_seconds": 2.86,
+        "end_seconds": 3.26
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "half",
+        "start_seconds": 0.0,
+        "end_seconds": 0.66
+      },
+      {
+        "word": "circle",
+        "start_seconds": 0.66,
+        "end_seconds": 1.1
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5446024502024931,
+        "no_speech_prob": 0.06608045846223831,
+        "compression_ratio": 0.8518518518518519,
+        "word_probabilities": [
+          0.875,
+          0.99658203125,
+          0.9951171875,
+          0.9990234375,
+          0.99853515625,
+          0.9921875
+        ]
+      },
+      {
+        "avg_logprob": -0.5446024502024931,
+        "no_speech_prob": 0.06608045846223831,
+        "compression_ratio": 0.8518518518518519,
+        "word_probabilities": [
+          0.76220703125,
+          0.7666015625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6154928207397461,
+        "no_speech_prob": 0.3006618916988373,
+        "compression_ratio": 0.5789473684210527,
+        "word_probabilities": [
+          0.3955078125,
+          0.74072265625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 6,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 67,
+    "extracted_voiced_seconds": 0.67,
+    "unremoved_raw_target_tokens": [
+      "half",
+      "circle"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "half",
+      "circle"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.5201814058956917,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.78,
+      "search_end_seconds": 2.38,
+      "prefix_last_word_end_seconds": 1.78,
+      "target_first_word_start_seconds": 2.38,
+      "gap_seconds": 0.3791383219954649,
+      "verified_silence_start_seconds": 1.9496145124716553,
+      "verified_silence_end_seconds": 2.32875283446712,
+      "gap_rms_dbfs": -56.481,
+      "gap_peak_dbfs": -36.022,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.139183673469388,
+      "cut_sample": 47169,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 1975,
+      "removed_seconds": 0.08956916099773243,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 49144,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/assets/audio/vocab/v1/en/shape_half_circle.wav.delivery.wav",
+      "sha256": "2008ba2e7b17c814d4e371891681186d7c85f58982ffb48a931f5b96e7040658"
+    }
+  },
   "output": {
     "path": "assets/audio/vocab/v1/en/shape_half_circle.wav",
-    "bytes": 49478,
-    "sha256": "0802a311127610276bd000235b0de17956e889705410ddd8659227446843feb1"
+    "sha256": "dbce64b83236b04ad17f295a12547a741571bbdbb959bab8a7e00ddc1575749a",
+    "bytes": 57030
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "72ed170c176fac7568741443290429a4e60c7d0b7af71ea230d811dc902e3a57",
+    "original_sha256": "9f84366b1f7db8db898d2c17369b37b11360e515f3db0dc9d0eb9f27040bd587",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

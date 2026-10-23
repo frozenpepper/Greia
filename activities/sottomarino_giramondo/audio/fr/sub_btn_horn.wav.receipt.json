@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T15:38:03.502888+00:00",
+  "created_utc": "2026-10-22T09:35:32.728928+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "Fais sonner la sirène !",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français...\n\nFais sonner la sirène !",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Fais sonner la sirène !",
+    "cue_id": "greia.submarine.sub_btn_horn.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Fais sonner la sirène !",
     "cue_id": "greia.submarine.sub_btn_horn.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/sottomarino_giramondo/audio/fr/sub_btn_horn.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-173746-4181b494",
-    "idempotency_key": "greia-473bf858a19f4d71996a34a8ddccc010",
+    "job_id": "20261022-113319-ac4e019b",
+    "idempotency_key": "greia-79bf9703559745abbc4121cdf1306aaa",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,268 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2118384845,
+    "script_seed": 1426973705,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2378025444,
-        "sha256": "dde8e491b59bdacc1ed772d9e2c9f07aa638713d83c5df2a41f8645b38064b69",
+        "seed": 1785876349,
+        "sha256": "6a1326dfc928c3a30b82e5f337d0b634bd485acf03bccfb08c88674154bf1635",
         "generation": {
-          "elapsed_seconds": 15.672333375026938,
+          "elapsed_seconds": 14.302014291999512,
           "model_load_seconds": 0.0,
-          "rtf": 9.794188131461475,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.437846470573978,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8966,
+    "transcript": " Fais sonner la siren.",
+    "metrics": {
+      "duration_seconds": 1.8517460317460317,
+      "rms_dbfs": -33.08,
+      "peak": 0.17709,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.06,
+      "trailing_silence_seconds": 0.12,
+      "longest_internal_pause_seconds": 0.0
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/sottomarino_giramondo/audio/fr/sub_btn_horn.wav.raw.wav",
+    "sha256": "18c885283f8b4007da5bc2eca2d2689d461c210c9981a3f9ba0adbd9629a9479",
+    "receipt_sha256": "f12afd72fd47cfdb4d52ecc3d2b642e9120513983af2285263943d858fb1b979"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/sottomarino_giramondo/audio/fr/sub_btn_horn.wav.extracted.wav",
+    "sha256": "106967d7e27bda1e3579fd73c6a861ad825bb1bb2cd480ed7321a1746647da0f"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/sottomarino_giramondo/audio/fr/sub_btn_horn.wav.delivery.wav",
+    "sha256": "e1420d452c9d4298864ddda7e0e5ccd2b908e90379ce54d730addda00858c266"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/activities/sottomarino_giramondo/audio/fr/sub_btn_horn.wav.raw.wav",
+    "source_sha256": "18c885283f8b4007da5bc2eca2d2689d461c210c9981a3f9ba0adbd9629a9479",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/activities/sottomarino_giramondo/audio/fr/sub_btn_horn.wav.extracted.wav",
+    "output_sha256": "106967d7e27bda1e3579fd73c6a861ad825bb1bb2cd480ed7321a1746647da0f",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Fais sonner la sirène !",
+      "locale": "fr",
+      "cue_id": "greia.submarine.sub_btn_horn.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/activities/sottomarino_giramondo/audio/fr/sub_btn_horn.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "f12afd72fd47cfdb4d52ecc3d2b642e9120513983af2285263943d858fb1b979"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "Fais sonner la sirène !",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français, fait sonner la Syrenne.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Fais sonner la Syren.",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.3
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.3,
+        "end_seconds": 0.66
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.66,
+        "end_seconds": 1.0
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.0,
+        "end_seconds": 1.14
+      },
+      {
+        "word": "français",
+        "start_seconds": 1.14,
+        "end_seconds": 1.72
+      },
+      {
+        "word": "fait",
+        "start_seconds": 2.46,
+        "end_seconds": 2.58
+      },
+      {
+        "word": "sonner",
+        "start_seconds": 2.58,
+        "end_seconds": 3.06
+      },
+      {
+        "word": "la",
+        "start_seconds": 3.06,
+        "end_seconds": 3.26
+      },
+      {
+        "word": "syrenne",
+        "start_seconds": 3.26,
+        "end_seconds": 4.14
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "fais",
+        "start_seconds": 0.0,
+        "end_seconds": 0.48
+      },
+      {
+        "word": "sonner",
+        "start_seconds": 0.48,
+        "end_seconds": 0.96
+      },
+      {
+        "word": "la",
+        "start_seconds": 0.96,
+        "end_seconds": 1.14
+      },
+      {
+        "word": "syren",
+        "start_seconds": 1.14,
+        "end_seconds": 1.64
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.4734509972965016,
+        "no_speech_prob": 0.00794955249875784,
+        "compression_ratio": 0.8852459016393442,
+        "word_probabilities": [
+          0.85009765625,
+          0.994140625,
+          0.5341796875,
+          0.97705078125,
+          0.96630859375,
+          0.168212890625,
+          0.89501953125,
+          0.974609375,
+          0.5615234375
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6723224466497247,
+        "no_speech_prob": 0.11452939361333847,
+        "compression_ratio": 0.7241379310344828,
+        "word_probabilities": [
+          0.58349609375,
+          0.701171875,
+          0.79150390625,
+          0.31591796875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 143,
+    "extracted_voiced_seconds": 1.43,
+    "unremoved_raw_target_tokens": [
+      "fait",
+      "sonner",
+      "la",
+      "syrenne"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "fait",
+      "sonner",
+      "la",
+      "syrenne"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 4.160181405895692,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.72,
+      "search_end_seconds": 2.46,
+      "prefix_last_word_end_seconds": 1.72,
+      "target_first_word_start_seconds": 2.46,
+      "gap_seconds": 0.5687074829931973,
+      "verified_silence_start_seconds": 1.8397278911564625,
+      "verified_silence_end_seconds": 2.40843537414966,
+      "gap_rms_dbfs": -54.126,
+      "gap_peak_dbfs": -36.26,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.1240816326530614,
+      "cut_sample": 46836,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 4065,
+      "removed_seconds": 0.18435374149659864,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 50901,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/activities/sottomarino_giramondo/audio/fr/sub_btn_horn.wav.delivery.wav",
+      "sha256": "e1420d452c9d4298864ddda7e0e5ccd2b908e90379ce54d730addda00858c266"
+    }
+  },
   "output": {
     "path": "activities/sottomarino_giramondo/audio/fr/sub_btn_horn.wav",
-    "bytes": 70646,
-    "sha256": "3452c00c3edf7a191e707c0ba71cff3e2a942ee8bb27259f65fb547a84c0e1cb"
+    "sha256": "8e6f785e40e553e9a9365de6d3a98822143150a0483dd9d2158fe22db83b65b9",
+    "bytes": 81740
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "fc821ef26912edb9ac1462cf781ff6ac1a68e8de4eccbd3b989bd4a6d508023c",
+    "original_sha256": "fca847e039d6c8972c50e46e3996231e483df196c9cbbdc5c6c4557c692fc28d",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

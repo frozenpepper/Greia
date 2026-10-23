@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T13:39:24.809362+00:00",
+  "created_utc": "2026-10-23T01:50:49.325192+00:00",
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
@@ -8,17 +8,22 @@
     "text": "Nello stagno",
     "cue_id": "greia.requested.place_pond.it",
     "output": "activities/nascondino_bosco/assets/audio/it/place_pond.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. A short, lively reaction: expressive and clear, one breath, no extra words."
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic"
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.lilli.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "job_id": "20261020-153917-6d1fc4b6",
-    "idempotency_key": "greia-1f76b8dac908439c9052a30b9d821014",
+    "job_id": "20261023-035034-b34dcb8c",
+    "idempotency_key": "greia-96f14168a7e84c82aa6200d93dbf3282",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +46,327 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2226351050,
+    "script_seed": 1605605310,
     "language_direction": "Italian",
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. A short, lively reaction: expressive and clear, one breath, no extra words.",
-    "effective_delivery": "Speak in Italian. Lilli, a sparkly, affectionate storybook unicorn. A short, lively reaction: expressive and clear, one breath, no extra words.",
+    "delivery_prompt": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "effective_delivery": "Speak in Italian. Voce calda e calma. Pronuncia chiara e naturale.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2968801938,
-        "sha256": "89691abb08858d627e20d689b3d0dd55e5269fac87bb0931ebd412cecdb5a723",
+        "seed": 3829283459,
+        "sha256": "5fde1baf9959e510d442d762e7384a5f5480920a1b4c633ed0ed3c6c79d8c730",
         "generation": {
-          "elapsed_seconds": 6.748570707975887,
+          "elapsed_seconds": 12.784340582991717,
           "model_load_seconds": 0.0,
-          "rtf": 5.27163445486985,
-          "peak_memory_gb": 8.44494914
+          "rtf": 4.438750274749743,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-audio-parakeet-tdt-v3",
+    "transcript": "Nello stagno!",
+    "score": 1.0,
+    "detail": "Delivered target transcribed and screened; human listening remains pending",
+    "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+    "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+    "flags": [],
+    "metrics": {
+      "duration_seconds": 1.1001814058956916,
+      "rms_dbfs": -28.76,
+      "peak": 0.22153,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.08,
+      "trailing_silence_seconds": 0.2,
+      "longest_internal_pause_seconds": 0.06
+    }
   },
   "attempts": 1,
   "output": {
     "path": "activities/nascondino_bosco/assets/audio/it/place_pond.wav",
-    "bytes": 56534,
-    "sha256": "1090b6418a6590b5685a5aa52d502242db11ba26408d9a89e009bf39f005261d"
+    "bytes": 48596,
+    "sha256": "da4a9b6b90bec629fb99be1c96887fff27005252fc8568f643cf169ff654a072"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "short_phrase": {
+    "mode": "automatic-carrier",
+    "composition_policy": "natural-context-period-v1",
+    "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/bf35f77003834ed1970f88613509ad7a",
+    "prefix": "Parliamo con calma insieme.",
+    "composite_text": "Parliamo con calma insieme.\n\nNello stagno",
+    "effective_delivery": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "extraction": {
+      "schema_version": 1,
+      "algorithm_version": "greia-spoken-carrier-extractor-v7",
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "status": "EXTRACTED_PENDING_LISTENING",
+      "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/bf35f77003834ed1970f88613509ad7a/attempt-01/raw.wav",
+      "source_sha256": "5fde1baf9959e510d442d762e7384a5f5480920a1b4c633ed0ed3c6c79d8c730",
+      "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/bf35f77003834ed1970f88613509ad7a/attempt-01/target.wav",
+      "output_sha256": "429c9e63f3a3377c756a4d400d6b9dc6695b7b5b845a5e6a18ba50b7991d5f90",
+      "output_bytes": 105660,
+      "locale": "it",
+      "prefix": "Parliamo con calma insieme.",
+      "target": "Nello stagno",
+      "remove_first_words": 4,
+      "ignore_accents": true,
+      "target_verification_requested": "warn",
+      "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+      "target_comparison_score": 1.0,
+      "target_word_count_matches": true,
+      "target_numbers_match": true,
+      "target_comparison_flags": [],
+      "target_transcript_warning": false,
+      "recognizer": "mlx-audio-parakeet-tdt-v3",
+      "recognizer_version": "0.5.0",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "extracted_transcript": "Nello stagno!",
+      "expected_target_tokens": [
+        "nello",
+        "stagno"
+      ],
+      "extracted_target_tokens": [
+        "nello",
+        "stagno"
+      ],
+      "extracted_target_exact_match": true,
+      "transcription_settings": {
+        "language_detection": "automatic",
+        "expected_text_prompt": null,
+        "timestamps": "model-provided-token-timestamps"
+      },
+      "sample_rate": 48000,
+      "duration_seconds": 2.8801666666666668,
+      "boundary": {
+        "search_strategy": "target-only-global-quiet-run-v7",
+        "verified_silence_start_seconds": 1.68,
+        "verified_silence_end_seconds": 1.88,
+        "verified_silence_duration_seconds": 0.2,
+        "cut_sample": 85440,
+        "cut_time_seconds": 1.78,
+        "padding_seconds": 0.1,
+        "quiet_run_start_sample": 80640,
+        "quiet_run_end_sample": 90240,
+        "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+      },
+      "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/bf35f77003834ed1970f88613509ad7a/attempt-01/target.wav.search/99fcfef325b64b639a3942a9bf0ae04b",
+      "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/bf35f77003834ed1970f88613509ad7a/attempt-01/target.wav.search/99fcfef325b64b639a3942a9bf0ae04b/search.json",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/bf35f77003834ed1970f88613509ad7a/attempt-01/raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "3f8dc5637e3c1aba0330bf3bb268b956dd91965728e027711544ea247f21d338",
+      "candidate_sha256": "429c9e63f3a3377c756a4d400d6b9dc6695b7b5b845a5e6a18ba50b7991d5f90",
+      "candidate_id": "candidate-01",
+      "candidate_count": 1,
+      "qualifying_quiet_run_count": 1,
+      "candidate_results": [
+        {
+          "candidate_id": "candidate-01",
+          "quiet_run": {
+            "start_sample": 80640,
+            "end_sample": 90240,
+            "start_seconds": 1.68,
+            "end_seconds": 1.88,
+            "duration_seconds": 0.2
+          },
+          "cut_sample": 85440,
+          "cut_time_seconds": 1.78,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/bf35f77003834ed1970f88613509ad7a/attempt-01/target.wav.search/99fcfef325b64b639a3942a9bf0ae04b/candidate-01.wav",
+          "preceding_voiced_seconds": 1.51,
+          "retained_voiced_seconds": 0.72,
+          "retained_duration_seconds": 1.1001666666666667,
+          "candidate_sha256": "429c9e63f3a3377c756a4d400d6b9dc6695b7b5b845a5e6a18ba50b7991d5f90",
+          "extracted_transcript": "Nello stagno!",
+          "canonical_transcript_tokens": [
+            "nello",
+            "stagno"
+          ],
+          "exact_target_match": true,
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": true,
+          "asr_segment_count": 1
+        }
+      ],
+      "human_review": "PENDING",
+      "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+      "delivery": {
+        "policy": "verified-carrier-gap-delivery-v1",
+        "removed_frames": 0,
+        "removed_seconds": 0.0,
+        "retained_verified_quiet_seconds": 0.1,
+        "raw_delivery_start_sample": 85440,
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/bf35f77003834ed1970f88613509ad7a/attempt-01/delivery-target.wav",
+        "sha256": "429c9e63f3a3377c756a4d400d6b9dc6695b7b5b845a5e6a18ba50b7991d5f90"
+      }
+    },
+    "quality": {
+      "disposition": "PASS",
+      "score": 1.0,
+      "transcript": "Nello stagno!",
+      "metrics": {
+        "duration_seconds": 1.1001814058956916,
+        "rms_dbfs": -28.76,
+        "peak": 0.22153,
+        "clipped_fraction": 0.0,
+        "leading_silence_seconds": 0.08,
+        "trailing_silence_seconds": 0.2,
+        "longest_internal_pause_seconds": 0.06
+      },
+      "flags": [],
+      "ignore_accents": true,
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "detail": "Delivered target transcribed and screened; human listening remains pending"
+    },
+    "history": [
+      {
+        "attempt": 1,
+        "status": "PASS",
+        "quality": {
+          "disposition": "PASS",
+          "score": 1.0,
+          "transcript": "Nello stagno!",
+          "metrics": {
+            "duration_seconds": 1.1001814058956916,
+            "rms_dbfs": -28.76,
+            "peak": 0.22153,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.08,
+            "trailing_silence_seconds": 0.2,
+            "longest_internal_pause_seconds": 0.06
+          },
+          "flags": [],
+          "ignore_accents": true,
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "detail": "Delivered target transcribed and screened; human listening remains pending"
+        },
+        "extraction": {
+          "schema_version": 1,
+          "algorithm_version": "greia-spoken-carrier-extractor-v7",
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "status": "EXTRACTED_PENDING_LISTENING",
+          "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/bf35f77003834ed1970f88613509ad7a/attempt-01/raw.wav",
+          "source_sha256": "5fde1baf9959e510d442d762e7384a5f5480920a1b4c633ed0ed3c6c79d8c730",
+          "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/bf35f77003834ed1970f88613509ad7a/attempt-01/target.wav",
+          "output_sha256": "429c9e63f3a3377c756a4d400d6b9dc6695b7b5b845a5e6a18ba50b7991d5f90",
+          "output_bytes": 105660,
+          "locale": "it",
+          "prefix": "Parliamo con calma insieme.",
+          "target": "Nello stagno",
+          "remove_first_words": 4,
+          "ignore_accents": true,
+          "target_verification_requested": "warn",
+          "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_transcript_warning": false,
+          "recognizer": "mlx-audio-parakeet-tdt-v3",
+          "recognizer_version": "0.5.0",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "extracted_transcript": "Nello stagno!",
+          "expected_target_tokens": [
+            "nello",
+            "stagno"
+          ],
+          "extracted_target_tokens": [
+            "nello",
+            "stagno"
+          ],
+          "extracted_target_exact_match": true,
+          "transcription_settings": {
+            "language_detection": "automatic",
+            "expected_text_prompt": null,
+            "timestamps": "model-provided-token-timestamps"
+          },
+          "sample_rate": 48000,
+          "duration_seconds": 2.8801666666666668,
+          "boundary": {
+            "search_strategy": "target-only-global-quiet-run-v7",
+            "verified_silence_start_seconds": 1.68,
+            "verified_silence_end_seconds": 1.88,
+            "verified_silence_duration_seconds": 0.2,
+            "cut_sample": 85440,
+            "cut_time_seconds": 1.78,
+            "padding_seconds": 0.1,
+            "quiet_run_start_sample": 80640,
+            "quiet_run_end_sample": 90240,
+            "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+          },
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/bf35f77003834ed1970f88613509ad7a/attempt-01/target.wav.search/99fcfef325b64b639a3942a9bf0ae04b",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/bf35f77003834ed1970f88613509ad7a/attempt-01/target.wav.search/99fcfef325b64b639a3942a9bf0ae04b/search.json",
+          "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/bf35f77003834ed1970f88613509ad7a/attempt-01/raw.wav.receipt.json",
+          "source_provider_receipt_sha256": "3f8dc5637e3c1aba0330bf3bb268b956dd91965728e027711544ea247f21d338",
+          "candidate_sha256": "429c9e63f3a3377c756a4d400d6b9dc6695b7b5b845a5e6a18ba50b7991d5f90",
+          "candidate_id": "candidate-01",
+          "candidate_count": 1,
+          "qualifying_quiet_run_count": 1,
+          "candidate_results": [
+            {
+              "candidate_id": "candidate-01",
+              "quiet_run": {
+                "start_sample": 80640,
+                "end_sample": 90240,
+                "start_seconds": 1.68,
+                "end_seconds": 1.88,
+                "duration_seconds": 0.2
+              },
+              "cut_sample": 85440,
+              "cut_time_seconds": 1.78,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/bf35f77003834ed1970f88613509ad7a/attempt-01/target.wav.search/99fcfef325b64b639a3942a9bf0ae04b/candidate-01.wav",
+              "preceding_voiced_seconds": 1.51,
+              "retained_voiced_seconds": 0.72,
+              "retained_duration_seconds": 1.1001666666666667,
+              "candidate_sha256": "429c9e63f3a3377c756a4d400d6b9dc6695b7b5b845a5e6a18ba50b7991d5f90",
+              "extracted_transcript": "Nello stagno!",
+              "canonical_transcript_tokens": [
+                "nello",
+                "stagno"
+              ],
+              "exact_target_match": true,
+              "target_comparison_score": 1.0,
+              "target_word_count_matches": true,
+              "target_numbers_match": true,
+              "target_comparison_flags": [],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": true,
+              "asr_segment_count": 1
+            }
+          ],
+          "human_review": "PENDING",
+          "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+          "delivery": {
+            "policy": "verified-carrier-gap-delivery-v1",
+            "removed_frames": 0,
+            "removed_seconds": 0.0,
+            "retained_verified_quiet_seconds": 0.1,
+            "raw_delivery_start_sample": 85440,
+            "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/bf35f77003834ed1970f88613509ad7a/attempt-01/delivery-target.wav",
+            "sha256": "429c9e63f3a3377c756a4d400d6b9dc6695b7b5b845a5e6a18ba50b7991d5f90"
+          }
+        },
+        "candidate": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/bf35f77003834ed1970f88613509ad7a/attempt-01/candidate.wav"
+      }
+    ]
+  },
   "corpus_replacement": {
-    "original_sha256": "be8c5e835fa71d4d5647efb79b5f33c4ea8b7e27b20b93c1ac3b2f5bf7300375",
+    "original_sha256": "b56f8f7b1fb21dc9f91253126d34a552d38a4b77c9d3e9ef0d35a37b2e62a6fe",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

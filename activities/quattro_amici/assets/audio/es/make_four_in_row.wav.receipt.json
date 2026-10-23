@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T14:15:16.326059+00:00",
+  "created_utc": "2026-10-21T17:02:27.595530+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "¡Haz cuatro en raya!",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. ¡Haz cuatro en raya!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "¡Haz cuatro en raya!",
+    "cue_id": "greia.requested.make_four_in_row.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "¡Haz cuatro en raya!",
     "cue_id": "greia.requested.make_four_in_row.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/quattro_amici/assets/audio/es/make_four_in_row.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-161510-dfa5d59c",
-    "idempotency_key": "greia-0e3fc6cc5fbb41f98ec8e39e52d283a7",
+    "job_id": "20261021-190208-7fa81546",
+    "idempotency_key": "greia-81e918840e5a419d93c5aea74519b7e5",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,187 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2897972864,
+    "script_seed": 924991644,
     "language_direction": "Spanish",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in Spanish. Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 4134415924,
-        "sha256": "1a6725393537414dd514dc616900a1b50d1e80df5779d5eeecef61f67b785020",
+        "seed": 1846119460,
+        "sha256": "24ad32787440309a4477dd321c207ee8b0918a854592b03478924b36337f792b",
         "generation": {
-          "elapsed_seconds": 5.899943125026766,
+          "elapsed_seconds": 18.172804874993744,
           "model_load_seconds": 0.0,
-          "rtf": 4.6087304713137085,
-          "peak_memory_gb": 8.44494914
+          "rtf": 4.056278756369275,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8918,
+    "transcript": "Has 4 en raya.",
+    "metrics": {
+      "duration_seconds": 1.4872108843537415,
+      "rms_dbfs": -31.45,
+      "peak": 0.21741,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.08,
+      "trailing_silence_seconds": 0.06,
+      "longest_internal_pause_seconds": 0.02
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v1",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/quattro_amici/assets/audio/es/make_four_in_row.wav.raw.wav",
+    "sha256": "8d96e535193f02084128339cdab1fcb21c712201a7258254d210d4d7f9a1811b",
+    "receipt_sha256": "5d2b93d1fba9a2e183e5d77b0946ee83567ef982b6c84ac13f4054b98bd4c3af"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/quattro_amici/assets/audio/es/make_four_in_row.wav.extracted.wav",
+    "sha256": "06887046ec8055b28ec75bcda573505ba7d6428a76bbbab94d28cfa0a0bcf4bb"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/quattro_amici/assets/audio/es/make_four_in_row.wav.delivery.wav",
+    "sha256": "06887046ec8055b28ec75bcda573505ba7d6428a76bbbab94d28cfa0a0bcf4bb"
+  },
+  "extraction": {
+    "schema_version": 1,
+    "algorithm_version": "greia-spoken-carrier-extractor-v7",
+    "comparison_policy": "locale-number-tokens-v1",
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-raw/activities/quattro_amici/assets/audio/es/make_four_in_row.wav.raw.wav",
+    "source_sha256": "8d96e535193f02084128339cdab1fcb21c712201a7258254d210d4d7f9a1811b",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/quattro_amici/assets/audio/es/make_four_in_row.wav.extracted.wav",
+    "output_sha256": "06887046ec8055b28ec75bcda573505ba7d6428a76bbbab94d28cfa0a0bcf4bb",
+    "output_bytes": 65630,
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "¡Haz cuatro en raya!",
+    "remove_first_words": 5,
+    "ignore_accents": true,
+    "target_verification_requested": "warn",
+    "target_verification_policy": "warn",
+    "target_comparison_score": 0.8918,
+    "target_word_count_matches": true,
+    "target_numbers_match": true,
+    "target_comparison_flags": [],
+    "target_transcript_warning": true,
+    "recognizer": "mlx-whisper-base",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extracted_transcript": "Has 4 en raya.",
+    "expected_target_tokens": [
+      "haz",
+      "<num:4>",
+      "en",
+      "raya"
+    ],
+    "extracted_target_tokens": [
+      "has",
+      "<num:4>",
+      "en",
+      "raya"
+    ],
+    "extracted_target_exact_match": false,
+    "transcription_settings": {
+      "language": "es",
+      "initial_prompt": null,
+      "word_timestamps": true,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "sample_rate": 22050,
+    "duration_seconds": 4.480181405895691,
+    "boundary": {
+      "search_strategy": "target-only-global-quiet-run-v7",
+      "verified_silence_start_seconds": 2.3147392290249433,
+      "verified_silence_end_seconds": 3.0929705215419503,
+      "verified_silence_duration_seconds": 0.7782312925170068,
+      "cut_sample": 65995,
+      "cut_time_seconds": 2.99297052154195,
+      "padding_seconds": 0.1,
+      "quiet_run_start_sample": 51040,
+      "quiet_run_end_sample": 68200,
+      "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+    },
+    "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/quattro_amici/assets/audio/es/make_four_in_row.wav.extracted.wav.search/85b2dbdfe1634e3e8d53dbef35490e24",
+    "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/quattro_amici/assets/audio/es/make_four_in_row.wav.extracted.wav.search/85b2dbdfe1634e3e8d53dbef35490e24/search.json",
+    "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-raw/activities/quattro_amici/assets/audio/es/make_four_in_row.wav.raw.wav.receipt.json",
+    "source_provider_receipt_sha256": "5d2b93d1fba9a2e183e5d77b0946ee83567ef982b6c84ac13f4054b98bd4c3af",
+    "candidate_sha256": "06887046ec8055b28ec75bcda573505ba7d6428a76bbbab94d28cfa0a0bcf4bb",
+    "candidate_id": "candidate-01",
+    "candidate_count": 1,
+    "qualifying_quiet_run_count": 1,
+    "candidate_results": [
+      {
+        "candidate_id": "candidate-01",
+        "quiet_run": {
+          "start_sample": 51040,
+          "end_sample": 68200,
+          "start_seconds": 2.3147392290249433,
+          "end_seconds": 3.0929705215419503,
+          "duration_seconds": 0.7782312925170068
+        },
+        "cut_sample": 65995,
+        "cut_time_seconds": 2.99297052154195,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/quattro_amici/assets/audio/es/make_four_in_row.wav.extracted.wav.search/85b2dbdfe1634e3e8d53dbef35490e24/candidate-01.wav",
+        "preceding_voiced_seconds": 1.69,
+        "retained_voiced_seconds": 1.14,
+        "retained_duration_seconds": 1.4872108843537415,
+        "candidate_sha256": "06887046ec8055b28ec75bcda573505ba7d6428a76bbbab94d28cfa0a0bcf4bb",
+        "extracted_transcript": "Has 4 en raya.",
+        "canonical_transcript_tokens": [
+          "has",
+          "<num:4>",
+          "en",
+          "raya"
+        ],
+        "exact_target_match": false,
+        "target_comparison_score": 0.8918,
+        "target_word_count_matches": true,
+        "target_numbers_match": true,
+        "target_comparison_flags": [],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": true,
+        "asr_segment_count": 1
+      }
+    ],
+    "human_review": "PENDING",
+    "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+    "target_verification_effective_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+    "target_verification_warning": true,
+    "saved_recovery_policy": "target-only-v7-saved-v1",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 0,
+      "removed_seconds": 0.0,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 65995,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/quattro_amici/assets/audio/es/make_four_in_row.wav.delivery.wav",
+      "sha256": "06887046ec8055b28ec75bcda573505ba7d6428a76bbbab94d28cfa0a0bcf4bb"
+    }
+  },
   "output": {
     "path": "activities/quattro_amici/assets/audio/es/make_four_in_row.wav",
-    "bytes": 56534,
-    "sha256": "f1152653c82ee38dd8322c8ff62848e9354ef27428cb132d5462a0ae35856498"
+    "sha256": "439b608a939cd4949d6bca3ace4eef4e16d025c87aac470d26671be9b8eb5fc9",
+    "bytes": 65664
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "5f5519cab51fb94eb6c91bba28b055c1a0ee65ab7559dfd7005b71fdb5d4e9b0",
+    "original_sha256": "25128175a5582096e1510209cb52dff98f5fb5e756631ca0e084f57718bc3531",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

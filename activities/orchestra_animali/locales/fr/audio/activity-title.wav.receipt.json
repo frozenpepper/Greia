@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T13:58:58.747595+00:00",
+  "created_utc": "2026-10-21T16:56:33.428289+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "Orchestre magique",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. Orchestre magique",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Orchestre magique",
+    "cue_id": "orchestra_animali.title.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Orchestre magique",
     "cue_id": "orchestra_animali.title.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/orchestra_animali/locales/fr/audio/activity-title.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-155844-49372f26",
-    "idempotency_key": "greia-f9fe82be7c6c48bdaf93c5cd5910ffaa",
+    "job_id": "20261021-185619-0d9d02ed",
+    "idempotency_key": "greia-58466f6cafa447e8860868d827fccfb2",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,205 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3204831367,
+    "script_seed": 4290296532,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3978533729,
-        "sha256": "055dc70b0f205e2a58f1a5eeb1f506c7f0945ee8d1894dfe66c231385ec3ca0e",
+        "seed": 4029790419,
+        "sha256": "867a4f6a6386cc623538728640d21262ad9154a82e0ded42e73f5ccf83a44e2b",
         "generation": {
-          "elapsed_seconds": 13.195184165961109,
+          "elapsed_seconds": 12.202307707993896,
           "model_load_seconds": 0.0,
-          "rtf": 11.779661508074193,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.466400560956554,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Orchestre magique",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/orchestra_animali/locales/fr/audio/activity-title.wav.raw.wav",
+    "sha256": "1e3ef20fe31bd1098eb22d14d7bd74f9f46b399b71d87918a3d6b44b56e9a06d",
+    "receipt_sha256": "7aae5097d82f8eae903106a743d9d703d25f82a7fb4ed507cf17aab1067f9fc6"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/orchestra_animali/locales/fr/audio/activity-title.wav.extracted.wav",
+    "sha256": "8db476aaacc336e92e397c9450afa5768452f719e944db8dc2d4f81fce461d82"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/orchestra_animali/locales/fr/audio/activity-title.wav.raw.wav",
+    "source_sha256": "1e3ef20fe31bd1098eb22d14d7bd74f9f46b399b71d87918a3d6b44b56e9a06d",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/orchestra_animali/locales/fr/audio/activity-title.wav.extracted.wav",
+    "output_sha256": "8db476aaacc336e92e397c9450afa5768452f719e944db8dc2d4f81fce461d82",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Orchestre magique",
+      "locale": "fr",
+      "cue_id": "orchestra_animali.title.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/orchestra_animali/locales/fr/audio/activity-title.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "7aae5097d82f8eae903106a743d9d703d25f82a7fb4ed507cf17aab1067f9fc6"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "Orchestre magique",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français, orchestre magique.",
+    "extracted_transcript": " Orchestre magique",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.48
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.48,
+        "end_seconds": 0.8
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.8,
+        "end_seconds": 1.04
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.04,
+        "end_seconds": 1.14
+      },
+      {
+        "word": "français",
+        "start_seconds": 1.14,
+        "end_seconds": 1.64
+      },
+      {
+        "word": "orchestre",
+        "start_seconds": 2.16,
+        "end_seconds": 2.88
+      },
+      {
+        "word": "magique",
+        "start_seconds": 2.88,
+        "end_seconds": 3.34
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "orchestre",
+        "start_seconds": 0.0,
+        "end_seconds": 1.0
+      },
+      {
+        "word": "magique",
+        "start_seconds": 1.0,
+        "end_seconds": 1.48
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.4504375457763672,
+        "no_speech_prob": 0.01508542150259018,
+        "compression_ratio": 0.875,
+        "word_probabilities": [
+          0.681640625,
+          0.96044921875,
+          0.97265625,
+          0.7646484375,
+          0.94287109375,
+          0.826171875,
+          0.84375
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.652382493019104,
+        "no_speech_prob": 0.12490478903055191,
+        "compression_ratio": 0.68,
+        "word_probabilities": [
+          0.6181640625,
+          0.73583984375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 85,
+    "extracted_voiced_seconds": 0.85,
+    "unremoved_raw_target_tokens": [
+      "orchestre",
+      "magique"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "orchestre",
+      "magique"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.5201814058956917,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.64,
+      "target_first_word_start_seconds": 2.16,
+      "gap_seconds": 0.4090702947845805,
+      "verified_silence_start_seconds": 1.6998639455782314,
+      "verified_silence_end_seconds": 2.108934240362812,
+      "gap_rms_dbfs": -61.358,
+      "gap_peak_dbfs": -44.074,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.9043990929705217,
+      "cut_sample": 41992,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/orchestra_animali/locales/fr/audio/activity-title.wav",
-    "bytes": 49478,
-    "sha256": "bc8a7cda32dcf6871c4aa41439076e80f39be8a445f229be08ac4687c6ac737c"
+    "sha256": "38328783377e4565f6bb3a7352f362062b6ff040340aa549a980e416a38d4d17",
+    "bytes": 71334
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "cb0c00f461fa49976647365ec838fbdc4e85eacfd6ca53560be9620c4f6aed7e",
+    "original_sha256": "bc8a7cda32dcf6871c4aa41439076e80f39be8a445f229be08ac4687c6ac737c",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

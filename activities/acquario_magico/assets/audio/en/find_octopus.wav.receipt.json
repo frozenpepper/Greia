@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T07:48:02.985818+00:00",
+  "created_utc": "2026-10-21T14:50:43.448177+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Listen to this phrase in English.",
+    "prefix_word_count": 6,
+    "target": "Find the octopus",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Listen to this phrase in English. Find the octopus",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Find the octopus",
+    "cue_id": "greia.requested.find_octopus.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "Find the octopus",
     "cue_id": "greia.requested.find_octopus.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/acquario_magico/assets/audio/en/find_octopus.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.tito.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261021-094745-eac837e4",
-    "idempotency_key": "greia-3075d5a1dee7478b938af3a2142e6c47",
+    "job_id": "20261021-165028-a513b9bc",
+    "idempotency_key": "greia-2bde81ec1c194a369ad4a4693add71dc",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,225 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3008138978,
+    "script_seed": 2981106526,
     "language_direction": "English",
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in English. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in English. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3087761295,
-        "sha256": "fd28365e72dc62dc0c9fda4dc75ebc5ed7640252017e9a33b95b0f8e555bfc5d",
+        "seed": 1735259759,
+        "sha256": "99dbfe61af7618dee4c690b56c6ebdce82b94703d1c09522c27016e65c0aa863",
         "generation": {
-          "elapsed_seconds": 6.3042533330008155,
+          "elapsed_seconds": 14.612287333002314,
           "model_load_seconds": 0.0,
-          "rtf": 4.3774470545081465,
-          "peak_memory_gb": 7.648166916
+          "rtf": 3.6529196282660674,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Find the octopus.",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/acquario_magico/assets/audio/en/find_octopus.wav.raw.wav",
+    "sha256": "46414b05b0942d5ad2f596c4ca4abe2113e694be13c640f558afa9aad93bf422",
+    "receipt_sha256": "78ce1c399aee29815a77ea98dba51c6c1a75b0cc9dd3e6ba6b61ee0f3f14838e"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/acquario_magico/assets/audio/en/find_octopus.wav.extracted.wav",
+    "sha256": "9cc91e18e6ebc24c45bea0f73bcfeba6eacbf049d9af8ff476d8c67906d29ad0"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-corpus-v1/run/carrier-raw/activities/acquario_magico/assets/audio/en/find_octopus.wav.raw.wav",
+    "source_sha256": "46414b05b0942d5ad2f596c4ca4abe2113e694be13c640f558afa9aad93bf422",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-corpus-v1/run/carrier-extracted/activities/acquario_magico/assets/audio/en/find_octopus.wav.extracted.wav",
+    "output_sha256": "9cc91e18e6ebc24c45bea0f73bcfeba6eacbf049d9af8ff476d8c67906d29ad0",
+    "target_request": {
+      "speaker": "tito",
+      "kind": "character_dialogue",
+      "text": "Find the octopus",
+      "locale": "en",
+      "cue_id": "greia.requested.find_octopus.en",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-corpus-v1/run/carrier-raw/activities/acquario_magico/assets/audio/en/find_octopus.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "78ce1c399aee29815a77ea98dba51c6c1a75b0cc9dd3e6ba6b61ee0f3f14838e"
+    },
+    "locale": "en",
+    "prefix": "Listen to this phrase in English.",
+    "target": "Find the octopus",
+    "remove_first_words": 6,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Listen to this phrase in English. Find the octopus.",
+    "extracted_transcript": " Find the octopus.",
+    "raw_word_alignment": [
+      {
+        "word": "listen",
+        "start_seconds": 0.0,
+        "end_seconds": 0.36
+      },
+      {
+        "word": "to",
+        "start_seconds": 0.36,
+        "end_seconds": 0.64
+      },
+      {
+        "word": "this",
+        "start_seconds": 0.64,
+        "end_seconds": 0.8
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.8,
+        "end_seconds": 1.2
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.2,
+        "end_seconds": 1.52
+      },
+      {
+        "word": "english",
+        "start_seconds": 1.52,
+        "end_seconds": 2.0
+      },
+      {
+        "word": "find",
+        "start_seconds": 2.34,
+        "end_seconds": 2.9
+      },
+      {
+        "word": "the",
+        "start_seconds": 2.9,
+        "end_seconds": 3.16
+      },
+      {
+        "word": "octopus",
+        "start_seconds": 3.16,
+        "end_seconds": 3.5
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "find",
+        "start_seconds": 0.0,
+        "end_seconds": 0.74
+      },
+      {
+        "word": "the",
+        "start_seconds": 0.74,
+        "end_seconds": 0.98
+      },
+      {
+        "word": "octopus",
+        "start_seconds": 0.98,
+        "end_seconds": 1.32
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.31760692596435547,
+        "no_speech_prob": 0.0056419093161821365,
+        "compression_ratio": 0.8793103448275862,
+        "word_probabilities": [
+          0.89013671875,
+          0.994140625,
+          0.9658203125,
+          0.998046875,
+          0.98388671875,
+          0.99169921875,
+          0.9794921875,
+          0.9072265625,
+          0.9306640625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.4823722839355469,
+        "no_speech_prob": 0.04583734646439552,
+        "compression_ratio": 0.68,
+        "word_probabilities": [
+          0.88037109375,
+          0.9423828125,
+          0.88330078125
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 96,
+    "extracted_voiced_seconds": 0.96,
+    "unremoved_raw_target_tokens": [
+      "find",
+      "the",
+      "octopus"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "find",
+      "the",
+      "octopus"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 4.000181405895692,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 2.0,
+      "target_first_word_start_seconds": 2.34,
+      "gap_seconds": 0.22947845804988662,
+      "verified_silence_start_seconds": 2.0598639455782313,
+      "verified_silence_end_seconds": 2.289342403628118,
+      "gap_rms_dbfs": -83.998,
+      "gap_peak_dbfs": -69.481,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.174603174603175,
+      "cut_sample": 47950,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/acquario_magico/assets/audio/en/find_octopus.wav",
-    "bytes": 63590,
-    "sha256": "e712d0b3be9bb849e9a26b586b9d283ac0b6ab690a7fc8405520f291d18c0011"
+    "sha256": "e228297d6b6ffcbed594d6f5113d9ec04dfa006741d9dddd1bce8a5560f53e7a",
+    "bytes": 80586
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "3d24459439f1ebac57e68d7e8f7aa0a4f2d81c5cbd88217a8cbdc733d0145ac7",
+    "original_sha256": "e712d0b3be9bb849e9a26b586b9d283ac0b6ab690a7fc8405520f291d18c0011",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

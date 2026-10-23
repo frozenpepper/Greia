@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:19:35.478603+00:00",
+  "created_utc": "2026-10-21T16:12:00.705762+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "rana",
+    "target_word_count": 1,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. rana",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "rana",
+    "cue_id": "festa_delle_rime.rana.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "rana",
     "cue_id": "festa_delle_rime.rana.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/festa_delle_rime/assets/audio/it/rana.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Let the ending of the word ring out clearly so the rhyme is easy to hear."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-141931-9ec042e1",
-    "idempotency_key": "greia-cc8d32a5218c4f8da0ed926a4064fbf9",
+    "job_id": "20261021-181143-5a9a2978",
+    "idempotency_key": "greia-48604feaafb34602aaa2c50012385bda",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,178 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1116211865,
+    "script_seed": 88396864,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Let the ending of the word ring out clearly so the rhyme is easy to hear.",
-    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Let the ending of the word ring out clearly so the rhyme is easy to hear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 831978352,
-        "sha256": "739118d9b5a94178486fbc0430029e5ef5dd27f261a2248d08cb4a59aec92dae",
+        "seed": 3828032298,
+        "sha256": "7f5a7c9b0bb7e01e5236008415bc43de22a862531b386e674ccf5df7cc2f2ba0",
         "generation": {
-          "elapsed_seconds": 3.252239291963633,
+          "elapsed_seconds": 16.511830249990453,
           "model_load_seconds": 0.0,
-          "rtf": 4.064452354047448,
-          "peak_memory_gb": 8.44494914
+          "rtf": 4.48670719170068,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": "Rana.",
+    "metrics": {
+      "duration_seconds": 0.6473015873015873,
+      "rms_dbfs": -33.44,
+      "peak": 0.18048,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.1,
+      "trailing_silence_seconds": 0.14,
+      "longest_internal_pause_seconds": 0.0
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v1",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/festa_delle_rime/assets/audio/it/rana.wav.raw.wav",
+    "sha256": "d59d6d1d4967056e020add0e4865d010deb08149798600b16d79f06231f3c047",
+    "receipt_sha256": "9482d9934f37a2579a562bbce4db73a422dd0efdfa4a75411a8db773ff5821fc"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/festa_delle_rime/assets/audio/it/rana.wav.extracted.wav",
+    "sha256": "f3d19d99e32e1e5df7fc2b9a604356f960a2eb13528cbb5d34fad095a4b8a45c"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/festa_delle_rime/assets/audio/it/rana.wav.delivery.wav",
+    "sha256": "f3d19d99e32e1e5df7fc2b9a604356f960a2eb13528cbb5d34fad095a4b8a45c"
+  },
+  "extraction": {
+    "schema_version": 1,
+    "algorithm_version": "greia-spoken-carrier-extractor-v7",
+    "comparison_policy": "locale-number-tokens-v1",
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-raw/activities/festa_delle_rime/assets/audio/it/rana.wav.raw.wav",
+    "source_sha256": "d59d6d1d4967056e020add0e4865d010deb08149798600b16d79f06231f3c047",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/festa_delle_rime/assets/audio/it/rana.wav.extracted.wav",
+    "output_sha256": "f3d19d99e32e1e5df7fc2b9a604356f960a2eb13528cbb5d34fad095a4b8a45c",
+    "output_bytes": 28590,
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "rana",
+    "remove_first_words": 5,
+    "ignore_accents": true,
+    "target_verification_requested": "warn",
+    "target_verification_policy": "warn",
+    "target_comparison_score": 1.0,
+    "target_word_count_matches": true,
+    "target_numbers_match": true,
+    "target_comparison_flags": [],
+    "target_transcript_warning": false,
+    "recognizer": "mlx-whisper-base",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extracted_transcript": "Rana.",
+    "expected_target_tokens": [
+      "rana"
+    ],
+    "extracted_target_tokens": [
+      "rana"
+    ],
+    "extracted_target_exact_match": true,
+    "transcription_settings": {
+      "language": "it",
+      "initial_prompt": null,
+      "word_timestamps": true,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "sample_rate": 22050,
+    "duration_seconds": 3.6801814058956914,
+    "boundary": {
+      "search_strategy": "target-only-global-quiet-run-v7",
+      "verified_silence_start_seconds": 1.8657596371882086,
+      "verified_silence_end_seconds": 3.1328798185941045,
+      "verified_silence_duration_seconds": 1.2671201814058957,
+      "cut_sample": 66875,
+      "cut_time_seconds": 3.0328798185941044,
+      "padding_seconds": 0.1,
+      "quiet_run_start_sample": 41140,
+      "quiet_run_end_sample": 69080,
+      "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+    },
+    "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/festa_delle_rime/assets/audio/it/rana.wav.extracted.wav.search/57120c15a22143faa523b854bc9aa440",
+    "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/festa_delle_rime/assets/audio/it/rana.wav.extracted.wav.search/57120c15a22143faa523b854bc9aa440/search.json",
+    "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-raw/activities/festa_delle_rime/assets/audio/it/rana.wav.raw.wav.receipt.json",
+    "source_provider_receipt_sha256": "9482d9934f37a2579a562bbce4db73a422dd0efdfa4a75411a8db773ff5821fc",
+    "candidate_sha256": "f3d19d99e32e1e5df7fc2b9a604356f960a2eb13528cbb5d34fad095a4b8a45c",
+    "candidate_id": "candidate-01",
+    "candidate_count": 1,
+    "qualifying_quiet_run_count": 1,
+    "candidate_results": [
+      {
+        "candidate_id": "candidate-01",
+        "quiet_run": {
+          "start_sample": 41140,
+          "end_sample": 69080,
+          "start_seconds": 1.8657596371882086,
+          "end_seconds": 3.1328798185941045,
+          "duration_seconds": 1.2671201814058957
+        },
+        "cut_sample": 66875,
+        "cut_time_seconds": 3.0328798185941044,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/festa_delle_rime/assets/audio/it/rana.wav.extracted.wav.search/57120c15a22143faa523b854bc9aa440/candidate-01.wav",
+        "preceding_voiced_seconds": 1.31,
+        "retained_voiced_seconds": 0.33,
+        "retained_duration_seconds": 0.6473015873015873,
+        "candidate_sha256": "f3d19d99e32e1e5df7fc2b9a604356f960a2eb13528cbb5d34fad095a4b8a45c",
+        "extracted_transcript": "Rana.",
+        "canonical_transcript_tokens": [
+          "rana"
+        ],
+        "exact_target_match": true,
+        "target_comparison_score": 1.0,
+        "target_word_count_matches": true,
+        "target_numbers_match": true,
+        "target_comparison_flags": [],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": true,
+        "asr_segment_count": 1
+      }
+    ],
+    "human_review": "PENDING",
+    "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+    "target_verification_effective_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+    "target_verification_warning": false,
+    "saved_recovery_policy": "target-only-v7-saved-v1",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 0,
+      "removed_seconds": 0.0,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 66875,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/festa_delle_rime/assets/audio/it/rana.wav.delivery.wav",
+      "sha256": "f3d19d99e32e1e5df7fc2b9a604356f960a2eb13528cbb5d34fad095a4b8a45c"
+    }
+  },
   "output": {
     "path": "activities/festa_delle_rime/assets/audio/it/rana.wav",
-    "bytes": 35366,
-    "sha256": "5211d8c87d8b2a7fbb003e3ec0ff7db49fbd36a307c64676bfdc393512d51110"
+    "sha256": "6f815449b4a9f12115e7b72a93f80d73886ee20f8e18056a77ac0aca2b3f5334",
+    "bytes": 28624
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "981050d350bb649b3c6c63cd64190570ebba0f49ff3ea3b2c5079a6ea2d6e5ce",
+    "original_sha256": "7e42201e9366c727f809d918f511255bb3963cd99e3f874600bca20335328436",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

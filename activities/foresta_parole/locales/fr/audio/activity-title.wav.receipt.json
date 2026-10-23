@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:35:37.522525+00:00",
+  "created_utc": "2026-10-21T16:26:40.364708+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "La forêt des mots",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. La forêt des mots",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "La forêt des mots",
+    "cue_id": "foresta_parole.title.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "La forêt des mots",
     "cue_id": "foresta_parole.title.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/foresta_parole/locales/fr/audio/activity-title.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-143520-1cd546d6",
-    "idempotency_key": "greia-cf6689ace8f8440c8ebd4aa4359eec6b",
+    "job_id": "20261021-182624-fbdc30e6",
+    "idempotency_key": "greia-b88f7b9b1dc44b9fa44b90e1339efd8a",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,233 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3038204075,
+    "script_seed": 3151673508,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3084561378,
-        "sha256": "3f73fa22b34fc0ac569bea4d72d28173695b37d66f7fb3da0df44c5ac81fb2ec",
+        "seed": 881627901,
+        "sha256": "00cef1fd9e2a88ad472845284150c0cac29202b6a2231026091ca525935f80e1",
         "generation": {
-          "elapsed_seconds": 16.37344758299878,
+          "elapsed_seconds": 14.519740916992305,
           "model_load_seconds": 0.0,
-          "rtf": 4.872808169138072,
-          "peak_memory_gb": 8.44494914
+          "rtf": 4.537182724959837,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " La chorée des mots",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/foresta_parole/locales/fr/audio/activity-title.wav.raw.wav",
+    "sha256": "76f9c5802670697123ff5ee8dcccbb37b7ca07717430f21092c0db3abe7160ed",
+    "receipt_sha256": "cf508d856d8c31208931372fa8b952441a4edf1d1ec14fdc14d97087ab17d2bd"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/foresta_parole/locales/fr/audio/activity-title.wav.extracted.wav",
+    "sha256": "e2d5b807a8f45d3dcbdfbf24706df680bf8d4dede09ada9cdc4b9ef3cc68e8c9"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/foresta_parole/locales/fr/audio/activity-title.wav.raw.wav",
+    "source_sha256": "76f9c5802670697123ff5ee8dcccbb37b7ca07717430f21092c0db3abe7160ed",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/foresta_parole/locales/fr/audio/activity-title.wav.extracted.wav",
+    "output_sha256": "e2d5b807a8f45d3dcbdfbf24706df680bf8d4dede09ada9cdc4b9ef3cc68e8c9",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "La forêt des mots",
+      "locale": "fr",
+      "cue_id": "foresta_parole.title.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/foresta_parole/locales/fr/audio/activity-title.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "cf508d856d8c31208931372fa8b952441a4edf1d1ec14fdc14d97087ab17d2bd"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "La forêt des mots",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français, la forêt des mots.",
+    "extracted_transcript": " La chorée des mots",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.54
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.54,
+        "end_seconds": 0.82
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.82,
+        "end_seconds": 1.0
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.0,
+        "end_seconds": 1.1
+      },
+      {
+        "word": "français",
+        "start_seconds": 1.1,
+        "end_seconds": 1.54
+      },
+      {
+        "word": "la",
+        "start_seconds": 2.2,
+        "end_seconds": 2.26
+      },
+      {
+        "word": "forêt",
+        "start_seconds": 2.26,
+        "end_seconds": 2.56
+      },
+      {
+        "word": "des",
+        "start_seconds": 2.56,
+        "end_seconds": 2.7
+      },
+      {
+        "word": "mots",
+        "start_seconds": 2.7,
+        "end_seconds": 2.92
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "la",
+        "start_seconds": 0.0,
+        "end_seconds": 0.4
+      },
+      {
+        "word": "chorée",
+        "start_seconds": 0.4,
+        "end_seconds": 0.72
+      },
+      {
+        "word": "des",
+        "start_seconds": 0.72,
+        "end_seconds": 0.84
+      },
+      {
+        "word": "mots",
+        "start_seconds": 0.84,
+        "end_seconds": 1.06
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.34601949055989584,
+        "no_speech_prob": 0.022355681285262108,
+        "compression_ratio": 0.8620689655172413,
+        "word_probabilities": [
+          0.81103515625,
+          0.97265625,
+          0.93017578125,
+          0.8603515625,
+          0.95654296875,
+          0.8466796875,
+          0.89111328125,
+          0.97705078125,
+          0.966796875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6947497129440308,
+        "no_speech_prob": 0.05547717958688736,
+        "compression_ratio": 0.7037037037037037,
+        "word_probabilities": [
+          0.4638671875,
+          0.459228515625,
+          0.93017578125,
+          0.91064453125
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 81,
+    "extracted_voiced_seconds": 0.81,
+    "unremoved_raw_target_tokens": [
+      "la",
+      "forêt",
+      "des",
+      "mots"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "la",
+      "forêt",
+      "des",
+      "mots"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.2001814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.54,
+      "target_first_word_start_seconds": 2.2,
+      "gap_seconds": 0.4988662131519274,
+      "verified_silence_start_seconds": 1.5998639455782313,
+      "verified_silence_end_seconds": 2.0987301587301586,
+      "gap_rms_dbfs": -60.335,
+      "gap_peak_dbfs": -36.867,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.849297052154195,
+      "cut_sample": 40777,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/foresta_parole/locales/fr/audio/activity-title.wav",
-    "bytes": 148262,
-    "sha256": "7a7c61d9aa7c13e3bddf4f1ade9bc194cb44f46c5f97ffe62043760121c18983"
+    "sha256": "1920b43a0f0f4fb91342461faa7036e01a3a51c3a76ea14b314e04a6f886d5eb",
+    "bytes": 59652
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "6fba0ee55a396c01b2a16ff7076fb0b0f2c40dfb0be3cf0c2bc4d90bae3987ff",
+    "original_sha256": "7a7c61d9aa7c13e3bddf4f1ade9bc194cb44f46c5f97ffe62043760121c18983",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

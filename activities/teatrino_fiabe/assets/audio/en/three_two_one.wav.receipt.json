@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T17:13:08.137472+00:00",
+  "created_utc": "2026-10-21T17:27:15.692585+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Listen to this phrase in English.",
+    "prefix_word_count": 6,
+    "target": "Three, two, one… action!",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Listen to this phrase in English. Three, two, one… action!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "lilli",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Three, two, one… action!",
+    "cue_id": "greia.requested.three_two_one.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "Three, two, one… action!",
     "cue_id": "greia.requested.three_two_one.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/teatrino_fiabe/assets/audio/en/three_two_one.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. An excited countdown before the show: each number a little bigger, then a joyful burst on the last word."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.lilli.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "job_id": "20261020-191251-b3f2e527",
-    "idempotency_key": "greia-3d7de316d9fa4b45b6e657605a51fd56",
+    "job_id": "20261021-192657-54580b6b",
+    "idempotency_key": "greia-2d123053a529425a8001a6a4a8803159",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,246 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2344319058,
+    "script_seed": 1925165633,
     "language_direction": "English",
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. An excited countdown before the show: each number a little bigger, then a joyful burst on the last word.",
-    "effective_delivery": "Speak in English. Lilli, a sparkly, affectionate storybook unicorn. An excited countdown before the show: each number a little bigger, then a joyful burst on the last word.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in English. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3831343226,
-        "sha256": "7ccc58f5afbb3d083b5db1671bd8548f3a02948a63b70f3adceb103f3d55dfff",
+        "seed": 2661560395,
+        "sha256": "845df99e435da79627411e59d3cb6697062e18b699d89d3cd932de1d26452e97",
         "generation": {
-          "elapsed_seconds": 13.664676459040493,
+          "elapsed_seconds": 18.184684207997634,
           "model_load_seconds": 0.0,
-          "rtf": 5.023470299261256,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.4439602679203882,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " 3, 2, 1, action!",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/teatrino_fiabe/assets/audio/en/three_two_one.wav.raw.wav",
+    "sha256": "165857f98c9b5c55c0125b2edde257a91853488e56e5d7703bca75c7750bc2cd",
+    "receipt_sha256": "4796c37e92631fc4a99570f0d08ff12917107fe9301a7615849debfa10791bf8"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/teatrino_fiabe/assets/audio/en/three_two_one.wav.extracted.wav",
+    "sha256": "80f76553e67fc31781082fa29c037df55ebeee7724f0929b31a12005ff9677cd"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/teatrino_fiabe/assets/audio/en/three_two_one.wav.raw.wav",
+    "source_sha256": "165857f98c9b5c55c0125b2edde257a91853488e56e5d7703bca75c7750bc2cd",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/teatrino_fiabe/assets/audio/en/three_two_one.wav.extracted.wav",
+    "output_sha256": "80f76553e67fc31781082fa29c037df55ebeee7724f0929b31a12005ff9677cd",
+    "target_request": {
+      "speaker": "lilli",
+      "kind": "character_dialogue",
+      "text": "Three, two, one… action!",
+      "locale": "en",
+      "cue_id": "greia.requested.three_two_one.en",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/teatrino_fiabe/assets/audio/en/three_two_one.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "4796c37e92631fc4a99570f0d08ff12917107fe9301a7615849debfa10791bf8"
+    },
+    "locale": "en",
+    "prefix": "Listen to this phrase in English.",
+    "target": "Three, two, one… action!",
+    "remove_first_words": 6,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Listen to this phrase in English. Three, two, one, action.",
+    "extracted_transcript": " 3, 2, 1, action!",
+    "raw_word_alignment": [
+      {
+        "word": "listen",
+        "start_seconds": 0.0,
+        "end_seconds": 0.3
+      },
+      {
+        "word": "to",
+        "start_seconds": 0.3,
+        "end_seconds": 0.5
+      },
+      {
+        "word": "this",
+        "start_seconds": 0.5,
+        "end_seconds": 0.64
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.64,
+        "end_seconds": 0.96
+      },
+      {
+        "word": "in",
+        "start_seconds": 0.96,
+        "end_seconds": 1.14
+      },
+      {
+        "word": "english",
+        "start_seconds": 1.14,
+        "end_seconds": 1.52
+      },
+      {
+        "word": "three",
+        "start_seconds": 2.1,
+        "end_seconds": 2.54
+      },
+      {
+        "word": "two",
+        "start_seconds": 3.18,
+        "end_seconds": 3.56
+      },
+      {
+        "word": "one",
+        "start_seconds": 3.86,
+        "end_seconds": 4.3
+      },
+      {
+        "word": "action",
+        "start_seconds": 4.42,
+        "end_seconds": 4.88
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "3",
+        "start_seconds": 0.0,
+        "end_seconds": 0.74
+      },
+      {
+        "word": "2",
+        "start_seconds": 1.32,
+        "end_seconds": 1.76
+      },
+      {
+        "word": "1",
+        "start_seconds": 2.08,
+        "end_seconds": 2.46
+      },
+      {
+        "word": "action",
+        "start_seconds": 2.72,
+        "end_seconds": 3.08
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.4274725437164307,
+        "no_speech_prob": 0.02367299050092697,
+        "compression_ratio": 0.90625,
+        "word_probabilities": [
+          0.82177734375,
+          0.98193359375,
+          0.98193359375,
+          0.994140625,
+          0.7138671875,
+          0.9892578125
+        ]
+      },
+      {
+        "avg_logprob": -0.4274725437164307,
+        "no_speech_prob": 0.02367299050092697,
+        "compression_ratio": 0.90625,
+        "word_probabilities": [
+          0.6787109375,
+          0.9697265625,
+          0.9931640625,
+          0.97412109375
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.597311713478782,
+        "no_speech_prob": 0.3580198585987091,
+        "compression_ratio": 0.6666666666666666,
+        "word_probabilities": [
+          0.381103515625,
+          0.96337890625,
+          0.9775390625,
+          0.84716796875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 192,
+    "extracted_voiced_seconds": 1.92,
+    "unremoved_raw_target_tokens": [
+      "three",
+      "two",
+      "one",
+      "action"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "three",
+      "two",
+      "one",
+      "action"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 5.280181405895692,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.52,
+      "target_first_word_start_seconds": 2.1,
+      "gap_seconds": 0.4290249433106576,
+      "verified_silence_start_seconds": 1.6197732426303855,
+      "verified_silence_end_seconds": 2.048798185941043,
+      "gap_rms_dbfs": -60.656,
+      "gap_peak_dbfs": -34.951,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.8342857142857143,
+      "cut_sample": 40446,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/teatrino_fiabe/assets/audio/en/three_two_one.wav",
-    "bytes": 120038,
-    "sha256": "b7f192741a64dd576788f2c984cade8e520ef2877af1e819ea65fd1de81e3c58"
+    "sha256": "f705afc642889bcade1fb339c52ee7076e395447e2ad7e98aeaf3cce46ffb851",
+    "bytes": 152042
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "a4590a3c7872fa66f5fe644956f5be21a0bb989f238ae4065b9996efdbbcafd8",
+    "original_sha256": "b7f192741a64dd576788f2c984cade8e520ef2877af1e819ea65fd1de81e3c58",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

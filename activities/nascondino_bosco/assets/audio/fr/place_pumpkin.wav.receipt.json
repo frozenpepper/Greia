@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T13:37:37.114426+00:00",
+  "created_utc": "2026-10-21T16:50:13.477641+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "Derrière la citrouille",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. Derrière la citrouille",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "lilli",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Derrière la citrouille",
+    "cue_id": "greia.requested.place_pumpkin.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Derrière la citrouille",
     "cue_id": "greia.requested.place_pumpkin.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/nascondino_bosco/assets/audio/fr/place_pumpkin.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.lilli.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "job_id": "20261020-153727-f18a3ee7",
-    "idempotency_key": "greia-eacb4d44dc3f486e9a388e2add7440ac",
+    "job_id": "20261021-185000-8eae3d3e",
+    "idempotency_key": "greia-0eab1f482ea1460890116bd033201013",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,233 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3586930420,
+    "script_seed": 2000450124,
     "language_direction": "French",
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in French. Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1536117052,
-        "sha256": "d72fc0eb11919c2889a69a99d4b047450d191191a247c66603070fd4b9fe3a6c",
+        "seed": 3807037099,
+        "sha256": "15df884ccac2461aeadb1a654db50f01a756a70aeaa1423e3bb7d384fa0b3930",
         "generation": {
-          "elapsed_seconds": 8.379061249957886,
+          "elapsed_seconds": 12.15270837501157,
           "model_load_seconds": 0.0,
-          "rtf": 4.363715606262244,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.6166980928559807,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Dériez la citrouille.",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/nascondino_bosco/assets/audio/fr/place_pumpkin.wav.raw.wav",
+    "sha256": "5efbf6fbd9eaf7436a7c4e540184445e8ad7ef6c236bd9871a3d3f120f1e9a2c",
+    "receipt_sha256": "0812d38ba86a3fd70b77348dc799164ed83081a5cc6159a8fef458b3ecbcc970"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/nascondino_bosco/assets/audio/fr/place_pumpkin.wav.extracted.wav",
+    "sha256": "212256270d15fc7e5e08559758b9435a6ebbb98eb7d186fd996982e9542b5434"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/nascondino_bosco/assets/audio/fr/place_pumpkin.wav.raw.wav",
+    "source_sha256": "5efbf6fbd9eaf7436a7c4e540184445e8ad7ef6c236bd9871a3d3f120f1e9a2c",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/nascondino_bosco/assets/audio/fr/place_pumpkin.wav.extracted.wav",
+    "output_sha256": "212256270d15fc7e5e08559758b9435a6ebbb98eb7d186fd996982e9542b5434",
+    "target_request": {
+      "speaker": "lilli",
+      "kind": "character_dialogue",
+      "text": "Derrière la citrouille",
+      "locale": "fr",
+      "cue_id": "greia.requested.place_pumpkin.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/nascondino_bosco/assets/audio/fr/place_pumpkin.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "0812d38ba86a3fd70b77348dc799164ed83081a5cc6159a8fef458b3ecbcc970"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "Derrière la citrouille",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français. D'ailleurs, la citrouille.",
+    "extracted_transcript": " Dériez la citrouille.",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.32
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.32,
+        "end_seconds": 0.66
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.66,
+        "end_seconds": 0.88
+      },
+      {
+        "word": "en",
+        "start_seconds": 0.88,
+        "end_seconds": 0.94
+      },
+      {
+        "word": "français",
+        "start_seconds": 0.94,
+        "end_seconds": 1.46
+      },
+      {
+        "word": "d",
+        "start_seconds": 2.16,
+        "end_seconds": 2.28
+      },
+      {
+        "word": "ailleurs",
+        "start_seconds": 2.28,
+        "end_seconds": 2.48
+      },
+      {
+        "word": "la",
+        "start_seconds": 2.58,
+        "end_seconds": 2.72
+      },
+      {
+        "word": "citrouille",
+        "start_seconds": 2.72,
+        "end_seconds": 3.2
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "dériez",
+        "start_seconds": 0.0,
+        "end_seconds": 0.68
+      },
+      {
+        "word": "la",
+        "start_seconds": 0.68,
+        "end_seconds": 0.82
+      },
+      {
+        "word": "citrouille",
+        "start_seconds": 0.82,
+        "end_seconds": 1.38
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.6346628189086914,
+        "no_speech_prob": 0.044483572244644165,
+        "compression_ratio": 0.9047619047619048,
+        "word_probabilities": [
+          0.3583984375,
+          0.94384765625,
+          0.97412109375,
+          0.61376953125,
+          0.93994140625
+        ]
+      },
+      {
+        "avg_logprob": -0.6346628189086914,
+        "no_speech_prob": 0.044483572244644165,
+        "compression_ratio": 0.9047619047619048,
+        "word_probabilities": [
+          0.386474609375,
+          0.46240234375,
+          0.77978515625,
+          0.8466796875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.8092861175537109,
+        "no_speech_prob": 0.03891298174858093,
+        "compression_ratio": 0.7333333333333333,
+        "word_probabilities": [
+          0.4013671875,
+          0.3203125,
+          0.78173828125
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 85,
+    "extracted_voiced_seconds": 0.85,
+    "unremoved_raw_target_tokens": [
+      "d'ailleurs",
+      "la",
+      "citrouille"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "d",
+      "ailleurs",
+      "la",
+      "citrouille"
+    ],
+    "raw_transcript_alignment_suffix_match": false,
+    "duration_seconds": 3.3601814058956916,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.46,
+      "target_first_word_start_seconds": 2.16,
+      "gap_seconds": 0.5786848072562358,
+      "verified_silence_start_seconds": 1.5198639455782312,
+      "verified_silence_end_seconds": 2.0985487528344673,
+      "gap_rms_dbfs": -58.524,
+      "gap_peak_dbfs": -36.26,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.8092063492063493,
+      "cut_sample": 39893,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/nascondino_bosco/assets/audio/fr/place_pumpkin.wav",
-    "bytes": 84758,
-    "sha256": "ccf834b06c3fc236ef20ab2e94381bf01d86f57b2705b8339fcbb83914ed39c4"
+    "sha256": "9522a693c5a57b07e298f7527084da53bd0b2bc846b2c9515ba2f0cc93d9ca84",
+    "bytes": 68476
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "799127f0e7de39dce0c3273a89720bf963d8bfcc05ce23b555f5ea0f785cb086",
+    "original_sha256": "ccf834b06c3fc236ef20ab2e94381bf01d86f57b2705b8339fcbb83914ed39c4",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

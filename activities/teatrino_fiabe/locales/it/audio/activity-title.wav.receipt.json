@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T17:15:05.835530+00:00",
+  "created_utc": "2026-10-21T17:28:58.801404+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "Teatrino Fiabe",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. Teatrino Fiabe",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Teatrino Fiabe",
+    "cue_id": "activity.title",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Teatrino Fiabe",
     "cue_id": "activity.title",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/teatrino_fiabe/locales/it/audio/activity-title.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-191456-380489ff",
-    "idempotency_key": "greia-a0b4ed94694a4ea9a2c52dc6d700eca3",
+    "job_id": "20261021-192846-de28bb92",
+    "idempotency_key": "greia-29d9bded252348cb84fbd22851bef9c1",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,241 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2348888735,
+    "script_seed": 165040510,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2161520807,
-        "sha256": "59169b0ecf08effa977175bc9dbc2807d1f18d64b0f787465d7519efadc4eae9",
+        "seed": 2372634813,
+        "sha256": "a7171cd4c533eb47d6dc8d327b3915a0769cd56a4865de6e015a5b460ad4ac68",
         "generation": {
-          "elapsed_seconds": 8.789528707973659,
+          "elapsed_seconds": 11.940367209012038,
           "model_load_seconds": 0.0,
-          "rtf": 4.993577525598139,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.391989169739701,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " Teatrino fiabe",
+    "metrics": {
+      "duration_seconds": 1.2712925170068028,
+      "rms_dbfs": -32.62,
+      "peak": 0.20276,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.28,
+      "trailing_silence_seconds": 0.04,
+      "longest_internal_pause_seconds": 0.0
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/teatrino_fiabe/locales/it/audio/activity-title.wav.raw.wav",
+    "sha256": "3f68cf909a500cd9e0b509c005e415d7ed88f64565e3728fe54fd5a723bbf2bd",
+    "receipt_sha256": "d4b0ecbc96c355e4f8d7df8a2bfdd780937955ef3580578d58ff7ffa8257f5c8"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/teatrino_fiabe/locales/it/audio/activity-title.wav.extracted.wav",
+    "sha256": "903029ca2755bc9ade86c56773f93d43d93a1368a04576ca92db555a7d3b060a"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/teatrino_fiabe/locales/it/audio/activity-title.wav.delivery.wav",
+    "sha256": "d1d26cb308a0f476a7edffd3eccd7cfbbf0f6f8a9414bfff0f2a82e761159d0c"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/teatrino_fiabe/locales/it/audio/activity-title.wav.raw.wav",
+    "source_sha256": "3f68cf909a500cd9e0b509c005e415d7ed88f64565e3728fe54fd5a723bbf2bd",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/teatrino_fiabe/locales/it/audio/activity-title.wav.extracted.wav",
+    "output_sha256": "903029ca2755bc9ade86c56773f93d43d93a1368a04576ca92db555a7d3b060a",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Teatrino Fiabe",
+      "locale": "it",
+      "cue_id": "activity.title",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/teatrino_fiabe/locales/it/audio/activity-title.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "d4b0ecbc96c355e4f8d7df8a2bfdd780937955ef3580578d58ff7ffa8257f5c8"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "Teatrino Fiabe",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " ascolta questa frase in italiano. Teatrino fiabe.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Teatrinofiabe",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.58
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.58,
+        "end_seconds": 0.88
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.88,
+        "end_seconds": 1.16
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.16,
+        "end_seconds": 1.36
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.36,
+        "end_seconds": 1.86
+      },
+      {
+        "word": "teatrino",
+        "start_seconds": 2.4,
+        "end_seconds": 2.92
+      },
+      {
+        "word": "fiabe",
+        "start_seconds": 2.92,
+        "end_seconds": 3.34
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "teatrinofiabe",
+        "start_seconds": 0.0,
+        "end_seconds": 1.2
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5576133728027344,
+        "no_speech_prob": 0.04712570086121559,
+        "compression_ratio": 0.8909090909090909,
+        "word_probabilities": [
+          0.5087890625,
+          0.97021484375,
+          0.96875,
+          0.962890625,
+          0.9912109375
+        ]
+      },
+      {
+        "avg_logprob": -0.5576133728027344,
+        "no_speech_prob": 0.04712570086121559,
+        "compression_ratio": 0.8909090909090909,
+        "word_probabilities": [
+          0.68505859375,
+          0.66552734375
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.5450410842895508,
+        "no_speech_prob": 0.16950783133506775,
+        "compression_ratio": 0.6190476190476191,
+        "word_probabilities": [
+          0.5556640625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 86,
+    "extracted_voiced_seconds": 0.86,
+    "unremoved_raw_target_tokens": [
+      "teatrino",
+      "fiabe"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "teatrino",
+      "fiabe"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.5201814058956917,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.86,
+      "search_end_seconds": 2.4,
+      "prefix_last_word_end_seconds": 1.86,
+      "target_first_word_start_seconds": 2.4,
+      "gap_seconds": 0.4290249433106576,
+      "verified_silence_start_seconds": 1.9198639455782314,
+      "verified_silence_end_seconds": 2.348888888888889,
+      "gap_rms_dbfs": -60.94,
+      "gap_peak_dbfs": -40.913,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.13437641723356,
+      "cut_sample": 47063,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 2525,
+      "removed_seconds": 0.1145124716553288,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 49588,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/teatrino_fiabe/locales/it/audio/activity-title.wav.delivery.wav",
+      "sha256": "d1d26cb308a0f476a7edffd3eccd7cfbbf0f6f8a9414bfff0f2a82e761159d0c"
+    }
+  },
   "output": {
     "path": "activities/teatrino_fiabe/locales/it/audio/activity-title.wav",
-    "bytes": 77702,
-    "sha256": "cdea681457668180da5d8ba488c42a989400a9e523c57c81249981ae654b5aa5"
+    "sha256": "79167440baebfb09069b8ed78a520cfb347144e381faf48f2d6c385baaa32be4",
+    "bytes": 56142
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "5923d318833809cc51118161695f9a49eb92e89926dc8f476b4c1824ea35fe47",
+    "original_sha256": "40caf8428993b812ff7ca0c5859e5597cc7918aeac6f649dcbed9f32a8ed27b7",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

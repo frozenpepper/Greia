@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T17:07:05.075299+00:00",
+  "created_utc": "2026-10-22T10:01:06.956976+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "Stelle Incantate",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano...\n\nStelle Incantate",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Stelle Incantate",
+    "cue_id": "activity.title",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Stelle Incantate",
     "cue_id": "activity.title",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/stelle_incantate/locales/it/audio/activity-title.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-190653-23320bf6",
-    "idempotency_key": "greia-4265ef7ba8584575a6bfeafddd57f22a",
+    "job_id": "20261022-115917-0c84fd9e",
+    "idempotency_key": "greia-e3e83227ce704f609444237bf335332d",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,240 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 485811230,
+    "script_seed": 3886938904,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 675587867,
-        "sha256": "b5e4c12334906507ab2616f8794b3de5585981b6e3a3ec06f8df80f440b84fd7",
+        "seed": 2148568284,
+        "sha256": "2fca56e3ca922dd76be4914627af005241b939e59c2205b5c2a12343000b5083",
         "generation": {
-          "elapsed_seconds": 10.598152333986945,
+          "elapsed_seconds": 14.369901041995035,
           "model_load_seconds": 0.0,
-          "rtf": 6.021107281878768,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.45416474708426,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " stelle incantate",
+    "metrics": {
+      "duration_seconds": 1.4824036281179138,
+      "rms_dbfs": -33.15,
+      "peak": 0.17404,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.08,
+      "trailing_silence_seconds": 0.1,
+      "longest_internal_pause_seconds": 0.08
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/stelle_incantate/locales/it/audio/activity-title.wav.raw.wav",
+    "sha256": "eee6e493fb76be3d07fb0a6b982b8f1cf9991a51d32b0f59dae3b24551a55a6a",
+    "receipt_sha256": "d747ba14f339e56d91a7442f1e322057fd56a91ff552c4de63260b61897e38f2"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/stelle_incantate/locales/it/audio/activity-title.wav.extracted.wav",
+    "sha256": "b7e46a906a5237c42be9360e8878debc498e5719351a50e36a149851422a6b5c"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/stelle_incantate/locales/it/audio/activity-title.wav.delivery.wav",
+    "sha256": "66c515e45c983f4fd940a909f2ffaa25bdbbfe3068e6d7ee5930b01898fcb233"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/activities/stelle_incantate/locales/it/audio/activity-title.wav.raw.wav",
+    "source_sha256": "eee6e493fb76be3d07fb0a6b982b8f1cf9991a51d32b0f59dae3b24551a55a6a",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/activities/stelle_incantate/locales/it/audio/activity-title.wav.extracted.wav",
+    "output_sha256": "b7e46a906a5237c42be9360e8878debc498e5719351a50e36a149851422a6b5c",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Stelle Incantate",
+      "locale": "it",
+      "cue_id": "activity.title",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/activities/stelle_incantate/locales/it/audio/activity-title.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "d747ba14f339e56d91a7442f1e322057fd56a91ff552c4de63260b61897e38f2"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "Stelle Incantate",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Ascolta questa frase in italiano, stelle incantate.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " stelle incantate",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.46
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.46,
+        "end_seconds": 0.76
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.76,
+        "end_seconds": 1.06
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.06,
+        "end_seconds": 1.26
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.26,
+        "end_seconds": 1.8
+      },
+      {
+        "word": "stelle",
+        "start_seconds": 2.88,
+        "end_seconds": 3.1
+      },
+      {
+        "word": "incantate",
+        "start_seconds": 3.1,
+        "end_seconds": 4.0
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "stelle",
+        "start_seconds": 0.0,
+        "end_seconds": 0.78
+      },
+      {
+        "word": "incantate",
+        "start_seconds": 0.78,
+        "end_seconds": 1.64
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.41973621704999137,
+        "no_speech_prob": 0.010632401332259178,
+        "compression_ratio": 0.9272727272727272,
+        "word_probabilities": [
+          0.724609375,
+          0.99072265625,
+          0.87353515625,
+          0.96533203125,
+          0.99169921875,
+          0.837890625,
+          0.794921875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.35700905323028564,
+        "no_speech_prob": 0.10454559326171875,
+        "compression_ratio": 0.6666666666666666,
+        "word_probabilities": [
+          0.822265625,
+          0.83056640625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 98,
+    "extracted_voiced_seconds": 0.98,
+    "unremoved_raw_target_tokens": [
+      "stelle",
+      "incantate"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "stelle",
+      "incantate"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 4.160181405895692,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.8,
+      "search_end_seconds": 2.88,
+      "prefix_last_word_end_seconds": 1.8,
+      "target_first_word_start_seconds": 2.88,
+      "gap_seconds": 0.8979591836734694,
+      "verified_silence_start_seconds": 1.8798185941043084,
+      "verified_silence_end_seconds": 2.7777777777777777,
+      "gap_rms_dbfs": -58.03,
+      "gap_peak_dbfs": -34.461,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.328798185941043,
+      "cut_sample": 51350,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 7695,
+      "removed_seconds": 0.3489795918367347,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 59045,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/activities/stelle_incantate/locales/it/audio/activity-title.wav.delivery.wav",
+      "sha256": "66c515e45c983f4fd940a909f2ffaa25bdbbfe3068e6d7ee5930b01898fcb233"
+    }
+  },
   "output": {
     "path": "activities/stelle_incantate/locales/it/audio/activity-title.wav",
-    "bytes": 77702,
-    "sha256": "3c58c5e47cb2a7f22e561ddf92a7849fb90264918c3dea29d65cb03a65df1965"
+    "sha256": "c8fb4debad182db7160c8fafc6fc89c11b868c27987e63b4a572020880beb7e9",
+    "bytes": 65452
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "1c67bb7b55558e73fa9031cd66a1a7d4667bd0c579a2f7996b27344f6a3efcc4",
+    "original_sha256": "eed5c4ff2a645004ab632dd6c4b84fcf25f4d77721da0179a279901a52951bf2",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T14:47:15.490920+00:00",
+  "created_utc": "2026-10-22T09:18:04.933902+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "Sílabas mágicas",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español...\n\nSílabas mágicas",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "Sílabas mágicas",
+    "cue_id": "sillabe_magiche.title.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "Sílabas mágicas",
     "cue_id": "sillabe_magiche.title.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/sillabe_magiche/locales/es/audio/activity-title.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-164703-b3335c6f",
-    "idempotency_key": "greia-bc559cbf58d84073b349867f91a0ff47",
+    "job_id": "20261022-111643-aa4c13b0",
+    "idempotency_key": "greia-0d0f0aad28e243f0a60e6bf1402317c6",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,240 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 4212629812,
+    "script_seed": 2018206053,
     "language_direction": "Spanish",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "effective_delivery": "Speak in Spanish. Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 366445469,
-        "sha256": "9a0849df4f9aec4a461a83f45a559900fed23f744a7c3190f46bdb6e6c66b457",
+        "seed": 4230018528,
+        "sha256": "31aeec70b2df7c5124083e8476099ba4517ffe61ba5f4900cf86cfcd079578d9",
         "generation": {
-          "elapsed_seconds": 11.377952415961772,
+          "elapsed_seconds": 18.63159808299679,
           "model_load_seconds": 0.0,
-          "rtf": 7.900441441473283,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.4248211910781143,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " sílabas mágicas.",
+    "metrics": {
+      "duration_seconds": 1.8719274376417234,
+      "rms_dbfs": -35.3,
+      "peak": 0.17679,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.08,
+      "trailing_silence_seconds": 0.2,
+      "longest_internal_pause_seconds": 0.06
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/sillabe_magiche/locales/es/audio/activity-title.wav.raw.wav",
+    "sha256": "b084df87ae666e51fcadd13c04ba96512823763f106713dc53180e1a790a729b",
+    "receipt_sha256": "6f266b08e4d7bfaf0a57488733b344b7cb61eeae183000ff18e81623a6c3f1da"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/sillabe_magiche/locales/es/audio/activity-title.wav.extracted.wav",
+    "sha256": "086196ce885b938728f3ada016d89314aac3ade12ef54a07aa6f1cd780c17946"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/sillabe_magiche/locales/es/audio/activity-title.wav.delivery.wav",
+    "sha256": "9fd16e25f07a6a6d6e200acea48ac2785ff19a4293d572f401995ae5f0e24fbc"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/activities/sillabe_magiche/locales/es/audio/activity-title.wav.raw.wav",
+    "source_sha256": "b084df87ae666e51fcadd13c04ba96512823763f106713dc53180e1a790a729b",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/activities/sillabe_magiche/locales/es/audio/activity-title.wav.extracted.wav",
+    "output_sha256": "086196ce885b938728f3ada016d89314aac3ade12ef54a07aa6f1cd780c17946",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Sílabas mágicas",
+      "locale": "es",
+      "cue_id": "sillabe_magiche.title.es",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/activities/sillabe_magiche/locales/es/audio/activity-title.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "6f266b08e4d7bfaf0a57488733b344b7cb61eeae183000ff18e81623a6c3f1da"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "Sílabas mágicas",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Escucha esta frase en español, sílabas mágicas.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " sílabas mágicas",
+    "raw_word_alignment": [
+      {
+        "word": "escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.86
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.86,
+        "end_seconds": 1.44
+      },
+      {
+        "word": "frase",
+        "start_seconds": 1.44,
+        "end_seconds": 1.94
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.94,
+        "end_seconds": 2.32
+      },
+      {
+        "word": "español",
+        "start_seconds": 2.32,
+        "end_seconds": 2.9
+      },
+      {
+        "word": "sílabas",
+        "start_seconds": 3.86,
+        "end_seconds": 4.4
+      },
+      {
+        "word": "mágicas",
+        "start_seconds": 4.4,
+        "end_seconds": 5.06
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "sílabas",
+        "start_seconds": 0.0,
+        "end_seconds": 1.1
+      },
+      {
+        "word": "mágicas",
+        "start_seconds": 1.1,
+        "end_seconds": 1.82
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.38025662478278666,
+        "no_speech_prob": 0.022465961053967476,
+        "compression_ratio": 0.8771929824561403,
+        "word_probabilities": [
+          0.84765625,
+          0.98095703125,
+          0.99462890625,
+          0.98486328125,
+          0.982421875,
+          0.6953125,
+          0.98291015625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.4596763716803657,
+        "no_speech_prob": 0.2148788720369339,
+        "compression_ratio": 0.68,
+        "word_probabilities": [
+          0.61328125,
+          0.9755859375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 109,
+    "extracted_voiced_seconds": 1.09,
+    "unremoved_raw_target_tokens": [
+      "sílabas",
+      "mágicas"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "sílabas",
+      "mágicas"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 5.440181405895691,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 2.9,
+      "search_end_seconds": 3.86,
+      "prefix_last_word_end_seconds": 2.9,
+      "target_first_word_start_seconds": 3.86,
+      "gap_seconds": 0.7083900226757369,
+      "verified_silence_start_seconds": 2.959863945578231,
+      "verified_silence_end_seconds": 3.668253968253968,
+      "gap_rms_dbfs": -56.5,
+      "gap_peak_dbfs": -33.595,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 3.3140589569160994,
+      "cut_sample": 73075,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 5605,
+      "removed_seconds": 0.2541950113378685,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 78680,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/activities/sillabe_magiche/locales/es/audio/activity-title.wav.delivery.wav",
+      "sha256": "9fd16e25f07a6a6d6e200acea48ac2785ff19a4293d572f401995ae5f0e24fbc"
+    }
+  },
   "output": {
     "path": "activities/sillabe_magiche/locales/es/audio/activity-title.wav",
-    "bytes": 63590,
-    "sha256": "c70faef4f2ca713ea479125374155f5aa31bb45b2af839bccb4054169ae01e0e"
+    "sha256": "89395beb0817086c73ade882e61e0678500514917ea15dce2ffb7e6d588e4e8b",
+    "bytes": 82630
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "722027ccf4ceeb25c5cd8d4bb7467c3476641ac4514c366459c4417502ffa441",
+    "original_sha256": "1952d5a23cec516a4c4703063a014ff7b0cc85e61fc025832c92139e0af1c57d",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

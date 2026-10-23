@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T14:15:38.283128+00:00",
+  "created_utc": "2026-10-21T17:02:49.397587+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "¡Me has bloqueado!",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. ¡Me has bloqueado!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "¡Me has bloqueado!",
+    "cue_id": "greia.requested.you_blocked_me.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "¡Me has bloqueado!",
     "cue_id": "greia.requested.you_blocked_me.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/quattro_amici/assets/audio/es/you_blocked_me.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-161531-3b3748dc",
-    "idempotency_key": "greia-08266498ef4a46f9b2000df939fb392b",
+    "job_id": "20261021-190230-cd568357",
+    "idempotency_key": "greia-447e328d111b4d069ebb4f544c9904e2",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,226 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2493424041,
+    "script_seed": 2157504883,
     "language_direction": "Spanish",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in Spanish. Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3437215761,
-        "sha256": "b4081ae5914bdb88e18da48dfaf8d8e4867c630e7d9c72cdaee110282edb66a3",
+        "seed": 2434030619,
+        "sha256": "52bbb046b8fb3d6579760cebd31b27cceeeec90f44d3b08af86c41e1a11868a5",
         "generation": {
-          "elapsed_seconds": 5.5410969170043245,
+          "elapsed_seconds": 17.464663374994416,
           "model_load_seconds": 0.0,
-          "rtf": 4.946671849728603,
-          "peak_memory_gb": 8.44494914
+          "rtf": 4.19806819638502,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Me ha bloqueado.",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/quattro_amici/assets/audio/es/you_blocked_me.wav.raw.wav",
+    "sha256": "471556f44a78bd032d04de940e176032abf08babdb19cba8afd3d61b695fc0d1",
+    "receipt_sha256": "03a71ab89cdc11efda8579f2a61db5e1fd5a8e66c60835e475317e8e4c81aca3"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/quattro_amici/assets/audio/es/you_blocked_me.wav.extracted.wav",
+    "sha256": "e4568ae9f2e9b0ba44456e66d0d1cf763c375bc5f5a592b96758517be6a344ce"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/quattro_amici/assets/audio/es/you_blocked_me.wav.raw.wav",
+    "source_sha256": "471556f44a78bd032d04de940e176032abf08babdb19cba8afd3d61b695fc0d1",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/quattro_amici/assets/audio/es/you_blocked_me.wav.extracted.wav",
+    "output_sha256": "e4568ae9f2e9b0ba44456e66d0d1cf763c375bc5f5a592b96758517be6a344ce",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "¡Me has bloqueado!",
+      "locale": "es",
+      "cue_id": "greia.requested.you_blocked_me.es",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/quattro_amici/assets/audio/es/you_blocked_me.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "03a71ab89cdc11efda8579f2a61db5e1fd5a8e66c60835e475317e8e4c81aca3"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "¡Me has bloqueado!",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Escucha esta frase en español. ¡Me has bloqueado!",
+    "extracted_transcript": " Me ha bloqueado.",
+    "raw_word_alignment": [
+      {
+        "word": "escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.66
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.66,
+        "end_seconds": 0.96
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.96,
+        "end_seconds": 1.4
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.4,
+        "end_seconds": 1.72
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.72,
+        "end_seconds": 2.24
+      },
+      {
+        "word": "me",
+        "start_seconds": 2.84,
+        "end_seconds": 3.02
+      },
+      {
+        "word": "has",
+        "start_seconds": 3.02,
+        "end_seconds": 3.28
+      },
+      {
+        "word": "bloqueado",
+        "start_seconds": 3.28,
+        "end_seconds": 3.9
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "me",
+        "start_seconds": 0.0,
+        "end_seconds": 0.52
+      },
+      {
+        "word": "ha",
+        "start_seconds": 0.52,
+        "end_seconds": 0.68
+      },
+      {
+        "word": "bloqueado",
+        "start_seconds": 0.68,
+        "end_seconds": 1.38
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5410056644015842,
+        "no_speech_prob": 0.011770552955567837,
+        "compression_ratio": 0.8793103448275862,
+        "word_probabilities": [
+          0.662109375,
+          0.87109375,
+          0.9931640625,
+          0.93701171875,
+          0.98388671875
+        ]
+      },
+      {
+        "avg_logprob": -0.5410056644015842,
+        "no_speech_prob": 0.011770552955567837,
+        "compression_ratio": 0.8793103448275862,
+        "word_probabilities": [
+          0.5595703125,
+          0.65478515625,
+          0.9716796875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.8508334159851074,
+        "no_speech_prob": 0.2503697872161865,
+        "compression_ratio": 0.6666666666666666,
+        "word_probabilities": [
+          0.60302734375,
+          0.285400390625,
+          0.5771484375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 107,
+    "extracted_voiced_seconds": 1.07,
+    "unremoved_raw_target_tokens": [
+      "me",
+      "has",
+      "bloqueado"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "me",
+      "has",
+      "bloqueado"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 4.160181405895692,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 2.24,
+      "target_first_word_start_seconds": 2.84,
+      "gap_seconds": 0.47891156462585033,
+      "verified_silence_start_seconds": 2.2998639455782315,
+      "verified_silence_end_seconds": 2.7787755102040816,
+      "gap_rms_dbfs": -63.992,
+      "gap_peak_dbfs": -42.814,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.5393197278911566,
+      "cut_sample": 55992,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/quattro_amici/assets/audio/es/you_blocked_me.wav",
-    "bytes": 49478,
-    "sha256": "ad93b647edb70d2b5b91125d2fd3e8e411b49b743f759e6f5ce8b3320ea1c94e"
+    "sha256": "c4ed07ca3329c7609aef0aaf6bfd9996daf0d6542f073272f125d96a130d410d",
+    "bytes": 71558
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "a058da173a4b4bc042a1e55b8d716c050cbaa7e78195a9f48dc3fc0475c98519",
+    "original_sha256": "ad93b647edb70d2b5b91125d2fd3e8e411b49b743f759e6f5ce8b3320ea1c94e",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

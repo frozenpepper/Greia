@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T13:09:54.793024+00:00",
+  "created_utc": "2026-10-21T18:15:49.868993+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "Vai avanti!",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. Vai avanti!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "momo",
+    "kind": "shared_character_utterance",
+    "locale": "it",
+    "text": "Vai avanti!",
+    "cue_id": "shared.encourage.progress.03",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "momo",
     "kind": "shared_character_utterance",
     "locale": "it",
     "text": "Vai avanti!",
     "cue_id": "shared.encourage.progress.03",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "assets/audio/characters/shared/v0.2/momo/it/momo__it__encourage.progress__03.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Brief, natural conversational reaction; relaxed pace and clear words."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.momo.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261021-150949-42c0cf5e",
-    "idempotency_key": "greia-a421e6d937804b07b7b6c3ccac20ce8b",
+    "job_id": "20261021-201533-0714c586",
+    "idempotency_key": "greia-7ccae08913424488a62411f6230c7bbd",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,211 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1130218085,
+    "script_seed": 1023011184,
     "language_direction": "Italian",
-    "delivery_prompt": "Brief, natural conversational reaction; relaxed pace and clear words.",
-    "effective_delivery": "Speak in Italian. Brief, natural conversational reaction; relaxed pace and clear words.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 999711103,
-        "sha256": "eae2cc00c867e2bbb01f22d537b74679c3c6301b7430b1961561cdaf7d432809",
+        "seed": 3924670097,
+        "sha256": "51fdf752b6b2edadf325045c416e16b8f51292f550e7194bd196d49b2dfc160c",
         "generation": {
-          "elapsed_seconds": 4.151618124997185,
+          "elapsed_seconds": 14.749032583000371,
           "model_load_seconds": 0.0,
-          "rtf": 3.7062503719659436,
+          "rtf": 5.120895520976924,
           "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " vai a vanti?",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/characters/shared/v0.2/momo/it/momo__it__encourage.progress__03.wav.raw.wav",
+    "sha256": "f7bda93d650fcfe582e09b9d19c70bbd91063f72fd533c8b6344e60b8288d037",
+    "receipt_sha256": "043a2b31a2a42a021efdb6359c8eeb14867a511854d3ca1f10986ea6a0068059"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/characters/shared/v0.2/momo/it/momo__it__encourage.progress__03.wav.extracted.wav",
+    "sha256": "8f613b4a9b33bc85e8feef2da1e1c81f324e07857166f262b015440813675fb9"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/assets/audio/characters/shared/v0.2/momo/it/momo__it__encourage.progress__03.wav.raw.wav",
+    "source_sha256": "f7bda93d650fcfe582e09b9d19c70bbd91063f72fd533c8b6344e60b8288d037",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/assets/audio/characters/shared/v0.2/momo/it/momo__it__encourage.progress__03.wav.extracted.wav",
+    "output_sha256": "8f613b4a9b33bc85e8feef2da1e1c81f324e07857166f262b015440813675fb9",
+    "target_request": {
+      "speaker": "momo",
+      "kind": "shared_character_utterance",
+      "text": "Vai avanti!",
+      "locale": "it",
+      "cue_id": "shared.encourage.progress.03",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/assets/audio/characters/shared/v0.2/momo/it/momo__it__encourage.progress__03.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "043a2b31a2a42a021efdb6359c8eeb14867a511854d3ca1f10986ea6a0068059"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "Vai avanti!",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " ascolta questa frase in italiano, vai avanti?",
+    "extracted_transcript": " vai a vanti?",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.58
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.58,
+        "end_seconds": 0.82
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.82,
+        "end_seconds": 1.1
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.1,
+        "end_seconds": 1.26
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.26,
+        "end_seconds": 1.62
+      },
+      {
+        "word": "vai",
+        "start_seconds": 2.06,
+        "end_seconds": 2.22
+      },
+      {
+        "word": "avanti",
+        "start_seconds": 2.22,
+        "end_seconds": 2.62
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "vai",
+        "start_seconds": 0.0,
+        "end_seconds": 0.32
+      },
+      {
+        "word": "a",
+        "start_seconds": 0.32,
+        "end_seconds": 0.42
+      },
+      {
+        "word": "vanti",
+        "start_seconds": 0.42,
+        "end_seconds": 0.72
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5685953140258789,
+        "no_speech_prob": 0.0018415851518511772,
+        "compression_ratio": 0.8823529411764706,
+        "word_probabilities": [
+          0.6025390625,
+          0.97802734375,
+          0.62890625,
+          0.75048828125,
+          0.96044921875,
+          0.8828125,
+          0.8154296875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6427500247955322,
+        "no_speech_prob": 0.0470770038664341,
+        "compression_ratio": 0.6,
+        "word_probabilities": [
+          0.54052734375,
+          0.460205078125,
+          0.78271484375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 58,
+    "extracted_voiced_seconds": 0.58,
+    "unremoved_raw_target_tokens": [
+      "vai",
+      "avanti"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "vai",
+      "avanti"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 2.8801814058956916,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.62,
+      "target_first_word_start_seconds": 2.06,
+      "gap_seconds": 0.20952380952380953,
+      "verified_silence_start_seconds": 1.799591836734694,
+      "verified_silence_end_seconds": 2.0091156462585036,
+      "gap_rms_dbfs": -57.826,
+      "gap_peak_dbfs": -39.834,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.9043537414965988,
+      "cut_sample": 41991,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "assets/audio/characters/shared/v0.2/momo/it/momo__it__encourage.progress__03.wav",
-    "bytes": 49478,
-    "sha256": "9e95775ecb5fda1737b1a2081320cedb946899a003aa797da7ae7484b7240fd2"
+    "sha256": "eff2af6f69826ce4d63be225b88845ac620f74addc10bfabfc29f75a182d50a5",
+    "bytes": 43112
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "44ba12f11e01a3b9ff8fe58fa59c7b02621f9e2795ee8470110145c1ff5997d6",
+    "original_sha256": "9e95775ecb5fda1737b1a2081320cedb946899a003aa797da7ae7484b7240fd2",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T03:32:20.698544+00:00",
+  "created_utc": "2026-10-21T16:00:59.638093+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "Je suis tout sale !",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. Je suis tout sale !",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "lilli",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Je suis tout sale !",
+    "cue_id": "greia.requested.muddy.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Je suis tout sale !",
     "cue_id": "greia.requested.muddy.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/cucciolo_mio/assets/audio/fr/muddy.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.lilli.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "job_id": "20261020-053203-5f377eab",
-    "idempotency_key": "greia-d949ce6d70b5482db3035f060db05270",
+    "job_id": "20261021-180047-d27837a2",
+    "idempotency_key": "greia-f12fd510843e4a1f86c1d8d2e147b394",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,264 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2222949761,
+    "script_seed": 2446959778,
     "language_direction": "French",
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak naturally in French. Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 210498548,
-        "sha256": "c6adc9b6fe6d9c070938c8683dc6c0940d0999c4133c925b091a77e0cb45a469",
+        "seed": 2765697427,
+        "sha256": "11ed7e3d225f7bb5b1e7f5c7d08325e5bf66389ec84e82afde12c483fc638728",
         "generation": {
-          "elapsed_seconds": 16.244634167000186,
+          "elapsed_seconds": 11.906368916999782,
           "model_load_seconds": 0.0,
-          "rtf": 7.80929452784241,
-          "peak_memory_gb": 6.61593154
+          "rtf": 4.133916642671066,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " Je suis tout sale !",
+    "metrics": {
+      "duration_seconds": 1.4757823129251701,
+      "rms_dbfs": -25.38,
+      "peak": 0.31824,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.26,
+      "trailing_silence_seconds": 0.2,
+      "longest_internal_pause_seconds": 0.08
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/cucciolo_mio/assets/audio/fr/muddy.wav.raw.wav",
+    "sha256": "a317524b7b1020aa4eebf1f7cc19ead3cac111eb0d08ae3bc21451391a4819a0",
+    "receipt_sha256": "6630763ad76ad944e5b1a0c16facc0d28a7cf2ef1bbe606cbf8e3d4d4954c093"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/cucciolo_mio/assets/audio/fr/muddy.wav.extracted.wav",
+    "sha256": "25cc77c95f2c4af324b0d4f666e032b83eede99ffdeca5c043f4ea90b8ddd9c0"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/cucciolo_mio/assets/audio/fr/muddy.wav.raw.wav",
+    "source_sha256": "a317524b7b1020aa4eebf1f7cc19ead3cac111eb0d08ae3bc21451391a4819a0",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-extracted/activities/cucciolo_mio/assets/audio/fr/muddy.wav.extracted.wav",
+    "output_sha256": "25cc77c95f2c4af324b0d4f666e032b83eede99ffdeca5c043f4ea90b8ddd9c0",
+    "target_request": {
+      "speaker": "lilli",
+      "kind": "character_dialogue",
+      "text": "Je suis tout sale !",
+      "locale": "fr",
+      "cue_id": "greia.requested.muddy.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/cucciolo_mio/assets/audio/fr/muddy.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "6630763ad76ad944e5b1a0c16facc0d28a7cf2ef1bbe606cbf8e3d4d4954c093"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "Je suis tout sale !",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français. Je suis tout seul !",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Je suis tout sale !",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.24
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.24,
+        "end_seconds": 0.44
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.44,
+        "end_seconds": 0.66
+      },
+      {
+        "word": "en",
+        "start_seconds": 0.66,
+        "end_seconds": 0.78
+      },
+      {
+        "word": "français",
+        "start_seconds": 0.78,
+        "end_seconds": 1.14
+      },
+      {
+        "word": "je",
+        "start_seconds": 1.62,
+        "end_seconds": 1.76
+      },
+      {
+        "word": "suis",
+        "start_seconds": 1.76,
+        "end_seconds": 1.9
+      },
+      {
+        "word": "tout",
+        "start_seconds": 1.9,
+        "end_seconds": 2.08
+      },
+      {
+        "word": "seul",
+        "start_seconds": 2.08,
+        "end_seconds": 2.38
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "je",
+        "start_seconds": 0.0,
+        "end_seconds": 0.36
+      },
+      {
+        "word": "suis",
+        "start_seconds": 0.36,
+        "end_seconds": 0.5
+      },
+      {
+        "word": "tout",
+        "start_seconds": 0.5,
+        "end_seconds": 0.68
+      },
+      {
+        "word": "sale",
+        "start_seconds": 0.68,
+        "end_seconds": 1.04
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.553441047668457,
+        "no_speech_prob": 0.01706131361424923,
+        "compression_ratio": 0.8620689655172413,
+        "word_probabilities": [
+          0.8818359375,
+          0.9482421875,
+          0.95849609375,
+          0.9833984375,
+          0.97509765625
+        ]
+      },
+      {
+        "avg_logprob": -0.553441047668457,
+        "no_speech_prob": 0.01706131361424923,
+        "compression_ratio": 0.8620689655172413,
+        "word_probabilities": [
+          0.8466796875,
+          0.99951171875,
+          0.96533203125,
+          0.56005859375,
+          0.61474609375
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.5908854007720947,
+        "no_speech_prob": 0.09972390532493591,
+        "compression_ratio": 0.7037037037037037,
+        "word_probabilities": [
+          0.873046875,
+          0.99951171875,
+          0.716796875,
+          0.36767578125,
+          0.74658203125
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 76,
+    "extracted_voiced_seconds": 0.76,
+    "unremoved_raw_target_tokens": [
+      "je",
+      "suis",
+      "tout",
+      "seul"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "je",
+      "suis",
+      "tout",
+      "seul"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 2.8801814058956916,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.14,
+      "search_end_seconds": 1.62,
+      "prefix_last_word_end_seconds": 1.14,
+      "target_first_word_start_seconds": 1.62,
+      "gap_seconds": 0.3292517006802721,
+      "verified_silence_start_seconds": 1.2397732426303856,
+      "verified_silence_end_seconds": 1.5690249433106576,
+      "gap_rms_dbfs": -61.02,
+      "gap_peak_dbfs": -37.054,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.4043990929705217,
+      "cut_sample": 30967,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/cucciolo_mio/assets/audio/fr/muddy.wav",
-    "bytes": 91814,
-    "sha256": "9898176b5ab9b0818cdfd06bbe520c9fa42f6a3f1d4bd02b355aea5e86625396"
+    "sha256": "931fbea0f9728588362563ff024d2e84760b3bd6058967c87b3dd6f6497dcad5",
+    "bytes": 65160
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "f31f17fb31b3140b5574040caf0b4f200dd25732ce436161722421c94ba5e7e3",
+    "original_sha256": "9898176b5ab9b0818cdfd06bbe520c9fa42f6a3f1d4bd02b355aea5e86625396",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

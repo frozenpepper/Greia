@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T20:40:42.404882+00:00",
+  "created_utc": "2026-10-21T18:39:42.918454+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Listen to this phrase in English.",
+    "prefix_word_count": 6,
+    "target": "Trumpet",
+    "target_word_count": 1,
+    "target_verification": "warn",
+    "composite_text": "Listen to this phrase in English. Trumpet",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Trumpet",
+    "cue_id": "greia.vocab.trumpet.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "Trumpet",
     "cue_id": "greia.vocab.trumpet.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "assets/audio/vocab/v1/en/trumpet.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-224034-a60867a7",
-    "idempotency_key": "greia-39739589adeb4bbb8e4ce3e9115f48ce",
+    "job_id": "20261021-203929-64619a55",
+    "idempotency_key": "greia-0deaa6b4be3d4fa4bcc4ada69d9cd661",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,232 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2610630338,
+    "script_seed": 1798814465,
     "language_direction": "English",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
-    "effective_delivery": "Speak in English. Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in English. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1282812858,
-        "sha256": "925109ec4c2246c1c22f1e45f44a0627928311b6331011176bd061a269747d28",
+        "seed": 3195351263,
+        "sha256": "423c0ad9bf00da8901a417c43840eff59a2f321a286ab8c8a5138adcbda003c5",
         "generation": {
-          "elapsed_seconds": 7.122557667025831,
+          "elapsed_seconds": 12.360657875004108,
           "model_load_seconds": 0.0,
-          "rtf": 6.3584802859924086,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.862504413833897,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " Trumpet.",
+    "metrics": {
+      "duration_seconds": 0.9921541950113378,
+      "rms_dbfs": -37.75,
+      "peak": 0.11801,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.22,
+      "trailing_silence_seconds": 0.32,
+      "longest_internal_pause_seconds": 0.04
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/vocab/v1/en/trumpet.wav.raw.wav",
+    "sha256": "1ebc028735bde880fed16c71d8e9cb562e9a9937e762b05cb3128a63eb33b146",
+    "receipt_sha256": "bc77dbe2ad59ee7f4c49ed4e8ad8dfd2c349b417d74c762878fed7223d1c3e2e"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/vocab/v1/en/trumpet.wav.extracted.wav",
+    "sha256": "918d70ebe4f486dc9a8eb87707859becfe07c5373c873dc349ac9ca9029d34ec"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/assets/audio/vocab/v1/en/trumpet.wav.delivery.wav",
+    "sha256": "6e316d27d54604042e078dc23887ddbd276f1b1fe535271847132ac5c30f6676"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/assets/audio/vocab/v1/en/trumpet.wav.raw.wav",
+    "source_sha256": "1ebc028735bde880fed16c71d8e9cb562e9a9937e762b05cb3128a63eb33b146",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/assets/audio/vocab/v1/en/trumpet.wav.extracted.wav",
+    "output_sha256": "918d70ebe4f486dc9a8eb87707859becfe07c5373c873dc349ac9ca9029d34ec",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Trumpet",
+      "locale": "en",
+      "cue_id": "greia.vocab.trumpet.en",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/assets/audio/vocab/v1/en/trumpet.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "bc77dbe2ad59ee7f4c49ed4e8ad8dfd2c349b417d74c762878fed7223d1c3e2e"
+    },
+    "locale": "en",
+    "prefix": "Listen to this phrase in English.",
+    "target": "Trumpet",
+    "remove_first_words": 6,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Listen to this phrase in English. Trumpet.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Trumpet.",
+    "raw_word_alignment": [
+      {
+        "word": "listen",
+        "start_seconds": 0.0,
+        "end_seconds": 0.26
+      },
+      {
+        "word": "to",
+        "start_seconds": 0.26,
+        "end_seconds": 0.48
+      },
+      {
+        "word": "this",
+        "start_seconds": 0.48,
+        "end_seconds": 0.66
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.66,
+        "end_seconds": 0.92
+      },
+      {
+        "word": "in",
+        "start_seconds": 0.92,
+        "end_seconds": 1.16
+      },
+      {
+        "word": "english",
+        "start_seconds": 1.16,
+        "end_seconds": 1.44
+      },
+      {
+        "word": "trumpet",
+        "start_seconds": 2.36,
+        "end_seconds": 2.88
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "trumpet",
+        "start_seconds": 0.0,
+        "end_seconds": 0.94
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.3507274114168607,
+        "no_speech_prob": 0.01500933337956667,
+        "compression_ratio": 0.84,
+        "word_probabilities": [
+          0.9248046875,
+          0.99853515625,
+          0.99658203125,
+          0.998046875,
+          0.998046875,
+          0.9931640625,
+          0.91748046875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6039624214172363,
+        "no_speech_prob": 0.2312026023864746,
+        "compression_ratio": 0.5,
+        "word_probabilities": [
+          0.80859375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 6,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 29,
+    "extracted_voiced_seconds": 0.29,
+    "unremoved_raw_target_tokens": [
+      "trumpet"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "trumpet"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.2001814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.44,
+      "search_end_seconds": 2.36,
+      "prefix_last_word_end_seconds": 1.44,
+      "target_first_word_start_seconds": 2.36,
+      "gap_seconds": 0.6984126984126984,
+      "verified_silence_start_seconds": 1.6096145124716554,
+      "verified_silence_end_seconds": 2.3080272108843536,
+      "gap_rms_dbfs": -57.25,
+      "gap_peak_dbfs": -33.187,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.9588208616780045,
+      "cut_sample": 43192,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 5495,
+      "removed_seconds": 0.2492063492063492,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 48687,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/assets/audio/vocab/v1/en/trumpet.wav.delivery.wav",
+      "sha256": "6e316d27d54604042e078dc23887ddbd276f1b1fe535271847132ac5c30f6676"
+    }
+  },
   "output": {
     "path": "assets/audio/vocab/v1/en/trumpet.wav",
-    "bytes": 49478,
-    "sha256": "04013adc068f4c928fa07ea49b6e8bbc2bce6b567c7c1effeebd1f24181f0f2c"
+    "sha256": "5a6e2293dd882ded3321c0563d0c7bae2ec2045eab5d49cc329128c8288997e4",
+    "bytes": 43832
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "e24cb4f76dfd31bca8933b96cd88feaa9dc8ba27a1ce7215ff26bb48e54ffc6b",
+    "original_sha256": "c328774b0786e050178749937087fa37bf72d6d9f388990b576be28b272bbb8f",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

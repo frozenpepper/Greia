@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T13:28:15.636618+00:00",
+  "created_utc": "2026-10-21T16:45:51.438432+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "Monstruitos peludos",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. Monstruitos peludos",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "Monstruitos peludos",
+    "cue_id": "morbidi_mostriciattoli.title.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "Monstruitos peludos",
     "cue_id": "morbidi_mostriciattoli.title.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/morbidi_mostriciattoli/locales/es/audio/activity-title.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-152759-80e80f24",
-    "idempotency_key": "greia-32e162c63922464183f5d90282bbdb62",
+    "job_id": "20261021-184533-bb72c060",
+    "idempotency_key": "greia-cd196d2f0f1c4fbd9476c9437408e48c",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,247 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1349519183,
+    "script_seed": 456201499,
     "language_direction": "Spanish",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "effective_delivery": "Speak in Spanish. Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 402322585,
-        "sha256": "963c1e71d74d603eafaf18a4bb6390c45b877a2f7a9757f0470d8319fdbebca2",
+        "seed": 1385610432,
+        "sha256": "13ae8ee956b4622ec96ce11b4532bfbbfdf3254838eba33fdcf93565ddc36952",
         "generation": {
-          "elapsed_seconds": 15.402317041007336,
+          "elapsed_seconds": 17.3367675000045,
           "model_load_seconds": 0.0,
-          "rtf": 4.8129733996168955,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.736238102080636,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8074,
+    "transcript": " Mostruitos peludos",
+    "metrics": {
+      "duration_seconds": 1.9522902494331065,
+      "rms_dbfs": -35.61,
+      "peak": 0.1297,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.34,
+      "trailing_silence_seconds": 0.12,
+      "longest_internal_pause_seconds": 0.08
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/morbidi_mostriciattoli/locales/es/audio/activity-title.wav.raw.wav",
+    "sha256": "319aa5d45a187b483562d0d16ddb70c5f927614672fa1e118da49a47f8de32ca",
+    "receipt_sha256": "ff06f5797a74aaa91e26f658971862f329db33e1dbe1e1aea28ed85bde944a1f"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/morbidi_mostriciattoli/locales/es/audio/activity-title.wav.extracted.wav",
+    "sha256": "8f195fbf7ae4d025f5032d458dcb476ee14ad1fb038d7be64689725b2219836a"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/morbidi_mostriciattoli/locales/es/audio/activity-title.wav.delivery.wav",
+    "sha256": "f997e04c0fdff8fc33da7ec38497dd9cf9ebe11d25786fea29e3ec18bc1f1fc2"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/morbidi_mostriciattoli/locales/es/audio/activity-title.wav.raw.wav",
+    "source_sha256": "319aa5d45a187b483562d0d16ddb70c5f927614672fa1e118da49a47f8de32ca",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/morbidi_mostriciattoli/locales/es/audio/activity-title.wav.extracted.wav",
+    "output_sha256": "8f195fbf7ae4d025f5032d458dcb476ee14ad1fb038d7be64689725b2219836a",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Monstruitos peludos",
+      "locale": "es",
+      "cue_id": "morbidi_mostriciattoli.title.es",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/morbidi_mostriciattoli/locales/es/audio/activity-title.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "ff06f5797a74aaa91e26f658971862f329db33e1dbe1e1aea28ed85bde944a1f"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "Monstruitos peludos",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Escucha esta frase en español. Monstruitos peludos",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Mostruitos peludos",
+    "raw_word_alignment": [
+      {
+        "word": "escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.46
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.46,
+        "end_seconds": 0.8
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.8,
+        "end_seconds": 1.1
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.1,
+        "end_seconds": 1.42
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.42,
+        "end_seconds": 1.86
+      },
+      {
+        "word": "monstruitos",
+        "start_seconds": 2.84,
+        "end_seconds": 3.74
+      },
+      {
+        "word": "peludos",
+        "start_seconds": 3.74,
+        "end_seconds": 4.3
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "mostruitos",
+        "start_seconds": 0.0,
+        "end_seconds": 1.36
+      },
+      {
+        "word": "peludos",
+        "start_seconds": 1.36,
+        "end_seconds": 1.96
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5168847476734835,
+        "no_speech_prob": 0.010509287938475609,
+        "compression_ratio": 0.8793103448275862,
+        "word_probabilities": [
+          0.91455078125,
+          0.98486328125,
+          0.99609375,
+          0.97021484375,
+          0.9873046875
+        ]
+      },
+      {
+        "avg_logprob": -0.5168847476734835,
+        "no_speech_prob": 0.010509287938475609,
+        "compression_ratio": 0.8793103448275862,
+        "word_probabilities": [
+          0.623046875,
+          0.90673828125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.5510683059692383,
+        "no_speech_prob": 0.17609161138534546,
+        "compression_ratio": 0.6923076923076923,
+        "word_probabilities": [
+          0.49462890625,
+          0.9326171875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 116,
+    "extracted_voiced_seconds": 1.16,
+    "unremoved_raw_target_tokens": [
+      "monstruitos",
+      "peludos"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "monstruitos",
+      "peludos"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 4.640181405895691,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.86,
+      "search_end_seconds": 2.84,
+      "prefix_last_word_end_seconds": 1.86,
+      "target_first_word_start_seconds": 2.84,
+      "gap_seconds": 0.8680272108843538,
+      "verified_silence_start_seconds": 1.9198639455782314,
+      "verified_silence_end_seconds": 2.7878911564625852,
+      "gap_rms_dbfs": -68.054,
+      "gap_peak_dbfs": -43.906,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.353877551020408,
+      "cut_sample": 51903,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 7365,
+      "removed_seconds": 0.3340136054421769,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 59268,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/morbidi_mostriciattoli/locales/es/audio/activity-title.wav.delivery.wav",
+      "sha256": "f997e04c0fdff8fc33da7ec38497dd9cf9ebe11d25786fea29e3ec18bc1f1fc2"
+    }
+  },
   "output": {
     "path": "activities/morbidi_mostriciattoli/locales/es/audio/activity-title.wav",
-    "bytes": 141206,
-    "sha256": "93eb77a1582c0c340389e1b434326d4f1e73c0c7cddc61893d59233437000ed6"
+    "sha256": "2f6496d99c47bf68f0b27c22ed8a2bda6402643a95e05b92d4c16b7a7bee1465",
+    "bytes": 86174
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "d1feb7d40eaf0d7b8ac276dbb72dc5a34be21e1cd3ded5db7c222c82c151e4ae",
+    "original_sha256": "9c5aa1167839ab76afbeb312ffc4b4451a11214e99dda9d5a582b6da2d75141a",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

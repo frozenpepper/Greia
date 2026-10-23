@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T20:37:05.586008+00:00",
+  "created_utc": "2026-10-21T18:38:30.927961+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Listen to this phrase in English.",
+    "prefix_word_count": 6,
+    "target": "Rectangle",
+    "target_word_count": 1,
+    "target_verification": "warn",
+    "composite_text": "Listen to this phrase in English. Rectangle",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Rectangle",
+    "cue_id": "greia.vocab.shape_rectangle.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "Rectangle",
     "cue_id": "greia.vocab.shape_rectangle.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "assets/audio/vocab/v1/en/shape_rectangle.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-223654-28ec1141",
-    "idempotency_key": "greia-0533f04278bc4008998c241c11d25598",
+    "job_id": "20261021-203817-6598f9bb",
+    "idempotency_key": "greia-9b3bca75c14b4e52aa46e41209647bc8",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,204 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1756249783,
+    "script_seed": 4097842626,
     "language_direction": "English",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
-    "effective_delivery": "Speak in English. Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in English. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2993475129,
-        "sha256": "1b6c2ceac96c93c1e816f03e92a3d940af9716211dfc97b65f984be46b2cb582",
+        "seed": 1452803669,
+        "sha256": "cf05d21b59ff31bcd9793859d25896f5dddb448825a95e1b1c4a0607dc3625c0",
         "generation": {
-          "elapsed_seconds": 9.621539292042144,
+          "elapsed_seconds": 12.351972166987252,
           "model_load_seconds": 0.0,
-          "rtf": 6.012835720472124,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.675999851293265,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " rectangle",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/vocab/v1/en/shape_rectangle.wav.raw.wav",
+    "sha256": "e2d6c261db2fcc6e985e53db9aabca182f276e2d0bbdd2f8743253d7e62cfbd8",
+    "receipt_sha256": "dda3fe0f44d325dc220fa9498e20254f3b188da97f31a8b32c20828ebf77b6d5"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/vocab/v1/en/shape_rectangle.wav.extracted.wav",
+    "sha256": "6acb900b9e65f50b9d01f22e4a095fedbde25e023a1682df66b9c324bb44b2b7"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/assets/audio/vocab/v1/en/shape_rectangle.wav.raw.wav",
+    "source_sha256": "e2d6c261db2fcc6e985e53db9aabca182f276e2d0bbdd2f8743253d7e62cfbd8",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/assets/audio/vocab/v1/en/shape_rectangle.wav.extracted.wav",
+    "output_sha256": "6acb900b9e65f50b9d01f22e4a095fedbde25e023a1682df66b9c324bb44b2b7",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Rectangle",
+      "locale": "en",
+      "cue_id": "greia.vocab.shape_rectangle.en",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/assets/audio/vocab/v1/en/shape_rectangle.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "dda3fe0f44d325dc220fa9498e20254f3b188da97f31a8b32c20828ebf77b6d5"
+    },
+    "locale": "en",
+    "prefix": "Listen to this phrase in English.",
+    "target": "Rectangle",
+    "remove_first_words": 6,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Listen to this phrase in English. Rectangle.",
+    "extracted_transcript": " rectangle",
+    "raw_word_alignment": [
+      {
+        "word": "listen",
+        "start_seconds": 0.0,
+        "end_seconds": 0.42
+      },
+      {
+        "word": "to",
+        "start_seconds": 0.42,
+        "end_seconds": 0.62
+      },
+      {
+        "word": "this",
+        "start_seconds": 0.62,
+        "end_seconds": 0.78
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.78,
+        "end_seconds": 1.1
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.1,
+        "end_seconds": 1.32
+      },
+      {
+        "word": "english",
+        "start_seconds": 1.32,
+        "end_seconds": 1.88
+      },
+      {
+        "word": "rectangle",
+        "start_seconds": 2.56,
+        "end_seconds": 3.2
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "rectangle",
+        "start_seconds": 0.0,
+        "end_seconds": 0.74
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5718410015106201,
+        "no_speech_prob": 0.009159437380731106,
+        "compression_ratio": 0.88,
+        "word_probabilities": [
+          0.87255859375,
+          0.98876953125,
+          0.99072265625,
+          0.99853515625,
+          0.9423828125,
+          0.9853515625
+        ]
+      },
+      {
+        "avg_logprob": -0.5718410015106201,
+        "no_speech_prob": 0.009159437380731106,
+        "compression_ratio": 0.88,
+        "word_probabilities": [
+          0.736328125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6591882705688477,
+        "no_speech_prob": 0.11935462057590485,
+        "compression_ratio": 0.5294117647058824,
+        "word_probabilities": [
+          0.250732421875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 63,
+    "extracted_voiced_seconds": 0.63,
+    "unremoved_raw_target_tokens": [
+      "rectangle"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "rectangle"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.3601814058956916,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.88,
+      "target_first_word_start_seconds": 2.56,
+      "gap_seconds": 0.5687074829931973,
+      "verified_silence_start_seconds": 1.9398639455782314,
+      "verified_silence_end_seconds": 2.5085714285714285,
+      "gap_rms_dbfs": -69.307,
+      "gap_peak_dbfs": -48.371,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.22421768707483,
+      "cut_sample": 49044,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "assets/audio/vocab/v1/en/shape_rectangle.wav",
-    "bytes": 70646,
-    "sha256": "6d8d9c1fde6a1c7590be33ebe9b1f150fed3079639de4482cf3aead49297fcd6"
+    "sha256": "1ce3ef2bf2ffb29e634fd047c66d80419c589c61d5d414b35de9dc8fc8f99295",
+    "bytes": 50174
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "b0f27dc1828b87810e3006adc63ad73b3b4eb5234ef751b09870cc8aba563f18",
+    "original_sha256": "6d8d9c1fde6a1c7590be33ebe9b1f150fed3079639de4482cf3aead49297fcd6",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

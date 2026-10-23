@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T23:21:55.671464+00:00",
+  "created_utc": "2026-10-23T01:05:17.607820+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
@@ -8,17 +8,22 @@
     "text": "Dov'è la lettera H?",
     "cue_id": "alfabeto_leo.ask_H",
     "output": "activities/alfabeto_leo/assets/audio/it/ask_H.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think."
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic"
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-012143-834e3fa8",
-    "idempotency_key": "greia-017edeba268e4cbd8519d79e307025d7",
+    "job_id": "20261023-030456-eb81a4f7",
+    "idempotency_key": "greia-1fe79e9e65624eb3834f922f0974feff",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +46,339 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3167635237,
+    "script_seed": 1753951816,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
-    "effective_delivery": "Speak naturally in Italian. Leo, a warm, curious cartoon guide. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "delivery_prompt": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "effective_delivery": "Speak in Italian. Voce calda e calma. Pronuncia chiara e naturale.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2100125382,
-        "sha256": "e3beab5c1493bb83d6050503a8fb887b5eb4081635d0bb6de831c6e155998ac7",
+        "seed": 360912340,
+        "sha256": "2303d6275eb6268c6e114333449f307df7c7c1dac491562f0f5f513463b65025",
         "generation": {
-          "elapsed_seconds": 11.141580249997787,
+          "elapsed_seconds": 19.72845354198944,
           "model_load_seconds": 0.0,
-          "rtf": 5.356099791682295,
-          "peak_memory_gb": 8.21220922
+          "rtf": 3.736331594707763,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-audio-parakeet-tdt-v3",
+    "transcript": "Dov'è la lettera ecccia?",
+    "score": 0.819,
+    "detail": "Delivered target transcribed and screened; human listening remains pending",
+    "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+    "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+    "flags": [],
+    "metrics": {
+      "duration_seconds": 1.7601814058956917,
+      "rms_dbfs": -33.41,
+      "peak": 0.11996,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.0,
+      "trailing_silence_seconds": 0.1,
+      "longest_internal_pause_seconds": 0.02
+    }
   },
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/it/ask_H.wav",
-    "bytes": 91814,
-    "sha256": "b10dfd48f032762f03a1b0bcf21018ea9e302f384c7cf727bb2f7b1bb06d6d7a"
+    "bytes": 77702,
+    "sha256": "618d83cf3b4be55df4903bbd868b500aa566aec01ca277ffc8c45c2e017cf55c"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "short_phrase": {
+    "mode": "automatic-carrier",
+    "composition_policy": "natural-context-period-v1",
+    "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/db7472a36a5341e095ab8754f4988824",
+    "prefix": "Guardiamo insieme le lettere.",
+    "composite_text": "Guardiamo insieme le lettere.\n\nDov'è la lettera H?",
+    "effective_delivery": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "extraction": {
+      "schema_version": 1,
+      "algorithm_version": "greia-spoken-carrier-extractor-v7",
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "status": "EXTRACTED_PENDING_LISTENING",
+      "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/db7472a36a5341e095ab8754f4988824/attempt-01/raw.wav",
+      "source_sha256": "2303d6275eb6268c6e114333449f307df7c7c1dac491562f0f5f513463b65025",
+      "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/db7472a36a5341e095ab8754f4988824/attempt-01/target.wav",
+      "output_sha256": "8f59d0ab0278119952d09ec990169f3537d28ce9bfc953d580cb4292bd9beb47",
+      "output_bytes": 169020,
+      "locale": "it",
+      "prefix": "Guardiamo insieme le lettere.",
+      "target": "Dov'è la lettera H?",
+      "remove_first_words": 4,
+      "ignore_accents": true,
+      "target_verification_requested": "warn",
+      "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+      "target_comparison_score": 0.819,
+      "target_word_count_matches": true,
+      "target_numbers_match": true,
+      "target_comparison_flags": [],
+      "target_transcript_warning": true,
+      "recognizer": "mlx-audio-parakeet-tdt-v3",
+      "recognizer_version": "0.5.0",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "extracted_transcript": "Dov'è la lettera ecccia?",
+      "expected_target_tokens": [
+        "dov'e",
+        "la",
+        "lettera",
+        "h"
+      ],
+      "extracted_target_tokens": [
+        "dov'e",
+        "la",
+        "lettera",
+        "ekkkia"
+      ],
+      "extracted_target_exact_match": false,
+      "transcription_settings": {
+        "language_detection": "automatic",
+        "expected_text_prompt": null,
+        "timestamps": "model-provided-token-timestamps"
+      },
+      "sample_rate": 48000,
+      "duration_seconds": 5.280166666666666,
+      "boundary": {
+        "search_strategy": "target-only-global-quiet-run-v7",
+        "verified_silence_start_seconds": 1.94,
+        "verified_silence_end_seconds": 3.62,
+        "verified_silence_duration_seconds": 1.68,
+        "cut_sample": 168960,
+        "cut_time_seconds": 3.52,
+        "padding_seconds": 0.1,
+        "quiet_run_start_sample": 93120,
+        "quiet_run_end_sample": 173760,
+        "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+      },
+      "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/db7472a36a5341e095ab8754f4988824/attempt-01/target.wav.search/e28cf948e6cc4181acec740e0b14e997",
+      "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/db7472a36a5341e095ab8754f4988824/attempt-01/target.wav.search/e28cf948e6cc4181acec740e0b14e997/search.json",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/db7472a36a5341e095ab8754f4988824/attempt-01/raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "377c59bf3c10b359cf558fe8fd7b78045ecfd4b13e87003f9a9248cf6969b466",
+      "candidate_sha256": "8f59d0ab0278119952d09ec990169f3537d28ce9bfc953d580cb4292bd9beb47",
+      "candidate_id": "candidate-01",
+      "candidate_count": 1,
+      "qualifying_quiet_run_count": 1,
+      "candidate_results": [
+        {
+          "candidate_id": "candidate-01",
+          "quiet_run": {
+            "start_sample": 93120,
+            "end_sample": 173760,
+            "start_seconds": 1.94,
+            "end_seconds": 3.62,
+            "duration_seconds": 1.68
+          },
+          "cut_sample": 168960,
+          "cut_time_seconds": 3.52,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/db7472a36a5341e095ab8754f4988824/attempt-01/target.wav.search/e28cf948e6cc4181acec740e0b14e997/candidate-01.wav",
+          "preceding_voiced_seconds": 1.54,
+          "retained_voiced_seconds": 1.36,
+          "retained_duration_seconds": 1.7601666666666667,
+          "candidate_sha256": "8f59d0ab0278119952d09ec990169f3537d28ce9bfc953d580cb4292bd9beb47",
+          "extracted_transcript": "Dov'è la lettera ecccia?",
+          "canonical_transcript_tokens": [
+            "dov'e",
+            "la",
+            "lettera",
+            "ekkkia"
+          ],
+          "exact_target_match": false,
+          "target_comparison_score": 0.819,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": true,
+          "asr_segment_count": 1
+        }
+      ],
+      "human_review": "PENDING",
+      "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+      "delivery": {
+        "policy": "verified-carrier-gap-delivery-v1",
+        "removed_frames": 0,
+        "removed_seconds": 0.0,
+        "retained_verified_quiet_seconds": 0.1,
+        "raw_delivery_start_sample": 168960,
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/db7472a36a5341e095ab8754f4988824/attempt-01/delivery-target.wav",
+        "sha256": "8f59d0ab0278119952d09ec990169f3537d28ce9bfc953d580cb4292bd9beb47"
+      }
+    },
+    "quality": {
+      "disposition": "PASS",
+      "score": 0.819,
+      "transcript": "Dov'è la lettera ecccia?",
+      "metrics": {
+        "duration_seconds": 1.7601814058956917,
+        "rms_dbfs": -33.41,
+        "peak": 0.11996,
+        "clipped_fraction": 0.0,
+        "leading_silence_seconds": 0.0,
+        "trailing_silence_seconds": 0.1,
+        "longest_internal_pause_seconds": 0.02
+      },
+      "flags": [],
+      "ignore_accents": true,
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "detail": "Delivered target transcribed and screened; human listening remains pending"
+    },
+    "history": [
+      {
+        "attempt": 1,
+        "status": "PASS",
+        "quality": {
+          "disposition": "PASS",
+          "score": 0.819,
+          "transcript": "Dov'è la lettera ecccia?",
+          "metrics": {
+            "duration_seconds": 1.7601814058956917,
+            "rms_dbfs": -33.41,
+            "peak": 0.11996,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.0,
+            "trailing_silence_seconds": 0.1,
+            "longest_internal_pause_seconds": 0.02
+          },
+          "flags": [],
+          "ignore_accents": true,
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "detail": "Delivered target transcribed and screened; human listening remains pending"
+        },
+        "extraction": {
+          "schema_version": 1,
+          "algorithm_version": "greia-spoken-carrier-extractor-v7",
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "status": "EXTRACTED_PENDING_LISTENING",
+          "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/db7472a36a5341e095ab8754f4988824/attempt-01/raw.wav",
+          "source_sha256": "2303d6275eb6268c6e114333449f307df7c7c1dac491562f0f5f513463b65025",
+          "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/db7472a36a5341e095ab8754f4988824/attempt-01/target.wav",
+          "output_sha256": "8f59d0ab0278119952d09ec990169f3537d28ce9bfc953d580cb4292bd9beb47",
+          "output_bytes": 169020,
+          "locale": "it",
+          "prefix": "Guardiamo insieme le lettere.",
+          "target": "Dov'è la lettera H?",
+          "remove_first_words": 4,
+          "ignore_accents": true,
+          "target_verification_requested": "warn",
+          "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+          "target_comparison_score": 0.819,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_transcript_warning": true,
+          "recognizer": "mlx-audio-parakeet-tdt-v3",
+          "recognizer_version": "0.5.0",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "extracted_transcript": "Dov'è la lettera ecccia?",
+          "expected_target_tokens": [
+            "dov'e",
+            "la",
+            "lettera",
+            "h"
+          ],
+          "extracted_target_tokens": [
+            "dov'e",
+            "la",
+            "lettera",
+            "ekkkia"
+          ],
+          "extracted_target_exact_match": false,
+          "transcription_settings": {
+            "language_detection": "automatic",
+            "expected_text_prompt": null,
+            "timestamps": "model-provided-token-timestamps"
+          },
+          "sample_rate": 48000,
+          "duration_seconds": 5.280166666666666,
+          "boundary": {
+            "search_strategy": "target-only-global-quiet-run-v7",
+            "verified_silence_start_seconds": 1.94,
+            "verified_silence_end_seconds": 3.62,
+            "verified_silence_duration_seconds": 1.68,
+            "cut_sample": 168960,
+            "cut_time_seconds": 3.52,
+            "padding_seconds": 0.1,
+            "quiet_run_start_sample": 93120,
+            "quiet_run_end_sample": 173760,
+            "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+          },
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/db7472a36a5341e095ab8754f4988824/attempt-01/target.wav.search/e28cf948e6cc4181acec740e0b14e997",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/db7472a36a5341e095ab8754f4988824/attempt-01/target.wav.search/e28cf948e6cc4181acec740e0b14e997/search.json",
+          "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/db7472a36a5341e095ab8754f4988824/attempt-01/raw.wav.receipt.json",
+          "source_provider_receipt_sha256": "377c59bf3c10b359cf558fe8fd7b78045ecfd4b13e87003f9a9248cf6969b466",
+          "candidate_sha256": "8f59d0ab0278119952d09ec990169f3537d28ce9bfc953d580cb4292bd9beb47",
+          "candidate_id": "candidate-01",
+          "candidate_count": 1,
+          "qualifying_quiet_run_count": 1,
+          "candidate_results": [
+            {
+              "candidate_id": "candidate-01",
+              "quiet_run": {
+                "start_sample": 93120,
+                "end_sample": 173760,
+                "start_seconds": 1.94,
+                "end_seconds": 3.62,
+                "duration_seconds": 1.68
+              },
+              "cut_sample": 168960,
+              "cut_time_seconds": 3.52,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/db7472a36a5341e095ab8754f4988824/attempt-01/target.wav.search/e28cf948e6cc4181acec740e0b14e997/candidate-01.wav",
+              "preceding_voiced_seconds": 1.54,
+              "retained_voiced_seconds": 1.36,
+              "retained_duration_seconds": 1.7601666666666667,
+              "candidate_sha256": "8f59d0ab0278119952d09ec990169f3537d28ce9bfc953d580cb4292bd9beb47",
+              "extracted_transcript": "Dov'è la lettera ecccia?",
+              "canonical_transcript_tokens": [
+                "dov'e",
+                "la",
+                "lettera",
+                "ekkkia"
+              ],
+              "exact_target_match": false,
+              "target_comparison_score": 0.819,
+              "target_word_count_matches": true,
+              "target_numbers_match": true,
+              "target_comparison_flags": [],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": true,
+              "asr_segment_count": 1
+            }
+          ],
+          "human_review": "PENDING",
+          "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+          "delivery": {
+            "policy": "verified-carrier-gap-delivery-v1",
+            "removed_frames": 0,
+            "removed_seconds": 0.0,
+            "retained_verified_quiet_seconds": 0.1,
+            "raw_delivery_start_sample": 168960,
+            "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/db7472a36a5341e095ab8754f4988824/attempt-01/delivery-target.wav",
+            "sha256": "8f59d0ab0278119952d09ec990169f3537d28ce9bfc953d580cb4292bd9beb47"
+          }
+        },
+        "candidate": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/db7472a36a5341e095ab8754f4988824/attempt-01/candidate.wav"
+      }
+    ]
+  },
   "corpus_replacement": {
-    "original_sha256": "388458623b13302b5dc801e7cbdd1b9cbd485f90dce6fa0b5779e795e75b45eb",
+    "original_sha256": "20ce8a5d3a63729cbb02ec6d860bbb2ff6cebfaefdda3513dc8704d18ee0cb83",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

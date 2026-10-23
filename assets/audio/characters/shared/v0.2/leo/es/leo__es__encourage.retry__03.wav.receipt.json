@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T18:52:42.319891+00:00",
+  "created_utc": "2026-10-21T17:42:11.770528+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "¡Una vez más!",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. ¡Una vez más!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "shared_character_utterance",
+    "locale": "es",
+    "text": "¡Una vez más!",
+    "cue_id": "greia.shared.leo__es__encourage.retry__03.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "shared_character_utterance",
     "locale": "es",
     "text": "¡Una vez más!",
     "cue_id": "greia.shared.leo__es__encourage.retry__03.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "assets/audio/characters/shared/v0.2/leo/es/leo__es__encourage.retry__03.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-205236-19c575c2",
-    "idempotency_key": "greia-5f3aa7dd0c9d41aaa88db22f93cd6dbb",
+    "job_id": "20261021-194148-1a59d5db",
+    "idempotency_key": "greia-ae3955e3b65049478bad23dacc3a5404",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,184 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1286524663,
+    "script_seed": 497218746,
     "language_direction": "Spanish",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
-    "effective_delivery": "Speak in Spanish. Leo, a warm, curious cartoon guide. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2008250390,
-        "sha256": "05f710e02378237712dfbef2c2c65f3a95c8bc246e874c0cc2c60f750cde291c",
+        "seed": 2546410912,
+        "sha256": "e5cbcc3a477b989b32412b6cb54d6267ec364f863a0912985833fd013240132f",
         "generation": {
-          "elapsed_seconds": 5.972736582974903,
+          "elapsed_seconds": 22.635368041999754,
           "model_load_seconds": 0.0,
-          "rtf": 4.14725373195804,
-          "peak_memory_gb": 8.843167284
+          "rtf": 4.286866205359633,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": "Una vez más.",
+    "metrics": {
+      "duration_seconds": 1.4191836734693877,
+      "rms_dbfs": -33.83,
+      "peak": 0.14203,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.1,
+      "trailing_silence_seconds": 0.22,
+      "longest_internal_pause_seconds": 0.0
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v1",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/characters/shared/v0.2/leo/es/leo__es__encourage.retry__03.wav.raw.wav",
+    "sha256": "43ef3e04e713b1eb092edc626f2b6b5e42ae7437c2874715160dac92e11a5cf2",
+    "receipt_sha256": "976d19a54b431e9f6a0e87d1992c16d54cd2aaa5c303d036acc354abf39a71d8"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/characters/shared/v0.2/leo/es/leo__es__encourage.retry__03.wav.extracted.wav",
+    "sha256": "e051f468ccf202e984e6186b57ed0f928443aa4f6875fe6f516914dcd7c5d745"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/assets/audio/characters/shared/v0.2/leo/es/leo__es__encourage.retry__03.wav.delivery.wav",
+    "sha256": "e051f468ccf202e984e6186b57ed0f928443aa4f6875fe6f516914dcd7c5d745"
+  },
+  "extraction": {
+    "schema_version": 1,
+    "algorithm_version": "greia-spoken-carrier-extractor-v7",
+    "comparison_policy": "locale-number-tokens-v1",
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-raw/assets/audio/characters/shared/v0.2/leo/es/leo__es__encourage.retry__03.wav.raw.wav",
+    "source_sha256": "43ef3e04e713b1eb092edc626f2b6b5e42ae7437c2874715160dac92e11a5cf2",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/assets/audio/characters/shared/v0.2/leo/es/leo__es__encourage.retry__03.wav.extracted.wav",
+    "output_sha256": "e051f468ccf202e984e6186b57ed0f928443aa4f6875fe6f516914dcd7c5d745",
+    "output_bytes": 62630,
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "¡Una vez más!",
+    "remove_first_words": 5,
+    "ignore_accents": true,
+    "target_verification_requested": "warn",
+    "target_verification_policy": "warn",
+    "target_comparison_score": 1.0,
+    "target_word_count_matches": true,
+    "target_numbers_match": true,
+    "target_comparison_flags": [],
+    "target_transcript_warning": false,
+    "recognizer": "mlx-whisper-base",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extracted_transcript": "Una vez más.",
+    "expected_target_tokens": [
+      "una",
+      "vez",
+      "mas"
+    ],
+    "extracted_target_tokens": [
+      "una",
+      "vez",
+      "mas"
+    ],
+    "extracted_target_exact_match": true,
+    "transcription_settings": {
+      "language": "es",
+      "initial_prompt": null,
+      "word_timestamps": true,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "sample_rate": 22050,
+    "duration_seconds": 5.280181405895692,
+    "boundary": {
+      "search_strategy": "target-only-global-quiet-run-v7",
+      "verified_silence_start_seconds": 2.5541950113378684,
+      "verified_silence_end_seconds": 3.960997732426304,
+      "verified_silence_duration_seconds": 1.4068027210884353,
+      "cut_sample": 85135,
+      "cut_time_seconds": 3.860997732426304,
+      "padding_seconds": 0.1,
+      "quiet_run_start_sample": 56320,
+      "quiet_run_end_sample": 87340,
+      "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+    },
+    "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/assets/audio/characters/shared/v0.2/leo/es/leo__es__encourage.retry__03.wav.extracted.wav.search/337117d230434745a1dffbd650e1fb7f",
+    "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/assets/audio/characters/shared/v0.2/leo/es/leo__es__encourage.retry__03.wav.extracted.wav.search/337117d230434745a1dffbd650e1fb7f/search.json",
+    "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-raw/assets/audio/characters/shared/v0.2/leo/es/leo__es__encourage.retry__03.wav.raw.wav.receipt.json",
+    "source_provider_receipt_sha256": "976d19a54b431e9f6a0e87d1992c16d54cd2aaa5c303d036acc354abf39a71d8",
+    "candidate_sha256": "e051f468ccf202e984e6186b57ed0f928443aa4f6875fe6f516914dcd7c5d745",
+    "candidate_id": "candidate-01",
+    "candidate_count": 1,
+    "qualifying_quiet_run_count": 1,
+    "candidate_results": [
+      {
+        "candidate_id": "candidate-01",
+        "quiet_run": {
+          "start_sample": 56320,
+          "end_sample": 87340,
+          "start_seconds": 2.5541950113378684,
+          "end_seconds": 3.960997732426304,
+          "duration_seconds": 1.4068027210884353
+        },
+        "cut_sample": 85135,
+        "cut_time_seconds": 3.860997732426304,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/assets/audio/characters/shared/v0.2/leo/es/leo__es__encourage.retry__03.wav.extracted.wav.search/337117d230434745a1dffbd650e1fb7f/candidate-01.wav",
+        "preceding_voiced_seconds": 1.94,
+        "retained_voiced_seconds": 1.0,
+        "retained_duration_seconds": 1.4191836734693877,
+        "candidate_sha256": "e051f468ccf202e984e6186b57ed0f928443aa4f6875fe6f516914dcd7c5d745",
+        "extracted_transcript": "Una vez más.",
+        "canonical_transcript_tokens": [
+          "una",
+          "vez",
+          "mas"
+        ],
+        "exact_target_match": true,
+        "target_comparison_score": 1.0,
+        "target_word_count_matches": true,
+        "target_numbers_match": true,
+        "target_comparison_flags": [],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": true,
+        "asr_segment_count": 1
+      }
+    ],
+    "human_review": "PENDING",
+    "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+    "target_verification_effective_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+    "target_verification_warning": false,
+    "saved_recovery_policy": "target-only-v7-saved-v1",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 0,
+      "removed_seconds": 0.0,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 85135,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/assets/audio/characters/shared/v0.2/leo/es/leo__es__encourage.retry__03.wav.delivery.wav",
+      "sha256": "e051f468ccf202e984e6186b57ed0f928443aa4f6875fe6f516914dcd7c5d745"
+    }
+  },
   "output": {
     "path": "assets/audio/characters/shared/v0.2/leo/es/leo__es__encourage.retry__03.wav",
-    "bytes": 63590,
-    "sha256": "47fa8707fd12ecb99002d86a780bf1e8bfdb6e33613d73462143aeca19bae703"
+    "sha256": "55fe83246e918afd4f1e05721b6848d963e7a37baf0202e7e7202c6b8e073181",
+    "bytes": 62664
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "b4278536fd37e6fa456b27807d098f6d5d72e32bc8af51bdcf069b06024e077c",
+    "original_sha256": "8fb7b6c9129a5eac0048daf17c41d0b79238fce6224de74589440e038904dab2",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T19:37:07.421826+00:00",
+  "created_utc": "2026-10-22T11:08:49.424756+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Listen to this phrase in English.",
+    "prefix_word_count": 6,
+    "target": "Twenty-two!",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Listen to this phrase in English...\n\nTwenty-two!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Twenty-two!",
+    "cue_id": "greia.numbers.22.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "Twenty-two!",
     "cue_id": "greia.numbers.22.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "assets/audio/numbers/v1/en/22.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-213658-139974d9",
-    "idempotency_key": "greia-390c7bda61404cbab5073f6b6c96e3d7",
+    "job_id": "20261022-130827-61ffccca",
+    "idempotency_key": "greia-d9de0d7cbb6f41588beba5ae6fb0ad4d",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,212 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1048805593,
+    "script_seed": 2223136372,
     "language_direction": "English",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words.",
-    "effective_delivery": "Speak in English. Leo, a warm, curious cartoon guide. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "effective_delivery": "Speak in English. Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3222168461,
-        "sha256": "82af2a42b953549321230c1e8a9ba01d4817b9cea1d9e8310e291e82198c071d",
+        "seed": 2133659116,
+        "sha256": "157efee5ecb880c079ba25ce83e151c76273813e76be239ece2c9e0a5116a857",
         "generation": {
-          "elapsed_seconds": 8.510088167036884,
+          "elapsed_seconds": 18.416042791999644,
           "model_load_seconds": 0.0,
-          "rtf": 6.6476408022681035,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.9688321810279037,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": "22",
+    "metrics": {
+      "duration_seconds": 1.2980045351473923,
+      "rms_dbfs": -37.03,
+      "peak": 0.11444,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.08,
+      "trailing_silence_seconds": 0.28,
+      "longest_internal_pause_seconds": 0.06
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v1",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/numbers/v1/en/22.wav.raw.wav",
+    "sha256": "5d3cba1fc91eb798954cd7198a2922b52b279d839a339587ac191d047db6195e",
+    "receipt_sha256": "fe0acd0e946a2e856f46e3b49c0bbe0f6909e1f8279ef03781aea65f78f0971a"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/numbers/v1/en/22.wav.extracted.wav",
+    "sha256": "c9382d108dafbfa1c75b215233c56f24c86837d6d6537cdde2a5467d5474c452"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/assets/audio/numbers/v1/en/22.wav.delivery.wav",
+    "sha256": "c9382d108dafbfa1c75b215233c56f24c86837d6d6537cdde2a5467d5474c452"
+  },
+  "extraction": {
+    "schema_version": 1,
+    "algorithm_version": "greia-spoken-carrier-extractor-v7",
+    "comparison_policy": "locale-number-tokens-v1",
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-raw/assets/audio/numbers/v1/en/22.wav.raw.wav",
+    "source_sha256": "5d3cba1fc91eb798954cd7198a2922b52b279d839a339587ac191d047db6195e",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/assets/audio/numbers/v1/en/22.wav.extracted.wav",
+    "output_sha256": "c9382d108dafbfa1c75b215233c56f24c86837d6d6537cdde2a5467d5474c452",
+    "output_bytes": 57286,
+    "locale": "en",
+    "prefix": "Listen to this phrase in English.",
+    "target": "Twenty-two!",
+    "remove_first_words": 6,
+    "ignore_accents": true,
+    "target_verification_requested": "warn",
+    "target_verification_policy": "warn",
+    "target_comparison_score": 1.0,
+    "target_word_count_matches": true,
+    "target_numbers_match": true,
+    "target_comparison_flags": [],
+    "target_transcript_warning": false,
+    "recognizer": "mlx-whisper-base",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extracted_transcript": "22",
+    "expected_target_tokens": [
+      "<num:22>"
+    ],
+    "extracted_target_tokens": [
+      "<num:22>"
+    ],
+    "extracted_target_exact_match": true,
+    "transcription_settings": {
+      "language": "en",
+      "initial_prompt": null,
+      "word_timestamps": true,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "sample_rate": 22050,
+    "duration_seconds": 4.640181405895691,
+    "boundary": {
+      "search_strategy": "target-only-global-quiet-run-v7",
+      "verified_silence_start_seconds": 3.212698412698413,
+      "verified_silence_end_seconds": 3.442176870748299,
+      "verified_silence_duration_seconds": 0.22947845804988662,
+      "cut_sample": 73695,
+      "cut_time_seconds": 3.3421768707482995,
+      "padding_seconds": 0.1,
+      "quiet_run_start_sample": 70840,
+      "quiet_run_end_sample": 75900,
+      "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+    },
+    "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/assets/audio/numbers/v1/en/22.wav.extracted.wav.search/c6461f1aa3e44e64b1e845fde2792470",
+    "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/assets/audio/numbers/v1/en/22.wav.extracted.wav.search/c6461f1aa3e44e64b1e845fde2792470/search.json",
+    "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-raw/assets/audio/numbers/v1/en/22.wav.raw.wav.receipt.json",
+    "source_provider_receipt_sha256": "fe0acd0e946a2e856f46e3b49c0bbe0f6909e1f8279ef03781aea65f78f0971a",
+    "candidate_sha256": "c9382d108dafbfa1c75b215233c56f24c86837d6d6537cdde2a5467d5474c452",
+    "candidate_id": "candidate-02",
+    "candidate_count": 2,
+    "qualifying_quiet_run_count": 2,
+    "candidate_results": [
+      {
+        "candidate_id": "candidate-01",
+        "quiet_run": {
+          "start_sample": 45980,
+          "end_sample": 59620,
+          "start_seconds": 2.0852607709750566,
+          "end_seconds": 2.703854875283447,
+          "duration_seconds": 0.61859410430839
+        },
+        "cut_sample": 57415,
+        "cut_time_seconds": 2.6038548752834467,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/assets/audio/numbers/v1/en/22.wav.extracted.wav.search/c6461f1aa3e44e64b1e845fde2792470/candidate-01.wav",
+        "preceding_voiced_seconds": 1.61,
+        "retained_voiced_seconds": 1.02,
+        "retained_duration_seconds": 2.036326530612245,
+        "candidate_sha256": "9a6a3237dcbfc972df7756281d720db5a3923f674872d82b1e876a8a96aa25bb",
+        "extracted_transcript": "by 822.",
+        "canonical_transcript_tokens": [
+          "by",
+          "822"
+        ],
+        "exact_target_match": false,
+        "target_comparison_score": 0.325,
+        "target_word_count_matches": false,
+        "target_numbers_match": false,
+        "target_comparison_flags": [
+          "TARGET_NUMBER_MISMATCH",
+          "TARGET_WORD_COUNT_MISMATCH"
+        ],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": false,
+        "asr_segment_count": 1
+      },
+      {
+        "candidate_id": "candidate-02",
+        "quiet_run": {
+          "start_sample": 70840,
+          "end_sample": 75900,
+          "start_seconds": 3.212698412698413,
+          "end_seconds": 3.442176870748299,
+          "duration_seconds": 0.22947845804988662
+        },
+        "cut_sample": 73695,
+        "cut_time_seconds": 3.3421768707482995,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/assets/audio/numbers/v1/en/22.wav.extracted.wav.search/c6461f1aa3e44e64b1e845fde2792470/candidate-02.wav",
+        "preceding_voiced_seconds": 2.01,
+        "retained_voiced_seconds": 0.62,
+        "retained_duration_seconds": 1.2980045351473923,
+        "candidate_sha256": "c9382d108dafbfa1c75b215233c56f24c86837d6d6537cdde2a5467d5474c452",
+        "extracted_transcript": "22",
+        "canonical_transcript_tokens": [
+          "<num:22>"
+        ],
+        "exact_target_match": true,
+        "target_comparison_score": 1.0,
+        "target_word_count_matches": true,
+        "target_numbers_match": true,
+        "target_comparison_flags": [],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": true,
+        "asr_segment_count": 1
+      }
+    ],
+    "human_review": "PENDING",
+    "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+    "target_verification_effective_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+    "target_verification_warning": false,
+    "saved_recovery_policy": "target-only-v7-saved-v1",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 0,
+      "removed_seconds": 0.0,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 73695,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/assets/audio/numbers/v1/en/22.wav.delivery.wav",
+      "sha256": "c9382d108dafbfa1c75b215233c56f24c86837d6d6537cdde2a5467d5474c452"
+    }
+  },
   "output": {
     "path": "assets/audio/numbers/v1/en/22.wav",
-    "bytes": 56534,
-    "sha256": "60761ebd7de2e1ebb6c38664e1f8a31e6da62d8ebd3061d111d58547beb44bca"
+    "sha256": "8819c1c4259607f90d512cabbe23ce3c6cdcdabe176cbcd994b0c1b5657df4fe",
+    "bytes": 57320
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "e4df445f6b6cd03a25939123f6a819451159da9de367a284230db0a4ff3eda87",
+    "original_sha256": "60761ebd7de2e1ebb6c38664e1f8a31e6da62d8ebd3061d111d58547beb44bca",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

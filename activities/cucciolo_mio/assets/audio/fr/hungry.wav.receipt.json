@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T03:32:02.507211+00:00",
+  "created_utc": "2026-10-21T16:00:44.837579+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "J'ai faim !",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. J'ai faim !",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "lilli",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "J'ai faim !",
+    "cue_id": "greia.requested.hungry.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "J'ai faim !",
     "cue_id": "greia.requested.hungry.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/cucciolo_mio/assets/audio/fr/hungry.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. A short, lively reaction: expressive and clear, one breath, no extra words."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.lilli.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "job_id": "20261020-053152-54797732",
-    "idempotency_key": "greia-98da355025bb40d0bc995ec652a9f985",
+    "job_id": "20261021-180033-29f06be7",
+    "idempotency_key": "greia-1b4a2063e5664c138c5b17fe9f6c2ec3",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,227 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3136099967,
+    "script_seed": 291964341,
     "language_direction": "French",
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. A short, lively reaction: expressive and clear, one breath, no extra words.",
-    "effective_delivery": "Speak naturally in French. Lilli, a sparkly, affectionate storybook unicorn. A short, lively reaction: expressive and clear, one breath, no extra words.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1423274013,
-        "sha256": "d56d3a48c20d4a0f38cb38338852ba211cde567cc7f00538debd867ed795bdc7",
+        "seed": 1923291437,
+        "sha256": "c2ce9451e19a224faba7c8d103df83dc70a7003ef22874a8c285f8cf7716e31d",
         "generation": {
-          "elapsed_seconds": 8.643144167028368,
+          "elapsed_seconds": 11.065295291002258,
           "model_load_seconds": 0.0,
-          "rtf": 6.751577268867361,
-          "peak_memory_gb": 6.61593154
+          "rtf": 4.322099586355937,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " J'ai faim !",
+    "metrics": {
+      "duration_seconds": 1.1217687074829932,
+      "rms_dbfs": -25.06,
+      "peak": 0.25659,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.1,
+      "trailing_silence_seconds": 0.16,
+      "longest_internal_pause_seconds": 0.1
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/cucciolo_mio/assets/audio/fr/hungry.wav.raw.wav",
+    "sha256": "c8f35c0de6f5916bee5c852abb722f4549181d88beb618ad5ae123bf9febbc43",
+    "receipt_sha256": "c2aa6f9d94b5eb4bfe44b73e7b49bc9c1fdd631979a1b71e473eb405a4d48457"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/cucciolo_mio/assets/audio/fr/hungry.wav.extracted.wav",
+    "sha256": "78c698b1339b7a037a5e45582229e1c51fc252dc5dfcbe6a9e2a0e2663521692"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/cucciolo_mio/assets/audio/fr/hungry.wav.raw.wav",
+    "source_sha256": "c8f35c0de6f5916bee5c852abb722f4549181d88beb618ad5ae123bf9febbc43",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-extracted/activities/cucciolo_mio/assets/audio/fr/hungry.wav.extracted.wav",
+    "output_sha256": "78c698b1339b7a037a5e45582229e1c51fc252dc5dfcbe6a9e2a0e2663521692",
+    "target_request": {
+      "speaker": "lilli",
+      "kind": "character_dialogue",
+      "text": "J'ai faim !",
+      "locale": "fr",
+      "cue_id": "greia.requested.hungry.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/cucciolo_mio/assets/audio/fr/hungry.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "c2aa6f9d94b5eb4bfe44b73e7b49bc9c1fdd631979a1b71e473eb405a4d48457"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "J'ai faim !",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Parfois, c'est ta forçaie ! J'ai faim !",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " J'ai faim !",
+    "raw_word_alignment": [
+      {
+        "word": "parfois",
+        "start_seconds": 0.0,
+        "end_seconds": 0.48
+      },
+      {
+        "word": "c'est",
+        "start_seconds": 0.56,
+        "end_seconds": 0.64
+      },
+      {
+        "word": "ta",
+        "start_seconds": 0.64,
+        "end_seconds": 0.74
+      },
+      {
+        "word": "forçaie",
+        "start_seconds": 0.74,
+        "end_seconds": 1.32
+      },
+      {
+        "word": "j'ai",
+        "start_seconds": 1.5,
+        "end_seconds": 1.7
+      },
+      {
+        "word": "faim",
+        "start_seconds": 1.7,
+        "end_seconds": 2.14
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "j'ai",
+        "start_seconds": 0.0,
+        "end_seconds": 0.34
+      },
+      {
+        "word": "faim",
+        "start_seconds": 0.34,
+        "end_seconds": 0.8
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.6522152764456612,
+        "no_speech_prob": 0.014683043584227562,
+        "compression_ratio": 0.8333333333333334,
+        "word_probabilities": [
+          0.40185546875,
+          0.75537109375,
+          0.95703125,
+          0.3583984375,
+          0.3193359375,
+          0.525390625,
+          0.8837890625,
+          0.9580078125,
+          0.771484375,
+          0.8779296875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.5958463880750868,
+        "no_speech_prob": 0.20509302616119385,
+        "compression_ratio": 0.5789473684210527,
+        "word_probabilities": [
+          0.1793212890625,
+          0.78662109375,
+          0.75146484375,
+          0.68408203125
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": false,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 4,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 74,
+    "extracted_voiced_seconds": 0.74,
+    "unremoved_raw_target_tokens": [
+      "j'ai",
+      "faim"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "j'ai",
+      "faim"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 2.5601814058956918,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-expanded-boundary",
+      "search_start_seconds": 0.74,
+      "search_end_seconds": 1.7,
+      "prefix_last_word_end_seconds": 1.32,
+      "target_first_word_start_seconds": 1.5,
+      "gap_seconds": 0.21950113378684807,
+      "verified_silence_start_seconds": 1.3286621315192744,
+      "verified_silence_end_seconds": 1.5481632653061224,
+      "gap_rms_dbfs": -53.796,
+      "gap_peak_dbfs": -32.022,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.4384126984126984,
+      "cut_sample": 31717,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/cucciolo_mio/assets/audio/fr/hungry.wav",
-    "bytes": 56534,
-    "sha256": "96beb103ad653c1d9ed9b3e6d6dfe5acbe7687ee6c6a1c8f8d3ee4e983edd92c"
+    "sha256": "4ddaff59d853f943f3b0975eee080be972efd80b43af4c18eef44d68d89b25a6",
+    "bytes": 49548
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "94a8753dacf68ca78b5b229f3a08b3ea443c5530043c340930044a69622afffc",
+    "original_sha256": "96beb103ad653c1d9ed9b3e6d6dfe5acbe7687ee6c6a1c8f8d3ee4e983edd92c",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

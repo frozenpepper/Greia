@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T03:30:02.001126+00:00",
+  "created_utc": "2026-10-21T15:59:59.868452+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "Elige un nombre",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. Elige un nombre",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "lilli",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "Elige un nombre",
+    "cue_id": "greia.requested.choose_name.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "Elige un nombre",
     "cue_id": "greia.requested.choose_name.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/cucciolo_mio/assets/audio/es/choose_name.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.lilli.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "job_id": "20261020-052932-1bc69879",
-    "idempotency_key": "greia-871972a8935d40ecb5eed1cc17218571",
+    "job_id": "20261021-175945-db46e51d",
+    "idempotency_key": "greia-5c2e4f75f59643b38d437778ed588336",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,233 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1774958038,
+    "script_seed": 848254680,
     "language_direction": "Spanish",
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak naturally in Spanish. Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3130769279,
-        "sha256": "0a893a54a6bea3f950a8068c4e4b94c75b8cf26bb884808e07f4e5cce6c08ef7",
+        "seed": 674642999,
+        "sha256": "12fae7a81533278d27ae2540b30ec80748eb4941fb8ffab210b11640c43da9e5",
         "generation": {
-          "elapsed_seconds": 28.18251195800258,
+          "elapsed_seconds": 13.989057582992245,
           "model_load_seconds": 0.0,
-          "rtf": 7.045334433899232,
-          "peak_memory_gb": 6.61593154
+          "rtf": 3.80120218730825,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Elige a un nombre",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/cucciolo_mio/assets/audio/es/choose_name.wav.raw.wav",
+    "sha256": "1a59bf90cb290b9ee72910c69c05b9262638d3c45724ea3f3ed62eab22c28f4c",
+    "receipt_sha256": "9d0de093afe3182a87faceedf2488d51c449aed277acb8f3d4be885d17bf7649"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/cucciolo_mio/assets/audio/es/choose_name.wav.extracted.wav",
+    "sha256": "3e2e9bb90479d51971134cc78703d5084953140702f500eb32c07b7818a20c06"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/cucciolo_mio/assets/audio/es/choose_name.wav.raw.wav",
+    "source_sha256": "1a59bf90cb290b9ee72910c69c05b9262638d3c45724ea3f3ed62eab22c28f4c",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/cucciolo_mio/assets/audio/es/choose_name.wav.extracted.wav",
+    "output_sha256": "3e2e9bb90479d51971134cc78703d5084953140702f500eb32c07b7818a20c06",
+    "target_request": {
+      "speaker": "lilli",
+      "kind": "character_dialogue",
+      "text": "Elige un nombre",
+      "locale": "es",
+      "cue_id": "greia.requested.choose_name.es",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/cucciolo_mio/assets/audio/es/choose_name.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "9d0de093afe3182a87faceedf2488d51c449aed277acb8f3d4be885d17bf7649"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "Elige un nombre",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Escucha, esta frase en español, elige a un nombre.",
+    "extracted_transcript": " Elige a un nombre",
+    "raw_word_alignment": [
+      {
+        "word": "escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.68
+      },
+      {
+        "word": "esta",
+        "start_seconds": 1.06,
+        "end_seconds": 1.18
+      },
+      {
+        "word": "frase",
+        "start_seconds": 1.18,
+        "end_seconds": 1.54
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.54,
+        "end_seconds": 1.82
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.82,
+        "end_seconds": 2.3
+      },
+      {
+        "word": "elige",
+        "start_seconds": 2.66,
+        "end_seconds": 3.02
+      },
+      {
+        "word": "a",
+        "start_seconds": 3.02,
+        "end_seconds": 3.18
+      },
+      {
+        "word": "un",
+        "start_seconds": 3.18,
+        "end_seconds": 3.28
+      },
+      {
+        "word": "nombre",
+        "start_seconds": 3.28,
+        "end_seconds": 3.54
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "elige",
+        "start_seconds": 0.0,
+        "end_seconds": 0.54
+      },
+      {
+        "word": "a",
+        "start_seconds": 0.54,
+        "end_seconds": 0.7
+      },
+      {
+        "word": "un",
+        "start_seconds": 0.7,
+        "end_seconds": 0.8
+      },
+      {
+        "word": "nombre",
+        "start_seconds": 0.8,
+        "end_seconds": 1.04
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.4817822961246266,
+        "no_speech_prob": 0.09369601309299469,
+        "compression_ratio": 0.8947368421052632,
+        "word_probabilities": [
+          0.69921875,
+          0.8115234375,
+          0.99462890625,
+          0.939453125,
+          0.9873046875,
+          0.54638671875,
+          0.7900390625,
+          0.99169921875,
+          0.92578125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.7725292444229126,
+        "no_speech_prob": 0.2410062849521637,
+        "compression_ratio": 0.68,
+        "word_probabilities": [
+          0.217529296875,
+          0.6044921875,
+          0.986328125,
+          0.91552734375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 87,
+    "extracted_voiced_seconds": 0.87,
+    "unremoved_raw_target_tokens": [
+      "elige",
+      "a",
+      "un",
+      "nombre"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "elige",
+      "a",
+      "un",
+      "nombre"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.6801814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 2.3,
+      "target_first_word_start_seconds": 2.66,
+      "gap_seconds": 0.2494331065759637,
+      "verified_silence_start_seconds": 2.359863945578231,
+      "verified_silence_end_seconds": 2.609297052154195,
+      "gap_rms_dbfs": -81.994,
+      "gap_peak_dbfs": -61.682,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.484580498866213,
+      "cut_sample": 54785,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/cucciolo_mio/assets/audio/es/choose_name.wav",
-    "bytes": 176486,
-    "sha256": "32dafe511da5ec367df6cf95926e11a29f2fc89bd84b71a6598d8310a0d266a4"
+    "sha256": "4dc896d7aea12df236f4fcfa245a1caa09481383cc2258e18ac39d9b41827d4e",
+    "bytes": 52804
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "d19967802e7d902a84530f3a12c9502ae54cc9c744e10a138a8b4da04dbcb860",
+    "original_sha256": "32dafe511da5ec367df6cf95926e11a29f2fc89bd84b71a6598d8310a0d266a4",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

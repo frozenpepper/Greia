@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T21:16:01.558877+00:00",
+  "created_utc": "2026-10-22T12:14:09.894057+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "Étoile de mer",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français...\n\nÉtoile de mer",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Étoile de mer",
+    "cue_id": "greia.vocab.starfish.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Étoile de mer",
     "cue_id": "greia.vocab.starfish.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "assets/audio/vocab/v1/fr/starfish.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-231547-53a281bd",
-    "idempotency_key": "greia-8aa22eb1701941cdba0d7e702b9fc2d2",
+    "job_id": "20261022-135345-618ae83f",
+    "idempotency_key": "greia-c8839d43310d4a409477eb37f9100ed2",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,260 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2088161177,
+    "script_seed": 2249829875,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
-    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1863962693,
-        "sha256": "88ab67c5cafdf99d09dbb26857b6ad42e06beb7b4c1aef52b144bb0c90569669",
+        "seed": 3978129995,
+        "sha256": "8fda7f14e8f78cb76a10882f4d445a060a9c089cffa2d7d2883851e1d628a8be",
         "generation": {
-          "elapsed_seconds": 13.338882124982774,
+          "elapsed_seconds": 10.925791957997717,
           "model_load_seconds": 0.0,
-          "rtf": 4.631288279028797,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.414132167490563,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8036,
+    "transcript": " et toile de mer.",
+    "metrics": {
+      "duration_seconds": 1.1017233560090702,
+      "rms_dbfs": -36.91,
+      "peak": 0.09784,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.08,
+      "trailing_silence_seconds": 0.04,
+      "longest_internal_pause_seconds": 0.06
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/vocab/v1/fr/starfish.wav.raw.wav",
+    "sha256": "10b7122cd9bfeb67349fa052c1939a7fff0b5a04e7598f892eacca888d8089cd",
+    "receipt_sha256": "3fc7be7a4f29416ed3265693db9c95c885e52dae79bdb6f7e983ac9e2e99eb96"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/vocab/v1/fr/starfish.wav.extracted.wav",
+    "sha256": "d772adb7aba5e6e2cc957bd5b37b5318f2833902f96edcb4ab967ba584a85431"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/assets/audio/vocab/v1/fr/starfish.wav.delivery.wav",
+    "sha256": "a8cdff22f2d77b6174562829dc710dac34598021995cd5d8323e965d18868492"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/assets/audio/vocab/v1/fr/starfish.wav.raw.wav",
+    "source_sha256": "10b7122cd9bfeb67349fa052c1939a7fff0b5a04e7598f892eacca888d8089cd",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/assets/audio/vocab/v1/fr/starfish.wav.extracted.wav",
+    "output_sha256": "d772adb7aba5e6e2cc957bd5b37b5318f2833902f96edcb4ab967ba584a85431",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Étoile de mer",
+      "locale": "fr",
+      "cue_id": "greia.vocab.starfish.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/assets/audio/vocab/v1/fr/starfish.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "3fc7be7a4f29416ed3265693db9c95c885e52dae79bdb6f7e983ac9e2e99eb96"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "Étoile de mer",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français et toile de mer.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Étoile de mer.",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.28
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.28,
+        "end_seconds": 0.6
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.6,
+        "end_seconds": 0.84
+      },
+      {
+        "word": "en",
+        "start_seconds": 0.84,
+        "end_seconds": 0.98
+      },
+      {
+        "word": "français",
+        "start_seconds": 0.98,
+        "end_seconds": 1.52
+      },
+      {
+        "word": "et",
+        "start_seconds": 1.52,
+        "end_seconds": 2.28
+      },
+      {
+        "word": "toile",
+        "start_seconds": 2.28,
+        "end_seconds": 2.62
+      },
+      {
+        "word": "de",
+        "start_seconds": 2.62,
+        "end_seconds": 2.78
+      },
+      {
+        "word": "mer",
+        "start_seconds": 2.78,
+        "end_seconds": 3.06
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "étoile",
+        "start_seconds": 0.0,
+        "end_seconds": 0.74
+      },
+      {
+        "word": "de",
+        "start_seconds": 0.74,
+        "end_seconds": 0.84
+      },
+      {
+        "word": "mer",
+        "start_seconds": 0.84,
+        "end_seconds": 1.1
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.40482330322265625,
+        "no_speech_prob": 0.01230786181986332,
+        "compression_ratio": 0.8518518518518519,
+        "word_probabilities": [
+          0.87939453125,
+          0.95361328125,
+          0.923828125,
+          0.94873046875,
+          0.95947265625,
+          0.448974609375,
+          0.71630859375,
+          0.98681640625,
+          0.62646484375
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6191186904907227,
+        "no_speech_prob": 0.07432601600885391,
+        "compression_ratio": 0.6521739130434783,
+        "word_probabilities": [
+          0.6591796875,
+          0.98583984375,
+          0.71435546875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": false,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 6,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 65,
+    "extracted_voiced_seconds": 0.65,
+    "unremoved_raw_target_tokens": [
+      "toile",
+      "de",
+      "mer"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "toile",
+      "de",
+      "mer"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.2001814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-expanded-boundary",
+      "search_start_seconds": 1.52,
+      "search_end_seconds": 2.62,
+      "prefix_last_word_end_seconds": 2.28,
+      "target_first_word_start_seconds": 2.28,
+      "gap_seconds": 0.5587301587301587,
+      "verified_silence_start_seconds": 1.6397278911564626,
+      "verified_silence_end_seconds": 2.1984580498866215,
+      "gap_rms_dbfs": -53.148,
+      "gap_peak_dbfs": -33.892,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.919092970521542,
+      "cut_sample": 42316,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 3955,
+      "removed_seconds": 0.17936507936507937,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 46271,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/assets/audio/vocab/v1/fr/starfish.wav.delivery.wav",
+      "sha256": "a8cdff22f2d77b6174562829dc710dac34598021995cd5d8323e965d18868492"
+    }
+  },
   "output": {
     "path": "assets/audio/vocab/v1/fr/starfish.wav",
-    "bytes": 127094,
-    "sha256": "c7e0332a25e86e100d5882d583654137210b7c52c09176966a5209f147226641"
+    "sha256": "c4945c4eff07e7fde1f20476524e8541b82c398ace9ab287978e0b9173ab3250",
+    "bytes": 48664
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "415bd6fbee84218939903c09cc279c32508458521471e92eab56edd390b57549",
+    "original_sha256": "088317c5d7f9695c16b8ecabbd48e8f3cdf5b17ce1619a6f879f8a6fe982ed7a",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

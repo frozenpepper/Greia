@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T07:49:29.959518+00:00",
+  "created_utc": "2026-10-21T14:52:57.772425+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Listen to this phrase in English.",
+    "prefix_word_count": 6,
+    "target": "Find Luna",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Listen to this phrase in English. Find Luna",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Find Luna",
+    "cue_id": "greia.requested.find_luna.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "Find Luna",
     "cue_id": "greia.requested.find_luna.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/baia_delle_orche/assets/audio/en/find_luna.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.tito.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261021-094921-d00bf447",
-    "idempotency_key": "greia-b77a7ff6ff1344c5acb3e9db7c87c711",
+    "job_id": "20261021-165241-c1f1ad63",
+    "idempotency_key": "greia-dd16e345aa794067abe83276e842a6a3",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,218 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 4272087639,
+    "script_seed": 3237423393,
     "language_direction": "English",
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in English. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in English. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2347466261,
-        "sha256": "56738ddf1b3532b8195db6bf1c8537d1b1973f19cb6c5ea0448f057effcd65fe",
+        "seed": 118281624,
+        "sha256": "2d6d6bdd87a17a461835d61cab7a4b0db06a0c5270a768a05f2a0cf262a1d75f",
         "generation": {
-          "elapsed_seconds": 4.366355542006204,
+          "elapsed_seconds": 15.176691792003112,
           "model_load_seconds": 0.0,
-          "rtf": 3.8979516816005386,
-          "peak_memory_gb": 7.648166916
+          "rtf": 3.51298756807294,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Find Lunar",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/baia_delle_orche/assets/audio/en/find_luna.wav.raw.wav",
+    "sha256": "937c9f6c1aabb0e37e8e06f92193ad00c59d1a4fc8ad1f4dca514112f298a18e",
+    "receipt_sha256": "faa600bba818b079e0524a08f96d9168d891b031723b5f727f7ffc2dbfa9083b"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/baia_delle_orche/assets/audio/en/find_luna.wav.extracted.wav",
+    "sha256": "eb23450f969062d760b7529b338ec53beab3164186d3b2e989e1c42e9f63c738"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-corpus-v1/run/carrier-raw/activities/baia_delle_orche/assets/audio/en/find_luna.wav.raw.wav",
+    "source_sha256": "937c9f6c1aabb0e37e8e06f92193ad00c59d1a4fc8ad1f4dca514112f298a18e",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-corpus-v1/run/carrier-extracted/activities/baia_delle_orche/assets/audio/en/find_luna.wav.extracted.wav",
+    "output_sha256": "eb23450f969062d760b7529b338ec53beab3164186d3b2e989e1c42e9f63c738",
+    "target_request": {
+      "speaker": "tito",
+      "kind": "character_dialogue",
+      "text": "Find Luna",
+      "locale": "en",
+      "cue_id": "greia.requested.find_luna.en",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-corpus-v1/run/carrier-raw/activities/baia_delle_orche/assets/audio/en/find_luna.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "faa600bba818b079e0524a08f96d9168d891b031723b5f727f7ffc2dbfa9083b"
+    },
+    "locale": "en",
+    "prefix": "Listen to this phrase in English.",
+    "target": "Find Luna",
+    "remove_first_words": 6,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Listen to this phrase in English. Find Lunar...",
+    "extracted_transcript": " Find Lunar",
+    "raw_word_alignment": [
+      {
+        "word": "listen",
+        "start_seconds": 0.0,
+        "end_seconds": 0.34
+      },
+      {
+        "word": "to",
+        "start_seconds": 0.34,
+        "end_seconds": 0.56
+      },
+      {
+        "word": "this",
+        "start_seconds": 0.56,
+        "end_seconds": 0.72
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.72,
+        "end_seconds": 1.0
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.0,
+        "end_seconds": 1.2
+      },
+      {
+        "word": "english",
+        "start_seconds": 1.2,
+        "end_seconds": 1.62
+      },
+      {
+        "word": "find",
+        "start_seconds": 3.1000000000000005,
+        "end_seconds": 3.7
+      },
+      {
+        "word": "lunar",
+        "start_seconds": 3.7,
+        "end_seconds": 4.3
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "find",
+        "start_seconds": 0.0,
+        "end_seconds": 1.34
+      },
+      {
+        "word": "lunar",
+        "start_seconds": 1.34,
+        "end_seconds": 1.92
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.6708773970603943,
+        "no_speech_prob": 0.014309847727417946,
+        "compression_ratio": 0.8545454545454545,
+        "word_probabilities": [
+          0.83203125,
+          0.98876953125,
+          0.98388671875,
+          0.99755859375,
+          0.97509765625,
+          0.984375
+        ]
+      },
+      {
+        "avg_logprob": -0.6708773970603943,
+        "no_speech_prob": 0.014309847727417946,
+        "compression_ratio": 0.8545454545454545,
+        "word_probabilities": [
+          0.88525390625,
+          0.52734375
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.7813167572021484,
+        "no_speech_prob": 0.365034818649292,
+        "compression_ratio": 0.5555555555555556,
+        "word_probabilities": [
+          0.5205078125,
+          0.6455078125
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 68,
+    "extracted_voiced_seconds": 0.68,
+    "unremoved_raw_target_tokens": [
+      "find",
+      "lunar"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "find",
+      "lunar"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 4.320181405895692,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.62,
+      "target_first_word_start_seconds": 3.1000000000000005,
+      "gap_seconds": 1.3668934240362811,
+      "verified_silence_start_seconds": 1.6798639455782314,
+      "verified_silence_end_seconds": 3.0467573696145123,
+      "gap_rms_dbfs": -85.948,
+      "gap_peak_dbfs": -71.224,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.363310657596372,
+      "cut_sample": 52111,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/baia_delle_orche/assets/audio/en/find_luna.wav",
-    "bytes": 49478,
-    "sha256": "d20c0e1faf5be64346db8ba44bb7cf7a9bfe5662f7aa725d43bd9f5261c0b9c1"
+    "sha256": "3cbbf86a1cb8bd92aa04b5b829c348c1e68e2758727776d11ed359b93dfba528",
+    "bytes": 86376
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "0dd3b1ffb78436f3d69afee4b4435be00c30237dfac33a106946c4912716f7c3",
+    "original_sha256": "d20c0e1faf5be64346db8ba44bb7cf7a9bfe5662f7aa725d43bd9f5261c0b9c1",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

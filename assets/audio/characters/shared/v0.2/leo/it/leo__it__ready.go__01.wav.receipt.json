@@ -1,24 +1,29 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T18:58:14.543844+00:00",
+  "created_utc": "2026-10-23T02:36:41.445160+00:00",
   "request": {
     "speaker": "leo",
-    "kind": "shared_character_utterance",
+    "kind": "character_dialogue",
     "locale": "it",
     "text": "Forza, andiamo!",
     "cue_id": "shared.ready.go.01",
     "output": "assets/audio/characters/shared/v0.2/leo/it/leo__it__ready.go__01.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. A short, lively reaction: expressive and clear, one breath, no extra words."
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic"
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-205808-8f15973d",
-    "idempotency_key": "greia-355370ad5def4cbc972bb410e5ab9fe3",
+    "job_id": "20261023-043624-f6ad6278",
+    "idempotency_key": "greia-7efe82a6a4ab48f0bc87f8a0df44203c",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +46,404 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 820433833,
+    "script_seed": 3085159898,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. A short, lively reaction: expressive and clear, one breath, no extra words.",
-    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. A short, lively reaction: expressive and clear, one breath, no extra words.",
+    "delivery_prompt": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "effective_delivery": "Speak in Italian. Voce calda e calma. Pronuncia chiara e naturale.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3148913039,
-        "sha256": "4796f73520e195c48b3496277e007d29ebd207374bdd1e93aac77e324d389208",
+        "seed": 871261084,
+        "sha256": "f05e3d4f70434f8ebc2d49ad7b7cff6df5e88ec62d31cad2f75232b7fd0d9e54",
         "generation": {
-          "elapsed_seconds": 5.645388832956087,
+          "elapsed_seconds": 14.459474000002956,
           "model_load_seconds": 0.0,
-          "rtf": 5.039775777077298,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.6147178867554572,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-audio-parakeet-tdt-v3",
+    "transcript": "Forza, andiamo!",
+    "score": 1.0,
+    "detail": "Delivered target transcribed and screened; human listening remains pending",
+    "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+    "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+    "flags": [],
+    "metrics": {
+      "duration_seconds": 1.8801814058956916,
+      "rms_dbfs": -35.92,
+      "peak": 0.13098,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.0,
+      "trailing_silence_seconds": 0.32,
+      "longest_internal_pause_seconds": 0.22
+    }
   },
-  "attempts": 1,
+  "attempts": 2,
   "output": {
     "path": "assets/audio/characters/shared/v0.2/leo/it/leo__it__ready.go__01.wav",
-    "bytes": 49478,
-    "sha256": "8155afcd242178543e37ae7beb2c32518f03fd3dd8cec9662dc290c901c414d8"
+    "bytes": 82994,
+    "sha256": "ab012123c47d6741447cb13f3b5548e613d70b2758f312885aef1aeba4db221d"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "short_phrase": {
+    "mode": "automatic-carrier",
+    "composition_policy": "natural-context-period-v1",
+    "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0c09c9534a9d4fa0b87af43ca34637e9",
+    "prefix": "Parliamo con calma insieme.",
+    "composite_text": "Parliamo con calma insieme.\n\nForza, andiamo!",
+    "effective_delivery": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "extraction": {
+      "schema_version": 1,
+      "algorithm_version": "greia-spoken-carrier-extractor-v7",
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "status": "EXTRACTED_PENDING_LISTENING",
+      "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0c09c9534a9d4fa0b87af43ca34637e9/attempt-02/raw.wav",
+      "source_sha256": "f05e3d4f70434f8ebc2d49ad7b7cff6df5e88ec62d31cad2f75232b7fd0d9e54",
+      "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0c09c9534a9d4fa0b87af43ca34637e9/attempt-02/target.wav",
+      "output_sha256": "a497600ac92d6ec2ac7cd0868d0d955577c99c9ea074ba404757ba6b3c6370f2",
+      "output_bytes": 180540,
+      "locale": "it",
+      "prefix": "Parliamo con calma insieme.",
+      "target": "Forza, andiamo!",
+      "remove_first_words": 4,
+      "ignore_accents": true,
+      "target_verification_requested": "warn",
+      "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+      "target_comparison_score": 1.0,
+      "target_word_count_matches": true,
+      "target_numbers_match": true,
+      "target_comparison_flags": [],
+      "target_transcript_warning": false,
+      "recognizer": "mlx-audio-parakeet-tdt-v3",
+      "recognizer_version": "0.5.0",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "extracted_transcript": "Forza, andiamo!",
+      "expected_target_tokens": [
+        "forza",
+        "andiamo"
+      ],
+      "extracted_target_tokens": [
+        "forza",
+        "andiamo"
+      ],
+      "extracted_target_exact_match": true,
+      "transcription_settings": {
+        "language_detection": "automatic",
+        "expected_text_prompt": null,
+        "timestamps": "model-provided-token-timestamps"
+      },
+      "sample_rate": 48000,
+      "duration_seconds": 4.000166666666667,
+      "boundary": {
+        "search_strategy": "target-only-global-quiet-run-v7",
+        "verified_silence_start_seconds": 1.72,
+        "verified_silence_end_seconds": 2.22,
+        "verified_silence_duration_seconds": 0.5,
+        "cut_sample": 101760,
+        "cut_time_seconds": 2.12,
+        "padding_seconds": 0.1,
+        "quiet_run_start_sample": 82560,
+        "quiet_run_end_sample": 106560,
+        "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+      },
+      "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0c09c9534a9d4fa0b87af43ca34637e9/attempt-02/target.wav.search/444f65bd9cff4d419cb5aa3a6057d98c",
+      "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0c09c9534a9d4fa0b87af43ca34637e9/attempt-02/target.wav.search/444f65bd9cff4d419cb5aa3a6057d98c/search.json",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0c09c9534a9d4fa0b87af43ca34637e9/attempt-02/raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "abd66f117cbe12e4e54fc005caf6086fef1864697b174526469634f44b0af7a5",
+      "candidate_sha256": "a497600ac92d6ec2ac7cd0868d0d955577c99c9ea074ba404757ba6b3c6370f2",
+      "candidate_id": "candidate-01",
+      "candidate_count": 2,
+      "qualifying_quiet_run_count": 2,
+      "candidate_results": [
+        {
+          "candidate_id": "candidate-01",
+          "quiet_run": {
+            "start_sample": 82560,
+            "end_sample": 106560,
+            "start_seconds": 1.72,
+            "end_seconds": 2.22,
+            "duration_seconds": 0.5
+          },
+          "cut_sample": 101760,
+          "cut_time_seconds": 2.12,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0c09c9534a9d4fa0b87af43ca34637e9/attempt-02/target.wav.search/444f65bd9cff4d419cb5aa3a6057d98c/candidate-01.wav",
+          "preceding_voiced_seconds": 1.27,
+          "retained_voiced_seconds": 0.9,
+          "retained_duration_seconds": 1.8801666666666668,
+          "candidate_sha256": "a497600ac92d6ec2ac7cd0868d0d955577c99c9ea074ba404757ba6b3c6370f2",
+          "extracted_transcript": "Forza, andiamo!",
+          "canonical_transcript_tokens": [
+            "forza",
+            "andiamo"
+          ],
+          "exact_target_match": true,
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": true,
+          "asr_segment_count": 1
+        },
+        {
+          "candidate_id": "candidate-02",
+          "quiet_run": {
+            "start_sample": 130560,
+            "end_sample": 152640,
+            "start_seconds": 2.72,
+            "end_seconds": 3.18,
+            "duration_seconds": 0.46
+          },
+          "cut_sample": 147840,
+          "cut_time_seconds": 3.08,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0c09c9534a9d4fa0b87af43ca34637e9/attempt-02/target.wav.search/444f65bd9cff4d419cb5aa3a6057d98c/candidate-02.wav",
+          "preceding_voiced_seconds": 1.71,
+          "retained_voiced_seconds": 0.46,
+          "retained_duration_seconds": 0.9201666666666667,
+          "candidate_sha256": "a8dcbcc23152d6deefac7dc01b1382abd0d726fcf1ce011da24488863be14af1",
+          "extracted_transcript": "Andiamo!",
+          "canonical_transcript_tokens": [
+            "andiamo"
+          ],
+          "exact_target_match": false,
+          "target_comparison_score": 0.6883,
+          "target_word_count_matches": false,
+          "target_numbers_match": true,
+          "target_comparison_flags": [
+            "TARGET_WORD_COUNT_MISMATCH"
+          ],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": false,
+          "asr_segment_count": 1
+        }
+      ],
+      "human_review": "PENDING",
+      "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+      "delivery": {
+        "policy": "verified-carrier-gap-delivery-v1",
+        "removed_frames": 0,
+        "removed_seconds": 0.0,
+        "retained_verified_quiet_seconds": 0.1,
+        "raw_delivery_start_sample": 101760,
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0c09c9534a9d4fa0b87af43ca34637e9/attempt-02/delivery-target.wav",
+        "sha256": "a497600ac92d6ec2ac7cd0868d0d955577c99c9ea074ba404757ba6b3c6370f2"
+      }
+    },
+    "quality": {
+      "disposition": "PASS",
+      "score": 1.0,
+      "transcript": "Forza, andiamo!",
+      "metrics": {
+        "duration_seconds": 1.8801814058956916,
+        "rms_dbfs": -35.92,
+        "peak": 0.13098,
+        "clipped_fraction": 0.0,
+        "leading_silence_seconds": 0.0,
+        "trailing_silence_seconds": 0.32,
+        "longest_internal_pause_seconds": 0.22
+      },
+      "flags": [],
+      "ignore_accents": true,
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "detail": "Delivered target transcribed and screened; human listening remains pending"
+    },
+    "history": [
+      {
+        "attempt": 1,
+        "status": "REJECTED_CUT",
+        "error": "no candidate suffix meets target verification policy",
+        "evidence": {
+          "candidate_transcripts": [
+            "Cosa andiamo?"
+          ],
+          "matching_candidate_ids": [],
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0c09c9534a9d4fa0b87af43ca34637e9/attempt-01/target.wav.search/c435ae4cb7574801b5925aea02c2a7d2",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0c09c9534a9d4fa0b87af43ca34637e9/attempt-01/target.wav.search/c435ae4cb7574801b5925aea02c2a7d2/search.json"
+        }
+      },
+      {
+        "attempt": 2,
+        "status": "PASS",
+        "quality": {
+          "disposition": "PASS",
+          "score": 1.0,
+          "transcript": "Forza, andiamo!",
+          "metrics": {
+            "duration_seconds": 1.8801814058956916,
+            "rms_dbfs": -35.92,
+            "peak": 0.13098,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.0,
+            "trailing_silence_seconds": 0.32,
+            "longest_internal_pause_seconds": 0.22
+          },
+          "flags": [],
+          "ignore_accents": true,
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "detail": "Delivered target transcribed and screened; human listening remains pending"
+        },
+        "extraction": {
+          "schema_version": 1,
+          "algorithm_version": "greia-spoken-carrier-extractor-v7",
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "status": "EXTRACTED_PENDING_LISTENING",
+          "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0c09c9534a9d4fa0b87af43ca34637e9/attempt-02/raw.wav",
+          "source_sha256": "f05e3d4f70434f8ebc2d49ad7b7cff6df5e88ec62d31cad2f75232b7fd0d9e54",
+          "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0c09c9534a9d4fa0b87af43ca34637e9/attempt-02/target.wav",
+          "output_sha256": "a497600ac92d6ec2ac7cd0868d0d955577c99c9ea074ba404757ba6b3c6370f2",
+          "output_bytes": 180540,
+          "locale": "it",
+          "prefix": "Parliamo con calma insieme.",
+          "target": "Forza, andiamo!",
+          "remove_first_words": 4,
+          "ignore_accents": true,
+          "target_verification_requested": "warn",
+          "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_transcript_warning": false,
+          "recognizer": "mlx-audio-parakeet-tdt-v3",
+          "recognizer_version": "0.5.0",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "extracted_transcript": "Forza, andiamo!",
+          "expected_target_tokens": [
+            "forza",
+            "andiamo"
+          ],
+          "extracted_target_tokens": [
+            "forza",
+            "andiamo"
+          ],
+          "extracted_target_exact_match": true,
+          "transcription_settings": {
+            "language_detection": "automatic",
+            "expected_text_prompt": null,
+            "timestamps": "model-provided-token-timestamps"
+          },
+          "sample_rate": 48000,
+          "duration_seconds": 4.000166666666667,
+          "boundary": {
+            "search_strategy": "target-only-global-quiet-run-v7",
+            "verified_silence_start_seconds": 1.72,
+            "verified_silence_end_seconds": 2.22,
+            "verified_silence_duration_seconds": 0.5,
+            "cut_sample": 101760,
+            "cut_time_seconds": 2.12,
+            "padding_seconds": 0.1,
+            "quiet_run_start_sample": 82560,
+            "quiet_run_end_sample": 106560,
+            "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+          },
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0c09c9534a9d4fa0b87af43ca34637e9/attempt-02/target.wav.search/444f65bd9cff4d419cb5aa3a6057d98c",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0c09c9534a9d4fa0b87af43ca34637e9/attempt-02/target.wav.search/444f65bd9cff4d419cb5aa3a6057d98c/search.json",
+          "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0c09c9534a9d4fa0b87af43ca34637e9/attempt-02/raw.wav.receipt.json",
+          "source_provider_receipt_sha256": "abd66f117cbe12e4e54fc005caf6086fef1864697b174526469634f44b0af7a5",
+          "candidate_sha256": "a497600ac92d6ec2ac7cd0868d0d955577c99c9ea074ba404757ba6b3c6370f2",
+          "candidate_id": "candidate-01",
+          "candidate_count": 2,
+          "qualifying_quiet_run_count": 2,
+          "candidate_results": [
+            {
+              "candidate_id": "candidate-01",
+              "quiet_run": {
+                "start_sample": 82560,
+                "end_sample": 106560,
+                "start_seconds": 1.72,
+                "end_seconds": 2.22,
+                "duration_seconds": 0.5
+              },
+              "cut_sample": 101760,
+              "cut_time_seconds": 2.12,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0c09c9534a9d4fa0b87af43ca34637e9/attempt-02/target.wav.search/444f65bd9cff4d419cb5aa3a6057d98c/candidate-01.wav",
+              "preceding_voiced_seconds": 1.27,
+              "retained_voiced_seconds": 0.9,
+              "retained_duration_seconds": 1.8801666666666668,
+              "candidate_sha256": "a497600ac92d6ec2ac7cd0868d0d955577c99c9ea074ba404757ba6b3c6370f2",
+              "extracted_transcript": "Forza, andiamo!",
+              "canonical_transcript_tokens": [
+                "forza",
+                "andiamo"
+              ],
+              "exact_target_match": true,
+              "target_comparison_score": 1.0,
+              "target_word_count_matches": true,
+              "target_numbers_match": true,
+              "target_comparison_flags": [],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": true,
+              "asr_segment_count": 1
+            },
+            {
+              "candidate_id": "candidate-02",
+              "quiet_run": {
+                "start_sample": 130560,
+                "end_sample": 152640,
+                "start_seconds": 2.72,
+                "end_seconds": 3.18,
+                "duration_seconds": 0.46
+              },
+              "cut_sample": 147840,
+              "cut_time_seconds": 3.08,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0c09c9534a9d4fa0b87af43ca34637e9/attempt-02/target.wav.search/444f65bd9cff4d419cb5aa3a6057d98c/candidate-02.wav",
+              "preceding_voiced_seconds": 1.71,
+              "retained_voiced_seconds": 0.46,
+              "retained_duration_seconds": 0.9201666666666667,
+              "candidate_sha256": "a8dcbcc23152d6deefac7dc01b1382abd0d726fcf1ce011da24488863be14af1",
+              "extracted_transcript": "Andiamo!",
+              "canonical_transcript_tokens": [
+                "andiamo"
+              ],
+              "exact_target_match": false,
+              "target_comparison_score": 0.6883,
+              "target_word_count_matches": false,
+              "target_numbers_match": true,
+              "target_comparison_flags": [
+                "TARGET_WORD_COUNT_MISMATCH"
+              ],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": false,
+              "asr_segment_count": 1
+            }
+          ],
+          "human_review": "PENDING",
+          "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+          "delivery": {
+            "policy": "verified-carrier-gap-delivery-v1",
+            "removed_frames": 0,
+            "removed_seconds": 0.0,
+            "retained_verified_quiet_seconds": 0.1,
+            "raw_delivery_start_sample": 101760,
+            "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0c09c9534a9d4fa0b87af43ca34637e9/attempt-02/delivery-target.wav",
+            "sha256": "a497600ac92d6ec2ac7cd0868d0d955577c99c9ea074ba404757ba6b3c6370f2"
+          }
+        },
+        "candidate": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0c09c9534a9d4fa0b87af43ca34637e9/attempt-02/candidate.wav"
+      }
+    ]
+  },
   "corpus_replacement": {
-    "original_sha256": "75f15f73a5555a3eaeda1f9b84ce01aa6f592514a4323fe47d26337f473b588b",
+    "original_sha256": "8155afcd242178543e37ae7beb2c32518f03fd3dd8cec9662dc290c901c414d8",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

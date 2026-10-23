@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T14:11:52.383561+00:00",
+  "created_utc": "2026-10-21T17:01:41.410424+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "¿Para quién es?",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. ¿Para quién es?",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "¿Para quién es?",
+    "cue_id": "greia.requested.who_is_it_for.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "¿Para quién es?",
     "cue_id": "greia.requested.who_is_it_for.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/posta_di_leo/assets/audio/es/who_is_it_for.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-161146-6100ba43",
-    "idempotency_key": "greia-69dac8d6ba0f452ebc23ebf2190fc5a8",
+    "job_id": "20261021-190129-ac43f1fd",
+    "idempotency_key": "greia-96a041930edf435bb0030cd08a11595d",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,241 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1494225702,
+    "script_seed": 1020793695,
     "language_direction": "Spanish",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
-    "effective_delivery": "Speak in Spanish. Leo, a warm, curious cartoon guide. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 4056581600,
-        "sha256": "d3217f793c8ae0ecba703fe3f6a2a42d43ba00a2e59b0775b1c7ffee542ee39d",
+        "seed": 2194963496,
+        "sha256": "2a1683234672b4201e8033b6ba5f45b505cf9fb039c45f88145a857c475b5871",
         "generation": {
-          "elapsed_seconds": 5.74498495797161,
+          "elapsed_seconds": 11.29033391700068,
           "model_load_seconds": 0.0,
-          "rtf": 5.128687657763675,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.713722027411002,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " ¿Para quién es?",
+    "metrics": {
+      "duration_seconds": 1.2258049886621316,
+      "rms_dbfs": -34.71,
+      "peak": 0.18741,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.38,
+      "trailing_silence_seconds": 0.16,
+      "longest_internal_pause_seconds": 0.0
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/posta_di_leo/assets/audio/es/who_is_it_for.wav.raw.wav",
+    "sha256": "73501011398045a6e5086313a1200a43dee50cc21b8ac244278d74efce309b81",
+    "receipt_sha256": "e489fb89970d922afcc536a11102530edec5046704ff40f3ec9926d5a63b032e"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/posta_di_leo/assets/audio/es/who_is_it_for.wav.extracted.wav",
+    "sha256": "adcd0ac1cf8211ff567547f1ff808b3e8c9ec5b0d145d7797f33f8fa447c7528"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/posta_di_leo/assets/audio/es/who_is_it_for.wav.raw.wav",
+    "source_sha256": "73501011398045a6e5086313a1200a43dee50cc21b8ac244278d74efce309b81",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-extracted/activities/posta_di_leo/assets/audio/es/who_is_it_for.wav.extracted.wav",
+    "output_sha256": "adcd0ac1cf8211ff567547f1ff808b3e8c9ec5b0d145d7797f33f8fa447c7528",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "¿Para quién es?",
+      "locale": "es",
+      "cue_id": "greia.requested.who_is_it_for.es",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/posta_di_leo/assets/audio/es/who_is_it_for.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "e489fb89970d922afcc536a11102530edec5046704ff40f3ec9926d5a63b032e"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "¿Para quién es?",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Escucha esta frase en español. ¿Para quién es?",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " ¿Para quién es?",
+    "raw_word_alignment": [
+      {
+        "word": "escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.34
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.34,
+        "end_seconds": 0.56
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.56,
+        "end_seconds": 0.86
+      },
+      {
+        "word": "en",
+        "start_seconds": 0.86,
+        "end_seconds": 1.14
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.14,
+        "end_seconds": 1.54
+      },
+      {
+        "word": "para",
+        "start_seconds": 2.08,
+        "end_seconds": 2.34
+      },
+      {
+        "word": "quién",
+        "start_seconds": 2.34,
+        "end_seconds": 2.5
+      },
+      {
+        "word": "es",
+        "start_seconds": 2.5,
+        "end_seconds": 2.8
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "para",
+        "start_seconds": 0.0,
+        "end_seconds": 0.5
+      },
+      {
+        "word": "quién",
+        "start_seconds": 0.5,
+        "end_seconds": 0.72
+      },
+      {
+        "word": "es",
+        "start_seconds": 0.72,
+        "end_seconds": 0.98
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.39939454197883606,
+        "no_speech_prob": 0.043951794505119324,
+        "compression_ratio": 0.9074074074074074,
+        "word_probabilities": [
+          0.4775390625,
+          0.96875,
+          0.9951171875,
+          0.94091796875,
+          0.9716796875,
+          0.78662109375,
+          0.9072265625,
+          0.81298828125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.4663604100545247,
+        "no_speech_prob": 0.22026006877422333,
+        "compression_ratio": 0.68,
+        "word_probabilities": [
+          0.6494140625,
+          0.8330078125,
+          0.93310546875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 62,
+    "extracted_voiced_seconds": 0.62,
+    "unremoved_raw_target_tokens": [
+      "para",
+      "quién",
+      "es"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "para",
+      "quién",
+      "es"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.0401814058956917,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.54,
+      "search_end_seconds": 2.08,
+      "prefix_last_word_end_seconds": 1.54,
+      "target_first_word_start_seconds": 2.08,
+      "gap_seconds": 0.4290249433106576,
+      "verified_silence_start_seconds": 1.5998639455782313,
+      "verified_silence_end_seconds": 2.028888888888889,
+      "gap_rms_dbfs": -54.464,
+      "gap_peak_dbfs": -36.775,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.8143764172335601,
+      "cut_sample": 40007,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/posta_di_leo/assets/audio/es/who_is_it_for.wav",
-    "bytes": 49478,
-    "sha256": "dc247890ff5780c95456aa6b5651e49fa8b2ebdbdc7cb92a4482210ec640d7fa"
+    "sha256": "565b9e28e1664b5e332356e5303d46f1dc4d46fa8887caa90c82cfbf8e8c4456",
+    "bytes": 54136
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "a56af4c7095aacd4f9a7e0c7d6231caa5d22b432608267c0cd0686fc2c47030e",
+    "original_sha256": "dc247890ff5780c95456aa6b5651e49fa8b2ebdbdc7cb92a4482210ec640d7fa",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

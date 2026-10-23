@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T14:18:35.448678+00:00",
+  "created_utc": "2026-10-22T09:09:57.234545+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "Hai vinto la partita!",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano...\n\nHai vinto la partita!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Hai vinto la partita!",
+    "cue_id": "greia.requested.you_won_match.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Hai vinto la partita!",
     "cue_id": "greia.requested.you_won_match.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/quattro_amici/assets/audio/it/you_won_match.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. A happy celebration with the child: joyful, proud and warm. Lively but clear."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-161827-8f6d3d50",
-    "idempotency_key": "greia-8428edd6eb084587979ccb497f0d2634",
+    "job_id": "20261022-110911-8ba8c8e4",
+    "idempotency_key": "greia-00813d443b804034b1bd7558f9294817",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,281 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1635365658,
+    "script_seed": 671896916,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
-    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3542340921,
-        "sha256": "4d3e1ee2a5033ee7125d3f3cfc731e319e4b3c69bedefef8d5e75c3442c27d5a",
+        "seed": 1577294205,
+        "sha256": "df9169ccba581dc5664fbda8c674d6ce1dcd75f9e4983564fd2fc470b31086cd",
         "generation": {
-          "elapsed_seconds": 8.051233249949291,
+          "elapsed_seconds": 21.169206250007846,
           "model_load_seconds": 0.0,
-          "rtf": 5.031496666982163,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.4816819029096537,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " hai vinto la partita?",
+    "metrics": {
+      "duration_seconds": 1.543265306122449,
+      "rms_dbfs": -35.34,
+      "peak": 0.12589,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.08,
+      "trailing_silence_seconds": 0.16,
+      "longest_internal_pause_seconds": 0.04
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/quattro_amici/assets/audio/it/you_won_match.wav.raw.wav",
+    "sha256": "eb157846cd8ef866a37839468403db6b58ab0adb32bc219ea0ddd9462fa6de35",
+    "receipt_sha256": "45233ec1270162305f15dd1f09084a34bf04a55bcfda3a798c41a02de5b9c133"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/quattro_amici/assets/audio/it/you_won_match.wav.extracted.wav",
+    "sha256": "73dcdb9676575e9fd060cfa30294bd2f26c46a5b66a2bd6b592038ae4a7c4aef"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/quattro_amici/assets/audio/it/you_won_match.wav.delivery.wav",
+    "sha256": "eaae8f182504e8dd98089f4e6ffb3991fd4d816c834e03b6ac203d858fd59d6c"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/activities/quattro_amici/assets/audio/it/you_won_match.wav.raw.wav",
+    "source_sha256": "eb157846cd8ef866a37839468403db6b58ab0adb32bc219ea0ddd9462fa6de35",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/activities/quattro_amici/assets/audio/it/you_won_match.wav.extracted.wav",
+    "output_sha256": "73dcdb9676575e9fd060cfa30294bd2f26c46a5b66a2bd6b592038ae4a7c4aef",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Hai vinto la partita!",
+      "locale": "it",
+      "cue_id": "greia.requested.you_won_match.it",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/activities/quattro_amici/assets/audio/it/you_won_match.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "45233ec1270162305f15dd1f09084a34bf04a55bcfda3a798c41a02de5b9c133"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "Hai vinto la partita!",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Ascolta questa frase in italiano, dittora hai vinto la partita.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " hai vinto la partita?",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.44
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.44,
+        "end_seconds": 0.76
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.76,
+        "end_seconds": 1.12
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.12,
+        "end_seconds": 1.34
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.34,
+        "end_seconds": 1.86
+      },
+      {
+        "word": "dittora",
+        "start_seconds": 3.2800000000000002,
+        "end_seconds": 4.08
+      },
+      {
+        "word": "hai",
+        "start_seconds": 4.08,
+        "end_seconds": 4.76
+      },
+      {
+        "word": "vinto",
+        "start_seconds": 4.76,
+        "end_seconds": 5.06
+      },
+      {
+        "word": "la",
+        "start_seconds": 5.06,
+        "end_seconds": 5.22
+      },
+      {
+        "word": "partita",
+        "start_seconds": 5.22,
+        "end_seconds": 5.84
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "hai",
+        "start_seconds": 0.0,
+        "end_seconds": 0.28
+      },
+      {
+        "word": "vinto",
+        "start_seconds": 0.28,
+        "end_seconds": 0.64
+      },
+      {
+        "word": "la",
+        "start_seconds": 0.64,
+        "end_seconds": 0.76
+      },
+      {
+        "word": "partita",
+        "start_seconds": 0.76,
+        "end_seconds": 1.4
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5963599992835004,
+        "no_speech_prob": 0.005810369271785021,
+        "compression_ratio": 0.9692307692307692,
+        "word_probabilities": [
+          0.74072265625,
+          0.9794921875,
+          0.97998046875,
+          0.84521484375,
+          0.98486328125
+        ]
+      },
+      {
+        "avg_logprob": -0.5963599992835004,
+        "no_speech_prob": 0.005810369271785021,
+        "compression_ratio": 0.9692307692307692,
+        "word_probabilities": [
+          0.2196044921875,
+          0.7216796875,
+          0.984375,
+          0.98828125,
+          0.9921875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.3987666130065918,
+        "no_speech_prob": 0.006155494134873152,
+        "compression_ratio": 0.7241379310344828,
+        "word_probabilities": [
+          0.53271484375,
+          0.9853515625,
+          0.97900390625,
+          0.994140625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": false,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 6,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 97,
+    "extracted_voiced_seconds": 0.97,
+    "unremoved_raw_target_tokens": [
+      "hai",
+      "vinto",
+      "la",
+      "partita"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "hai",
+      "vinto",
+      "la",
+      "partita"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 6.080181405895692,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-expanded-boundary",
+      "search_start_seconds": 3.2800000000000002,
+      "search_end_seconds": 4.76,
+      "prefix_last_word_end_seconds": 4.08,
+      "target_first_word_start_seconds": 4.08,
+      "gap_seconds": 0.35918367346938773,
+      "verified_silence_start_seconds": 4.277732426303855,
+      "verified_silence_end_seconds": 4.636916099773242,
+      "gap_rms_dbfs": -51.661,
+      "gap_peak_dbfs": -31.875,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 4.457324263038549,
+      "cut_sample": 98284,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 1755,
+      "removed_seconds": 0.07959183673469387,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 100039,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/activities/quattro_amici/assets/audio/it/you_won_match.wav.delivery.wav",
+      "sha256": "eaae8f182504e8dd98089f4e6ffb3991fd4d816c834e03b6ac203d858fd59d6c"
+    }
+  },
   "output": {
     "path": "activities/quattro_amici/assets/audio/it/you_won_match.wav",
-    "bytes": 70646,
-    "sha256": "9744c7862aad9bd09152787d11b9b8f8c4922e1425501fcf86232072304c4290"
+    "sha256": "fd8d24db6b06800e80569fe36c030b22d1ed1ef026bcf277ea55c4de343ef023",
+    "bytes": 68136
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "648490d99266cc844ebebd8d93fab579adb1418c9e6498676690b196c45d9405",
+    "original_sha256": "9744c7862aad9bd09152787d11b9b8f8c4922e1425501fcf86232072304c4290",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

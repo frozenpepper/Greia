@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T13:10:33.459652+00:00",
+  "created_utc": "2026-10-21T18:16:40.843337+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "Ben fatto!",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. Ben fatto!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "momo",
+    "kind": "shared_character_utterance",
+    "locale": "it",
+    "text": "Ben fatto!",
+    "cue_id": "shared.praise.general.03",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "momo",
     "kind": "shared_character_utterance",
     "locale": "it",
     "text": "Ben fatto!",
     "cue_id": "shared.praise.general.03",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "assets/audio/characters/shared/v0.2/momo/it/momo__it__praise.general__03.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Warm, measured encouragement. Emphasize the successful action gently, at a relaxed conversational pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.momo.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261021-151028-9ae46ad4",
-    "idempotency_key": "greia-b987a43a61934802903ebf8d41490318",
+    "job_id": "20261021-201624-294624b7",
+    "idempotency_key": "greia-35e563787bd64fa29a45e658cf36ccea",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,234 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2927891282,
+    "script_seed": 2111607541,
     "language_direction": "Italian",
-    "delivery_prompt": "Warm, measured encouragement. Emphasize the successful action gently, at a relaxed conversational pace.",
-    "effective_delivery": "Speak in Italian. Warm, measured encouragement. Emphasize the successful action gently, at a relaxed conversational pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1259636538,
-        "sha256": "67ba767c52029695b2b134be3ccd7e277e5ba3bb545b6d085438340dc62753a5",
+        "seed": 3868354942,
+        "sha256": "304542bbfa87ec46c8253e1293bb783d2775c87023530d6f0b5998f4b9a8ea38",
         "generation": {
-          "elapsed_seconds": 4.184165500002564,
+          "elapsed_seconds": 16.072578624996822,
           "model_load_seconds": 0.0,
-          "rtf": 3.7353062044361525,
+          "rtf": 4.7832682778622555,
           "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " Ben fatto!",
+    "metrics": {
+      "duration_seconds": 1.2658503401360544,
+      "rms_dbfs": -31.2,
+      "peak": 0.24228,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.38,
+      "trailing_silence_seconds": 0.16,
+      "longest_internal_pause_seconds": 0.12
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/characters/shared/v0.2/momo/it/momo__it__praise.general__03.wav.raw.wav",
+    "sha256": "76b0f56b31229942e3d4b80739e18c5c25af448881e73f7bc20f288f9acfe309",
+    "receipt_sha256": "6f9ff53bbf4c4884eb734b477f35c779c5c05a1422ce8374f4b1b1289e081b77"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/characters/shared/v0.2/momo/it/momo__it__praise.general__03.wav.extracted.wav",
+    "sha256": "567ff649997eab8f74a3020605a6b9e87d05af0d62bd33b9df5c7357ad2f32d0"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/assets/audio/characters/shared/v0.2/momo/it/momo__it__praise.general__03.wav.raw.wav",
+    "source_sha256": "76b0f56b31229942e3d4b80739e18c5c25af448881e73f7bc20f288f9acfe309",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-extracted/assets/audio/characters/shared/v0.2/momo/it/momo__it__praise.general__03.wav.extracted.wav",
+    "output_sha256": "567ff649997eab8f74a3020605a6b9e87d05af0d62bd33b9df5c7357ad2f32d0",
+    "target_request": {
+      "speaker": "momo",
+      "kind": "shared_character_utterance",
+      "text": "Ben fatto!",
+      "locale": "it",
+      "cue_id": "shared.praise.general.03",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/assets/audio/characters/shared/v0.2/momo/it/momo__it__praise.general__03.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "6f9ff53bbf4c4884eb734b477f35c779c5c05a1422ce8374f4b1b1289e081b77"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "Ben fatto!",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Ascolta questa frase in italiano. Ben fatto!",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Ben fatto!",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.5
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.5,
+        "end_seconds": 0.82
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.82,
+        "end_seconds": 1.12
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.12,
+        "end_seconds": 1.3
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.3,
+        "end_seconds": 1.8
+      },
+      {
+        "word": "ben",
+        "start_seconds": 2.34,
+        "end_seconds": 2.6
+      },
+      {
+        "word": "fatto",
+        "start_seconds": 2.6,
+        "end_seconds": 3.06
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "ben",
+        "start_seconds": 0.0,
+        "end_seconds": 0.5
+      },
+      {
+        "word": "fatto",
+        "start_seconds": 0.5,
+        "end_seconds": 0.96
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5251772403717041,
+        "no_speech_prob": 0.047270748764276505,
+        "compression_ratio": 0.88,
+        "word_probabilities": [
+          0.703125,
+          0.9853515625,
+          0.97314453125,
+          0.9482421875,
+          0.990234375
+        ]
+      },
+      {
+        "avg_logprob": -0.5251772403717041,
+        "no_speech_prob": 0.047270748764276505,
+        "compression_ratio": 0.88,
+        "word_probabilities": [
+          0.7080078125,
+          0.99658203125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.5543945630391439,
+        "no_speech_prob": 0.3233204483985901,
+        "compression_ratio": 0.5555555555555556,
+        "word_probabilities": [
+          0.64111328125,
+          0.9951171875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 47,
+    "extracted_voiced_seconds": 0.47,
+    "unremoved_raw_target_tokens": [
+      "ben",
+      "fatto"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "ben",
+      "fatto"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.3601814058956916,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.8,
+      "search_end_seconds": 2.34,
+      "prefix_last_word_end_seconds": 1.8,
+      "target_first_word_start_seconds": 2.34,
+      "gap_seconds": 0.3891156462585034,
+      "verified_silence_start_seconds": 1.8997732426303855,
+      "verified_silence_end_seconds": 2.2888888888888888,
+      "gap_rms_dbfs": -54.488,
+      "gap_peak_dbfs": -37.7,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.0943310657596372,
+      "cut_sample": 46180,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "assets/audio/characters/shared/v0.2/momo/it/momo__it__praise.general__03.wav",
-    "bytes": 49478,
-    "sha256": "27a77bcc2ed9eda20daa93bbd52dbcb13a84f74f3878a58fe690037f9848b7a5"
+    "sha256": "fda5f85ccd88c5dbfc1f441872b831f18fcd63d22574b0408c17bc59b818714e",
+    "bytes": 55902
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "eae24cb5a6913a861d0cbf472fd8118f789a57a883d86ddf153987c10aebd0b4",
+    "original_sha256": "27a77bcc2ed9eda20daa93bbd52dbcb13a84f74f3878a58fe690037f9848b7a5",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

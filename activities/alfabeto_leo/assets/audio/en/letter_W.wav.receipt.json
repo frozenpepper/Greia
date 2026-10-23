@@ -1,24 +1,66 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T20:47:40.672778+00:00",
+  "created_utc": "2026-10-22T17:47:29.623014+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "A whale is a large sea animal. We are learning the first letter of its name.",
+    "prefix_word_count": 16,
+    "target": "W as Whale",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "A whale is a large sea animal. We are learning the first letter of its name.\n\nDouble you as whale.",
+    "composite_delivery_prompt": "Warm, calm, clear speech. Careful, natural pronunciation.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "W as Whale",
+    "cue_id": "alfabeto_leo.letter_W.en",
+    "delivery_prompt": "Warm, calm, clear speech. Careful, natural pronunciation.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "W as Whale",
     "cue_id": "alfabeto_leo.letter_W.en",
+    "delivery_prompt": "Warm, calm, clear speech. Careful, natural pronunciation.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
     "output": "activities/alfabeto_leo/assets/audio/en/letter_W.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261019-224731-cac1a071",
-    "idempotency_key": "greia-c83d3c6c0b114bc3aa7fc0ea5242b748",
+    "job_id": "20261022-194704-4881f8f0",
+    "idempotency_key": "greia-e484429d13674e5eac42661ed1752dff",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +83,530 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1803428053,
+    "script_seed": 314159,
     "language_direction": "English",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak naturally in English. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Warm, calm, clear speech. Careful, natural pronunciation.",
+    "effective_delivery": "Speak in English. Warm, calm, clear speech. Careful, natural pronunciation.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3356000651,
-        "sha256": "474478e9f7c56f7cda9f05655e3f0c79e84b0922b013a565bf85ba33edad52ea",
+        "seed": 3526808665,
+        "sha256": "8bfa9bf05a2baf8d1a74419b590d8633f9af3ad4d294f6bf32f65f7981d70eda",
         "generation": {
-          "elapsed_seconds": 8.603619874978904,
+          "elapsed_seconds": 24.687754709011642,
           "model_load_seconds": 0.0,
-          "rtf": 4.887957508746655,
-          "peak_memory_gb": 8.21220922
+          "rtf": 3.5882495156142014,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": "double you as whale.",
+    "metrics": {
+      "duration_seconds": 1.6801814058956916,
+      "rms_dbfs": -31.52,
+      "peak": 0.20187,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.02,
+      "trailing_silence_seconds": 0.36,
+      "longest_internal_pause_seconds": 0.0
+    },
+    "flags": [],
+    "isolated": {
+      "score": 0.7123,
+      "transcript": " W as well.",
+      "flags": []
+    },
+    "contextual": {
+      "score": 1.0,
+      "transcript": "double you as whale.",
+      "flags": [],
+      "full_transcript": " A whale is a large sea animal. We are learning the first letter of its name, double you as whale.",
+      "retained_words": [
+        {
+          "word": " double",
+          "start": 5.32,
+          "end": 5.52,
+          "probability": 0.2225341796875
+        },
+        {
+          "word": " you",
+          "start": 5.52,
+          "end": 5.86,
+          "probability": 0.609375
+        },
+        {
+          "word": " as",
+          "start": 5.86,
+          "end": 6.12,
+          "probability": 0.9853515625
+        },
+        {
+          "word": " whale.",
+          "start": 6.12,
+          "end": 6.4,
+          "probability": 0.96923828125
+        }
+      ],
+      "straddling": []
+    },
+    "proof": {
+      "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/en-letter-W/run/carrier-raw/activities/alfabeto_leo/assets/audio/en/letter_W.wav.raw.wav",
+      "source_sha256": "8bfa9bf05a2baf8d1a74419b590d8633f9af3ad4d294f6bf32f65f7981d70eda",
+      "extracted": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/en-letter-W/run/carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_W.wav.extracted.wav",
+      "extracted_sha256": "3fe8e82c71451097fdc9bad135e80d5024b4c649180c109ef4fc3adc6abc5c9c",
+      "packaged": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/en-letter-W/run/candidates/activities/alfabeto_leo/assets/audio/en/letter_W.wav",
+      "packaged_sha256": "769131c5f2e864f856ed272d1a86133d8b2509d25925a2526da7f2310ebb355b",
+      "decoded": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/en-letter-W/run/carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_W.wav.validation.wav",
+      "decoded_sha256": "769131c5f2e864f856ed272d1a86133d8b2509d25925a2526da7f2310ebb355b",
+      "cut_sample": 249600,
+      "source_rate": 48000,
+      "packaged_suffix_matches": true,
+      "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/en-letter-W/run/context-verification/activities/alfabeto_leo/assets/audio/en/letter_W.wav/ffc1dcf04132429c8f6f8a42901c0cf0",
+      "isolated_observation": {
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/en-letter-W/run/context-verification/activities/alfabeto_leo/assets/audio/en/letter_W.wav/ffc1dcf04132429c8f6f8a42901c0cf0/isolated.json",
+        "sha256": "ab8ff6bf112dacf73baf84a601dddf20e741208df1996159e79ebae6c7f6dda3"
+      },
+      "contextual_observation": {
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/en-letter-W/run/context-verification/activities/alfabeto_leo/assets/audio/en/letter_W.wav/ffc1dcf04132429c8f6f8a42901c0cf0/context.json",
+        "sha256": "295cca8e3d9eed84acc8468d28d37fc21a0893e751fc25b604158b3345d40ff5"
+      },
+      "prefix_frames": 114660,
+      "prefix_seconds": 5.2,
+      "context": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/en-letter-W/run/context-verification/activities/alfabeto_leo/assets/audio/en/letter_W.wav/ffc1dcf04132429c8f6f8a42901c0cf0/context.wav",
+      "context_sha256": "004eba3b981ee8c485b0dd4dfc6dcf09d3b34a12439b0640d54477934a58a385",
+      "payload_pcm_sha256": "7b29cd351b42a78bbd9185e3aa2bdb360cf8c5a70c98a58e523e382f75ae7eb0",
+      "context_payload_identical": true,
+      "word_timestamp_coverage_valid": true,
+      "intro_wording_agreement_required": false
+    },
+    "selected_evidence": "contextual",
+    "verification_strategy": "saved-wav-context-hard-invariants-v1",
+    "comparison_policy": "locale-number-tokens-v2-spoken-en-v1",
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Saved WAV screening only; human listening remains pending",
+    "verifier_id": "mlx-whisper-base"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/alfabeto_leo/assets/audio/en/letter_W.wav.raw.wav",
+    "sha256": "8bfa9bf05a2baf8d1a74419b590d8633f9af3ad4d294f6bf32f65f7981d70eda",
+    "receipt_sha256": "185b21b7b30f38349cb4e340add8292150519755aad5261502fb0f95b79ea316"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_W.wav.extracted.wav",
+    "sha256": "3fe8e82c71451097fdc9bad135e80d5024b4c649180c109ef4fc3adc6abc5c9c"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_W.wav.delivery.wav",
+    "sha256": "3fe8e82c71451097fdc9bad135e80d5024b4c649180c109ef4fc3adc6abc5c9c"
+  },
+  "extraction": {
+    "schema_version": 1,
+    "algorithm_version": "greia-spoken-carrier-extractor-v7-saved-wav-context-v1",
+    "comparison_policy": "locale-number-tokens-v2-spoken-en-v1",
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/en-letter-W/run/carrier-raw/activities/alfabeto_leo/assets/audio/en/letter_W.wav.raw.wav",
+    "source_sha256": "8bfa9bf05a2baf8d1a74419b590d8633f9af3ad4d294f6bf32f65f7981d70eda",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/en-letter-W/run/carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_W.wav.extracted.wav",
+    "output_sha256": "3fe8e82c71451097fdc9bad135e80d5024b4c649180c109ef4fc3adc6abc5c9c",
+    "output_bytes": 161340,
+    "locale": "en",
+    "prefix": "A whale is a large sea animal. We are learning the first letter of its name.",
+    "target": "W as Whale",
+    "remove_first_words": 16,
+    "ignore_accents": true,
+    "target_verification_requested": "warn",
+    "target_verification_policy": "warn",
+    "target_comparison_score": 1.0,
+    "target_word_count_matches": true,
+    "target_numbers_match": true,
+    "target_comparison_flags": [],
+    "target_transcript_warning": false,
+    "recognizer": "mlx-whisper-base",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extracted_transcript": "double you as whale.",
+    "expected_target_tokens": [
+      "w",
+      "as",
+      "whale"
+    ],
+    "extracted_target_tokens": [
+      "w",
+      "as",
+      "whale"
+    ],
+    "extracted_target_exact_match": true,
+    "transcription_settings": {
+      "language": "en",
+      "initial_prompt": null,
+      "word_timestamps": true,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "sample_rate": 48000,
+    "duration_seconds": 6.880166666666667,
+    "boundary": {
+      "search_strategy": "target-only-global-quiet-run-v7",
+      "verified_silence_start_seconds": 4.6,
+      "verified_silence_end_seconds": 5.3,
+      "verified_silence_duration_seconds": 0.7,
+      "cut_sample": 249600,
+      "cut_time_seconds": 5.2,
+      "padding_seconds": 0.1,
+      "quiet_run_start_sample": 220800,
+      "quiet_run_end_sample": 254400,
+      "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+    },
+    "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/en-letter-W/run/carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_W.wav.extracted.wav.search/14c3cb09f49a40c990f5ad5f79679325",
+    "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/en-letter-W/run/carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_W.wav.extracted.wav.search/14c3cb09f49a40c990f5ad5f79679325/search.json",
+    "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/en-letter-W/run/carrier-raw/activities/alfabeto_leo/assets/audio/en/letter_W.wav.raw.wav.receipt.json",
+    "source_provider_receipt_sha256": "185b21b7b30f38349cb4e340add8292150519755aad5261502fb0f95b79ea316",
+    "candidate_sha256": "3fe8e82c71451097fdc9bad135e80d5024b4c649180c109ef4fc3adc6abc5c9c",
+    "candidate_id": "candidate-02",
+    "candidate_count": 2,
+    "qualifying_quiet_run_count": 2,
+    "candidate_results": [
+      {
+        "candidate_id": "candidate-01",
+        "quiet_run": {
+          "start_sample": 96960,
+          "end_sample": 128160,
+          "start_seconds": 2.02,
+          "end_seconds": 2.67,
+          "duration_seconds": 0.65
+        },
+        "cut_sample": 123360,
+        "cut_time_seconds": 2.57,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/en-letter-W/run/carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_W.wav.extracted.wav.search/14c3cb09f49a40c990f5ad5f79679325/candidate-01.wav",
+        "preceding_voiced_seconds": 1.61,
+        "retained_voiced_seconds": 2.86,
+        "retained_duration_seconds": 4.3101666666666665,
+        "candidate_sha256": "87b619ba1b01b6fc1b37da9500dd6a9d99d093a18458ebbca00159fc5ee0802f",
+        "candidate_quality": {
+          "disposition": "WARN",
+          "score": 0.34,
+          "transcript": " We are learning the first letter of its name, double U as whale.",
+          "metrics": {
+            "duration_seconds": 4.310204081632653,
+            "rms_dbfs": -31.98,
+            "peak": 0.20041,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.08,
+            "trailing_silence_seconds": 0.34,
+            "longest_internal_pause_seconds": 0.56
+          },
+          "flags": [
+            "TARGET_WORD_COUNT_MISMATCH"
+          ],
+          "isolated": {
+            "score": 0.34,
+            "transcript": " We are learning the first letter of its name, double U as whale.",
+            "flags": [
+              "TARGET_WORD_COUNT_MISMATCH"
+            ]
+          },
+          "contextual": null,
+          "proof": {
+            "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/en-letter-W/run/carrier-raw/activities/alfabeto_leo/assets/audio/en/letter_W.wav.raw.wav",
+            "source_sha256": "8bfa9bf05a2baf8d1a74419b590d8633f9af3ad4d294f6bf32f65f7981d70eda",
+            "extracted": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/en-letter-W/run/carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_W.wav.extracted.wav.search/14c3cb09f49a40c990f5ad5f79679325/candidate-01.wav",
+            "extracted_sha256": "87b619ba1b01b6fc1b37da9500dd6a9d99d093a18458ebbca00159fc5ee0802f",
+            "packaged": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/en-letter-W/run/carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_W.wav.extracted.wav.search/14c3cb09f49a40c990f5ad5f79679325/candidate-01.wav.delivery-proof/candidate.wav",
+            "packaged_sha256": "779f7a8f6233eb06a1e88e0de60d0677b0445aa7e48d78b31012aec6f0435ac2",
+            "decoded": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/en-letter-W/run/carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_W.wav.extracted.wav.search/14c3cb09f49a40c990f5ad5f79679325/candidate-01.wav.delivery-proof/decoded.wav",
+            "decoded_sha256": "779f7a8f6233eb06a1e88e0de60d0677b0445aa7e48d78b31012aec6f0435ac2",
+            "cut_sample": 123360,
+            "source_rate": 48000,
+            "packaged_suffix_matches": true,
+            "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/en-letter-W/run/context-verification/activities/alfabeto_leo/assets/audio/en/letter_W.wav/440ce6f0e2be4bb98bb34958e14e848d",
+            "isolated_observation": {
+              "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/en-letter-W/run/context-verification/activities/alfabeto_leo/assets/audio/en/letter_W.wav/440ce6f0e2be4bb98bb34958e14e848d/isolated.json",
+              "sha256": "be69d45f942537e2f2286580df7b3a460a25efdae88a1687fbdfccd6ec01ae50"
+            }
+          },
+          "selected_evidence": "none",
+          "verification_strategy": "saved-wav-context-hard-invariants-v1",
+          "comparison_policy": "locale-number-tokens-v2-spoken-en-v1",
+          "ignore_accents": true,
+          "model_id": "mlx-community/whisper-base-mlx",
+          "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+          "detail": "Saved WAV screening only; human listening remains pending"
+        },
+        "extracted_transcript": "We are learning the first letter of its name, double U as whale.",
+        "canonical_transcript_tokens": [
+          "we",
+          "are",
+          "learning",
+          "the",
+          "first",
+          "letter",
+          "of",
+          "its",
+          "name",
+          "w",
+          "as",
+          "whale"
+        ],
+        "exact_target_match": false,
+        "target_comparison_score": 0.34,
+        "target_word_count_matches": false,
+        "target_numbers_match": true,
+        "target_comparison_flags": [
+          "TARGET_WORD_COUNT_MISMATCH"
+        ],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": false,
+        "asr_segment_count": 0
+      },
+      {
+        "candidate_id": "candidate-02",
+        "quiet_run": {
+          "start_sample": 220800,
+          "end_sample": 254400,
+          "start_seconds": 4.6,
+          "end_seconds": 5.3,
+          "duration_seconds": 0.7
+        },
+        "cut_sample": 249600,
+        "cut_time_seconds": 5.2,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/en-letter-W/run/carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_W.wav.extracted.wav.search/14c3cb09f49a40c990f5ad5f79679325/candidate-02.wav",
+        "preceding_voiced_seconds": 3.32,
+        "retained_voiced_seconds": 1.15,
+        "retained_duration_seconds": 1.6801666666666666,
+        "candidate_sha256": "3fe8e82c71451097fdc9bad135e80d5024b4c649180c109ef4fc3adc6abc5c9c",
+        "candidate_quality": {
+          "disposition": "PASS",
+          "score": 1.0,
+          "transcript": "double you as whale.",
+          "metrics": {
+            "duration_seconds": 1.6801814058956916,
+            "rms_dbfs": -31.52,
+            "peak": 0.20187,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.02,
+            "trailing_silence_seconds": 0.36,
+            "longest_internal_pause_seconds": 0.0
+          },
+          "flags": [],
+          "isolated": {
+            "score": 0.7123,
+            "transcript": " W as well.",
+            "flags": []
+          },
+          "contextual": {
+            "score": 1.0,
+            "transcript": "double you as whale.",
+            "flags": [],
+            "full_transcript": " A whale is a large sea animal. We are learning the first letter of its name, double you as whale.",
+            "retained_words": [
+              {
+                "word": " double",
+                "start": 5.32,
+                "end": 5.52,
+                "probability": 0.2225341796875
+              },
+              {
+                "word": " you",
+                "start": 5.52,
+                "end": 5.86,
+                "probability": 0.609375
+              },
+              {
+                "word": " as",
+                "start": 5.86,
+                "end": 6.12,
+                "probability": 0.9853515625
+              },
+              {
+                "word": " whale.",
+                "start": 6.12,
+                "end": 6.4,
+                "probability": 0.96923828125
+              }
+            ],
+            "straddling": []
+          },
+          "proof": {
+            "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/en-letter-W/run/carrier-raw/activities/alfabeto_leo/assets/audio/en/letter_W.wav.raw.wav",
+            "source_sha256": "8bfa9bf05a2baf8d1a74419b590d8633f9af3ad4d294f6bf32f65f7981d70eda",
+            "extracted": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/en-letter-W/run/carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_W.wav.extracted.wav.search/14c3cb09f49a40c990f5ad5f79679325/candidate-02.wav",
+            "extracted_sha256": "3fe8e82c71451097fdc9bad135e80d5024b4c649180c109ef4fc3adc6abc5c9c",
+            "packaged": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/en-letter-W/run/carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_W.wav.extracted.wav.search/14c3cb09f49a40c990f5ad5f79679325/candidate-02.wav.delivery-proof/candidate.wav",
+            "packaged_sha256": "769131c5f2e864f856ed272d1a86133d8b2509d25925a2526da7f2310ebb355b",
+            "decoded": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/en-letter-W/run/carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_W.wav.extracted.wav.search/14c3cb09f49a40c990f5ad5f79679325/candidate-02.wav.delivery-proof/decoded.wav",
+            "decoded_sha256": "769131c5f2e864f856ed272d1a86133d8b2509d25925a2526da7f2310ebb355b",
+            "cut_sample": 249600,
+            "source_rate": 48000,
+            "packaged_suffix_matches": true,
+            "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/en-letter-W/run/context-verification/activities/alfabeto_leo/assets/audio/en/letter_W.wav/856eba7c9df14f3c88424085da9c203f",
+            "isolated_observation": {
+              "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/en-letter-W/run/context-verification/activities/alfabeto_leo/assets/audio/en/letter_W.wav/856eba7c9df14f3c88424085da9c203f/isolated.json",
+              "sha256": "ab8ff6bf112dacf73baf84a601dddf20e741208df1996159e79ebae6c7f6dda3"
+            },
+            "contextual_observation": {
+              "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/en-letter-W/run/context-verification/activities/alfabeto_leo/assets/audio/en/letter_W.wav/856eba7c9df14f3c88424085da9c203f/context.json",
+              "sha256": "295cca8e3d9eed84acc8468d28d37fc21a0893e751fc25b604158b3345d40ff5"
+            },
+            "prefix_frames": 114660,
+            "prefix_seconds": 5.2,
+            "context": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/en-letter-W/run/context-verification/activities/alfabeto_leo/assets/audio/en/letter_W.wav/856eba7c9df14f3c88424085da9c203f/context.wav",
+            "context_sha256": "004eba3b981ee8c485b0dd4dfc6dcf09d3b34a12439b0640d54477934a58a385",
+            "payload_pcm_sha256": "7b29cd351b42a78bbd9185e3aa2bdb360cf8c5a70c98a58e523e382f75ae7eb0",
+            "context_payload_identical": true,
+            "word_timestamp_coverage_valid": true,
+            "intro_wording_agreement_required": false
+          },
+          "selected_evidence": "contextual",
+          "verification_strategy": "saved-wav-context-hard-invariants-v1",
+          "comparison_policy": "locale-number-tokens-v2-spoken-en-v1",
+          "ignore_accents": true,
+          "model_id": "mlx-community/whisper-base-mlx",
+          "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+          "detail": "Saved WAV screening only; human listening remains pending"
+        },
+        "extracted_transcript": "double you as whale.",
+        "canonical_transcript_tokens": [
+          "w",
+          "as",
+          "whale"
+        ],
+        "exact_target_match": true,
+        "target_comparison_score": 1.0,
+        "target_word_count_matches": true,
+        "target_numbers_match": true,
+        "target_comparison_flags": [],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": true,
+        "asr_segment_count": 0
+      }
+    ],
+    "human_review": "PENDING",
+    "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+    "candidate_verification_policy": "saved-wav-context-hard-invariants-v1",
+    "selected_candidate_quality": {
+      "disposition": "PASS",
+      "score": 1.0,
+      "transcript": "double you as whale.",
+      "metrics": {
+        "duration_seconds": 1.6801814058956916,
+        "rms_dbfs": -31.52,
+        "peak": 0.20187,
+        "clipped_fraction": 0.0,
+        "leading_silence_seconds": 0.02,
+        "trailing_silence_seconds": 0.36,
+        "longest_internal_pause_seconds": 0.0
+      },
+      "flags": [],
+      "isolated": {
+        "score": 0.7123,
+        "transcript": " W as well.",
+        "flags": []
+      },
+      "contextual": {
+        "score": 1.0,
+        "transcript": "double you as whale.",
+        "flags": [],
+        "full_transcript": " A whale is a large sea animal. We are learning the first letter of its name, double you as whale.",
+        "retained_words": [
+          {
+            "word": " double",
+            "start": 5.32,
+            "end": 5.52,
+            "probability": 0.2225341796875
+          },
+          {
+            "word": " you",
+            "start": 5.52,
+            "end": 5.86,
+            "probability": 0.609375
+          },
+          {
+            "word": " as",
+            "start": 5.86,
+            "end": 6.12,
+            "probability": 0.9853515625
+          },
+          {
+            "word": " whale.",
+            "start": 6.12,
+            "end": 6.4,
+            "probability": 0.96923828125
+          }
+        ],
+        "straddling": []
+      },
+      "proof": {
+        "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/en-letter-W/run/carrier-raw/activities/alfabeto_leo/assets/audio/en/letter_W.wav.raw.wav",
+        "source_sha256": "8bfa9bf05a2baf8d1a74419b590d8633f9af3ad4d294f6bf32f65f7981d70eda",
+        "extracted": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/en-letter-W/run/carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_W.wav.extracted.wav.search/14c3cb09f49a40c990f5ad5f79679325/candidate-02.wav",
+        "extracted_sha256": "3fe8e82c71451097fdc9bad135e80d5024b4c649180c109ef4fc3adc6abc5c9c",
+        "packaged": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/en-letter-W/run/carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_W.wav.extracted.wav.search/14c3cb09f49a40c990f5ad5f79679325/candidate-02.wav.delivery-proof/candidate.wav",
+        "packaged_sha256": "769131c5f2e864f856ed272d1a86133d8b2509d25925a2526da7f2310ebb355b",
+        "decoded": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/en-letter-W/run/carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_W.wav.extracted.wav.search/14c3cb09f49a40c990f5ad5f79679325/candidate-02.wav.delivery-proof/decoded.wav",
+        "decoded_sha256": "769131c5f2e864f856ed272d1a86133d8b2509d25925a2526da7f2310ebb355b",
+        "cut_sample": 249600,
+        "source_rate": 48000,
+        "packaged_suffix_matches": true,
+        "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/en-letter-W/run/context-verification/activities/alfabeto_leo/assets/audio/en/letter_W.wav/856eba7c9df14f3c88424085da9c203f",
+        "isolated_observation": {
+          "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/en-letter-W/run/context-verification/activities/alfabeto_leo/assets/audio/en/letter_W.wav/856eba7c9df14f3c88424085da9c203f/isolated.json",
+          "sha256": "ab8ff6bf112dacf73baf84a601dddf20e741208df1996159e79ebae6c7f6dda3"
+        },
+        "contextual_observation": {
+          "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/en-letter-W/run/context-verification/activities/alfabeto_leo/assets/audio/en/letter_W.wav/856eba7c9df14f3c88424085da9c203f/context.json",
+          "sha256": "295cca8e3d9eed84acc8468d28d37fc21a0893e751fc25b604158b3345d40ff5"
+        },
+        "prefix_frames": 114660,
+        "prefix_seconds": 5.2,
+        "context": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/en-letter-W/run/context-verification/activities/alfabeto_leo/assets/audio/en/letter_W.wav/856eba7c9df14f3c88424085da9c203f/context.wav",
+        "context_sha256": "004eba3b981ee8c485b0dd4dfc6dcf09d3b34a12439b0640d54477934a58a385",
+        "payload_pcm_sha256": "7b29cd351b42a78bbd9185e3aa2bdb360cf8c5a70c98a58e523e382f75ae7eb0",
+        "context_payload_identical": true,
+        "word_timestamp_coverage_valid": true,
+        "intro_wording_agreement_required": false
+      },
+      "selected_evidence": "contextual",
+      "verification_strategy": "saved-wav-context-hard-invariants-v1",
+      "comparison_policy": "locale-number-tokens-v2-spoken-en-v1",
+      "ignore_accents": true,
+      "model_id": "mlx-community/whisper-base-mlx",
+      "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+      "detail": "Saved WAV screening only; human listening remains pending"
+    },
+    "raw_intro_asr": "prefix-heard-on-fallback; wording-agreement-not-required",
+    "target_verification_effective_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+    "target_verification_warning": false,
+    "saved_recovery_policy": "target-only-v7-saved-wav-context-spoken-en-v1",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 0,
+      "removed_seconds": 0.0,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 249600,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/en-letter-W/run/carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_W.wav.delivery.wav",
+      "sha256": "3fe8e82c71451097fdc9bad135e80d5024b4c649180c109ef4fc3adc6abc5c9c"
+    }
+  },
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/en/letter_W.wav",
-    "bytes": 77702,
-    "sha256": "cefcbe47cfbda6fb5458b331d292b2193cccd34bfa8da26d62c6b9f9ffab3125"
+    "sha256": "769131c5f2e864f856ed272d1a86133d8b2509d25925a2526da7f2310ebb355b",
+    "bytes": 74174
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "search_evidence_sha256": "56b8f5a9371bac441d5527664f7b3a5a79d22d9c79b8d1aecb553d2965982d91",
   "corpus_replacement": {
-    "original_sha256": "e52530931bc7be6d787cc5546f0f7c725fd57f0a54b823a5b7f91e7227389890",
+    "original_sha256": "6a90904db29ac335e2bc89c15e59ecb87de81f878f8f94bc9a1bf912a34215f0",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

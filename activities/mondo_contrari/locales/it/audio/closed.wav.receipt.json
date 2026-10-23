@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T13:23:50.498029+00:00",
+  "created_utc": "2026-10-21T16:45:00.260419+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "CHIUSO! Tutto al sicuro!",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. CHIUSO! Tutto al sicuro!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "flash",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "CHIUSO! Tutto al sicuro!",
+    "cue_id": "mondo_contrari.closed",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "flash",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "CHIUSO! Tutto al sicuro!",
     "cue_id": "mondo_contrari.closed",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/mondo_contrari/locales/it/audio/closed.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Flash, a springy, eager little rabbit. Acts out the word for a child. Snug and settled, like a door clicking shut. Playful, clear words."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.flash.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
   "generation_parameters": {
-    "job_id": "20261020-152339-0bac3a2d",
-    "idempotency_key": "greia-8f76ee596e904953bc655d5fbf8b8511",
+    "job_id": "20261021-184441-b3e50a15",
+    "idempotency_key": "greia-915d114942c7459ba51ce7be6a2c4574",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,247 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1760408182,
+    "script_seed": 3820489624,
     "language_direction": "Italian",
-    "delivery_prompt": "Flash, a springy, eager little rabbit. Acts out the word for a child. Snug and settled, like a door clicking shut. Playful, clear words.",
-    "effective_delivery": "Speak in Italian. Flash, a springy, eager little rabbit. Acts out the word for a child. Snug and settled, like a door clicking shut. Playful, clear words.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1209087702,
-        "sha256": "6a8f9493044e3e135270e38b7bb4e3a0efec57da8de2fd4534a9efe8c9ec68cd",
+        "seed": 201310279,
+        "sha256": "8052c7ec6beba78273da0874780c456b4ba07110ebcc85868a0f18d878c208fb",
         "generation": {
-          "elapsed_seconds": 10.445265375019517,
+          "elapsed_seconds": 17.203611000004457,
           "model_load_seconds": 0.0,
-          "rtf": 3.839935803573133,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.7075416112936583,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Che uso, tutto al sicuro!",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/mondo_contrari/locales/it/audio/closed.wav.raw.wav",
+    "sha256": "d098d8be00c99188495fb56b573c25577cd3d634c246e8cfab3d8cb7409a105c",
+    "receipt_sha256": "e8819439fd54b66b27244cf4af360625e4e2b5325cb7e8a46aa1260b4eaea66a"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/mondo_contrari/locales/it/audio/closed.wav.extracted.wav",
+    "sha256": "7bd0ea15a8cd40a077835cdf16035e55025ff247e6e58037b6c8436a19b82014"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/mondo_contrari/locales/it/audio/closed.wav.raw.wav",
+    "source_sha256": "d098d8be00c99188495fb56b573c25577cd3d634c246e8cfab3d8cb7409a105c",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/mondo_contrari/locales/it/audio/closed.wav.extracted.wav",
+    "output_sha256": "7bd0ea15a8cd40a077835cdf16035e55025ff247e6e58037b6c8436a19b82014",
+    "target_request": {
+      "speaker": "flash",
+      "kind": "character_dialogue",
+      "text": "CHIUSO! Tutto al sicuro!",
+      "locale": "it",
+      "cue_id": "mondo_contrari.closed",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/mondo_contrari/locales/it/audio/closed.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "e8819439fd54b66b27244cf4af360625e4e2b5325cb7e8a46aa1260b4eaea66a"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "CHIUSO! Tutto al sicuro!",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " ascolta questa frase in italiano, che uso tutto al sicuro!",
+    "extracted_transcript": " Che uso, tutto al sicuro!",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.76
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.76,
+        "end_seconds": 1.04
+      },
+      {
+        "word": "frase",
+        "start_seconds": 1.04,
+        "end_seconds": 1.42
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.42,
+        "end_seconds": 1.58
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.58,
+        "end_seconds": 2.06
+      },
+      {
+        "word": "che",
+        "start_seconds": 2.7,
+        "end_seconds": 2.76
+      },
+      {
+        "word": "uso",
+        "start_seconds": 2.76,
+        "end_seconds": 3.08
+      },
+      {
+        "word": "tutto",
+        "start_seconds": 3.08,
+        "end_seconds": 3.82
+      },
+      {
+        "word": "al",
+        "start_seconds": 3.82,
+        "end_seconds": 4.02
+      },
+      {
+        "word": "sicuro",
+        "start_seconds": 4.02,
+        "end_seconds": 4.44
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "che",
+        "start_seconds": 0.0,
+        "end_seconds": 0.36
+      },
+      {
+        "word": "uso",
+        "start_seconds": 0.36,
+        "end_seconds": 0.66
+      },
+      {
+        "word": "tutto",
+        "start_seconds": 1.1,
+        "end_seconds": 1.4
+      },
+      {
+        "word": "al",
+        "start_seconds": 1.4,
+        "end_seconds": 1.62
+      },
+      {
+        "word": "sicuro",
+        "start_seconds": 1.62,
+        "end_seconds": 2.02
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5221456421746148,
+        "no_speech_prob": 0.052530042827129364,
+        "compression_ratio": 0.9830508474576272,
+        "word_probabilities": [
+          0.640625,
+          0.97705078125,
+          0.9267578125,
+          0.8037109375,
+          0.94921875,
+          0.465576171875,
+          0.94970703125,
+          0.57373046875,
+          0.93701171875,
+          0.97265625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.8324059573086825,
+        "no_speech_prob": 0.247701495885849,
+        "compression_ratio": 0.7575757575757576,
+        "word_probabilities": [
+          0.06488037109375,
+          0.6318359375,
+          0.7548828125,
+          0.5625,
+          0.8974609375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 122,
+    "extracted_voiced_seconds": 1.22,
+    "unremoved_raw_target_tokens": [
+      "che",
+      "uso",
+      "tutto",
+      "al",
+      "sicuro"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "che",
+      "uso",
+      "tutto",
+      "al",
+      "sicuro"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 4.640181405895691,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 2.06,
+      "target_first_word_start_seconds": 2.7,
+      "gap_seconds": 0.4090702947845805,
+      "verified_silence_start_seconds": 2.1996825396825397,
+      "verified_silence_end_seconds": 2.6087528344671203,
+      "gap_rms_dbfs": -54.162,
+      "gap_peak_dbfs": -33.672,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.40421768707483,
+      "cut_sample": 53013,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/mondo_contrari/locales/it/audio/closed.wav",
-    "bytes": 120038,
-    "sha256": "f48262477889a6434f3459ad91af06bf777019ade2b40a048165d34cb6b5c248"
+    "sha256": "df47f6b458d27e8a6e90382a28c53f78c16786bddb96e7b96441facb24b82082",
+    "bytes": 98684
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "c5d6189afc7e7dac03c7b5f5818fdbdc861b0336f5a77f546f3708b3b2cc5356",
+    "original_sha256": "f48262477889a6434f3459ad91af06bf777019ade2b40a048165d34cb6b5c248",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

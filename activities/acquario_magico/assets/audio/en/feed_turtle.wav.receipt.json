@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T07:46:42.090996+00:00",
+  "created_utc": "2026-10-21T14:50:22.765085+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Listen to this phrase in English.",
+    "prefix_word_count": 6,
+    "target": "Feed the hungry turtle",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Listen to this phrase in English. Feed the hungry turtle",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Feed the hungry turtle",
+    "cue_id": "greia.requested.feed_turtle.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "Feed the hungry turtle",
     "cue_id": "greia.requested.feed_turtle.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/acquario_magico/assets/audio/en/feed_turtle.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.tito.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261021-094632-cdaab983",
-    "idempotency_key": "greia-502d4f402c094adbae9115209f9242da",
+    "job_id": "20261021-164935-3a4e37c9",
+    "idempotency_key": "greia-139148a058474dda8a59209449ccf2da",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,246 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1950003429,
+    "script_seed": 1064991024,
     "language_direction": "English",
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in English. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in English. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 40753276,
-        "sha256": "60757c061f0631b4cb0ad6e63b1d63da2688c1fd0ad833fb90e1199f9cf4ca91",
+        "seed": 2855074242,
+        "sha256": "26bfdc6853cacacd835588ff7c419f4c87ce26002c82962bc2e7f58da9720bb3",
         "generation": {
-          "elapsed_seconds": 8.37901525000052,
+          "elapsed_seconds": 46.337254957994446,
           "model_load_seconds": 0.0,
-          "rtf": 4.363691650030651,
-          "peak_memory_gb": 7.648166916
+          "rtf": 11.583831079870283,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " feed the hungry turtle.",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/acquario_magico/assets/audio/en/feed_turtle.wav.raw.wav",
+    "sha256": "894a367bd717c10e8efba640d7f089336522cf3abd719e776e7bfc23405976ae",
+    "receipt_sha256": "4820e0bb019751d3823911a06f3fcc6a0742a9b4ce58871856cc602660b69300"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/acquario_magico/assets/audio/en/feed_turtle.wav.extracted.wav",
+    "sha256": "d4bc704de8eb23637381d440d5c9492b74e2978af8a5610e0ee600fdeb2b90de"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-corpus-v1/run/carrier-raw/activities/acquario_magico/assets/audio/en/feed_turtle.wav.raw.wav",
+    "source_sha256": "894a367bd717c10e8efba640d7f089336522cf3abd719e776e7bfc23405976ae",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-corpus-v1/run/carrier-extracted/activities/acquario_magico/assets/audio/en/feed_turtle.wav.extracted.wav",
+    "output_sha256": "d4bc704de8eb23637381d440d5c9492b74e2978af8a5610e0ee600fdeb2b90de",
+    "target_request": {
+      "speaker": "tito",
+      "kind": "character_dialogue",
+      "text": "Feed the hungry turtle",
+      "locale": "en",
+      "cue_id": "greia.requested.feed_turtle.en",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-corpus-v1/run/carrier-raw/activities/acquario_magico/assets/audio/en/feed_turtle.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "4820e0bb019751d3823911a06f3fcc6a0742a9b4ce58871856cc602660b69300"
+    },
+    "locale": "en",
+    "prefix": "Listen to this phrase in English.",
+    "target": "Feed the hungry turtle",
+    "remove_first_words": 6,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Listen to this phrase in English. Feed the hungry turtle.",
+    "extracted_transcript": " feed the hungry turtle.",
+    "raw_word_alignment": [
+      {
+        "word": "listen",
+        "start_seconds": 0.0,
+        "end_seconds": 0.34
+      },
+      {
+        "word": "to",
+        "start_seconds": 0.34,
+        "end_seconds": 0.54
+      },
+      {
+        "word": "this",
+        "start_seconds": 0.54,
+        "end_seconds": 0.72
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.72,
+        "end_seconds": 1.04
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.04,
+        "end_seconds": 1.26
+      },
+      {
+        "word": "english",
+        "start_seconds": 1.26,
+        "end_seconds": 1.76
+      },
+      {
+        "word": "feed",
+        "start_seconds": 2.38,
+        "end_seconds": 2.7
+      },
+      {
+        "word": "the",
+        "start_seconds": 2.7,
+        "end_seconds": 3.12
+      },
+      {
+        "word": "hungry",
+        "start_seconds": 3.12,
+        "end_seconds": 3.38
+      },
+      {
+        "word": "turtle",
+        "start_seconds": 3.38,
+        "end_seconds": 3.74
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "feed",
+        "start_seconds": 0.0,
+        "end_seconds": 0.66
+      },
+      {
+        "word": "the",
+        "start_seconds": 0.66,
+        "end_seconds": 1.04
+      },
+      {
+        "word": "hungry",
+        "start_seconds": 1.04,
+        "end_seconds": 1.32
+      },
+      {
+        "word": "turtle",
+        "start_seconds": 1.32,
+        "end_seconds": 1.66
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.4390369864071117,
+        "no_speech_prob": 0.0054342737421393394,
+        "compression_ratio": 0.890625,
+        "word_probabilities": [
+          0.85888671875,
+          0.9912109375,
+          0.98095703125,
+          0.98828125,
+          0.951171875,
+          0.986328125
+        ]
+      },
+      {
+        "avg_logprob": -0.4390369864071117,
+        "no_speech_prob": 0.0054342737421393394,
+        "compression_ratio": 0.890625,
+        "word_probabilities": [
+          0.8544921875,
+          0.91064453125,
+          0.732421875,
+          0.9765625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.5563712120056152,
+        "no_speech_prob": 0.03179298713803291,
+        "compression_ratio": 0.7419354838709677,
+        "word_probabilities": [
+          0.396240234375,
+          0.93408203125,
+          0.935546875,
+          0.98583984375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 119,
+    "extracted_voiced_seconds": 1.19,
+    "unremoved_raw_target_tokens": [
+      "feed",
+      "the",
+      "hungry",
+      "turtle"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "feed",
+      "the",
+      "hungry",
+      "turtle"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 4.000181405895692,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.76,
+      "target_first_word_start_seconds": 2.38,
+      "gap_seconds": 0.508843537414966,
+      "verified_silence_start_seconds": 1.8198639455782313,
+      "verified_silence_end_seconds": 2.328707482993197,
+      "gap_rms_dbfs": -61.768,
+      "gap_peak_dbfs": -37.264,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.0742857142857143,
+      "cut_sample": 45738,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/acquario_magico/assets/audio/en/feed_turtle.wav",
-    "bytes": 84758,
-    "sha256": "c854ec766827f085999d36289556692c369736ac36871fc7a31fa4796f82c2cb"
+    "sha256": "65e0903f0117e62de2b62e6704a49340db42a6e0cf465ffeace6901eb2123dcd",
+    "bytes": 85010
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "9f74a8271b7599c7293a06d345e853c7a1acdc4655a8959c7d88b94325249441",
+    "original_sha256": "c854ec766827f085999d36289556692c369736ac36871fc7a31fa4796f82c2cb",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

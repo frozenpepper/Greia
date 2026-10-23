@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T16:01:31.809915+00:00",
+  "created_utc": "2026-10-22T09:43:52.254985+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "Pulsante di azione!",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano...\n\nPulsante di azione!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Pulsante di azione!",
+    "cue_id": "sub_btn_action",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Pulsante di azione!",
     "cue_id": "sub_btn_action",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/sottomarino_giramondo/audio/it/sub_btn_action.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-180120-ceb315fe",
-    "idempotency_key": "greia-46b84cca2cb848818c1e3bd82733f1e5",
+    "job_id": "20261022-114211-68a006d6",
+    "idempotency_key": "greia-cea8d9a8e1514db2b392e52bff2b68e7",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,254 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1645309214,
+    "script_seed": 3034212952,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2191248127,
-        "sha256": "b6bdee0d90903b9244fd5c8d9c276a6d0380aaf3d2853feb70ff22fb49076e3a",
+        "seed": 2648190124,
+        "sha256": "0fdcb62b3d233c1fdd808a092c5cba947a1e94e17cb648e2d70b5e14e910a1fa",
         "generation": {
-          "elapsed_seconds": 10.82208112499211,
+          "elapsed_seconds": 12.620415791985579,
           "model_load_seconds": 0.0,
-          "rtf": 8.453650143204356,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.429305500290452,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " pulsante di azione.",
+    "metrics": {
+      "duration_seconds": 1.3827210884353742,
+      "rms_dbfs": -34.82,
+      "peak": 0.12265,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.1,
+      "trailing_silence_seconds": 0.18,
+      "longest_internal_pause_seconds": 0.0
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/sottomarino_giramondo/audio/it/sub_btn_action.wav.raw.wav",
+    "sha256": "f4578cd878a25feea1578b435c74204232cc2d562837cbaec4eb5b7b189767e9",
+    "receipt_sha256": "de35339253bc3eb1965264f7cb939a08c971e74c4a8a0df13d4b53a5ab9a3c10"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/sottomarino_giramondo/audio/it/sub_btn_action.wav.extracted.wav",
+    "sha256": "6e0a892a4dae51cc544748af5c6bffe6f6aaf3a7fcd77098c2492a0453c40a4d"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/sottomarino_giramondo/audio/it/sub_btn_action.wav.delivery.wav",
+    "sha256": "43e2cc36c992aa5c9081256bb2fca67b640b984bb4340f528ba9ca8b449c0040"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/activities/sottomarino_giramondo/audio/it/sub_btn_action.wav.raw.wav",
+    "source_sha256": "f4578cd878a25feea1578b435c74204232cc2d562837cbaec4eb5b7b189767e9",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/activities/sottomarino_giramondo/audio/it/sub_btn_action.wav.extracted.wav",
+    "output_sha256": "6e0a892a4dae51cc544748af5c6bffe6f6aaf3a7fcd77098c2492a0453c40a4d",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Pulsante di azione!",
+      "locale": "it",
+      "cue_id": "sub_btn_action",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/activities/sottomarino_giramondo/audio/it/sub_btn_action.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "de35339253bc3eb1965264f7cb939a08c971e74c4a8a0df13d4b53a5ab9a3c10"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "Pulsante di azione!",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " scolta questa frase in italiano pulsante di azione.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " pulsante di azione.",
+    "raw_word_alignment": [
+      {
+        "word": "scolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.46
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.46,
+        "end_seconds": 0.8
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.8,
+        "end_seconds": 1.1
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.1,
+        "end_seconds": 1.28
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.28,
+        "end_seconds": 1.74
+      },
+      {
+        "word": "pulsante",
+        "start_seconds": 1.74,
+        "end_seconds": 2.84
+      },
+      {
+        "word": "di",
+        "start_seconds": 2.84,
+        "end_seconds": 3.0
+      },
+      {
+        "word": "azione",
+        "start_seconds": 3.0,
+        "end_seconds": 3.48
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "pulsante",
+        "start_seconds": 0.0,
+        "end_seconds": 0.72
+      },
+      {
+        "word": "di",
+        "start_seconds": 0.72,
+        "end_seconds": 0.86
+      },
+      {
+        "word": "azione",
+        "start_seconds": 0.86,
+        "end_seconds": 1.34
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.43114686012268066,
+        "no_speech_prob": 0.05726645141839981,
+        "compression_ratio": 0.8947368421052632,
+        "word_probabilities": [
+          0.76025390625,
+          0.79931640625,
+          0.90283203125,
+          0.95458984375,
+          0.99560546875,
+          0.85546875,
+          0.9951171875,
+          0.93994140625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.4103781382242839,
+        "no_speech_prob": 0.014243382960557938,
+        "compression_ratio": 0.7037037037037037,
+        "word_probabilities": [
+          0.81689453125,
+          0.99169921875,
+          0.96240234375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": false,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 93,
+    "extracted_voiced_seconds": 0.93,
+    "unremoved_raw_target_tokens": [
+      "pulsante",
+      "di",
+      "azione"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "pulsante",
+      "di",
+      "azione"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.6801814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-expanded-boundary",
+      "search_start_seconds": 1.28,
+      "search_end_seconds": 2.84,
+      "prefix_last_word_end_seconds": 1.74,
+      "target_first_word_start_seconds": 1.74,
+      "gap_seconds": 0.5287981859410431,
+      "verified_silence_start_seconds": 1.8686621315192744,
+      "verified_silence_end_seconds": 2.3974603174603173,
+      "gap_rms_dbfs": -55.733,
+      "gap_peak_dbfs": -31.907,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.1330612244897957,
+      "cut_sample": 47034,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 3625,
+      "removed_seconds": 0.16439909297052155,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 50659,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/activities/sottomarino_giramondo/audio/it/sub_btn_action.wav.delivery.wav",
+      "sha256": "43e2cc36c992aa5c9081256bb2fca67b640b984bb4340f528ba9ca8b449c0040"
+    }
+  },
   "output": {
     "path": "activities/sottomarino_giramondo/audio/it/sub_btn_action.wav",
-    "bytes": 56534,
-    "sha256": "84049f16025f00540c68a57239d545b3e1588a7303096a799e5bd463e2138e2d"
+    "sha256": "472bb8e625151782f72262154a0ef57113a4f859c6c305547710523191476f79",
+    "bytes": 61056
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "8ea2e5386132c83d7a7455e05a0d67f7600429222d307276642749bafae3f115",
+    "original_sha256": "84049f16025f00540c68a57239d545b3e1588a7303096a799e5bd463e2138e2d",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T13:44:15.404853+00:00",
+  "created_utc": "2026-10-22T08:38:14.915424+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "Bola",
+    "target_word_count": 1,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español...\n\nBola",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "Bola",
+    "cue_id": "officina_dei_suoni.bola.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "Bola",
     "cue_id": "officina_dei_suoni.bola.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/officina_dei_suoni/assets/audio/es/bola.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Make the very first sound crisp and easy to hear."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-154408-29329076",
-    "idempotency_key": "greia-0b874c3a20db4d578600a3f52c36e0cf",
+    "job_id": "20261022-103755-76073f2e",
+    "idempotency_key": "greia-49d24d4aaff947e1a642fe3cce87f0f7",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,178 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2024843144,
+    "script_seed": 1967767364,
     "language_direction": "Spanish",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Make the very first sound crisp and easy to hear.",
-    "effective_delivery": "Speak in Spanish. Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Make the very first sound crisp and easy to hear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 803024196,
-        "sha256": "22e01bd0a182e8f1bdaaf661d1e96808de00fe4870e7c66070ed441ae0f5676e",
+        "seed": 4074888050,
+        "sha256": "70488a255dadc37575965f3086b0211c87de7de2697901cb4ee66cc6ba653011",
         "generation": {
-          "elapsed_seconds": 6.587920500023756,
+          "elapsed_seconds": 18.529505958998925,
           "model_load_seconds": 0.0,
-          "rtf": 4.117021456113169,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.6189263290255376,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": "Bola",
+    "metrics": {
+      "duration_seconds": 1.8977324263038549,
+      "rms_dbfs": -36.27,
+      "peak": 0.15482,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.06,
+      "trailing_silence_seconds": 1.24,
+      "longest_internal_pause_seconds": 0.0
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v1",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/officina_dei_suoni/assets/audio/es/bola.wav.raw.wav",
+    "sha256": "984d235b6554dda9e42506d50de0486c6ee924d7eac2a5b57bdd2ec1e801d73d",
+    "receipt_sha256": "b3d00a79c875b32ca853c04ef90c7c1ea19bdfbbf9ab2d57a74e90c0e3f57048"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/officina_dei_suoni/assets/audio/es/bola.wav.extracted.wav",
+    "sha256": "f698c1566cfda02ed13411b7357081a49773293e893213d9ef1b0c450e5160e9"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/officina_dei_suoni/assets/audio/es/bola.wav.delivery.wav",
+    "sha256": "f698c1566cfda02ed13411b7357081a49773293e893213d9ef1b0c450e5160e9"
+  },
+  "extraction": {
+    "schema_version": 1,
+    "algorithm_version": "greia-spoken-carrier-extractor-v7",
+    "comparison_policy": "locale-number-tokens-v1",
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-raw/activities/officina_dei_suoni/assets/audio/es/bola.wav.raw.wav",
+    "source_sha256": "984d235b6554dda9e42506d50de0486c6ee924d7eac2a5b57bdd2ec1e801d73d",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/officina_dei_suoni/assets/audio/es/bola.wav.extracted.wav",
+    "output_sha256": "f698c1566cfda02ed13411b7357081a49773293e893213d9ef1b0c450e5160e9",
+    "output_bytes": 83734,
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "Bola",
+    "remove_first_words": 5,
+    "ignore_accents": true,
+    "target_verification_requested": "warn",
+    "target_verification_policy": "warn",
+    "target_comparison_score": 1.0,
+    "target_word_count_matches": true,
+    "target_numbers_match": true,
+    "target_comparison_flags": [],
+    "target_transcript_warning": false,
+    "recognizer": "mlx-whisper-base",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extracted_transcript": "Bola",
+    "expected_target_tokens": [
+      "bola"
+    ],
+    "extracted_target_tokens": [
+      "bola"
+    ],
+    "extracted_target_exact_match": true,
+    "transcription_settings": {
+      "language": "es",
+      "initial_prompt": null,
+      "word_timestamps": true,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "sample_rate": 22050,
+    "duration_seconds": 5.120181405895692,
+    "boundary": {
+      "search_strategy": "target-only-global-quiet-run-v7",
+      "verified_silence_start_seconds": 1.9854875283446711,
+      "verified_silence_end_seconds": 3.3224489795918366,
+      "verified_silence_duration_seconds": 1.3369614512471655,
+      "cut_sample": 71055,
+      "cut_time_seconds": 3.2224489795918365,
+      "padding_seconds": 0.1,
+      "quiet_run_start_sample": 43780,
+      "quiet_run_end_sample": 73260,
+      "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+    },
+    "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/officina_dei_suoni/assets/audio/es/bola.wav.extracted.wav.search/fd1e4e0f49ed431c8f53eb6515a41ffc",
+    "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/officina_dei_suoni/assets/audio/es/bola.wav.extracted.wav.search/fd1e4e0f49ed431c8f53eb6515a41ffc/search.json",
+    "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-raw/activities/officina_dei_suoni/assets/audio/es/bola.wav.raw.wav.receipt.json",
+    "source_provider_receipt_sha256": "b3d00a79c875b32ca853c04ef90c7c1ea19bdfbbf9ab2d57a74e90c0e3f57048",
+    "candidate_sha256": "f698c1566cfda02ed13411b7357081a49773293e893213d9ef1b0c450e5160e9",
+    "candidate_id": "candidate-01",
+    "candidate_count": 1,
+    "qualifying_quiet_run_count": 1,
+    "candidate_results": [
+      {
+        "candidate_id": "candidate-01",
+        "quiet_run": {
+          "start_sample": 43780,
+          "end_sample": 73260,
+          "start_seconds": 1.9854875283446711,
+          "end_seconds": 3.3224489795918366,
+          "duration_seconds": 1.3369614512471655
+        },
+        "cut_sample": 71055,
+        "cut_time_seconds": 3.2224489795918365,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/officina_dei_suoni/assets/audio/es/bola.wav.extracted.wav.search/fd1e4e0f49ed431c8f53eb6515a41ffc/candidate-01.wav",
+        "preceding_voiced_seconds": 1.39,
+        "retained_voiced_seconds": 0.44,
+        "retained_duration_seconds": 1.8977324263038549,
+        "candidate_sha256": "f698c1566cfda02ed13411b7357081a49773293e893213d9ef1b0c450e5160e9",
+        "extracted_transcript": "Bola",
+        "canonical_transcript_tokens": [
+          "bola"
+        ],
+        "exact_target_match": true,
+        "target_comparison_score": 1.0,
+        "target_word_count_matches": true,
+        "target_numbers_match": true,
+        "target_comparison_flags": [],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": true,
+        "asr_segment_count": 1
+      }
+    ],
+    "human_review": "PENDING",
+    "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+    "target_verification_effective_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+    "target_verification_warning": false,
+    "saved_recovery_policy": "target-only-v7-saved-v1",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 0,
+      "removed_seconds": 0.0,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 71055,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/officina_dei_suoni/assets/audio/es/bola.wav.delivery.wav",
+      "sha256": "f698c1566cfda02ed13411b7357081a49773293e893213d9ef1b0c450e5160e9"
+    }
+  },
   "output": {
     "path": "activities/officina_dei_suoni/assets/audio/es/bola.wav",
-    "bytes": 70646,
-    "sha256": "09b0eee55f6a255fe861744348b7aa5e9c20ae252671cd6add9f220bae84c0c7"
+    "sha256": "cc2513b810204ebfb4908fbac0171fc9a4a70caaa3840138147784a6175d01bd",
+    "bytes": 83768
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "d4c2b624184b65f009c4a26431dffe5544e4ba711eda31fc2821c01689e3b158",
+    "original_sha256": "644da7772c6fe00e4b28b2d07569e510414808a2b7b3b04ec21aa22f32be4e0d",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

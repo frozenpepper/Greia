@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T11:56:39.499850+00:00",
+  "created_utc": "2026-10-23T01:43:12.493600+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
@@ -8,17 +8,22 @@
     "text": "Deux lucioles !",
     "cue_id": "luci_di_momo.count_2.fr",
     "output": "activities/luci_di_momo/assets/audio/fr/count_2.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Counts aloud with a child: one crisp, clear number, bright and steady, no extra words."
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic"
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.momo.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261021-135634-d4278daf",
-    "idempotency_key": "greia-e32941359eb24ba5a6f2695b1c6d6e6e",
+    "job_id": "20261023-034259-e67f9e70",
+    "idempotency_key": "greia-0394b031564c45618e60a3db37514beb",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +46,327 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1923105075,
+    "script_seed": 188245710,
     "language_direction": "French",
-    "delivery_prompt": "Counts aloud with a child: one crisp, clear number, bright and steady, no extra words.",
-    "effective_delivery": "Speak in French. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words.",
+    "delivery_prompt": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "effective_delivery": "Speak in French. Lecture chaleureuse et calme. Diction claire et naturelle.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2988841059,
-        "sha256": "f666a2d3763d402d3851466a72c363d11a21a3ff218ae6107b73cdd0d67a9291",
+        "seed": 807760690,
+        "sha256": "0478692cc1a21d52073faeeb4d421efa5c388a1c762c46641c58c5b84c2aa11f",
         "generation": {
-          "elapsed_seconds": 4.210104917001445,
+          "elapsed_seconds": 11.394225458003348,
           "model_load_seconds": 0.0,
-          "rtf": 3.7584629522405395,
-          "peak_memory_gb": 7.648166916
+          "rtf": 3.560510012396234,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-audio-parakeet-tdt-v3",
+    "transcript": "Deux Lucioles.",
+    "score": 1.0,
+    "detail": "Delivered target transcribed and screened; human listening remains pending",
+    "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+    "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+    "flags": [],
+    "metrics": {
+      "duration_seconds": 0.9601814058956916,
+      "rms_dbfs": -28.03,
+      "peak": 0.19955,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.1,
+      "trailing_silence_seconds": 0.1,
+      "longest_internal_pause_seconds": 0.0
+    }
   },
   "attempts": 1,
   "output": {
     "path": "activities/luci_di_momo/assets/audio/fr/count_2.wav",
-    "bytes": 49478,
-    "sha256": "e4d7d08ee26a8234e1874c6a6e3146a6e08844697e46b2c19a058bc66969d877"
+    "bytes": 42422,
+    "sha256": "88af9ac482a75d2e50a5016d22d3d107c90ead76470761b4c8811704af550d61"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "short_phrase": {
+    "mode": "automatic-carrier",
+    "composition_policy": "natural-context-period-v1",
+    "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/abc0aa5ae1754bcd8907e677790e3e32",
+    "prefix": "Nous allons compter ensemble.",
+    "composite_text": "Nous allons compter ensemble.\n\nDeux lucioles !",
+    "effective_delivery": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "extraction": {
+      "schema_version": 1,
+      "algorithm_version": "greia-spoken-carrier-extractor-v7",
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "status": "EXTRACTED_PENDING_LISTENING",
+      "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/abc0aa5ae1754bcd8907e677790e3e32/attempt-01/raw.wav",
+      "source_sha256": "0478692cc1a21d52073faeeb4d421efa5c388a1c762c46641c58c5b84c2aa11f",
+      "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/abc0aa5ae1754bcd8907e677790e3e32/attempt-01/target.wav",
+      "output_sha256": "debd67fe8141f924c8d3b7e82694257949dcbc774adae12118e65f6486fa89d1",
+      "output_bytes": 92220,
+      "locale": "fr",
+      "prefix": "Nous allons compter ensemble.",
+      "target": "Deux lucioles !",
+      "remove_first_words": 4,
+      "ignore_accents": true,
+      "target_verification_requested": "warn",
+      "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+      "target_comparison_score": 1.0,
+      "target_word_count_matches": true,
+      "target_numbers_match": true,
+      "target_comparison_flags": [],
+      "target_transcript_warning": false,
+      "recognizer": "mlx-audio-parakeet-tdt-v3",
+      "recognizer_version": "0.5.0",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "extracted_transcript": "Deux Lucioles.",
+      "expected_target_tokens": [
+        "<num:2>",
+        "lukioles"
+      ],
+      "extracted_target_tokens": [
+        "<num:2>",
+        "lukioles"
+      ],
+      "extracted_target_exact_match": true,
+      "transcription_settings": {
+        "language_detection": "automatic",
+        "expected_text_prompt": null,
+        "timestamps": "model-provided-token-timestamps"
+      },
+      "sample_rate": 48000,
+      "duration_seconds": 3.2001666666666666,
+      "boundary": {
+        "search_strategy": "target-only-global-quiet-run-v7",
+        "verified_silence_start_seconds": 1.51,
+        "verified_silence_end_seconds": 2.34,
+        "verified_silence_duration_seconds": 0.83,
+        "cut_sample": 107520,
+        "cut_time_seconds": 2.24,
+        "padding_seconds": 0.1,
+        "quiet_run_start_sample": 72480,
+        "quiet_run_end_sample": 112320,
+        "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+      },
+      "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/abc0aa5ae1754bcd8907e677790e3e32/attempt-01/target.wav.search/ec907192043a4df8b54f6ff00458598e",
+      "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/abc0aa5ae1754bcd8907e677790e3e32/attempt-01/target.wav.search/ec907192043a4df8b54f6ff00458598e/search.json",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/abc0aa5ae1754bcd8907e677790e3e32/attempt-01/raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "f134ffc53e995a2d0218132cf3f3c24ae7c1a9b4733449f937d566d978f76f48",
+      "candidate_sha256": "debd67fe8141f924c8d3b7e82694257949dcbc774adae12118e65f6486fa89d1",
+      "candidate_id": "candidate-01",
+      "candidate_count": 1,
+      "qualifying_quiet_run_count": 1,
+      "candidate_results": [
+        {
+          "candidate_id": "candidate-01",
+          "quiet_run": {
+            "start_sample": 72480,
+            "end_sample": 112320,
+            "start_seconds": 1.51,
+            "end_seconds": 2.34,
+            "duration_seconds": 0.83
+          },
+          "cut_sample": 107520,
+          "cut_time_seconds": 2.24,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/abc0aa5ae1754bcd8907e677790e3e32/attempt-01/target.wav.search/ec907192043a4df8b54f6ff00458598e/candidate-01.wav",
+          "preceding_voiced_seconds": 1.22,
+          "retained_voiced_seconds": 0.72,
+          "retained_duration_seconds": 0.9601666666666666,
+          "candidate_sha256": "debd67fe8141f924c8d3b7e82694257949dcbc774adae12118e65f6486fa89d1",
+          "extracted_transcript": "Deux Lucioles.",
+          "canonical_transcript_tokens": [
+            "<num:2>",
+            "lukioles"
+          ],
+          "exact_target_match": true,
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": true,
+          "asr_segment_count": 1
+        }
+      ],
+      "human_review": "PENDING",
+      "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+      "delivery": {
+        "policy": "verified-carrier-gap-delivery-v1",
+        "removed_frames": 0,
+        "removed_seconds": 0.0,
+        "retained_verified_quiet_seconds": 0.1,
+        "raw_delivery_start_sample": 107520,
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/abc0aa5ae1754bcd8907e677790e3e32/attempt-01/delivery-target.wav",
+        "sha256": "debd67fe8141f924c8d3b7e82694257949dcbc774adae12118e65f6486fa89d1"
+      }
+    },
+    "quality": {
+      "disposition": "PASS",
+      "score": 1.0,
+      "transcript": "Deux Lucioles.",
+      "metrics": {
+        "duration_seconds": 0.9601814058956916,
+        "rms_dbfs": -28.03,
+        "peak": 0.19955,
+        "clipped_fraction": 0.0,
+        "leading_silence_seconds": 0.1,
+        "trailing_silence_seconds": 0.1,
+        "longest_internal_pause_seconds": 0.0
+      },
+      "flags": [],
+      "ignore_accents": true,
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "detail": "Delivered target transcribed and screened; human listening remains pending"
+    },
+    "history": [
+      {
+        "attempt": 1,
+        "status": "PASS",
+        "quality": {
+          "disposition": "PASS",
+          "score": 1.0,
+          "transcript": "Deux Lucioles.",
+          "metrics": {
+            "duration_seconds": 0.9601814058956916,
+            "rms_dbfs": -28.03,
+            "peak": 0.19955,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.1,
+            "trailing_silence_seconds": 0.1,
+            "longest_internal_pause_seconds": 0.0
+          },
+          "flags": [],
+          "ignore_accents": true,
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "detail": "Delivered target transcribed and screened; human listening remains pending"
+        },
+        "extraction": {
+          "schema_version": 1,
+          "algorithm_version": "greia-spoken-carrier-extractor-v7",
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "status": "EXTRACTED_PENDING_LISTENING",
+          "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/abc0aa5ae1754bcd8907e677790e3e32/attempt-01/raw.wav",
+          "source_sha256": "0478692cc1a21d52073faeeb4d421efa5c388a1c762c46641c58c5b84c2aa11f",
+          "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/abc0aa5ae1754bcd8907e677790e3e32/attempt-01/target.wav",
+          "output_sha256": "debd67fe8141f924c8d3b7e82694257949dcbc774adae12118e65f6486fa89d1",
+          "output_bytes": 92220,
+          "locale": "fr",
+          "prefix": "Nous allons compter ensemble.",
+          "target": "Deux lucioles !",
+          "remove_first_words": 4,
+          "ignore_accents": true,
+          "target_verification_requested": "warn",
+          "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_transcript_warning": false,
+          "recognizer": "mlx-audio-parakeet-tdt-v3",
+          "recognizer_version": "0.5.0",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "extracted_transcript": "Deux Lucioles.",
+          "expected_target_tokens": [
+            "<num:2>",
+            "lukioles"
+          ],
+          "extracted_target_tokens": [
+            "<num:2>",
+            "lukioles"
+          ],
+          "extracted_target_exact_match": true,
+          "transcription_settings": {
+            "language_detection": "automatic",
+            "expected_text_prompt": null,
+            "timestamps": "model-provided-token-timestamps"
+          },
+          "sample_rate": 48000,
+          "duration_seconds": 3.2001666666666666,
+          "boundary": {
+            "search_strategy": "target-only-global-quiet-run-v7",
+            "verified_silence_start_seconds": 1.51,
+            "verified_silence_end_seconds": 2.34,
+            "verified_silence_duration_seconds": 0.83,
+            "cut_sample": 107520,
+            "cut_time_seconds": 2.24,
+            "padding_seconds": 0.1,
+            "quiet_run_start_sample": 72480,
+            "quiet_run_end_sample": 112320,
+            "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+          },
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/abc0aa5ae1754bcd8907e677790e3e32/attempt-01/target.wav.search/ec907192043a4df8b54f6ff00458598e",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/abc0aa5ae1754bcd8907e677790e3e32/attempt-01/target.wav.search/ec907192043a4df8b54f6ff00458598e/search.json",
+          "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/abc0aa5ae1754bcd8907e677790e3e32/attempt-01/raw.wav.receipt.json",
+          "source_provider_receipt_sha256": "f134ffc53e995a2d0218132cf3f3c24ae7c1a9b4733449f937d566d978f76f48",
+          "candidate_sha256": "debd67fe8141f924c8d3b7e82694257949dcbc774adae12118e65f6486fa89d1",
+          "candidate_id": "candidate-01",
+          "candidate_count": 1,
+          "qualifying_quiet_run_count": 1,
+          "candidate_results": [
+            {
+              "candidate_id": "candidate-01",
+              "quiet_run": {
+                "start_sample": 72480,
+                "end_sample": 112320,
+                "start_seconds": 1.51,
+                "end_seconds": 2.34,
+                "duration_seconds": 0.83
+              },
+              "cut_sample": 107520,
+              "cut_time_seconds": 2.24,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/abc0aa5ae1754bcd8907e677790e3e32/attempt-01/target.wav.search/ec907192043a4df8b54f6ff00458598e/candidate-01.wav",
+              "preceding_voiced_seconds": 1.22,
+              "retained_voiced_seconds": 0.72,
+              "retained_duration_seconds": 0.9601666666666666,
+              "candidate_sha256": "debd67fe8141f924c8d3b7e82694257949dcbc774adae12118e65f6486fa89d1",
+              "extracted_transcript": "Deux Lucioles.",
+              "canonical_transcript_tokens": [
+                "<num:2>",
+                "lukioles"
+              ],
+              "exact_target_match": true,
+              "target_comparison_score": 1.0,
+              "target_word_count_matches": true,
+              "target_numbers_match": true,
+              "target_comparison_flags": [],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": true,
+              "asr_segment_count": 1
+            }
+          ],
+          "human_review": "PENDING",
+          "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+          "delivery": {
+            "policy": "verified-carrier-gap-delivery-v1",
+            "removed_frames": 0,
+            "removed_seconds": 0.0,
+            "retained_verified_quiet_seconds": 0.1,
+            "raw_delivery_start_sample": 107520,
+            "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/abc0aa5ae1754bcd8907e677790e3e32/attempt-01/delivery-target.wav",
+            "sha256": "debd67fe8141f924c8d3b7e82694257949dcbc774adae12118e65f6486fa89d1"
+          }
+        },
+        "candidate": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/abc0aa5ae1754bcd8907e677790e3e32/attempt-01/candidate.wav"
+      }
+    ]
+  },
   "corpus_replacement": {
-    "original_sha256": "8e93040099e3e934b71545dab4581cf3eadbb5d83adf41f34148896b18cc000f",
+    "original_sha256": "72c5e0dadd9ebe2306a7389056ad6146ccafc9cbaa82dba0b13749249914d071",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T20:16:11.783505+00:00",
+  "created_utc": "2026-10-21T18:30:28.492584+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "Prendre soin",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. Prendre soin",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Prendre soin",
+    "cue_id": "collection.care",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Prendre soin",
     "cue_id": "collection.care",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "assets/audio/system/launcher-labels/fr/care.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names a menu button for a small child: friendly, clear and matter-of-fact, even pace."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-221605-4b614ec6",
-    "idempotency_key": "greia-d6ba193c2979410abdc8bf302e34a2be",
+    "job_id": "20261021-203015-d37367ec",
+    "idempotency_key": "greia-6d81d4eacdd84943a8b9fc33e4be971d",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,212 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3564398206,
+    "script_seed": 209683606,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names a menu button for a small child: friendly, clear and matter-of-fact, even pace.",
-    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. Names a menu button for a small child: friendly, clear and matter-of-fact, even pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2126966328,
-        "sha256": "da66bc5c08a6c6ca1280b1f039f3d43fbcea471e2adedf0d43b198f44d7ec842",
+        "seed": 1126475870,
+        "sha256": "c98d3a2c381623499fe8e77c102dbab74afe36fc14daac6910c48112c5beea93",
         "generation": {
-          "elapsed_seconds": 5.745267249993049,
+          "elapsed_seconds": 12.267937582990271,
           "model_load_seconds": 0.0,
-          "rtf": 4.487905676338796,
-          "peak_memory_gb": 8.843167284
+          "rtf": 4.509994822495045,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Pondre soir",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/system/launcher-labels/fr/care.wav.raw.wav",
+    "sha256": "7b67820a9dccbf9f3690f93ee7bc12cffdb7402faa14448f06b557e45ac8e9f4",
+    "receipt_sha256": "92cbb3d59ee69da1edf7aa1a8afa7150a0b41135b3aadc81ce6992d2c32f6065"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/system/launcher-labels/fr/care.wav.extracted.wav",
+    "sha256": "a2d19c8c9235c9ae975297ab13610140de125b6c244d2985af989dac3b85efd9"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/assets/audio/system/launcher-labels/fr/care.wav.raw.wav",
+    "source_sha256": "7b67820a9dccbf9f3690f93ee7bc12cffdb7402faa14448f06b557e45ac8e9f4",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/assets/audio/system/launcher-labels/fr/care.wav.extracted.wav",
+    "output_sha256": "a2d19c8c9235c9ae975297ab13610140de125b6c244d2985af989dac3b85efd9",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Prendre soin",
+      "locale": "fr",
+      "cue_id": "collection.care",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/assets/audio/system/launcher-labels/fr/care.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "92cbb3d59ee69da1edf7aa1a8afa7150a0b41135b3aadc81ce6992d2c32f6065"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "Prendre soin",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français. Prendre soin.",
+    "extracted_transcript": " Pondre soir",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.26
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.26,
+        "end_seconds": 0.52
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.52,
+        "end_seconds": 0.72
+      },
+      {
+        "word": "en",
+        "start_seconds": 0.72,
+        "end_seconds": 0.82
+      },
+      {
+        "word": "français",
+        "start_seconds": 0.82,
+        "end_seconds": 1.22
+      },
+      {
+        "word": "prendre",
+        "start_seconds": 1.96,
+        "end_seconds": 2.34
+      },
+      {
+        "word": "soin",
+        "start_seconds": 2.34,
+        "end_seconds": 2.62
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "pondre",
+        "start_seconds": 0.0,
+        "end_seconds": 0.78
+      },
+      {
+        "word": "soir",
+        "start_seconds": 0.78,
+        "end_seconds": 1.0
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5870305790620691,
+        "no_speech_prob": 0.011789850890636444,
+        "compression_ratio": 0.8461538461538461,
+        "word_probabilities": [
+          0.54833984375,
+          0.9775390625,
+          0.970703125,
+          0.449462890625,
+          0.95849609375
+        ]
+      },
+      {
+        "avg_logprob": -0.5870305790620691,
+        "no_speech_prob": 0.011789850890636444,
+        "compression_ratio": 0.8461538461538461,
+        "word_probabilities": [
+          0.61962890625,
+          0.794921875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.7240743637084961,
+        "no_speech_prob": 0.060862764716148376,
+        "compression_ratio": 0.5789473684210527,
+        "word_probabilities": [
+          0.51171875,
+          0.265380859375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 55,
+    "extracted_voiced_seconds": 0.55,
+    "unremoved_raw_target_tokens": [
+      "prendre",
+      "soin"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "prendre",
+      "soin"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 2.7201814058956915,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.22,
+      "target_first_word_start_seconds": 1.96,
+      "gap_seconds": 0.6285714285714286,
+      "verified_silence_start_seconds": 1.2798639455782312,
+      "verified_silence_end_seconds": 1.9084353741496598,
+      "gap_rms_dbfs": -69.142,
+      "gap_peak_dbfs": -46.615,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.5941496598639455,
+      "cut_sample": 35151,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "assets/audio/system/launcher-labels/fr/care.wav",
-    "bytes": 56534,
-    "sha256": "d4c5d362867cb545d3681a7747fde9fb47b4ea8e71f61aabf1798f4154317b47"
+    "sha256": "59e4b1151e0ab2d553623a6567a17a2111f2c95714159688f97c8b238aac00a1",
+    "bytes": 49736
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "1e63064f2802ee56e85f3e1e1f3363f21c7c94038c57b44dddbc8a9a7d3591e9",
+    "original_sha256": "d4c5d362867cb545d3681a7747fde9fb47b4ea8e71f61aabf1798f4154317b47",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

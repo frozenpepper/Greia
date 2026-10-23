@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:15:59.327580+00:00",
+  "created_utc": "2026-10-21T16:10:32.970068+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "Trouve la rime !",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. Trouve la rime !",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Trouve la rime !",
+    "cue_id": "festa_delle_rime.prompt_rhyme.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Trouve la rime !",
     "cue_id": "festa_delle_rime.prompt_rhyme.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/festa_delle_rime/assets/audio/fr/prompt_rhyme.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-141551-42c37929",
-    "idempotency_key": "greia-9750c21c80ca4a57934b139bc39ea6ae",
+    "job_id": "20261021-181018-53e4b4d7",
+    "idempotency_key": "greia-474a916766424bc1b6a9e71e6d4cd1b3",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,261 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1121421199,
+    "script_seed": 170491031,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2891929128,
-        "sha256": "5f55dd9b8c0ba86ea0fca37551532622bb7fa31a91f64a77f84053185ddcd940",
+        "seed": 2048459182,
+        "sha256": "7431bd7b756a013246579dd73e0112e50319fb40c019b387bdee874b955298a3",
         "generation": {
-          "elapsed_seconds": 6.872369209013414,
+          "elapsed_seconds": 13.63676295800542,
           "model_load_seconds": 0.0,
-          "rtf": 4.771926311084421,
-          "peak_memory_gb": 8.44494914
+          "rtf": 4.261266483414016,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " Trouve la rime.",
+    "metrics": {
+      "duration_seconds": 1.1123809523809525,
+      "rms_dbfs": -33.83,
+      "peak": 0.18912,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.18,
+      "trailing_silence_seconds": 0.06,
+      "longest_internal_pause_seconds": 0.0
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/festa_delle_rime/assets/audio/fr/prompt_rhyme.wav.raw.wav",
+    "sha256": "44013909fa537c10980f0c32c5f332e0e99a6065e4c728c31471249f25542d6f",
+    "receipt_sha256": "792640ba4405e876d758503e19f51e1be6bb8cc189b1d332b096a0813e6b37dc"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/festa_delle_rime/assets/audio/fr/prompt_rhyme.wav.extracted.wav",
+    "sha256": "8b39ff00b4dae658ac1146837b16f219489843b1da25149383b4f7517bf0ab1f"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/festa_delle_rime/assets/audio/fr/prompt_rhyme.wav.delivery.wav",
+    "sha256": "4a7344f4310d77fed2a33665987d65872038c2c4022c0f4906d02bfaa5e92f0f"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/festa_delle_rime/assets/audio/fr/prompt_rhyme.wav.raw.wav",
+    "source_sha256": "44013909fa537c10980f0c32c5f332e0e99a6065e4c728c31471249f25542d6f",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/festa_delle_rime/assets/audio/fr/prompt_rhyme.wav.extracted.wav",
+    "output_sha256": "8b39ff00b4dae658ac1146837b16f219489843b1da25149383b4f7517bf0ab1f",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Trouve la rime !",
+      "locale": "fr",
+      "cue_id": "festa_delle_rime.prompt_rhyme.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/festa_delle_rime/assets/audio/fr/prompt_rhyme.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "792640ba4405e876d758503e19f51e1be6bb8cc189b1d332b096a0813e6b37dc"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "Trouve la rime !",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français. Trouve la rime.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Trouve la rime.",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.24
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.24,
+        "end_seconds": 0.44
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.44,
+        "end_seconds": 0.64
+      },
+      {
+        "word": "en",
+        "start_seconds": 0.64,
+        "end_seconds": 0.74
+      },
+      {
+        "word": "français",
+        "start_seconds": 0.74,
+        "end_seconds": 1.22
+      },
+      {
+        "word": "trouve",
+        "start_seconds": 2.24,
+        "end_seconds": 2.54
+      },
+      {
+        "word": "la",
+        "start_seconds": 2.54,
+        "end_seconds": 2.72
+      },
+      {
+        "word": "rime",
+        "start_seconds": 2.72,
+        "end_seconds": 3.06
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "trouve",
+        "start_seconds": 0.0,
+        "end_seconds": 0.82
+      },
+      {
+        "word": "la",
+        "start_seconds": 0.82,
+        "end_seconds": 1.0
+      },
+      {
+        "word": "rime",
+        "start_seconds": 1.0,
+        "end_seconds": 1.34
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5268073923447553,
+        "no_speech_prob": 0.011846976354718208,
+        "compression_ratio": 0.8518518518518519,
+        "word_probabilities": [
+          0.91796875,
+          0.9814453125,
+          0.92431640625,
+          0.9892578125,
+          0.9560546875
+        ]
+      },
+      {
+        "avg_logprob": -0.5268073923447553,
+        "no_speech_prob": 0.011846976354718208,
+        "compression_ratio": 0.8518518518518519,
+        "word_probabilities": [
+          0.76806640625,
+          0.7900390625,
+          0.646484375
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6457178327772353,
+        "no_speech_prob": 0.19748958945274353,
+        "compression_ratio": 0.6521739130434783,
+        "word_probabilities": [
+          0.59619140625,
+          0.91259765625,
+          0.59765625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 74,
+    "extracted_voiced_seconds": 0.74,
+    "unremoved_raw_target_tokens": [
+      "trouve",
+      "la",
+      "rime"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "trouve",
+      "la",
+      "rime"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.2001814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.22,
+      "search_end_seconds": 2.24,
+      "prefix_last_word_end_seconds": 1.22,
+      "target_first_word_start_seconds": 2.24,
+      "gap_seconds": 0.9079365079365079,
+      "verified_silence_start_seconds": 1.2798639455782312,
+      "verified_silence_end_seconds": 2.1878004535147393,
+      "gap_rms_dbfs": -64.678,
+      "gap_peak_dbfs": -42.077,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.7338321995464852,
+      "cut_sample": 38231,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 7805,
+      "removed_seconds": 0.353968253968254,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 46036,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/festa_delle_rime/assets/audio/fr/prompt_rhyme.wav.delivery.wav",
+      "sha256": "4a7344f4310d77fed2a33665987d65872038c2c4022c0f4906d02bfaa5e92f0f"
+    }
+  },
   "output": {
     "path": "activities/festa_delle_rime/assets/audio/fr/prompt_rhyme.wav",
-    "bytes": 63590,
-    "sha256": "740fad3e91a6a752c9ce9ebebc907dd084c8aa85bb8833b6a0c3b09a0ca5cd59"
+    "sha256": "5d8a227b01ef6ac9068c8b85637eacb207fb7b550435ec6eebd369025024e76a",
+    "bytes": 49134
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "dad056809d97a4f519dfcc7718659781bade5cd48f83c09e6958b05f4b215774",
+    "original_sha256": "d8825893791527ff254a60a6fbbc5b9206d71235f219d8f9e6dffa9ab4d048e0",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

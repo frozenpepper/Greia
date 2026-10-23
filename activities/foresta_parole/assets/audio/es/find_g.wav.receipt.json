@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:25:19.096340+00:00",
+  "created_utc": "2026-10-21T16:16:29.152979+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "G de Gato",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. G de Gato",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "G de Gato",
+    "cue_id": "foresta_parole.find_g",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "G de Gato",
     "cue_id": "foresta_parole.find_g",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/foresta_parole/assets/audio/es/find_g.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-142508-6e8f3c00",
-    "idempotency_key": "greia-37de9f06b37d42abbce96058235d9154",
+    "job_id": "20261021-181609-01ff7eb2",
+    "idempotency_key": "greia-098027848cdc432b9e6c5772ca804ef6",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,217 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2003556423,
+    "script_seed": 3217423714,
     "language_direction": "Spanish",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak in Spanish. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 4255154071,
-        "sha256": "5fcde06bdee0cdfdf849469d83a6f30b89282ccb24a5e8f8144bdc7f2ce583e2",
+        "seed": 1424877456,
+        "sha256": "823b1e9b13f7b070c07a064e586eb0b342f1836adf4871cd444322c1a2715433",
         "generation": {
-          "elapsed_seconds": 10.05701287498232,
+          "elapsed_seconds": 18.793003458005842,
           "model_load_seconds": 0.0,
-          "rtf": 3.697204659634454,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.9150731137125465,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": "G de gato.",
+    "metrics": {
+      "duration_seconds": 1.4779591836734693,
+      "rms_dbfs": -36.76,
+      "peak": 0.13907,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.08,
+      "trailing_silence_seconds": 0.22,
+      "longest_internal_pause_seconds": 0.2
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v1",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/foresta_parole/assets/audio/es/find_g.wav.raw.wav",
+    "sha256": "65c8f7398014b138eff8f2f2358b37f0bedec543cde16d56d36921275ec55f31",
+    "receipt_sha256": "23c156c72d53364dcf0fd4c047e6a36ea705cd7a2648bae22dba2f9044a892d7"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/foresta_parole/assets/audio/es/find_g.wav.extracted.wav",
+    "sha256": "8798f39e09ac20983b222b30837fa974826cb5cda8444ead9c51b3d5930291ba"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/foresta_parole/assets/audio/es/find_g.wav.delivery.wav",
+    "sha256": "8798f39e09ac20983b222b30837fa974826cb5cda8444ead9c51b3d5930291ba"
+  },
+  "extraction": {
+    "schema_version": 1,
+    "algorithm_version": "greia-spoken-carrier-extractor-v7",
+    "comparison_policy": "locale-number-tokens-v1",
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-raw/activities/foresta_parole/assets/audio/es/find_g.wav.raw.wav",
+    "source_sha256": "65c8f7398014b138eff8f2f2358b37f0bedec543cde16d56d36921275ec55f31",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/foresta_parole/assets/audio/es/find_g.wav.extracted.wav",
+    "output_sha256": "8798f39e09ac20983b222b30837fa974826cb5cda8444ead9c51b3d5930291ba",
+    "output_bytes": 65222,
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "G de Gato",
+    "remove_first_words": 5,
+    "ignore_accents": true,
+    "target_verification_requested": "warn",
+    "target_verification_policy": "warn",
+    "target_comparison_score": 1.0,
+    "target_word_count_matches": true,
+    "target_numbers_match": true,
+    "target_comparison_flags": [],
+    "target_transcript_warning": false,
+    "recognizer": "mlx-whisper-base",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extracted_transcript": "G de gato.",
+    "expected_target_tokens": [
+      "g",
+      "de",
+      "gato"
+    ],
+    "extracted_target_tokens": [
+      "g",
+      "de",
+      "gato"
+    ],
+    "extracted_target_exact_match": true,
+    "transcription_settings": {
+      "language": "es",
+      "initial_prompt": null,
+      "word_timestamps": true,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "sample_rate": 22050,
+    "duration_seconds": 4.8001814058956915,
+    "boundary": {
+      "search_strategy": "target-only-global-quiet-run-v7",
+      "verified_silence_start_seconds": 1.945578231292517,
+      "verified_silence_end_seconds": 3.422222222222222,
+      "verified_silence_duration_seconds": 1.476643990929705,
+      "cut_sample": 73255,
+      "cut_time_seconds": 3.3222222222222224,
+      "padding_seconds": 0.1,
+      "quiet_run_start_sample": 42900,
+      "quiet_run_end_sample": 75460,
+      "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+    },
+    "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/foresta_parole/assets/audio/es/find_g.wav.extracted.wav.search/40cb991977e342e59ff2fc36fa77341a",
+    "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/foresta_parole/assets/audio/es/find_g.wav.extracted.wav.search/40cb991977e342e59ff2fc36fa77341a/search.json",
+    "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-raw/activities/foresta_parole/assets/audio/es/find_g.wav.raw.wav.receipt.json",
+    "source_provider_receipt_sha256": "23c156c72d53364dcf0fd4c047e6a36ea705cd7a2648bae22dba2f9044a892d7",
+    "candidate_sha256": "8798f39e09ac20983b222b30837fa974826cb5cda8444ead9c51b3d5930291ba",
+    "candidate_id": "candidate-01",
+    "candidate_count": 2,
+    "qualifying_quiet_run_count": 2,
+    "candidate_results": [
+      {
+        "candidate_id": "candidate-01",
+        "quiet_run": {
+          "start_sample": 42900,
+          "end_sample": 75460,
+          "start_seconds": 1.945578231292517,
+          "end_seconds": 3.422222222222222,
+          "duration_seconds": 1.476643990929705
+        },
+        "cut_sample": 73255,
+        "cut_time_seconds": 3.3222222222222224,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/foresta_parole/assets/audio/es/find_g.wav.extracted.wav.search/40cb991977e342e59ff2fc36fa77341a/candidate-01.wav",
+        "preceding_voiced_seconds": 1.07,
+        "retained_voiced_seconds": 0.64,
+        "retained_duration_seconds": 1.4779591836734693,
+        "candidate_sha256": "8798f39e09ac20983b222b30837fa974826cb5cda8444ead9c51b3d5930291ba",
+        "extracted_transcript": "G de gato.",
+        "canonical_transcript_tokens": [
+          "g",
+          "de",
+          "gato"
+        ],
+        "exact_target_match": true,
+        "target_comparison_score": 1.0,
+        "target_word_count_matches": true,
+        "target_numbers_match": true,
+        "target_comparison_flags": [],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": true,
+        "asr_segment_count": 1
+      },
+      {
+        "candidate_id": "candidate-02",
+        "quiet_run": {
+          "start_sample": 82940,
+          "end_sample": 89100,
+          "start_seconds": 3.761451247165533,
+          "end_seconds": 4.040816326530612,
+          "duration_seconds": 0.27936507936507937
+        },
+        "cut_sample": 86895,
+        "cut_time_seconds": 3.940816326530612,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/foresta_parole/assets/audio/es/find_g.wav.extracted.wav.search/40cb991977e342e59ff2fc36fa77341a/candidate-02.wav",
+        "preceding_voiced_seconds": 1.4,
+        "retained_voiced_seconds": 0.31,
+        "retained_duration_seconds": 0.8593650793650793,
+        "candidate_sha256": "0b82ffe7634caccc73ed4dec4ffe1dec1ab51dd6b26358ea7d5003b8e698a435",
+        "extracted_transcript": "de gato.",
+        "canonical_transcript_tokens": [
+          "de",
+          "gato"
+        ],
+        "exact_target_match": false,
+        "target_comparison_score": 0.8487,
+        "target_word_count_matches": false,
+        "target_numbers_match": true,
+        "target_comparison_flags": [
+          "TARGET_WORD_COUNT_MISMATCH"
+        ],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": false,
+        "asr_segment_count": 1
+      }
+    ],
+    "human_review": "PENDING",
+    "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+    "target_verification_effective_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+    "target_verification_warning": false,
+    "saved_recovery_policy": "target-only-v7-saved-v1",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 0,
+      "removed_seconds": 0.0,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 73255,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/foresta_parole/assets/audio/es/find_g.wav.delivery.wav",
+      "sha256": "8798f39e09ac20983b222b30837fa974826cb5cda8444ead9c51b3d5930291ba"
+    }
+  },
   "output": {
     "path": "activities/foresta_parole/assets/audio/es/find_g.wav",
-    "bytes": 120038,
-    "sha256": "1b0fabf30dd8dfe19486ec0db2efe10c80a85d64ee7d725b0b22ce2922378e6a"
+    "sha256": "f08618caefd0a0295fdf5974ce46f1166198e7f04ff9715d70e6d5d67d7dc2ac",
+    "bytes": 65256
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "e31788dc70d8f1190f93a7b998e71299183780b0e9838037b269faf2a6ae85a8",
+    "original_sha256": "377092e5927290ea66dc80062c2c9ebb00d98aecd2d0ee575363577108872e3e",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

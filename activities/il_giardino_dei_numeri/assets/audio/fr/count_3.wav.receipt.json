@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:41:59.570336+00:00",
+  "created_utc": "2026-10-21T16:27:36.485294+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "Trois",
+    "target_word_count": 1,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. Trois",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Trois",
+    "cue_id": "il_giardino_dei_numeri.count_3.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Trois",
     "cue_id": "il_giardino_dei_numeri.count_3.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/il_giardino_dei_numeri/assets/audio/fr/count_3.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-144155-38e99328",
-    "idempotency_key": "greia-01cc997d5a4844c4a53b45296aea3873",
+    "job_id": "20261021-182721-fcf60e18",
+    "idempotency_key": "greia-9db4f9c1d67641af96232e7596c68b86",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,178 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2464243661,
+    "script_seed": 396410409,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words.",
-    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2668321307,
-        "sha256": "9cdc2c29cd10d8f5f84c7b5147f69abfb736e2c4d52938990ea2b5f8d7d28702",
+        "seed": 2703585449,
+        "sha256": "2ba940709eb83cc6e225c13ada0baf13ca8355cfb9341e1a05b7c6d15929aa65",
         "generation": {
-          "elapsed_seconds": 3.354854458011687,
+          "elapsed_seconds": 13.850934584013885,
           "model_load_seconds": 0.0,
-          "rtf": 5.240595352270273,
-          "peak_memory_gb": 8.44494914
+          "rtf": 4.809073983223384,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": "3",
+    "metrics": {
+      "duration_seconds": 0.6355102040816326,
+      "rms_dbfs": -34.7,
+      "peak": 0.12888,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.1,
+      "trailing_silence_seconds": 0.18,
+      "longest_internal_pause_seconds": 0.04
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v1",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/il_giardino_dei_numeri/assets/audio/fr/count_3.wav.raw.wav",
+    "sha256": "5f5f481adca3c8ef644b721d898247fc2514160afcb1da2aca142807e57102c4",
+    "receipt_sha256": "563cd26f4e60afb3f7f037b3166079175f986e6cc70929aa69825a213144a748"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/il_giardino_dei_numeri/assets/audio/fr/count_3.wav.extracted.wav",
+    "sha256": "1580f4cc73880a0d638fdf3c2f0cb38b803f1b2a82f292289267fa055be932e0"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/il_giardino_dei_numeri/assets/audio/fr/count_3.wav.delivery.wav",
+    "sha256": "1580f4cc73880a0d638fdf3c2f0cb38b803f1b2a82f292289267fa055be932e0"
+  },
+  "extraction": {
+    "schema_version": 1,
+    "algorithm_version": "greia-spoken-carrier-extractor-v7",
+    "comparison_policy": "locale-number-tokens-v1",
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-raw/activities/il_giardino_dei_numeri/assets/audio/fr/count_3.wav.raw.wav",
+    "source_sha256": "5f5f481adca3c8ef644b721d898247fc2514160afcb1da2aca142807e57102c4",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/il_giardino_dei_numeri/assets/audio/fr/count_3.wav.extracted.wav",
+    "output_sha256": "1580f4cc73880a0d638fdf3c2f0cb38b803f1b2a82f292289267fa055be932e0",
+    "output_bytes": 28070,
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "Trois",
+    "remove_first_words": 5,
+    "ignore_accents": true,
+    "target_verification_requested": "warn",
+    "target_verification_policy": "warn",
+    "target_comparison_score": 1.0,
+    "target_word_count_matches": true,
+    "target_numbers_match": true,
+    "target_comparison_flags": [],
+    "target_transcript_warning": false,
+    "recognizer": "mlx-whisper-base",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extracted_transcript": "3",
+    "expected_target_tokens": [
+      "<num:3>"
+    ],
+    "extracted_target_tokens": [
+      "<num:3>"
+    ],
+    "extracted_target_exact_match": true,
+    "transcription_settings": {
+      "language": "fr",
+      "initial_prompt": null,
+      "word_timestamps": true,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "sample_rate": 22050,
+    "duration_seconds": 2.8801814058956916,
+    "boundary": {
+      "search_strategy": "target-only-global-quiet-run-v7",
+      "verified_silence_start_seconds": 1.436734693877551,
+      "verified_silence_end_seconds": 2.3446712018140587,
+      "verified_silence_duration_seconds": 0.9079365079365079,
+      "cut_sample": 49495,
+      "cut_time_seconds": 2.244671201814059,
+      "padding_seconds": 0.1,
+      "quiet_run_start_sample": 31680,
+      "quiet_run_end_sample": 51700,
+      "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+    },
+    "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/il_giardino_dei_numeri/assets/audio/fr/count_3.wav.extracted.wav.search/3bfed24c882b40ce9a864e9437fbba33",
+    "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/il_giardino_dei_numeri/assets/audio/fr/count_3.wav.extracted.wav.search/3bfed24c882b40ce9a864e9437fbba33/search.json",
+    "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-raw/activities/il_giardino_dei_numeri/assets/audio/fr/count_3.wav.raw.wav.receipt.json",
+    "source_provider_receipt_sha256": "563cd26f4e60afb3f7f037b3166079175f986e6cc70929aa69825a213144a748",
+    "candidate_sha256": "1580f4cc73880a0d638fdf3c2f0cb38b803f1b2a82f292289267fa055be932e0",
+    "candidate_id": "candidate-01",
+    "candidate_count": 1,
+    "qualifying_quiet_run_count": 1,
+    "candidate_results": [
+      {
+        "candidate_id": "candidate-01",
+        "quiet_run": {
+          "start_sample": 31680,
+          "end_sample": 51700,
+          "start_seconds": 1.436734693877551,
+          "end_seconds": 2.3446712018140587,
+          "duration_seconds": 0.9079365079365079
+        },
+        "cut_sample": 49495,
+        "cut_time_seconds": 2.244671201814059,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/il_giardino_dei_numeri/assets/audio/fr/count_3.wav.extracted.wav.search/3bfed24c882b40ce9a864e9437fbba33/candidate-01.wav",
+        "preceding_voiced_seconds": 1.06,
+        "retained_voiced_seconds": 0.21,
+        "retained_duration_seconds": 0.6355102040816326,
+        "candidate_sha256": "1580f4cc73880a0d638fdf3c2f0cb38b803f1b2a82f292289267fa055be932e0",
+        "extracted_transcript": "3",
+        "canonical_transcript_tokens": [
+          "<num:3>"
+        ],
+        "exact_target_match": true,
+        "target_comparison_score": 1.0,
+        "target_word_count_matches": true,
+        "target_numbers_match": true,
+        "target_comparison_flags": [],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": true,
+        "asr_segment_count": 1
+      }
+    ],
+    "human_review": "PENDING",
+    "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+    "target_verification_effective_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+    "target_verification_warning": false,
+    "saved_recovery_policy": "target-only-v7-saved-v1",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 0,
+      "removed_seconds": 0.0,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 49495,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/il_giardino_dei_numeri/assets/audio/fr/count_3.wav.delivery.wav",
+      "sha256": "1580f4cc73880a0d638fdf3c2f0cb38b803f1b2a82f292289267fa055be932e0"
+    }
+  },
   "output": {
     "path": "activities/il_giardino_dei_numeri/assets/audio/fr/count_3.wav",
-    "bytes": 28310,
-    "sha256": "981af60fdbf123b27c90358cbdddd02219df4df48b774605c735a8b53577d3c8"
+    "sha256": "3fec54e5f421abde6dcfbae214cebc477579ceff367d5394a891fb2711ef48f7",
+    "bytes": 28104
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "28b0474d2c34670697482c99c4d42d75cbcab71f7d5a113bf40891273e8217ae",
+    "original_sha256": "2c0245380743341316bfdead4ef9c2e81e4b9fddf256ab301fd78ddbc0b0dfdb",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

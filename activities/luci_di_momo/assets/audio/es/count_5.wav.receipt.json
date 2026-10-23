@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T11:53:52.131664+00:00",
+  "created_utc": "2026-10-22T07:30:54.239779+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "¡Cinco luciérnagas!",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español...\n\n¡Cinco luciérnagas!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "momo",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "¡Cinco luciérnagas!",
+    "cue_id": "luci_di_momo.count_5.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "¡Cinco luciérnagas!",
     "cue_id": "luci_di_momo.count_5.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/luci_di_momo/assets/audio/es/count_5.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Counts aloud with a child: one crisp, clear number, bright and steady, no extra words."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.momo.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261021-135343-e2ca864c",
-    "idempotency_key": "greia-0cd54d5b7fff450da3460bcb4c564889",
+    "job_id": "20261022-093040-26c429b2",
+    "idempotency_key": "greia-27c71a5793524e73a596daa43145383a",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,181 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3533692710,
+    "script_seed": 536808421,
     "language_direction": "Spanish",
-    "delivery_prompt": "Counts aloud with a child: one crisp, clear number, bright and steady, no extra words.",
-    "effective_delivery": "Speak in Spanish. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 934693285,
-        "sha256": "2146c05f22176c124d3b54ea9b516cfc089c6779821739d0d91201f4daf691e0",
+        "seed": 599010939,
+        "sha256": "8d841fe22ad43d6cfde2f41df51faa52bdc59ef0fac5e58dd81e6fbd3ed6bb89",
         "generation": {
-          "elapsed_seconds": 7.330171165995125,
+          "elapsed_seconds": 13.05826975000673,
           "model_load_seconds": 0.0,
-          "rtf": 3.523838394036596,
-          "peak_memory_gb": 7.648166916
+          "rtf": 3.886197038839362,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8242,
+    "transcript": "5 lucíanagas.",
+    "metrics": {
+      "duration_seconds": 1.305079365079365,
+      "rms_dbfs": -27.02,
+      "peak": 0.18695,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.02,
+      "trailing_silence_seconds": 0.16,
+      "longest_internal_pause_seconds": 0.02
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v1",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/luci_di_momo/assets/audio/es/count_5.wav.raw.wav",
+    "sha256": "d0b742819951d4aa178357988e97f464d9d7c40d40989a69c409b10f51a2b00d",
+    "receipt_sha256": "4362210d3f7ae92ce1dbd728a4fbbeb65c6cf68499675a0567fe8614ab1a29a1"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/luci_di_momo/assets/audio/es/count_5.wav.extracted.wav",
+    "sha256": "1aa45692fd5b2ac01d3f4b0bbb7902676684c951036ec36349b98324fa482ac5"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/luci_di_momo/assets/audio/es/count_5.wav.delivery.wav",
+    "sha256": "1aa45692fd5b2ac01d3f4b0bbb7902676684c951036ec36349b98324fa482ac5"
+  },
+  "extraction": {
+    "schema_version": 1,
+    "algorithm_version": "greia-spoken-carrier-extractor-v7",
+    "comparison_policy": "locale-number-tokens-v1",
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-raw/activities/luci_di_momo/assets/audio/es/count_5.wav.raw.wav",
+    "source_sha256": "d0b742819951d4aa178357988e97f464d9d7c40d40989a69c409b10f51a2b00d",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/luci_di_momo/assets/audio/es/count_5.wav.extracted.wav",
+    "output_sha256": "1aa45692fd5b2ac01d3f4b0bbb7902676684c951036ec36349b98324fa482ac5",
+    "output_bytes": 57598,
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "¡Cinco luciérnagas!",
+    "remove_first_words": 5,
+    "ignore_accents": true,
+    "target_verification_requested": "warn",
+    "target_verification_policy": "warn",
+    "target_comparison_score": 0.8242,
+    "target_word_count_matches": true,
+    "target_numbers_match": true,
+    "target_comparison_flags": [],
+    "target_transcript_warning": true,
+    "recognizer": "mlx-whisper-base",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extracted_transcript": "5 lucíanagas.",
+    "expected_target_tokens": [
+      "<num:5>",
+      "luciernagas"
+    ],
+    "extracted_target_tokens": [
+      "<num:5>",
+      "lucianagas"
+    ],
+    "extracted_target_exact_match": false,
+    "transcription_settings": {
+      "language": "es",
+      "initial_prompt": null,
+      "word_timestamps": true,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "sample_rate": 22050,
+    "duration_seconds": 3.3601814058956916,
+    "boundary": {
+      "search_strategy": "target-only-global-quiet-run-v7",
+      "verified_silence_start_seconds": 1.5963718820861679,
+      "verified_silence_end_seconds": 2.1551020408163266,
+      "verified_silence_duration_seconds": 0.5587301587301587,
+      "cut_sample": 45315,
+      "cut_time_seconds": 2.0551020408163265,
+      "padding_seconds": 0.1,
+      "quiet_run_start_sample": 35200,
+      "quiet_run_end_sample": 47520,
+      "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+    },
+    "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/luci_di_momo/assets/audio/es/count_5.wav.extracted.wav.search/33a6bad00a54404eb3902498b3ed8d02",
+    "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/luci_di_momo/assets/audio/es/count_5.wav.extracted.wav.search/33a6bad00a54404eb3902498b3ed8d02/search.json",
+    "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-raw/activities/luci_di_momo/assets/audio/es/count_5.wav.raw.wav.receipt.json",
+    "source_provider_receipt_sha256": "4362210d3f7ae92ce1dbd728a4fbbeb65c6cf68499675a0567fe8614ab1a29a1",
+    "candidate_sha256": "1aa45692fd5b2ac01d3f4b0bbb7902676684c951036ec36349b98324fa482ac5",
+    "candidate_id": "candidate-01",
+    "candidate_count": 1,
+    "qualifying_quiet_run_count": 1,
+    "candidate_results": [
+      {
+        "candidate_id": "candidate-01",
+        "quiet_run": {
+          "start_sample": 35200,
+          "end_sample": 47520,
+          "start_seconds": 1.5963718820861679,
+          "end_seconds": 2.1551020408163266,
+          "duration_seconds": 0.5587301587301587
+        },
+        "cut_sample": 45315,
+        "cut_time_seconds": 2.0551020408163265,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/luci_di_momo/assets/audio/es/count_5.wav.extracted.wav.search/33a6bad00a54404eb3902498b3ed8d02/candidate-01.wav",
+        "preceding_voiced_seconds": 1.27,
+        "retained_voiced_seconds": 0.86,
+        "retained_duration_seconds": 1.305079365079365,
+        "candidate_sha256": "1aa45692fd5b2ac01d3f4b0bbb7902676684c951036ec36349b98324fa482ac5",
+        "extracted_transcript": "5 lucíanagas.",
+        "canonical_transcript_tokens": [
+          "<num:5>",
+          "lucianagas"
+        ],
+        "exact_target_match": false,
+        "target_comparison_score": 0.8242,
+        "target_word_count_matches": true,
+        "target_numbers_match": true,
+        "target_comparison_flags": [],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": true,
+        "asr_segment_count": 1
+      }
+    ],
+    "human_review": "PENDING",
+    "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+    "target_verification_effective_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+    "target_verification_warning": true,
+    "saved_recovery_policy": "target-only-v7-saved-v1",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 0,
+      "removed_seconds": 0.0,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 45315,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/luci_di_momo/assets/audio/es/count_5.wav.delivery.wav",
+      "sha256": "1aa45692fd5b2ac01d3f4b0bbb7902676684c951036ec36349b98324fa482ac5"
+    }
+  },
   "output": {
     "path": "activities/luci_di_momo/assets/audio/es/count_5.wav",
-    "bytes": 91814,
-    "sha256": "ed5d3ade76b396c839403140e4ce4502ed2d6c999a0547286b98f8c954e7b9e9"
+    "sha256": "c61e588de6e1eb71e171e9ba812708adff2d17aca4749650e955c45bd393eb61",
+    "bytes": 57632
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "b89fde38c21b3edc8f29134474bcec1a6b82e7cb163982c705e7c19415556c29",
+    "original_sha256": "3017fda323672b8aa88f5ec6310b05f09e20e91478b2e54a93e4219d41c03767",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

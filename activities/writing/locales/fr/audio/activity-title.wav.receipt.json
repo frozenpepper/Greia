@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T18:04:13.771831+00:00",
+  "created_utc": "2026-10-21T17:36:06.524377+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "Écriture et mots",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. Écriture et mots",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Écriture et mots",
+    "cue_id": "writing.title.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Écriture et mots",
     "cue_id": "writing.title.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/writing/locales/fr/audio/activity-title.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-200400-47d493aa",
-    "idempotency_key": "greia-01d29c0901dc4334814c9e091d4488d8",
+    "job_id": "20261021-193551-f2de7944",
+    "idempotency_key": "greia-3691be7acf4a407ab88dd9250c6ccd5e",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,241 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1183727333,
+    "script_seed": 1406226330,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2887881751,
-        "sha256": "9ca6e4d1980a54908e72a4a153d3f62aa91264f9c2ced759f50814479de41c1b",
+        "seed": 3127215364,
+        "sha256": "aad7f5afc2860c6a8a27dd17638cc8ea211ce5188529f5a9e6470a19770a96bb",
         "generation": {
-          "elapsed_seconds": 12.015920250036288,
+          "elapsed_seconds": 14.601968374990975,
           "model_load_seconds": 0.0,
-          "rtf": 8.343423388521899,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.967746490192738,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8624,
+    "transcript": " Écriture et mot.",
+    "metrics": {
+      "duration_seconds": 1.445986394557823,
+      "rms_dbfs": -37.77,
+      "peak": 0.14343,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.34,
+      "trailing_silence_seconds": 0.1,
+      "longest_internal_pause_seconds": 0.08
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/writing/locales/fr/audio/activity-title.wav.raw.wav",
+    "sha256": "d1aa49dcb37a453c63632724bd35b916c99f593f624c8a75c7714449e0b81bce",
+    "receipt_sha256": "c722b9ac41d3d8b0992e947728fce1fc7864ae7976ad17da672834d712a5ce10"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/writing/locales/fr/audio/activity-title.wav.extracted.wav",
+    "sha256": "bcfeb59846bebb6224edd7d1536763cc7aef76ec215564b59695b3bfafe4fd67"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/writing/locales/fr/audio/activity-title.wav.raw.wav",
+    "source_sha256": "d1aa49dcb37a453c63632724bd35b916c99f593f624c8a75c7714449e0b81bce",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-extracted/activities/writing/locales/fr/audio/activity-title.wav.extracted.wav",
+    "output_sha256": "bcfeb59846bebb6224edd7d1536763cc7aef76ec215564b59695b3bfafe4fd67",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Écriture et mots",
+      "locale": "fr",
+      "cue_id": "writing.title.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/writing/locales/fr/audio/activity-title.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "c722b9ac41d3d8b0992e947728fce1fc7864ae7976ad17da672834d712a5ce10"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "Écriture et mots",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français. Écriture et mot.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Écriture et mot.",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.22
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.22,
+        "end_seconds": 0.66
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.66,
+        "end_seconds": 0.96
+      },
+      {
+        "word": "en",
+        "start_seconds": 0.96,
+        "end_seconds": 1.42
+      },
+      {
+        "word": "français",
+        "start_seconds": 1.42,
+        "end_seconds": 1.88
+      },
+      {
+        "word": "écriture",
+        "start_seconds": 2.58,
+        "end_seconds": 3.08
+      },
+      {
+        "word": "et",
+        "start_seconds": 3.08,
+        "end_seconds": 3.34
+      },
+      {
+        "word": "mot",
+        "start_seconds": 3.34,
+        "end_seconds": 3.54
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "écriture",
+        "start_seconds": 0.45999999999999996,
+        "end_seconds": 0.88
+      },
+      {
+        "word": "et",
+        "start_seconds": 0.88,
+        "end_seconds": 1.16
+      },
+      {
+        "word": "mot",
+        "start_seconds": 1.16,
+        "end_seconds": 1.3
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5017501513163248,
+        "no_speech_prob": 0.022592343389987946,
+        "compression_ratio": 0.8727272727272727,
+        "word_probabilities": [
+          0.84326171875,
+          0.99169921875,
+          0.97900390625,
+          0.8427734375,
+          0.966796875,
+          0.6357421875,
+          0.88818359375,
+          0.82080078125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.7341256671481662,
+        "no_speech_prob": 0.314829558134079,
+        "compression_ratio": 0.68,
+        "word_probabilities": [
+          0.450927734375,
+          0.8974609375,
+          0.63720703125
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 69,
+    "extracted_voiced_seconds": 0.69,
+    "unremoved_raw_target_tokens": [
+      "écriture",
+      "et",
+      "mot"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "écriture",
+      "et",
+      "mot"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.6801814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.88,
+      "search_end_seconds": 2.58,
+      "prefix_last_word_end_seconds": 1.88,
+      "target_first_word_start_seconds": 2.58,
+      "gap_seconds": 0.5886621315192744,
+      "verified_silence_start_seconds": 1.9398639455782314,
+      "verified_silence_end_seconds": 2.5285260770975055,
+      "gap_rms_dbfs": -62.054,
+      "gap_peak_dbfs": -41.182,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.2341950113378686,
+      "cut_sample": 49264,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/writing/locales/fr/audio/activity-title.wav",
-    "bytes": 63590,
-    "sha256": "8cb3285dafcd3483031c5b9e0f03e43f25dfb47e0efca4c8a6bd229304045b0b"
+    "sha256": "2a9910f28871096398cbbb9a234e52cafcd10bb0fc48bd5648ad53e32e2475cc",
+    "bytes": 63846
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "aa186260ade12b1047a7834817d82ffd48f34454a7d6c09d3349dff31d1cc320",
+    "original_sha256": "8cb3285dafcd3483031c5b9e0f03e43f25dfb47e0efca4c8a6bd229304045b0b",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

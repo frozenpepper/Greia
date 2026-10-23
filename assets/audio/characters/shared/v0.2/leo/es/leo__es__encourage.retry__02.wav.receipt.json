@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T18:52:34.437919+00:00",
+  "created_utc": "2026-10-22T10:28:00.832017+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "¡Casi! ¡Probemos otra vez!",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español...\n\n¡Casi! ¡Probemos otra vez!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "shared_character_utterance",
+    "locale": "es",
+    "text": "¡Casi! ¡Probemos otra vez!",
+    "cue_id": "greia.shared.leo__es__encourage.retry__02.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "shared_character_utterance",
     "locale": "es",
     "text": "¡Casi! ¡Probemos otra vez!",
     "cue_id": "greia.shared.leo__es__encourage.retry__02.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "assets/audio/characters/shared/v0.2/leo/es/leo__es__encourage.retry__02.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-205223-20cc629c",
-    "idempotency_key": "greia-fb2b386a66b24f2886edc5a540083236",
+    "job_id": "20261022-122735-ca449537",
+    "idempotency_key": "greia-acbc2eb83c794abda4e787b1a09b032f",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,287 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1096631825,
+    "script_seed": 1843406268,
     "language_direction": "Spanish",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
-    "effective_delivery": "Speak in Spanish. Leo, a warm, curious cartoon guide. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3972345946,
-        "sha256": "45e0191f6cde0ce81b79b22db418cfbc8f9c7a3f8c651736ebcb66db18a2e4ce",
+        "seed": 3390700585,
+        "sha256": "09b59502600bd80698b29773023e78f9d2a15b6c6c537b933d07bbb6f5e0e12c",
         "generation": {
-          "elapsed_seconds": 11.017024792032316,
+          "elapsed_seconds": 21.316330292000202,
           "model_load_seconds": 0.0,
-          "rtf": 4.3032451501981575,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.600630099152648,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " casi, probemos otra vez",
+    "metrics": {
+      "duration_seconds": 2.391609977324263,
+      "rms_dbfs": -36.08,
+      "peak": 0.17807,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.26,
+      "trailing_silence_seconds": 0.3,
+      "longest_internal_pause_seconds": 0.38
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/characters/shared/v0.2/leo/es/leo__es__encourage.retry__02.wav.raw.wav",
+    "sha256": "52231dd06e47f6df17c53ee08e541180c69b0f6d6b98566131f8dfc94440c5a6",
+    "receipt_sha256": "eab263659a8acb221b863edb0d588b71ab39e402f32b5decd0ba43e44dfd6d2f"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/characters/shared/v0.2/leo/es/leo__es__encourage.retry__02.wav.extracted.wav",
+    "sha256": "8268bbf52ba00808494c0da26cd035ee1cbebde4db883676b848182a27c409cf"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/assets/audio/characters/shared/v0.2/leo/es/leo__es__encourage.retry__02.wav.delivery.wav",
+    "sha256": "a14d6c4dde0e67f85963ad89b6267f847556bda1877e10141d1d70bd75f0ae4b"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/assets/audio/characters/shared/v0.2/leo/es/leo__es__encourage.retry__02.wav.raw.wav",
+    "source_sha256": "52231dd06e47f6df17c53ee08e541180c69b0f6d6b98566131f8dfc94440c5a6",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/assets/audio/characters/shared/v0.2/leo/es/leo__es__encourage.retry__02.wav.extracted.wav",
+    "output_sha256": "8268bbf52ba00808494c0da26cd035ee1cbebde4db883676b848182a27c409cf",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "shared_character_utterance",
+      "text": "¡Casi! ¡Probemos otra vez!",
+      "locale": "es",
+      "cue_id": "greia.shared.leo__es__encourage.retry__02.es",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/assets/audio/characters/shared/v0.2/leo/es/leo__es__encourage.retry__02.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "eab263659a8acb221b863edb0d588b71ab39e402f32b5decd0ba43e44dfd6d2f"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "¡Casi! ¡Probemos otra vez!",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Escucha esta frase en español. Le caerás. Casi, probemos otra vez.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " casi, probemos otra vez",
+    "raw_word_alignment": [
+      {
+        "word": "escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.48
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.48,
+        "end_seconds": 0.82
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.82,
+        "end_seconds": 1.12
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.12,
+        "end_seconds": 1.4
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.4,
+        "end_seconds": 1.86
+      },
+      {
+        "word": "le",
+        "start_seconds": 2.56,
+        "end_seconds": 2.62
+      },
+      {
+        "word": "caerás",
+        "start_seconds": 2.62,
+        "end_seconds": 3.0
+      },
+      {
+        "word": "casi",
+        "start_seconds": 3.68,
+        "end_seconds": 4.08
+      },
+      {
+        "word": "probemos",
+        "start_seconds": 4.5,
+        "end_seconds": 4.92
+      },
+      {
+        "word": "otra",
+        "start_seconds": 4.92,
+        "end_seconds": 5.24
+      },
+      {
+        "word": "vez",
+        "start_seconds": 5.24,
+        "end_seconds": 5.46
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "casi",
+        "start_seconds": 0.0,
+        "end_seconds": 0.72
+      },
+      {
+        "word": "probemos",
+        "start_seconds": 1.08,
+        "end_seconds": 1.56
+      },
+      {
+        "word": "otra",
+        "start_seconds": 1.56,
+        "end_seconds": 1.9
+      },
+      {
+        "word": "vez",
+        "start_seconds": 1.9,
+        "end_seconds": 2.08
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5556235885620118,
+        "no_speech_prob": 0.02320142649114132,
+        "compression_ratio": 0.9066666666666666,
+        "word_probabilities": [
+          0.9326171875,
+          0.98486328125,
+          0.9951171875,
+          0.98828125,
+          0.99462890625,
+          0.75390625,
+          0.46826171875
+        ]
+      },
+      {
+        "avg_logprob": -0.5556235885620118,
+        "no_speech_prob": 0.02320142649114132,
+        "compression_ratio": 0.9066666666666666,
+        "word_probabilities": [
+          0.72802734375,
+          0.66357421875,
+          0.998046875,
+          0.998046875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6654173533121744,
+        "no_speech_prob": 0.09337502717971802,
+        "compression_ratio": 0.7419354838709677,
+        "word_probabilities": [
+          0.6015625,
+          0.66650390625,
+          0.9970703125,
+          0.994140625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": false,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 7,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 125,
+    "extracted_voiced_seconds": 1.25,
+    "unremoved_raw_target_tokens": [
+      "casi",
+      "probemos",
+      "otra",
+      "vez"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "casi",
+      "probemos",
+      "otra",
+      "vez"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 5.920181405895692,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 3.0,
+      "search_end_seconds": 3.68,
+      "prefix_last_word_end_seconds": 3.0,
+      "target_first_word_start_seconds": 3.68,
+      "gap_seconds": 0.5687074829931973,
+      "verified_silence_start_seconds": 3.0598639455782313,
+      "verified_silence_end_seconds": 3.6285714285714286,
+      "gap_rms_dbfs": -66.057,
+      "gap_peak_dbfs": -42.669,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 3.34421768707483,
+      "cut_sample": 73740,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 4065,
+      "removed_seconds": 0.18435374149659864,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 77805,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/assets/audio/characters/shared/v0.2/leo/es/leo__es__encourage.retry__02.wav.delivery.wav",
+      "sha256": "a14d6c4dde0e67f85963ad89b6267f847556bda1877e10141d1d70bd75f0ae4b"
+    }
+  },
   "output": {
     "path": "assets/audio/characters/shared/v0.2/leo/es/leo__es__encourage.retry__02.wav",
-    "bytes": 112982,
-    "sha256": "65c2d338d6e9bc29e6397d1c2b2edf884c9601b6c31d987d686fc56fe7125d84"
+    "sha256": "1048f748103a6a4b0b0b0b9a07364c66f2246177ac6a8f2a40db1d7e5f452af7",
+    "bytes": 105548
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "54280ce580c7c1ff0a08ab8ace50f0c57e4a566f8debee21dc7265a8368fc10c",
+    "original_sha256": "65c2d338d6e9bc29e6397d1c2b2edf884c9601b6c31d987d686fc56fe7125d84",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

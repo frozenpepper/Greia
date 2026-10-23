@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T14:52:46.671153+00:00",
+  "created_utc": "2026-10-21T17:10:15.630645+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Listen to this phrase in English.",
+    "prefix_word_count": 6,
+    "target": "Gentle whale!",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Listen to this phrase in English. Gentle whale!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Gentle whale!",
+    "cue_id": "sub_creature_whale",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "Gentle whale!",
     "cue_id": "sub_creature_whale",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/sottomarino_giramondo/audio/en/sub_creature_whale.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. A short, lively reaction: expressive and clear, one breath, no extra words."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-165237-72fc1f35",
-    "idempotency_key": "greia-81b6e1e39d3f4cb99362e09a5b9a5d4c",
+    "job_id": "20261021-191001-de13d5e5",
+    "idempotency_key": "greia-af900db601784f3b86716cf4534af12e",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,253 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 672106651,
+    "script_seed": 2284776116,
     "language_direction": "English",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. A short, lively reaction: expressive and clear, one breath, no extra words.",
-    "effective_delivery": "Speak in English. Leo, a warm, curious cartoon guide. A short, lively reaction: expressive and clear, one breath, no extra words.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in English. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 601094357,
-        "sha256": "c551bbb79fad73d3f35f77d5c5fb4315ce8d21bced4a2f6e4665f5654c928ac7",
+        "seed": 2911479124,
+        "sha256": "f8cc20b665353344c65fb886b0238a41be6a54a38bb53c4f702ab9bc6f4221e5",
         "generation": {
-          "elapsed_seconds": 9.131465625017881,
+          "elapsed_seconds": 13.578806624995195,
           "model_load_seconds": 0.0,
-          "rtf": 6.340561711619869,
-          "peak_memory_gb": 8.44494914
+          "rtf": 4.041111043597597,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " Gentle Whale",
+    "metrics": {
+      "duration_seconds": 1.271655328798186,
+      "rms_dbfs": -31.03,
+      "peak": 0.2243,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.06,
+      "trailing_silence_seconds": 0.3,
+      "longest_internal_pause_seconds": 0.0
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/sottomarino_giramondo/audio/en/sub_creature_whale.wav.raw.wav",
+    "sha256": "49302d0c7e16a1f3563ecb28bbc574cd4442ccec8582988c64002229e31007f3",
+    "receipt_sha256": "f373575da624155f1e9161fb8461470d1daf476fd360cd85478703ea88a81d16"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/sottomarino_giramondo/audio/en/sub_creature_whale.wav.extracted.wav",
+    "sha256": "7cd7b5ec8fbf1439e2c4ad817990a66af2537a4ab4883a0a07ad9d92383f9795"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/sottomarino_giramondo/audio/en/sub_creature_whale.wav.delivery.wav",
+    "sha256": "94e8192686df455582589c18b10e011278299c48ac3b1821683fe79da43a4f34"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/sottomarino_giramondo/audio/en/sub_creature_whale.wav.raw.wav",
+    "source_sha256": "49302d0c7e16a1f3563ecb28bbc574cd4442ccec8582988c64002229e31007f3",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/sottomarino_giramondo/audio/en/sub_creature_whale.wav.extracted.wav",
+    "output_sha256": "7cd7b5ec8fbf1439e2c4ad817990a66af2537a4ab4883a0a07ad9d92383f9795",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Gentle whale!",
+      "locale": "en",
+      "cue_id": "sub_creature_whale",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/sottomarino_giramondo/audio/en/sub_creature_whale.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "f373575da624155f1e9161fb8461470d1daf476fd360cd85478703ea88a81d16"
+    },
+    "locale": "en",
+    "prefix": "Listen to this phrase in English.",
+    "target": "Gentle whale!",
+    "remove_first_words": 6,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Listen to this phrase in English. Gentle whale.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Gentle Whale",
+    "raw_word_alignment": [
+      {
+        "word": "listen",
+        "start_seconds": 0.0,
+        "end_seconds": 0.26
+      },
+      {
+        "word": "to",
+        "start_seconds": 0.26,
+        "end_seconds": 0.44
+      },
+      {
+        "word": "this",
+        "start_seconds": 0.44,
+        "end_seconds": 0.62
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.62,
+        "end_seconds": 0.94
+      },
+      {
+        "word": "in",
+        "start_seconds": 0.94,
+        "end_seconds": 1.22
+      },
+      {
+        "word": "english",
+        "start_seconds": 1.22,
+        "end_seconds": 1.54
+      },
+      {
+        "word": "gentle",
+        "start_seconds": 2.24,
+        "end_seconds": 2.52
+      },
+      {
+        "word": "whale",
+        "start_seconds": 2.52,
+        "end_seconds": 2.84
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "gentle",
+        "start_seconds": 0.0,
+        "end_seconds": 0.6
+      },
+      {
+        "word": "whale",
+        "start_seconds": 0.6,
+        "end_seconds": 1.12
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.46187140146891276,
+        "no_speech_prob": 0.031363595277071,
+        "compression_ratio": 0.8545454545454545,
+        "word_probabilities": [
+          0.9091796875,
+          0.99755859375,
+          0.9970703125,
+          0.99853515625,
+          0.998046875,
+          0.99560546875
+        ]
+      },
+      {
+        "avg_logprob": -0.46187140146891276,
+        "no_speech_prob": 0.031363595277071,
+        "compression_ratio": 0.8545454545454545,
+        "word_probabilities": [
+          0.7529296875,
+          0.323486328125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6396808624267578,
+        "no_speech_prob": 0.2612973153591156,
+        "compression_ratio": 0.6,
+        "word_probabilities": [
+          0.4541015625,
+          0.7451171875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 6,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 79,
+    "extracted_voiced_seconds": 0.79,
+    "unremoved_raw_target_tokens": [
+      "gentle",
+      "whale"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "gentle",
+      "whale"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.3601814058956916,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.54,
+      "search_end_seconds": 2.24,
+      "prefix_last_word_end_seconds": 1.54,
+      "target_first_word_start_seconds": 2.24,
+      "gap_seconds": 0.4888888888888889,
+      "verified_silence_start_seconds": 1.6996371882086168,
+      "verified_silence_end_seconds": 2.1885260770975057,
+      "gap_rms_dbfs": -53.876,
+      "gap_peak_dbfs": -34.364,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.9440816326530612,
+      "cut_sample": 42867,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 3185,
+      "removed_seconds": 0.14444444444444443,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 46052,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/sottomarino_giramondo/audio/en/sub_creature_whale.wav.delivery.wav",
+      "sha256": "94e8192686df455582589c18b10e011278299c48ac3b1821683fe79da43a4f34"
+    }
+  },
   "output": {
     "path": "activities/sottomarino_giramondo/audio/en/sub_creature_whale.wav",
-    "bytes": 63590,
-    "sha256": "c0fdf74081127e134cad01a0ee149f98398d7bd65fb8f6a8843e1d60bb7e7864"
+    "sha256": "f6b3d9614bda29e83487daa6d02c249395eb87724dab9a48ba08c8ce722796f4",
+    "bytes": 56158
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "6d0c5dbda6bcd6325e1949c9712971897848916c4aa4bea2db26dc6d508f8cd5",
+    "original_sha256": "c0fdf74081127e134cad01a0ee149f98398d7bd65fb8f6a8843e1d60bb7e7864",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

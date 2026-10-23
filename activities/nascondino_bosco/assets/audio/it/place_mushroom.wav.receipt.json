@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T13:39:16.447562+00:00",
+  "created_utc": "2026-10-21T16:51:31.074365+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "Dietro il fungo",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. Dietro il fungo",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "lilli",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Dietro il fungo",
+    "cue_id": "greia.requested.place_mushroom.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Dietro il fungo",
     "cue_id": "greia.requested.place_mushroom.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/nascondino_bosco/assets/audio/it/place_mushroom.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.lilli.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "job_id": "20261020-153903-85b9fef3",
-    "idempotency_key": "greia-b7c1ae90412d48509e28879ebe07dcc2",
+    "job_id": "20261021-185116-b9b55bf1",
+    "idempotency_key": "greia-ed6126aeef824dc0895b3af52b3f0e1a",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,226 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2707767535,
+    "script_seed": 887053470,
     "language_direction": "Italian",
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in Italian. Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2507521744,
-        "sha256": "37be6be69cfeed1e9f30d3b745d127cbaf64353cb0a4a77b29bb444343407f9e",
+        "seed": 2634845117,
+        "sha256": "3f865ac5f1093870cee77d775061382f3c506be02df192d3f01b6e1f4815a634",
         "generation": {
-          "elapsed_seconds": 11.88378204201581,
+          "elapsed_seconds": 13.685140500005218,
           "model_load_seconds": 0.0,
-          "rtf": 9.282995996887756,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.5636839980917197,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Dietro il fungo!",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/nascondino_bosco/assets/audio/it/place_mushroom.wav.raw.wav",
+    "sha256": "bf518d85ca4b67a02f0c07cc6dc95319713647cd6f144d664a0e305f4cfd86ed",
+    "receipt_sha256": "6025057d9ffd6f5516ac3d741b313eda9184f005e8fbe773f0f50b12fbe9e33d"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/nascondino_bosco/assets/audio/it/place_mushroom.wav.extracted.wav",
+    "sha256": "3762a36c63a2409b19c9d968402b27fbffd16cd40f74b37e84b9361a3045a43e"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/nascondino_bosco/assets/audio/it/place_mushroom.wav.raw.wav",
+    "source_sha256": "bf518d85ca4b67a02f0c07cc6dc95319713647cd6f144d664a0e305f4cfd86ed",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/nascondino_bosco/assets/audio/it/place_mushroom.wav.extracted.wav",
+    "output_sha256": "3762a36c63a2409b19c9d968402b27fbffd16cd40f74b37e84b9361a3045a43e",
+    "target_request": {
+      "speaker": "lilli",
+      "kind": "character_dialogue",
+      "text": "Dietro il fungo",
+      "locale": "it",
+      "cue_id": "greia.requested.place_mushroom.it",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/nascondino_bosco/assets/audio/it/place_mushroom.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "6025057d9ffd6f5516ac3d741b313eda9184f005e8fbe773f0f50b12fbe9e33d"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "Dietro il fungo",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Ascolta questa frase in italiano. Dietro il fungo.",
+    "extracted_transcript": " Dietro il fungo!",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.6
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.6,
+        "end_seconds": 0.88
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.88,
+        "end_seconds": 1.3
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.3,
+        "end_seconds": 1.46
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.46,
+        "end_seconds": 1.98
+      },
+      {
+        "word": "dietro",
+        "start_seconds": 2.7,
+        "end_seconds": 3.1
+      },
+      {
+        "word": "il",
+        "start_seconds": 3.1,
+        "end_seconds": 3.2
+      },
+      {
+        "word": "fungo",
+        "start_seconds": 3.2,
+        "end_seconds": 3.6
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "dietro",
+        "start_seconds": 0.0,
+        "end_seconds": 0.72
+      },
+      {
+        "word": "il",
+        "start_seconds": 0.72,
+        "end_seconds": 0.82
+      },
+      {
+        "word": "fungo",
+        "start_seconds": 0.82,
+        "end_seconds": 1.26
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.6424490778069747,
+        "no_speech_prob": 0.009679345414042473,
+        "compression_ratio": 0.8928571428571429,
+        "word_probabilities": [
+          0.6826171875,
+          0.96142578125,
+          0.9609375,
+          0.61328125,
+          0.953125
+        ]
+      },
+      {
+        "avg_logprob": -0.6424490778069747,
+        "no_speech_prob": 0.009679345414042473,
+        "compression_ratio": 0.8928571428571429,
+        "word_probabilities": [
+          0.61279296875,
+          0.93212890625,
+          0.8173828125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6678502824571397,
+        "no_speech_prob": 0.2692593038082123,
+        "compression_ratio": 0.6666666666666666,
+        "word_probabilities": [
+          0.51220703125,
+          0.9287109375,
+          0.7548828125
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 85,
+    "extracted_voiced_seconds": 0.85,
+    "unremoved_raw_target_tokens": [
+      "dietro",
+      "il",
+      "fungo"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "dietro",
+      "il",
+      "fungo"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.8401814058956916,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.98,
+      "target_first_word_start_seconds": 2.7,
+      "gap_seconds": 0.4988662131519274,
+      "verified_silence_start_seconds": 2.1396371882086167,
+      "verified_silence_end_seconds": 2.6385034013605444,
+      "gap_rms_dbfs": -62.109,
+      "gap_peak_dbfs": -38.053,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.3890702947845806,
+      "cut_sample": 52679,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/nascondino_bosco/assets/audio/it/place_mushroom.wav",
-    "bytes": 56534,
-    "sha256": "c9d51ce70c89349e65f190524c420d3aa59fefc5a038a7d21282d79d83755946"
+    "sha256": "98ca7d1dac04855dceed0fcf5aa0cd2b2615d2f91a873e8659ce74e30ce48774",
+    "bytes": 64072
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "ed25b42e8fe5668a9e1fea6f031bb8f4563a2016444cf5b8ba56c58a93f80e81",
+    "original_sha256": "c9d51ce70c89349e65f190524c420d3aa59fefc5a038a7d21282d79d83755946",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

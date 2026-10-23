@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T17:17:12.455175+00:00",
+  "created_utc": "2026-10-21T17:29:26.917054+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Listen to this phrase in English.",
+    "prefix_word_count": 6,
+    "target": "Shape Tower",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Listen to this phrase in English. Shape Tower",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "lilli",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Shape Tower",
+    "cue_id": "torre_forme.activity-title",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "Shape Tower",
     "cue_id": "torre_forme.activity-title",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/torre_forme/locales/en/audio/activity-title.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.lilli.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "job_id": "20261020-191704-f2008fca",
-    "idempotency_key": "greia-a701e8f122a54ee9ac2d9fb6fedb0eb9",
+    "job_id": "20261021-192914-7873896c",
+    "idempotency_key": "greia-b3ef1cdf91f945b58d8a2feb1d12892a",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,233 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3542068153,
+    "script_seed": 1850497825,
     "language_direction": "English",
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "effective_delivery": "Speak in English. Lilli, a sparkly, affectionate storybook unicorn. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in English. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3656758219,
-        "sha256": "e00a51d6d89db59e69a2d5e2bbed4f131abd131b9d68b29a05f911f378baa111",
+        "seed": 1285848884,
+        "sha256": "470c4fd3167798e26fc7cfc4323c6fbb9453d2d51290081f93b53ddef1dd6081",
         "generation": {
-          "elapsed_seconds": 7.9304430420161225,
+          "elapsed_seconds": 11.476881499998854,
           "model_load_seconds": 0.0,
-          "rtf": 5.5066147728384145,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.5863386802767105,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " Shape Tower!",
+    "metrics": {
+      "duration_seconds": 1.296689342403628,
+      "rms_dbfs": -23.33,
+      "peak": 0.36856,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.1,
+      "trailing_silence_seconds": 0.18,
+      "longest_internal_pause_seconds": 0.12
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/torre_forme/locales/en/audio/activity-title.wav.raw.wav",
+    "sha256": "a84de94450c9ae82333133645839dfc3ff55b6bad92bc6075a40c58a3c1d68da",
+    "receipt_sha256": "313ba2d8a48dbf286f07eb56cce28e554a8fcf59c24a02e67d4825f4b212f5d1"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/torre_forme/locales/en/audio/activity-title.wav.extracted.wav",
+    "sha256": "79c94e266dd3517398fd4b40caea7a86e590276319b42a1bcd386fea6eacff51"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/torre_forme/locales/en/audio/activity-title.wav.raw.wav",
+    "source_sha256": "a84de94450c9ae82333133645839dfc3ff55b6bad92bc6075a40c58a3c1d68da",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-extracted/activities/torre_forme/locales/en/audio/activity-title.wav.extracted.wav",
+    "output_sha256": "79c94e266dd3517398fd4b40caea7a86e590276319b42a1bcd386fea6eacff51",
+    "target_request": {
+      "speaker": "lilli",
+      "kind": "character_dialogue",
+      "text": "Shape Tower",
+      "locale": "en",
+      "cue_id": "torre_forme.activity-title",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/torre_forme/locales/en/audio/activity-title.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "313ba2d8a48dbf286f07eb56cce28e554a8fcf59c24a02e67d4825f4b212f5d1"
+    },
+    "locale": "en",
+    "prefix": "Listen to this phrase in English.",
+    "target": "Shape Tower",
+    "remove_first_words": 6,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Listen to this phrase in English, shape tower.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Shape Tower!",
+    "raw_word_alignment": [
+      {
+        "word": "listen",
+        "start_seconds": 0.0,
+        "end_seconds": 0.26
+      },
+      {
+        "word": "to",
+        "start_seconds": 0.26,
+        "end_seconds": 0.54
+      },
+      {
+        "word": "this",
+        "start_seconds": 0.54,
+        "end_seconds": 0.74
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.74,
+        "end_seconds": 1.02
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.02,
+        "end_seconds": 1.24
+      },
+      {
+        "word": "english",
+        "start_seconds": 1.24,
+        "end_seconds": 1.58
+      },
+      {
+        "word": "shape",
+        "start_seconds": 1.98,
+        "end_seconds": 2.3
+      },
+      {
+        "word": "tower",
+        "start_seconds": 2.3,
+        "end_seconds": 2.76
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "shape",
+        "start_seconds": 0.0,
+        "end_seconds": 0.42
+      },
+      {
+        "word": "tower",
+        "start_seconds": 0.42,
+        "end_seconds": 0.88
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.41948824662428635,
+        "no_speech_prob": 0.07295086234807968,
+        "compression_ratio": 0.8679245283018868,
+        "word_probabilities": [
+          0.9150390625,
+          0.99560546875,
+          0.994140625,
+          0.99267578125,
+          0.998046875,
+          0.98681640625,
+          0.2303466796875,
+          0.86962890625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.9853264490763346,
+        "no_speech_prob": 0.3621506094932556,
+        "compression_ratio": 0.6,
+        "word_probabilities": [
+          0.2275390625,
+          0.5908203125
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 6,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 80,
+    "extracted_voiced_seconds": 0.8,
+    "unremoved_raw_target_tokens": [
+      "shape",
+      "tower"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "shape",
+      "tower"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.2001814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-expanded-boundary",
+      "search_start_seconds": 1.24,
+      "search_end_seconds": 2.3,
+      "prefix_last_word_end_seconds": 1.58,
+      "target_first_word_start_seconds": 1.98,
+      "gap_seconds": 0.2494331065759637,
+      "verified_silence_start_seconds": 1.7787755102040816,
+      "verified_silence_end_seconds": 2.0282086167800455,
+      "gap_rms_dbfs": -53.977,
+      "gap_peak_dbfs": -32.579,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.9034920634920636,
+      "cut_sample": 41972,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/torre_forme/locales/en/audio/activity-title.wav",
-    "bytes": 63590,
-    "sha256": "c5d1432c23a3184761d3355b8758b9b8fd8bde858de0af2526344a5d59b4285e"
+    "sha256": "4127921727dfe3696ed33453294831549440a12261973508afc4190d2dd72b9b",
+    "bytes": 57262
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "080b01088349618852a3da739581b8fb56ed882d2f7968ee757d433fc92d5da1",
+    "original_sha256": "c5d1432c23a3184761d3355b8758b9b8fd8bde858de0af2526344a5d59b4285e",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

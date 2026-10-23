@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T12:47:27.469926+00:00",
+  "created_utc": "2026-10-21T17:32:41.081404+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "El viaje del delfín",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. El viaje del delfín",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "El viaje del delfín",
+    "cue_id": "viaggio_delfino.title.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "El viaje del delfín",
     "cue_id": "viaggio_delfino.title.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/viaggio_delfino/locales/es/audio/activity-title.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.tito.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261021-144721-c3c3a7ef",
-    "idempotency_key": "greia-1570d2f94e6f40f0af8a9464234fb5aa",
+    "job_id": "20261021-193228-1513b352",
+    "idempotency_key": "greia-fd741f16ba474faaa27ab2285b2a6771",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,241 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2810863076,
+    "script_seed": 4275328521,
     "language_direction": "Spanish",
-    "delivery_prompt": "Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "effective_delivery": "Speak in Spanish. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 676223696,
-        "sha256": "5ee24ca65cb1405bd69a078dbf124003f0e365c51fc196519dbae63f4f10a5e8",
+        "seed": 3502302985,
+        "sha256": "6c5cf7ecb64965d7b2ff30a37e36f8a1fc842c973f04352f22fa71f95d842039",
         "generation": {
-          "elapsed_seconds": 5.91732220799895,
+          "elapsed_seconds": 11.794175541988807,
           "model_load_seconds": 0.0,
-          "rtf": 3.6979411777933233,
+          "rtf": 4.094962863950745,
           "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " El beajadal del fin.",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/viaggio_delfino/locales/es/audio/activity-title.wav.raw.wav",
+    "sha256": "495dbf42580067cb380580204fb97d5bcff270a02efd6190135d5be6c52d05d3",
+    "receipt_sha256": "0f3b006a92c2aa8c5862afbb6be8cfc52eafb7598a50bb2d7da0e2517a45b303"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/viaggio_delfino/locales/es/audio/activity-title.wav.extracted.wav",
+    "sha256": "86d9d8ff999095a06ea1e19d02060b084f7aa725898f57196acb8993ccd53ac4"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/viaggio_delfino/locales/es/audio/activity-title.wav.raw.wav",
+    "source_sha256": "495dbf42580067cb380580204fb97d5bcff270a02efd6190135d5be6c52d05d3",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/viaggio_delfino/locales/es/audio/activity-title.wav.extracted.wav",
+    "output_sha256": "86d9d8ff999095a06ea1e19d02060b084f7aa725898f57196acb8993ccd53ac4",
+    "target_request": {
+      "speaker": "tito",
+      "kind": "character_dialogue",
+      "text": "El viaje del delfín",
+      "locale": "es",
+      "cue_id": "viaggio_delfino.title.es",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/viaggio_delfino/locales/es/audio/activity-title.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "0f3b006a92c2aa8c5862afbb6be8cfc52eafb7598a50bb2d7da0e2517a45b303"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "El viaje del delfín",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Escucha esta frase en español, el viaje del del fin.",
+    "extracted_transcript": " El beajadal del fin.",
+    "raw_word_alignment": [
+      {
+        "word": "escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.48
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.48,
+        "end_seconds": 0.66
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.66,
+        "end_seconds": 0.96
+      },
+      {
+        "word": "en",
+        "start_seconds": 0.96,
+        "end_seconds": 1.16
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.16,
+        "end_seconds": 1.58
+      },
+      {
+        "word": "el",
+        "start_seconds": 2.0,
+        "end_seconds": 2.06
+      },
+      {
+        "word": "viaje",
+        "start_seconds": 2.06,
+        "end_seconds": 2.22
+      },
+      {
+        "word": "del",
+        "start_seconds": 2.22,
+        "end_seconds": 2.5
+      },
+      {
+        "word": "del",
+        "start_seconds": 2.5,
+        "end_seconds": 2.64
+      },
+      {
+        "word": "fin",
+        "start_seconds": 2.64,
+        "end_seconds": 2.82
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "el",
+        "start_seconds": 0.0,
+        "end_seconds": 0.28
+      },
+      {
+        "word": "beajadal",
+        "start_seconds": 0.28,
+        "end_seconds": 0.7
+      },
+      {
+        "word": "del",
+        "start_seconds": 0.7,
+        "end_seconds": 0.8
+      },
+      {
+        "word": "fin",
+        "start_seconds": 0.8,
+        "end_seconds": 1.02
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.44986075162887573,
+        "no_speech_prob": 0.0068284193985164165,
+        "compression_ratio": 0.9464285714285714,
+        "word_probabilities": [
+          0.53466796875,
+          0.70556640625,
+          0.97509765625,
+          0.92578125,
+          0.95703125,
+          0.70068359375,
+          0.92626953125,
+          0.93017578125,
+          0.2459716796875,
+          0.9033203125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.7797045274214311,
+        "no_speech_prob": 0.1404813677072525,
+        "compression_ratio": 0.7142857142857143,
+        "word_probabilities": [
+          0.5029296875,
+          0.458740234375,
+          0.951171875,
+          0.7490234375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 85,
+    "extracted_voiced_seconds": 0.85,
+    "unremoved_raw_target_tokens": [
+      "el",
+      "viaje",
+      "del",
+      "del",
+      "fin"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "el",
+      "viaje",
+      "del",
+      "del",
+      "fin"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 2.8801814058956916,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.58,
+      "target_first_word_start_seconds": 2.0,
+      "gap_seconds": 0.2693877551020408,
+      "verified_silence_start_seconds": 1.6398639455782313,
+      "verified_silence_end_seconds": 1.909251700680272,
+      "gap_rms_dbfs": -81.795,
+      "gap_peak_dbfs": -54.892,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.7745578231292516,
+      "cut_sample": 39129,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/viaggio_delfino/locales/es/audio/activity-title.wav",
-    "bytes": 70646,
-    "sha256": "d77dd571ad5c50c05c950a4fff1606b36e96f3248c1a553fa07564803d97efbf"
+    "sha256": "39fbe3bbcdfdf4f31e41515ece8606bd01c572fed500b58201ca1db15805b412",
+    "bytes": 48836
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "c75bd03c01cf670130d2a8b0bf43c070a2246ec4af039bf6b748bcdf5c02f2c5",
+    "original_sha256": "d77dd571ad5c50c05c950a4fff1606b36e96f3248c1a553fa07564803d97efbf",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

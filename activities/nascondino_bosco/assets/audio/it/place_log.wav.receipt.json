@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T13:39:02.445233+00:00",
+  "created_utc": "2026-10-21T16:51:13.950888+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "Dietro il tronco",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. Dietro il tronco",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "lilli",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Dietro il tronco",
+    "cue_id": "greia.requested.place_log.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Dietro il tronco",
     "cue_id": "greia.requested.place_log.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/nascondino_bosco/assets/audio/it/place_log.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.lilli.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "job_id": "20261020-153853-a6bb3116",
-    "idempotency_key": "greia-9a0482db164c47b08f0016ee49855892",
+    "job_id": "20261021-185101-704f427e",
+    "idempotency_key": "greia-1e405d7a758d4c10bc09bdfb7bd9a584",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,226 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1831309959,
+    "script_seed": 1084715203,
     "language_direction": "Italian",
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in Italian. Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3065109341,
-        "sha256": "31d1511d2f2cedb2e7c2e8ebe01e6d04af276db01f0bff0c491d61082fdcd5e6",
+        "seed": 1744855409,
+        "sha256": "5c7b60651146462c71ed8caaeb635a23dd2adb0b774acc071ab2e39bfe3d403b",
         "generation": {
-          "elapsed_seconds": 8.749569791019894,
+          "elapsed_seconds": 11.506799583003158,
           "model_load_seconds": 0.0,
-          "rtf": 6.834711462845901,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.5956875942929507,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " dietro il tronco",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/nascondino_bosco/assets/audio/it/place_log.wav.raw.wav",
+    "sha256": "cada9ac7fd65459d1d449f72c4da36c9bbc085b2e4b040d4affab8c77940faa5",
+    "receipt_sha256": "2c5fbfab02ee16a7c924281c16c299d0e153c5b5aa3da27e3398e938cd57914f"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/nascondino_bosco/assets/audio/it/place_log.wav.extracted.wav",
+    "sha256": "1a0f0239e8a9a0fe79dee7d32bb8f9a07ccbdf3c9c82a7695b766e632e1884a7"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/nascondino_bosco/assets/audio/it/place_log.wav.raw.wav",
+    "source_sha256": "cada9ac7fd65459d1d449f72c4da36c9bbc085b2e4b040d4affab8c77940faa5",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/nascondino_bosco/assets/audio/it/place_log.wav.extracted.wav",
+    "output_sha256": "1a0f0239e8a9a0fe79dee7d32bb8f9a07ccbdf3c9c82a7695b766e632e1884a7",
+    "target_request": {
+      "speaker": "lilli",
+      "kind": "character_dialogue",
+      "text": "Dietro il tronco",
+      "locale": "it",
+      "cue_id": "greia.requested.place_log.it",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/nascondino_bosco/assets/audio/it/place_log.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "2c5fbfab02ee16a7c924281c16c299d0e153c5b5aa3da27e3398e938cd57914f"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "Dietro il tronco",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Ascolta questa frase in italiano. Dietro il tronco?",
+    "extracted_transcript": " dietro il tronco",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.52
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.52,
+        "end_seconds": 0.74
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.74,
+        "end_seconds": 1.08
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.08,
+        "end_seconds": 1.24
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.24,
+        "end_seconds": 1.6
+      },
+      {
+        "word": "dietro",
+        "start_seconds": 2.34,
+        "end_seconds": 2.62
+      },
+      {
+        "word": "il",
+        "start_seconds": 2.62,
+        "end_seconds": 2.74
+      },
+      {
+        "word": "tronco",
+        "start_seconds": 2.74,
+        "end_seconds": 3.08
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "dietro",
+        "start_seconds": 0.0,
+        "end_seconds": 0.56
+      },
+      {
+        "word": "il",
+        "start_seconds": 0.56,
+        "end_seconds": 0.68
+      },
+      {
+        "word": "tronco",
+        "start_seconds": 0.68,
+        "end_seconds": 1.04
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.4859187126159668,
+        "no_speech_prob": 0.0015960709424689412,
+        "compression_ratio": 0.9107142857142857,
+        "word_probabilities": [
+          0.65234375,
+          0.97021484375,
+          0.9423828125,
+          0.78515625,
+          0.95751953125
+        ]
+      },
+      {
+        "avg_logprob": -0.4859187126159668,
+        "no_speech_prob": 0.0015960709424689412,
+        "compression_ratio": 0.9107142857142857,
+        "word_probabilities": [
+          0.70703125,
+          0.8994140625,
+          0.8876953125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.37480735778808594,
+        "no_speech_prob": 0.06702715158462524,
+        "compression_ratio": 0.7272727272727273,
+        "word_probabilities": [
+          0.69482421875,
+          0.94091796875,
+          0.91015625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 66,
+    "extracted_voiced_seconds": 0.66,
+    "unremoved_raw_target_tokens": [
+      "dietro",
+      "il",
+      "tronco"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "dietro",
+      "il",
+      "tronco"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.2001814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.6,
+      "target_first_word_start_seconds": 2.34,
+      "gap_seconds": 0.43900226757369615,
+      "verified_silence_start_seconds": 1.8394557823129252,
+      "verified_silence_end_seconds": 2.278458049886621,
+      "gap_rms_dbfs": -56.967,
+      "gap_peak_dbfs": -35.906,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.058956916099773,
+      "cut_sample": 45400,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/nascondino_bosco/assets/audio/it/place_log.wav",
-    "bytes": 56534,
-    "sha256": "bca2921825dd748e0462bf69f4fd179cd8b0033a74ee68c3de9e41dd7dd2390f"
+    "sha256": "9061b2c63006e0b68f7dfe758a04f04d3d52f0a9e3e9f900c5170d70c71a6af8",
+    "bytes": 50406
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "dd248ed2bfa3c074befb9e63c4d1530d0ad91db7ac694ed17452d503154ab3bf",
+    "original_sha256": "bca2921825dd748e0462bf69f4fd179cd8b0033a74ee68c3de9e41dd7dd2390f",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

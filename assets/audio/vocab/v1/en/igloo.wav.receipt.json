@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T20:29:32.173480+00:00",
+  "created_utc": "2026-10-21T18:36:23.535735+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Listen to this phrase in English.",
+    "prefix_word_count": 6,
+    "target": "Igloo",
+    "target_word_count": 1,
+    "target_verification": "warn",
+    "composite_text": "Listen to this phrase in English. Igloo",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Igloo",
+    "cue_id": "greia.vocab.igloo.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "Igloo",
     "cue_id": "greia.vocab.igloo.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "assets/audio/vocab/v1/en/igloo.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-222923-82c2c62a",
-    "idempotency_key": "greia-84c409f6a7a94df1aae08c8614f2bff2",
+    "job_id": "20261021-203608-78ed0952",
+    "idempotency_key": "greia-01fc6063175a422b8b20dd1335bc9e26",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,204 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1815196055,
+    "script_seed": 1790388498,
     "language_direction": "English",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
-    "effective_delivery": "Speak in English. Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in English. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3701234287,
-        "sha256": "cbcd62a42291b44c8e90a56cac7fec0de1f231c4b8347d419a4a8ea055d82aca",
+        "seed": 1846682772,
+        "sha256": "e011028f147c3f3836bb6cc30deaf94c0cc6e1ac4cb2eb10c7556b010c4334a0",
         "generation": {
-          "elapsed_seconds": 7.909287167014554,
+          "elapsed_seconds": 14.894590541996877,
           "model_load_seconds": 0.0,
-          "rtf": 9.884549677585362,
-          "peak_memory_gb": 8.843167284
+          "rtf": 4.432693976091526,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Igloo.",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/vocab/v1/en/igloo.wav.raw.wav",
+    "sha256": "4fb0b9defeee47c1df8c2551a07119d5f1bf5b5c114a582561f6a7b288679242",
+    "receipt_sha256": "75341ae7924dc06e368271d68d9cf9ca38b1ea4d7a7107d364ca0c2178010b43"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/vocab/v1/en/igloo.wav.extracted.wav",
+    "sha256": "cf4c3adf7e06cc418c17561d6d1e7fc38727efc7b148911ec8181a2f63d0de51"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/assets/audio/vocab/v1/en/igloo.wav.raw.wav",
+    "source_sha256": "4fb0b9defeee47c1df8c2551a07119d5f1bf5b5c114a582561f6a7b288679242",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/assets/audio/vocab/v1/en/igloo.wav.extracted.wav",
+    "output_sha256": "cf4c3adf7e06cc418c17561d6d1e7fc38727efc7b148911ec8181a2f63d0de51",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Igloo",
+      "locale": "en",
+      "cue_id": "greia.vocab.igloo.en",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/assets/audio/vocab/v1/en/igloo.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "75341ae7924dc06e368271d68d9cf9ca38b1ea4d7a7107d364ca0c2178010b43"
+    },
+    "locale": "en",
+    "prefix": "Listen to this phrase in English.",
+    "target": "Igloo",
+    "remove_first_words": 6,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Listen to this phrase in English. Igloo.",
+    "extracted_transcript": " Igloo.",
+    "raw_word_alignment": [
+      {
+        "word": "listen",
+        "start_seconds": 0.0,
+        "end_seconds": 0.66
+      },
+      {
+        "word": "to",
+        "start_seconds": 0.66,
+        "end_seconds": 0.86
+      },
+      {
+        "word": "this",
+        "start_seconds": 0.86,
+        "end_seconds": 0.98
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.98,
+        "end_seconds": 1.32
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.32,
+        "end_seconds": 1.56
+      },
+      {
+        "word": "english",
+        "start_seconds": 1.56,
+        "end_seconds": 2.02
+      },
+      {
+        "word": "igloo",
+        "start_seconds": 2.48,
+        "end_seconds": 3.06
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "igloo",
+        "start_seconds": 0.0,
+        "end_seconds": 0.76
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5917057673136393,
+        "no_speech_prob": 0.01849309913814068,
+        "compression_ratio": 0.8333333333333334,
+        "word_probabilities": [
+          0.7841796875,
+          0.9892578125,
+          0.97509765625,
+          0.998046875,
+          0.92919921875,
+          0.9833984375
+        ]
+      },
+      {
+        "avg_logprob": -0.5917057673136393,
+        "no_speech_prob": 0.01849309913814068,
+        "compression_ratio": 0.8333333333333334,
+        "word_probabilities": [
+          0.521484375
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.8261267344156901,
+        "no_speech_prob": 0.44415533542633057,
+        "compression_ratio": 0.42857142857142855,
+        "word_probabilities": [
+          0.418212890625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 28,
+    "extracted_voiced_seconds": 0.28,
+    "unremoved_raw_target_tokens": [
+      "igloo"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "igloo"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.3601814058956916,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 2.02,
+      "target_first_word_start_seconds": 2.48,
+      "gap_seconds": 0.3492063492063492,
+      "verified_silence_start_seconds": 2.0798639455782313,
+      "verified_silence_end_seconds": 2.4290702947845806,
+      "gap_rms_dbfs": -67.933,
+      "gap_peak_dbfs": -42.925,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.254467120181406,
+      "cut_sample": 49711,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "assets/audio/vocab/v1/en/igloo.wav",
-    "bytes": 35366,
-    "sha256": "56ef55ebf3074f56f18d027f3987ec51a40d0b8983e8d8421ac8dd06b11e0293"
+    "sha256": "97629f542c5c0faed5d60b8e09abdc82533cc15f2711d0ff98375880b23aaf1b",
+    "bytes": 48840
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "3f5e58737c4ab1d7cf3c362261cf6aa8be941df141c159d94f46499fef67d082",
+    "original_sha256": "56ef55ebf3074f56f18d027f3987ec51a40d0b8983e8d8421ac8dd06b11e0293",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

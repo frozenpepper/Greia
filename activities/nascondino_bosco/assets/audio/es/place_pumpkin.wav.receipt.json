@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T13:36:07.988104+00:00",
+  "created_utc": "2026-10-21T16:48:55.797924+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "Detrás de la calabaza",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. Detrás de la calabaza",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v4",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "lilli",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "Detrás de la calabaza",
+    "cue_id": "greia.requested.place_pumpkin.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "Detrás de la calabaza",
     "cue_id": "greia.requested.place_pumpkin.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/nascondino_bosco/assets/audio/es/place_pumpkin.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.lilli.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "job_id": "20261020-153558-4b66f803",
-    "idempotency_key": "greia-14211b526630431ea3640029b8dda233",
+    "job_id": "20261021-184841-476cd25b",
+    "idempotency_key": "greia-978302bcb857411899f19bf4308dbe14",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,275 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2997815825,
+    "script_seed": 4193292481,
     "language_direction": "Spanish",
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in Spanish. Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 490396568,
-        "sha256": "653df1013da06ca7a426d5467a2f3e014ccb81142318f22aee61467f6eb8adfb",
+        "seed": 2911846268,
+        "sha256": "90290ed291edebdad86df97d00bc055f40f3180f02a8afbab04616894c3b0e0d",
         "generation": {
-          "elapsed_seconds": 8.249190958042163,
+          "elapsed_seconds": 13.184100042009959,
           "model_load_seconds": 0.0,
-          "rtf": 5.727941875738107,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.582473631269406,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " detrás de la calabaza",
+    "score": 1.0,
+    "detail": "Exact raw/extracted target token checks; saved audio recovery only; human review pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/nascondino_bosco/assets/audio/es/place_pumpkin.wav.raw.wav",
+    "sha256": "abcf7cb73cfab456ffde729b0b18f535cc83ecb88c465c2d7ff336f0ac8fd01a",
+    "receipt_sha256": "b350a3e0adaabd1c6346d8acb01fa0f46f0015610f98f4d7dd0272f6d78f7cf6"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/nascondino_bosco/assets/audio/es/place_pumpkin.wav.extracted.wav",
+    "sha256": "eb20c858e05e10977a243792d5e0ee491ce41c984c87363d329f145dda2c41be"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v4",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/nascondino_bosco/assets/audio/es/place_pumpkin.wav.raw.wav",
+    "source_sha256": "abcf7cb73cfab456ffde729b0b18f535cc83ecb88c465c2d7ff336f0ac8fd01a",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/parent-boundary-audit-v4/outputs/31abc688e813bf6ce54e888a4197326c149505b662a51dd2387fea8591292377-proposed.wav",
+    "output_sha256": "eb20c858e05e10977a243792d5e0ee491ce41c984c87363d329f145dda2c41be",
+    "target_request": {
+      "speaker": "lilli",
+      "kind": "character_dialogue",
+      "text": "Detrás de la calabaza",
+      "locale": "es",
+      "cue_id": "greia.requested.place_pumpkin.es",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/nascondino_bosco/assets/audio/es/place_pumpkin.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "b350a3e0adaabd1c6346d8acb01fa0f46f0015610f98f4d7dd0272f6d78f7cf6"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "Detrás de la calabaza",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " escucha esta frase en español detrás de la calabaza",
+    "removed_prefix_transcript": " Escucha esta frase en español",
+    "removed_prefix_word_alignment": [
+      {
+        "word": " Escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.62
+      },
+      {
+        "word": " esta",
+        "start_seconds": 0.62,
+        "end_seconds": 0.92
+      },
+      {
+        "word": " frase",
+        "start_seconds": 0.92,
+        "end_seconds": 1.26
+      },
+      {
+        "word": " en",
+        "start_seconds": 1.26,
+        "end_seconds": 1.46
+      },
+      {
+        "word": " español",
+        "start_seconds": 1.46,
+        "end_seconds": 1.84
+      }
+    ],
+    "extracted_transcript": " detrás de la calabaza",
+    "raw_word_alignment": [
+      {
+        "word": "escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.66
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.66,
+        "end_seconds": 0.92
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.92,
+        "end_seconds": 1.24
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.24,
+        "end_seconds": 1.46
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.46,
+        "end_seconds": 1.94
+      },
+      {
+        "word": "detrás",
+        "start_seconds": 1.94,
+        "end_seconds": 2.78
+      },
+      {
+        "word": "de",
+        "start_seconds": 2.78,
+        "end_seconds": 2.9
+      },
+      {
+        "word": "la",
+        "start_seconds": 2.9,
+        "end_seconds": 2.98
+      },
+      {
+        "word": "calabaza",
+        "start_seconds": 2.98,
+        "end_seconds": 3.58
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "detrás",
+        "start_seconds": 0.0,
+        "end_seconds": 0.6
+      },
+      {
+        "word": "de",
+        "start_seconds": 0.6,
+        "end_seconds": 0.76
+      },
+      {
+        "word": "la",
+        "start_seconds": 0.76,
+        "end_seconds": 0.82
+      },
+      {
+        "word": "calabaza",
+        "start_seconds": 0.82,
+        "end_seconds": 1.4
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.38062895668877494,
+        "no_speech_prob": 0.04444742947816849,
+        "compression_ratio": 0.8983050847457628,
+        "word_probabilities": [
+          0.63330078125,
+          0.8212890625,
+          0.98779296875,
+          0.958984375,
+          0.98095703125
+        ]
+      },
+      {
+        "avg_logprob": -0.38062895668877494,
+        "no_speech_prob": 0.04444742947816849,
+        "compression_ratio": 0.8983050847457628,
+        "word_probabilities": [
+          0.611328125,
+          0.9921875,
+          0.9951171875,
+          0.70947265625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.4487971305847168,
+        "no_speech_prob": 0.13714903593063354,
+        "compression_ratio": 0.7333333333333333,
+        "word_probabilities": [
+          0.6357421875,
+          0.98779296875,
+          0.99462890625,
+          0.68798828125
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 92,
+    "extracted_voiced_seconds": 0.92,
+    "unremoved_raw_target_tokens": [
+      "detrás",
+      "de",
+      "la",
+      "calabaza"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "detrás",
+      "de",
+      "la",
+      "calabaza"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.6801814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "coincident-first-target-span-dual-transcript",
+      "search_end_seconds": 2.78,
+      "prefix_last_word_end_seconds": 1.94,
+      "target_first_word_start_seconds": 1.94,
+      "gap_seconds": 0.31927437641723355,
+      "verified_silence_start_seconds": 1.9998639455782312,
+      "verified_silence_end_seconds": 2.3191383219954647,
+      "gap_rms_dbfs": -58.401,
+      "gap_peak_dbfs": -39.654,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.159501133786848,
+      "cut_sample": 47617,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/nascondino_bosco/assets/audio/es/place_pumpkin.wav",
-    "bytes": 63590,
-    "sha256": "36291e53c139b71f38902a5442faa8b701e71030637dd7838cff59ec18bc3427"
+    "sha256": "5c210d8f45b3055e380971eecbac8482f274b6d336ee66d0dbc78bb7546c15ba",
+    "bytes": 67140
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "recovery_provenance": {
+    "audit": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/parent-boundary-audit-v4",
+    "no_new_synthesis": true,
+    "original_provider_receipt_sha256": "b350a3e0adaabd1c6346d8acb01fa0f46f0015610f98f4d7dd0272f6d78f7cf6"
+  },
   "corpus_replacement": {
-    "original_sha256": "c2fa20c6963917cf3fbac11b6950126f6ff4d3790477b27c1c886f0efab18351",
+    "original_sha256": "36291e53c139b71f38902a5442faa8b701e71030637dd7838cff59ec18bc3427",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

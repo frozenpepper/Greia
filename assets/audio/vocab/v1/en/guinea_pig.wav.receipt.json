@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T20:28:44.168535+00:00",
+  "created_utc": "2026-10-21T18:35:45.374049+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Listen to this phrase in English.",
+    "prefix_word_count": 6,
+    "target": "Guinea pig",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Listen to this phrase in English. Guinea pig",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Guinea pig",
+    "cue_id": "greia.vocab.guinea_pig.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "Guinea pig",
     "cue_id": "greia.vocab.guinea_pig.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "assets/audio/vocab/v1/en/guinea_pig.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-222834-c737a4b3",
-    "idempotency_key": "greia-1d46d9ed328f49e09aae8dbda0109d3d",
+    "job_id": "20261021-203528-0524327c",
+    "idempotency_key": "greia-2fbc50ac47ee4d3b88d8226f27c96392",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,218 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3318419670,
+    "script_seed": 1574153976,
     "language_direction": "English",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
-    "effective_delivery": "Speak in English. Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in English. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 4261014464,
-        "sha256": "e9d94a9cb42480e3b9fd6af903b2f07c60470ce2aa81936b2813348aeba551c1",
+        "seed": 4235612196,
+        "sha256": "4d7d1f5a417b5094c7925fdd746e1a043aa93d8e37f6fed493f6b05a469ad891",
         "generation": {
-          "elapsed_seconds": 9.156479999946896,
+          "elapsed_seconds": 15.43661545800569,
           "model_load_seconds": 0.0,
-          "rtf": 8.174212170760507,
-          "peak_memory_gb": 8.843167284
+          "rtf": 4.385194486436918,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Gini Pig",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/vocab/v1/en/guinea_pig.wav.raw.wav",
+    "sha256": "088683f6551b695e71b32cff88fbe9724fbce478307cdd9966ac814a09046578",
+    "receipt_sha256": "0c72afd7031123ead161c2e747b961ae3d9ac7959a5d70011281ed54cc12404d"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/vocab/v1/en/guinea_pig.wav.extracted.wav",
+    "sha256": "9ecf5d4b41d19fcc5841553fea4a3b046ab99b5117789739da4d9741e15995a0"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/assets/audio/vocab/v1/en/guinea_pig.wav.raw.wav",
+    "source_sha256": "088683f6551b695e71b32cff88fbe9724fbce478307cdd9966ac814a09046578",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/assets/audio/vocab/v1/en/guinea_pig.wav.extracted.wav",
+    "output_sha256": "9ecf5d4b41d19fcc5841553fea4a3b046ab99b5117789739da4d9741e15995a0",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Guinea pig",
+      "locale": "en",
+      "cue_id": "greia.vocab.guinea_pig.en",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/assets/audio/vocab/v1/en/guinea_pig.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "0c72afd7031123ead161c2e747b961ae3d9ac7959a5d70011281ed54cc12404d"
+    },
+    "locale": "en",
+    "prefix": "Listen to this phrase in English.",
+    "target": "Guinea pig",
+    "remove_first_words": 6,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Listen to this phrase in English. Guinea Pig.",
+    "extracted_transcript": " Gini Pig",
+    "raw_word_alignment": [
+      {
+        "word": "listen",
+        "start_seconds": 0.0,
+        "end_seconds": 0.58
+      },
+      {
+        "word": "to",
+        "start_seconds": 0.58,
+        "end_seconds": 0.74
+      },
+      {
+        "word": "this",
+        "start_seconds": 0.74,
+        "end_seconds": 0.9
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.9,
+        "end_seconds": 1.22
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.22,
+        "end_seconds": 1.44
+      },
+      {
+        "word": "english",
+        "start_seconds": 1.44,
+        "end_seconds": 1.9
+      },
+      {
+        "word": "guinea",
+        "start_seconds": 2.3,
+        "end_seconds": 2.84
+      },
+      {
+        "word": "pig",
+        "start_seconds": 2.84,
+        "end_seconds": 3.38
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "gini",
+        "start_seconds": 0.0,
+        "end_seconds": 0.78
+      },
+      {
+        "word": "pig",
+        "start_seconds": 0.78,
+        "end_seconds": 1.2
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5974545160929362,
+        "no_speech_prob": 0.015990816056728363,
+        "compression_ratio": 0.8490566037735849,
+        "word_probabilities": [
+          0.8525390625,
+          0.98876953125,
+          0.982421875,
+          0.99755859375,
+          0.96533203125,
+          0.98681640625
+        ]
+      },
+      {
+        "avg_logprob": -0.5974545160929362,
+        "no_speech_prob": 0.015990816056728363,
+        "compression_ratio": 0.8490566037735849,
+        "word_probabilities": [
+          0.34912109375,
+          0.52197265625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.8233774503072103,
+        "no_speech_prob": 0.19227980077266693,
+        "compression_ratio": 0.5,
+        "word_probabilities": [
+          0.252685546875,
+          0.66650390625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 57,
+    "extracted_voiced_seconds": 0.57,
+    "unremoved_raw_target_tokens": [
+      "guinea",
+      "pig"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "guinea",
+      "pig"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.5201814058956917,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.9,
+      "target_first_word_start_seconds": 2.3,
+      "gap_seconds": 0.2893424036281179,
+      "verified_silence_start_seconds": 1.9598639455782314,
+      "verified_silence_end_seconds": 2.249206349206349,
+      "gap_rms_dbfs": -71.137,
+      "gap_peak_dbfs": -51.823,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.10453514739229,
+      "cut_sample": 46405,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "assets/audio/vocab/v1/en/guinea_pig.wav",
-    "bytes": 49478,
-    "sha256": "902657bf1680bba37569aafb28a56029c723e872f28e072d3007c55ed27bc8e1"
+    "sha256": "e6446b37b2482d65f432f3010d9ab16427ead538ba3f9abd47f1931d9cca91de",
+    "bytes": 62508
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "6338880925f3b5c30e5d29c75fbe46d6f18341ec0dbc654ea2afd6366357cd68",
+    "original_sha256": "902657bf1680bba37569aafb28a56029c723e872f28e072d3007c55ed27bc8e1",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

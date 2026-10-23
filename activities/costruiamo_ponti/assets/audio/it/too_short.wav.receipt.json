@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T08:52:19.654669+00:00",
+  "created_utc": "2026-10-21T15:58:18.999896+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "Troppo corto!",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. Troppo corto!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Troppo corto!",
+    "cue_id": "greia.requested.too_short.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Troppo corto!",
     "cue_id": "greia.requested.too_short.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/costruiamo_ponti/assets/audio/it/too_short.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.tito.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261021-105210-0b393509",
-    "idempotency_key": "greia-9181eb7a9eee48f4837a8ff796cec5a7",
+    "job_id": "20261021-175805-9b679f3a",
+    "idempotency_key": "greia-e465c0ee284d4407b8210f3acc527faa",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,227 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3994152659,
+    "script_seed": 3089992260,
     "language_direction": "Italian",
-    "delivery_prompt": "Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
-    "effective_delivery": "Speak in Italian. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3676412248,
-        "sha256": "4b7605ddf26d3135f7b68d86d19ab4a021851d0e37393d49ee7d9e38da5e5fc3",
+        "seed": 192501833,
+        "sha256": "9579610f018700052f4f78ac347e8db89b4868028da3702bdedc18336988338c",
         "generation": {
-          "elapsed_seconds": 6.157065416999103,
+          "elapsed_seconds": 12.33763637499942,
           "model_load_seconds": 0.0,
-          "rtf": 3.4980013731649104,
-          "peak_memory_gb": 7.648166916
+          "rtf": 4.0582105284796075,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " troppo corto",
+    "metrics": {
+      "duration_seconds": 1.030748299319728,
+      "rms_dbfs": -26.14,
+      "peak": 0.27597,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.22,
+      "trailing_silence_seconds": 0.06,
+      "longest_internal_pause_seconds": 0.06
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/costruiamo_ponti/assets/audio/it/too_short.wav.raw.wav",
+    "sha256": "4da14b740c8fbc2c1c69d0051cfb17980f7e61d49552cfd728030765a8d35f55",
+    "receipt_sha256": "ad655d04353b6982c7a3aaa5f03a6cbc8d6bee9dc1c49f69d1a583a110207d2c"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/costruiamo_ponti/assets/audio/it/too_short.wav.extracted.wav",
+    "sha256": "74c8e01da0504b6867242c5797311df3d7e847f8e5033535da96e2976f18bbc2"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/costruiamo_ponti/assets/audio/it/too_short.wav.raw.wav",
+    "source_sha256": "4da14b740c8fbc2c1c69d0051cfb17980f7e61d49552cfd728030765a8d35f55",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-extracted/activities/costruiamo_ponti/assets/audio/it/too_short.wav.extracted.wav",
+    "output_sha256": "74c8e01da0504b6867242c5797311df3d7e847f8e5033535da96e2976f18bbc2",
+    "target_request": {
+      "speaker": "tito",
+      "kind": "character_dialogue",
+      "text": "Troppo corto!",
+      "locale": "it",
+      "cue_id": "greia.requested.too_short.it",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/costruiamo_ponti/assets/audio/it/too_short.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "ad655d04353b6982c7a3aaa5f03a6cbc8d6bee9dc1c49f69d1a583a110207d2c"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "Troppo corto!",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Ascolta questa frase in italiano. Troppo corto.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " troppo corto",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.52
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.52,
+        "end_seconds": 0.82
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.82,
+        "end_seconds": 1.14
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.14,
+        "end_seconds": 1.32
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.32,
+        "end_seconds": 1.76
+      },
+      {
+        "word": "troppo",
+        "start_seconds": 2.2,
+        "end_seconds": 2.5
+      },
+      {
+        "word": "corto",
+        "start_seconds": 2.5,
+        "end_seconds": 3.02
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "troppo",
+        "start_seconds": 0.0,
+        "end_seconds": 0.52
+      },
+      {
+        "word": "corto",
+        "start_seconds": 0.52,
+        "end_seconds": 1.0
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.34914684295654297,
+        "no_speech_prob": 0.034973155707120895,
+        "compression_ratio": 0.8867924528301887,
+        "word_probabilities": [
+          0.82861328125,
+          0.9921875,
+          0.970703125,
+          0.98681640625,
+          0.99267578125,
+          0.9169921875,
+          0.83203125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.36744437898908344,
+        "no_speech_prob": 0.0807654857635498,
+        "compression_ratio": 0.6,
+        "word_probabilities": [
+          0.689453125,
+          0.939453125
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 55,
+    "extracted_voiced_seconds": 0.55,
+    "unremoved_raw_target_tokens": [
+      "troppo",
+      "corto"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "troppo",
+      "corto"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.0401814058956917,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.76,
+      "search_end_seconds": 2.2,
+      "prefix_last_word_end_seconds": 1.76,
+      "target_first_word_start_seconds": 2.2,
+      "gap_seconds": 0.27936507936507937,
+      "verified_silence_start_seconds": 1.869750566893424,
+      "verified_silence_end_seconds": 2.1491156462585033,
+      "gap_rms_dbfs": -57.745,
+      "gap_peak_dbfs": -37.245,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.0094331065759636,
+      "cut_sample": 44308,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/costruiamo_ponti/assets/audio/it/too_short.wav",
-    "bytes": 77702,
-    "sha256": "7ef6d0a1614d382df25b7bce769c3643efe45826bed63ad8a4bf1c73a67414ef"
+    "sha256": "88232fe3284dff009dd2486f55bf055259fc07fc2a992f1991314ad5c6c37364",
+    "bytes": 45534
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "6539792d32fdb062d2941f8da37e2b71ae002ce49b863b5fa22225e560e70eea",
+    "original_sha256": "7ef6d0a1614d382df25b7bce769c3643efe45826bed63ad8a4bf1c73a67414ef",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

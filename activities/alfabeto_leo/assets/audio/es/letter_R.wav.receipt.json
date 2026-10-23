@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T20:54:51.263620+00:00",
+  "created_utc": "2026-10-21T15:20:57.174688+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "R de Rana",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. R de Rana",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "R de Rana",
+    "cue_id": "alfabeto_leo.letter_R.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "R de Rana",
     "cue_id": "alfabeto_leo.letter_R.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/alfabeto_leo/assets/audio/es/letter_R.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261019-225445-6425a1f5",
-    "idempotency_key": "greia-31698b18d927449297ddaf111e113962",
+    "job_id": "20261021-172037-f1ac68f2",
+    "idempotency_key": "greia-e6166c18fb954e38bfb8c8566f394eb3",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,261 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 218433364,
+    "script_seed": 1192011756,
     "language_direction": "Spanish",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak naturally in Spanish. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3519173580,
-        "sha256": "3e78f55d1064ea9ed04ea03f03e3f7d4139fdf70b424b7b05704693bac4ddbe3",
+        "seed": 2758801310,
+        "sha256": "b6878534858a5e1aaa80b0b7471ba195428fc7cb1b538033d00d69b42441c85d",
         "generation": {
-          "elapsed_seconds": 5.2812681249924935,
+          "elapsed_seconds": 18.564858958001423,
           "model_load_seconds": 0.0,
-          "rtf": 4.125453554218847,
-          "peak_memory_gb": 8.21220922
+          "rtf": 4.834388861074109,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " R de rana.",
+    "metrics": {
+      "duration_seconds": 1.1921995464852608,
+      "rms_dbfs": -32.29,
+      "peak": 0.20624,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.14,
+      "trailing_silence_seconds": 0.04,
+      "longest_internal_pause_seconds": 0.0
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/alfabeto_leo/assets/audio/es/letter_R.wav.raw.wav",
+    "sha256": "75cef46d05baf8782e14412dc948fd8d140a5a23bf8919a6002ead66c6c22914",
+    "receipt_sha256": "d9ac989e9538707abade1116dc7b05ba37936bf6be79dbfb8b8e6c493e1ce297"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/assets/audio/es/letter_R.wav.extracted.wav",
+    "sha256": "eb3fa40efb0ec6c2e04b082b60428b271a339249dbc24687a7d680004e98edaa"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/assets/audio/es/letter_R.wav.delivery.wav",
+    "sha256": "1ec2dd19bed645cc74cf43e524c8d8b6300d198e95c42b09b0c2ca774822650d"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/alfabeto_leo/assets/audio/es/letter_R.wav.raw.wav",
+    "source_sha256": "75cef46d05baf8782e14412dc948fd8d140a5a23bf8919a6002ead66c6c22914",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/alfabeto_leo/assets/audio/es/letter_R.wav.extracted.wav",
+    "output_sha256": "eb3fa40efb0ec6c2e04b082b60428b271a339249dbc24687a7d680004e98edaa",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "R de Rana",
+      "locale": "es",
+      "cue_id": "alfabeto_leo.letter_R.es",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/alfabeto_leo/assets/audio/es/letter_R.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "d9ac989e9538707abade1116dc7b05ba37936bf6be79dbfb8b8e6c493e1ce297"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "R de Rana",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Escucha esta frase en español. R de rana.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " R de rana.",
+    "raw_word_alignment": [
+      {
+        "word": "escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.5
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.5,
+        "end_seconds": 0.88
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.88,
+        "end_seconds": 1.16
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.16,
+        "end_seconds": 1.42
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.42,
+        "end_seconds": 1.86
+      },
+      {
+        "word": "r",
+        "start_seconds": 2.8,
+        "end_seconds": 3.1
+      },
+      {
+        "word": "de",
+        "start_seconds": 3.1,
+        "end_seconds": 3.32
+      },
+      {
+        "word": "rana",
+        "start_seconds": 3.32,
+        "end_seconds": 3.72
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "r",
+        "start_seconds": 0.0,
+        "end_seconds": 0.78
+      },
+      {
+        "word": "de",
+        "start_seconds": 0.78,
+        "end_seconds": 0.96
+      },
+      {
+        "word": "rana",
+        "start_seconds": 0.96,
+        "end_seconds": 1.4
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5798093010397518,
+        "no_speech_prob": 0.02446615882217884,
+        "compression_ratio": 0.8571428571428571,
+        "word_probabilities": [
+          0.9248046875,
+          0.9853515625,
+          0.9970703125,
+          0.9794921875,
+          0.984375
+        ]
+      },
+      {
+        "avg_logprob": -0.5798093010397518,
+        "no_speech_prob": 0.02446615882217884,
+        "compression_ratio": 0.8571428571428571,
+        "word_probabilities": [
+          0.0811767578125,
+          0.60888671875,
+          0.84912109375
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.951189398765564,
+        "no_speech_prob": 0.2968812882900238,
+        "compression_ratio": 0.5555555555555556,
+        "word_probabilities": [
+          0.16650390625,
+          0.411376953125,
+          0.474609375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 83,
+    "extracted_voiced_seconds": 0.83,
+    "unremoved_raw_target_tokens": [
+      "r",
+      "de",
+      "rana"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "r",
+      "de",
+      "rana"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.8401814058956916,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.86,
+      "search_end_seconds": 2.8,
+      "prefix_last_word_end_seconds": 1.86,
+      "target_first_word_start_seconds": 2.8,
+      "gap_seconds": 0.8281179138321996,
+      "verified_silence_start_seconds": 1.9198639455782314,
+      "verified_silence_end_seconds": 2.747981859410431,
+      "gap_rms_dbfs": -60.18,
+      "gap_peak_dbfs": -37.99,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.333922902494331,
+      "cut_sample": 51463,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 6925,
+      "removed_seconds": 0.31405895691609975,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 58388,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/alfabeto_leo/assets/audio/es/letter_R.wav.delivery.wav",
+      "sha256": "1ec2dd19bed645cc74cf43e524c8d8b6300d198e95c42b09b0c2ca774822650d"
+    }
+  },
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/es/letter_R.wav",
-    "bytes": 56534,
-    "sha256": "f52ed1f7ddee040ec7730207d6bcf30c5d09d509dca81951ba2f0568cab470a3"
+    "sha256": "a96591e7eca8ff5b53dd85195f1242918a90b039402ef3713610e3ca41b04e95",
+    "bytes": 52654
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "74f3c9a5b343daa08fccc0c134ac3925449952f0d8cfcceef81a759205138d38",
+    "original_sha256": "e1baae16f2533b213a440d6801da33624111a54155064571fe6d260166a790fb",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

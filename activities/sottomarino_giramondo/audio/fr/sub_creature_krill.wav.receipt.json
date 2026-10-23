@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T15:40:09.717651+00:00",
+  "created_utc": "2026-10-23T02:17:44.143321+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
@@ -8,17 +8,22 @@
     "text": "Essaim de krill lumineux !",
     "cue_id": "voice.creature_krill.fr",
     "output": "activities/sottomarino_giramondo/audio/fr/sub_creature_krill.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic"
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-173956-35035e1d",
-    "idempotency_key": "greia-692d71eab39a40e09d5ffd8ab307b90b",
+    "job_id": "20261023-041728-860b132c",
+    "idempotency_key": "greia-289c0aa39754455c9b0ec67420595e81",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +46,352 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 354707710,
+    "script_seed": 875473972,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "effective_delivery": "Speak in French. Lecture chaleureuse et calme. Diction claire et naturelle.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3200280291,
-        "sha256": "e4e2f4e17a714883fde66e93755a122648281608ec89f1f57c326b15f41431d3",
+        "seed": 3878962792,
+        "sha256": "161ef485f8d97a3ef86f0ca9625032f146eaf80a6b3434698b2dd5b85cd40722",
         "generation": {
-          "elapsed_seconds": 13.03120237501571,
+          "elapsed_seconds": 13.487926582980435,
           "model_load_seconds": 0.0,
-          "rtf": 5.089982048700883,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.8316159035027986,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-audio-parakeet-tdt-v3",
+    "transcript": "Esign de krill lumineux.",
+    "score": 0.8434,
+    "detail": "Delivered target transcribed and screened; human listening remains pending",
+    "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+    "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+    "flags": [],
+    "metrics": {
+      "duration_seconds": 1.8401814058956916,
+      "rms_dbfs": -30.53,
+      "peak": 0.17679,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.08,
+      "trailing_silence_seconds": 0.2,
+      "longest_internal_pause_seconds": 0.02
+    }
   },
-  "attempts": 1,
+  "attempts": 2,
   "output": {
     "path": "activities/sottomarino_giramondo/audio/fr/sub_creature_krill.wav",
-    "bytes": 112982,
-    "sha256": "89933c7e6baa75c45c7d228e2b31edce3435ea0ba68cc81480bcf57f5b97c484"
+    "bytes": 81230,
+    "sha256": "79b673081ce46ee65c316fa0d29ec6e54a6c1d44bbf2b7cce6741e4b7fd163dd"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "short_phrase": {
+    "mode": "automatic-carrier",
+    "composition_policy": "natural-context-period-v1",
+    "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/df1e871f6e0b4f8281a6db636567bd69",
+    "prefix": "Nous allons parler ensemble.",
+    "composite_text": "Nous allons parler ensemble.\n\nEssaim de krill lumineux !",
+    "effective_delivery": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "extraction": {
+      "schema_version": 1,
+      "algorithm_version": "greia-spoken-carrier-extractor-v7",
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "status": "EXTRACTED_PENDING_LISTENING",
+      "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/df1e871f6e0b4f8281a6db636567bd69/attempt-02/raw.wav",
+      "source_sha256": "161ef485f8d97a3ef86f0ca9625032f146eaf80a6b3434698b2dd5b85cd40722",
+      "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/df1e871f6e0b4f8281a6db636567bd69/attempt-02/target.wav",
+      "output_sha256": "4d35c9fa72be58d31cf2672278fcdc76a263167336020a7d9aabd9b8f8a5332b",
+      "output_bytes": 176700,
+      "locale": "fr",
+      "prefix": "Nous allons parler ensemble.",
+      "target": "Essaim de krill lumineux !",
+      "remove_first_words": 4,
+      "ignore_accents": true,
+      "target_verification_requested": "warn",
+      "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+      "target_comparison_score": 0.8434,
+      "target_word_count_matches": true,
+      "target_numbers_match": true,
+      "target_comparison_flags": [],
+      "target_transcript_warning": true,
+      "recognizer": "mlx-audio-parakeet-tdt-v3",
+      "recognizer_version": "0.5.0",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "extracted_transcript": "Esign de krill lumineux.",
+      "expected_target_tokens": [
+        "essaim",
+        "de",
+        "krill",
+        "lumineux"
+      ],
+      "extracted_target_tokens": [
+        "esign",
+        "de",
+        "krill",
+        "lumineux"
+      ],
+      "extracted_target_exact_match": false,
+      "transcription_settings": {
+        "language_detection": "automatic",
+        "expected_text_prompt": null,
+        "timestamps": "model-provided-token-timestamps"
+      },
+      "sample_rate": 48000,
+      "duration_seconds": 3.520166666666667,
+      "boundary": {
+        "search_strategy": "target-only-global-quiet-run-v7",
+        "verified_silence_start_seconds": 1.22,
+        "verified_silence_end_seconds": 1.78,
+        "verified_silence_duration_seconds": 0.56,
+        "cut_sample": 80640,
+        "cut_time_seconds": 1.68,
+        "padding_seconds": 0.1,
+        "quiet_run_start_sample": 58560,
+        "quiet_run_end_sample": 85440,
+        "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+      },
+      "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/df1e871f6e0b4f8281a6db636567bd69/attempt-02/target.wav.search/cd1f84dd37cb4e2f91f921dc83db0d6b",
+      "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/df1e871f6e0b4f8281a6db636567bd69/attempt-02/target.wav.search/cd1f84dd37cb4e2f91f921dc83db0d6b/search.json",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/df1e871f6e0b4f8281a6db636567bd69/attempt-02/raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "14f6bc65d3ad8f9fd206b83fdf87edbca5eddd41cd2455c799e672078494342c",
+      "candidate_sha256": "4d35c9fa72be58d31cf2672278fcdc76a263167336020a7d9aabd9b8f8a5332b",
+      "candidate_id": "candidate-01",
+      "candidate_count": 1,
+      "qualifying_quiet_run_count": 1,
+      "candidate_results": [
+        {
+          "candidate_id": "candidate-01",
+          "quiet_run": {
+            "start_sample": 58560,
+            "end_sample": 85440,
+            "start_seconds": 1.22,
+            "end_seconds": 1.78,
+            "duration_seconds": 0.56
+          },
+          "cut_sample": 80640,
+          "cut_time_seconds": 1.68,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/df1e871f6e0b4f8281a6db636567bd69/attempt-02/target.wav.search/cd1f84dd37cb4e2f91f921dc83db0d6b/candidate-01.wav",
+          "preceding_voiced_seconds": 1.06,
+          "retained_voiced_seconds": 1.46,
+          "retained_duration_seconds": 1.8401666666666667,
+          "candidate_sha256": "4d35c9fa72be58d31cf2672278fcdc76a263167336020a7d9aabd9b8f8a5332b",
+          "extracted_transcript": "Esign de krill lumineux.",
+          "canonical_transcript_tokens": [
+            "esign",
+            "de",
+            "krill",
+            "lumineux"
+          ],
+          "exact_target_match": false,
+          "target_comparison_score": 0.8434,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": true,
+          "asr_segment_count": 1
+        }
+      ],
+      "human_review": "PENDING",
+      "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+      "delivery": {
+        "policy": "verified-carrier-gap-delivery-v1",
+        "removed_frames": 0,
+        "removed_seconds": 0.0,
+        "retained_verified_quiet_seconds": 0.1,
+        "raw_delivery_start_sample": 80640,
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/df1e871f6e0b4f8281a6db636567bd69/attempt-02/delivery-target.wav",
+        "sha256": "4d35c9fa72be58d31cf2672278fcdc76a263167336020a7d9aabd9b8f8a5332b"
+      }
+    },
+    "quality": {
+      "disposition": "PASS",
+      "score": 0.8434,
+      "transcript": "Esign de krill lumineux.",
+      "metrics": {
+        "duration_seconds": 1.8401814058956916,
+        "rms_dbfs": -30.53,
+        "peak": 0.17679,
+        "clipped_fraction": 0.0,
+        "leading_silence_seconds": 0.08,
+        "trailing_silence_seconds": 0.2,
+        "longest_internal_pause_seconds": 0.02
+      },
+      "flags": [],
+      "ignore_accents": true,
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "detail": "Delivered target transcribed and screened; human listening remains pending"
+    },
+    "history": [
+      {
+        "attempt": 1,
+        "status": "REJECTED_CUT",
+        "error": "no candidate suffix meets target verification policy",
+        "evidence": {
+          "candidate_transcripts": [
+            "S. Aïn de krill lumineux."
+          ],
+          "matching_candidate_ids": [],
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/df1e871f6e0b4f8281a6db636567bd69/attempt-01/target.wav.search/63a855f9fa9b4bf3ac3c07d287f67c8a",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/df1e871f6e0b4f8281a6db636567bd69/attempt-01/target.wav.search/63a855f9fa9b4bf3ac3c07d287f67c8a/search.json"
+        }
+      },
+      {
+        "attempt": 2,
+        "status": "PASS",
+        "quality": {
+          "disposition": "PASS",
+          "score": 0.8434,
+          "transcript": "Esign de krill lumineux.",
+          "metrics": {
+            "duration_seconds": 1.8401814058956916,
+            "rms_dbfs": -30.53,
+            "peak": 0.17679,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.08,
+            "trailing_silence_seconds": 0.2,
+            "longest_internal_pause_seconds": 0.02
+          },
+          "flags": [],
+          "ignore_accents": true,
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "detail": "Delivered target transcribed and screened; human listening remains pending"
+        },
+        "extraction": {
+          "schema_version": 1,
+          "algorithm_version": "greia-spoken-carrier-extractor-v7",
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "status": "EXTRACTED_PENDING_LISTENING",
+          "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/df1e871f6e0b4f8281a6db636567bd69/attempt-02/raw.wav",
+          "source_sha256": "161ef485f8d97a3ef86f0ca9625032f146eaf80a6b3434698b2dd5b85cd40722",
+          "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/df1e871f6e0b4f8281a6db636567bd69/attempt-02/target.wav",
+          "output_sha256": "4d35c9fa72be58d31cf2672278fcdc76a263167336020a7d9aabd9b8f8a5332b",
+          "output_bytes": 176700,
+          "locale": "fr",
+          "prefix": "Nous allons parler ensemble.",
+          "target": "Essaim de krill lumineux !",
+          "remove_first_words": 4,
+          "ignore_accents": true,
+          "target_verification_requested": "warn",
+          "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+          "target_comparison_score": 0.8434,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_transcript_warning": true,
+          "recognizer": "mlx-audio-parakeet-tdt-v3",
+          "recognizer_version": "0.5.0",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "extracted_transcript": "Esign de krill lumineux.",
+          "expected_target_tokens": [
+            "essaim",
+            "de",
+            "krill",
+            "lumineux"
+          ],
+          "extracted_target_tokens": [
+            "esign",
+            "de",
+            "krill",
+            "lumineux"
+          ],
+          "extracted_target_exact_match": false,
+          "transcription_settings": {
+            "language_detection": "automatic",
+            "expected_text_prompt": null,
+            "timestamps": "model-provided-token-timestamps"
+          },
+          "sample_rate": 48000,
+          "duration_seconds": 3.520166666666667,
+          "boundary": {
+            "search_strategy": "target-only-global-quiet-run-v7",
+            "verified_silence_start_seconds": 1.22,
+            "verified_silence_end_seconds": 1.78,
+            "verified_silence_duration_seconds": 0.56,
+            "cut_sample": 80640,
+            "cut_time_seconds": 1.68,
+            "padding_seconds": 0.1,
+            "quiet_run_start_sample": 58560,
+            "quiet_run_end_sample": 85440,
+            "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+          },
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/df1e871f6e0b4f8281a6db636567bd69/attempt-02/target.wav.search/cd1f84dd37cb4e2f91f921dc83db0d6b",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/df1e871f6e0b4f8281a6db636567bd69/attempt-02/target.wav.search/cd1f84dd37cb4e2f91f921dc83db0d6b/search.json",
+          "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/df1e871f6e0b4f8281a6db636567bd69/attempt-02/raw.wav.receipt.json",
+          "source_provider_receipt_sha256": "14f6bc65d3ad8f9fd206b83fdf87edbca5eddd41cd2455c799e672078494342c",
+          "candidate_sha256": "4d35c9fa72be58d31cf2672278fcdc76a263167336020a7d9aabd9b8f8a5332b",
+          "candidate_id": "candidate-01",
+          "candidate_count": 1,
+          "qualifying_quiet_run_count": 1,
+          "candidate_results": [
+            {
+              "candidate_id": "candidate-01",
+              "quiet_run": {
+                "start_sample": 58560,
+                "end_sample": 85440,
+                "start_seconds": 1.22,
+                "end_seconds": 1.78,
+                "duration_seconds": 0.56
+              },
+              "cut_sample": 80640,
+              "cut_time_seconds": 1.68,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/df1e871f6e0b4f8281a6db636567bd69/attempt-02/target.wav.search/cd1f84dd37cb4e2f91f921dc83db0d6b/candidate-01.wav",
+              "preceding_voiced_seconds": 1.06,
+              "retained_voiced_seconds": 1.46,
+              "retained_duration_seconds": 1.8401666666666667,
+              "candidate_sha256": "4d35c9fa72be58d31cf2672278fcdc76a263167336020a7d9aabd9b8f8a5332b",
+              "extracted_transcript": "Esign de krill lumineux.",
+              "canonical_transcript_tokens": [
+                "esign",
+                "de",
+                "krill",
+                "lumineux"
+              ],
+              "exact_target_match": false,
+              "target_comparison_score": 0.8434,
+              "target_word_count_matches": true,
+              "target_numbers_match": true,
+              "target_comparison_flags": [],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": true,
+              "asr_segment_count": 1
+            }
+          ],
+          "human_review": "PENDING",
+          "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+          "delivery": {
+            "policy": "verified-carrier-gap-delivery-v1",
+            "removed_frames": 0,
+            "removed_seconds": 0.0,
+            "retained_verified_quiet_seconds": 0.1,
+            "raw_delivery_start_sample": 80640,
+            "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/df1e871f6e0b4f8281a6db636567bd69/attempt-02/delivery-target.wav",
+            "sha256": "4d35c9fa72be58d31cf2672278fcdc76a263167336020a7d9aabd9b8f8a5332b"
+          }
+        },
+        "candidate": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/df1e871f6e0b4f8281a6db636567bd69/attempt-02/candidate.wav"
+      }
+    ]
+  },
   "corpus_replacement": {
-    "original_sha256": "3d654fa184319325ed5b435d72b4b99fbd391d8aebcc8f5e585e25f5ad7e6446",
+    "original_sha256": "7b03cb528301920725521c2f05130d82039d7001096f7de098dc0279f92c73fb",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

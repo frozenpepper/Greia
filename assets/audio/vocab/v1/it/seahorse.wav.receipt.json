@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T22:16:39.986666+00:00",
+  "created_utc": "2026-10-21T18:53:22.456820+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "Cavalluccio marino",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. Cavalluccio marino",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Cavalluccio marino",
+    "cue_id": "greia.vocab.seahorse.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Cavalluccio marino",
     "cue_id": "greia.vocab.seahorse.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "assets/audio/vocab/v1/it/seahorse.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261021-001632-2c934a70",
-    "idempotency_key": "greia-62c16cc615bf456da9d2fb2628da92c9",
+    "job_id": "20261021-205301-50535782",
+    "idempotency_key": "greia-c54ea5c615764ae1975d0fa4eb206467",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,234 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2796889547,
+    "script_seed": 2540649572,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
-    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 718704249,
-        "sha256": "87864d13a2ee492645b7aa1532bc98df9b6b239b77df4c2cfb2b175016ad84d7",
+        "seed": 3582994036,
+        "sha256": "5798dc07e3a7610023368d9811247edfcb9aea094192ed96df87e9199077e68b",
         "generation": {
-          "elapsed_seconds": 6.951363833999949,
+          "elapsed_seconds": 20.414446291993954,
           "model_load_seconds": 0.0,
-          "rtf": 4.344149880637401,
-          "peak_memory_gb": 5.436131172
+          "rtf": 5.547152653954247,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " Cavalluccio marino",
+    "metrics": {
+      "duration_seconds": 1.5560544217687076,
+      "rms_dbfs": -31.16,
+      "peak": 0.21893,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.34,
+      "trailing_silence_seconds": 0.08,
+      "longest_internal_pause_seconds": 0.02
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/vocab/v1/it/seahorse.wav.raw.wav",
+    "sha256": "68aacaadd41e69f57fdf13332eef9ac9da4b5eef2d7bd5772d79a5b6cc83cf2a",
+    "receipt_sha256": "55e37143d0bec433ae560fd2a8c797ffdb74b473c3868124545d0b8a7e8af39d"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/vocab/v1/it/seahorse.wav.extracted.wav",
+    "sha256": "8a3bd12d29555d0b7d7332ecad4217e507303006e8c74cb4e7ff1b6f39002744"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/assets/audio/vocab/v1/it/seahorse.wav.raw.wav",
+    "source_sha256": "68aacaadd41e69f57fdf13332eef9ac9da4b5eef2d7bd5772d79a5b6cc83cf2a",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-extracted/assets/audio/vocab/v1/it/seahorse.wav.extracted.wav",
+    "output_sha256": "8a3bd12d29555d0b7d7332ecad4217e507303006e8c74cb4e7ff1b6f39002744",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Cavalluccio marino",
+      "locale": "it",
+      "cue_id": "greia.vocab.seahorse.it",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/assets/audio/vocab/v1/it/seahorse.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "55e37143d0bec433ae560fd2a8c797ffdb74b473c3868124545d0b8a7e8af39d"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "Cavalluccio marino",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Ascolta questa frase in italiano. Cavalluccio marino.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Cavalluccio marino",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.5
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.5,
+        "end_seconds": 0.78
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.78,
+        "end_seconds": 1.08
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.08,
+        "end_seconds": 1.26
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.26,
+        "end_seconds": 1.74
+      },
+      {
+        "word": "cavalluccio",
+        "start_seconds": 2.5,
+        "end_seconds": 3.04
+      },
+      {
+        "word": "marino",
+        "start_seconds": 3.04,
+        "end_seconds": 3.5
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "cavalluccio",
+        "start_seconds": 0.0,
+        "end_seconds": 0.92
+      },
+      {
+        "word": "marino",
+        "start_seconds": 0.92,
+        "end_seconds": 1.38
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5580331802368164,
+        "no_speech_prob": 0.03687138110399246,
+        "compression_ratio": 0.9137931034482759,
+        "word_probabilities": [
+          0.7626953125,
+          0.982421875,
+          0.85107421875,
+          0.93359375,
+          0.98388671875
+        ]
+      },
+      {
+        "avg_logprob": -0.5580331802368164,
+        "no_speech_prob": 0.03687138110399246,
+        "compression_ratio": 0.9137931034482759,
+        "word_probabilities": [
+          0.8056640625,
+          0.74609375
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.3491198751661513,
+        "no_speech_prob": 0.15037168562412262,
+        "compression_ratio": 0.6923076923076923,
+        "word_probabilities": [
+          0.7939453125,
+          0.646484375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 105,
+    "extracted_voiced_seconds": 1.05,
+    "unremoved_raw_target_tokens": [
+      "cavalluccio",
+      "marino"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "cavalluccio",
+      "marino"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.6801814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.74,
+      "search_end_seconds": 2.5,
+      "prefix_last_word_end_seconds": 1.74,
+      "target_first_word_start_seconds": 2.5,
+      "gap_seconds": 0.6485260770975056,
+      "verified_silence_start_seconds": 1.7998639455782313,
+      "verified_silence_end_seconds": 2.448390022675737,
+      "gap_rms_dbfs": -70.296,
+      "gap_peak_dbfs": -48.582,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.1241269841269843,
+      "cut_sample": 46837,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "assets/audio/vocab/v1/it/seahorse.wav",
-    "bytes": 70646,
-    "sha256": "8413bc580d22cf01d0efe750bb94caffbd9ad43239777364d3c45ccb03170b0d"
+    "sha256": "05416400350d7f72ab4d35ca3b9e0c82d0f1a8e26dc22a18c202ed6073ff96a8",
+    "bytes": 68700
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "2997e1e847b1ba5ab678aa44d5e08a393793c0da0de626f3381c17e46eb39f31",
+    "original_sha256": "8413bc580d22cf01d0efe750bb94caffbd9ad43239777364d3c45ccb03170b0d",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

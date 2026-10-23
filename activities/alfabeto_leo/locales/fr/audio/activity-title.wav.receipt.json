@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T23:31:31.866347+00:00",
+  "created_utc": "2026-10-21T15:43:06.694783+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "L'ALPHABET DE LEO",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. L'ALPHABET DE LEO",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "L'ALPHABET DE LEO",
+    "cue_id": "alfabeto_leo.title.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "L'ALPHABET DE LEO",
     "cue_id": "alfabeto_leo.title.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/alfabeto_leo/locales/fr/audio/activity-title.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-013119-838734df",
-    "idempotency_key": "greia-ff888a69026d41869b278ba103ae3967",
+    "job_id": "20261021-174251-855c41c8",
+    "idempotency_key": "greia-71c89031e02c43a995631c79ee7639da",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,245 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2167517407,
+    "script_seed": 1096609449,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "effective_delivery": "Speak naturally in French. Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2772970213,
-        "sha256": "6c26f6d9d659cbf828322369cf4c109cc927c20b8edf26c897a003d434c9cc39",
+        "seed": 4008549244,
+        "sha256": "640f0f0479d79c5b55a52d51aac3e8c625b1d29acfc031c7776d6d9ec4c353d8",
         "generation": {
-          "elapsed_seconds": 11.779233417008072,
+          "elapsed_seconds": 14.386219791005715,
           "model_load_seconds": 0.0,
-          "rtf": 6.134484897322145,
-          "peak_memory_gb": 8.21220922
+          "rtf": 4.281400661972833,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " L'Alphabet de l'O.",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/alfabeto_leo/locales/fr/audio/activity-title.wav.raw.wav",
+    "sha256": "3bfa675592e1475db59b41eb2e59cb9f97b99601bc685c5d0c2291d83c417a4b",
+    "receipt_sha256": "76b0a8a3b30ef8edf1ca474c2e9ea32a4abf538803bb88f3c964b948b539673c"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/locales/fr/audio/activity-title.wav.extracted.wav",
+    "sha256": "f6d47f6aa0eb431204533350f4ae3615a5b4737e50f8601e75254f32ed8de5b4"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/alfabeto_leo/locales/fr/audio/activity-title.wav.raw.wav",
+    "source_sha256": "3bfa675592e1475db59b41eb2e59cb9f97b99601bc685c5d0c2291d83c417a4b",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/alfabeto_leo/locales/fr/audio/activity-title.wav.extracted.wav",
+    "output_sha256": "f6d47f6aa0eb431204533350f4ae3615a5b4737e50f8601e75254f32ed8de5b4",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "L'ALPHABET DE LEO",
+      "locale": "fr",
+      "cue_id": "alfabeto_leo.title.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/alfabeto_leo/locales/fr/audio/activity-title.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "76b0a8a3b30ef8edf1ca474c2e9ea32a4abf538803bb88f3c964b948b539673c"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "L'ALPHABET DE LEO",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français, l'alphabet de l'eau.",
+    "extracted_transcript": " L'Alphabet de l'O.",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.26
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.26,
+        "end_seconds": 0.6
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.6,
+        "end_seconds": 0.84
+      },
+      {
+        "word": "en",
+        "start_seconds": 0.84,
+        "end_seconds": 0.94
+      },
+      {
+        "word": "français",
+        "start_seconds": 0.94,
+        "end_seconds": 1.52
+      },
+      {
+        "word": "l",
+        "start_seconds": 2.22,
+        "end_seconds": 2.32
+      },
+      {
+        "word": "alphabet",
+        "start_seconds": 2.32,
+        "end_seconds": 2.68
+      },
+      {
+        "word": "de",
+        "start_seconds": 2.68,
+        "end_seconds": 3.02
+      },
+      {
+        "word": "l",
+        "start_seconds": 3.02,
+        "end_seconds": 3.22
+      },
+      {
+        "word": "eau",
+        "start_seconds": 3.22,
+        "end_seconds": 3.24
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "l",
+        "start_seconds": 0.0,
+        "end_seconds": 0.46
+      },
+      {
+        "word": "alphabet",
+        "start_seconds": 0.46,
+        "end_seconds": 0.84
+      },
+      {
+        "word": "de",
+        "start_seconds": 0.84,
+        "end_seconds": 1.16
+      },
+      {
+        "word": "l",
+        "start_seconds": 1.16,
+        "end_seconds": 1.32
+      },
+      {
+        "word": "o",
+        "start_seconds": 1.32,
+        "end_seconds": 1.46
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.4281396336025662,
+        "no_speech_prob": 0.007630188949406147,
+        "compression_ratio": 0.8793103448275862,
+        "word_probabilities": [
+          0.384521484375,
+          0.9267578125,
+          0.92138671875,
+          0.70654296875,
+          0.9443359375,
+          0.720703125,
+          0.67333984375,
+          0.93359375,
+          0.9638671875,
+          0.931640625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6864051818847656,
+        "no_speech_prob": 0.16045977175235748,
+        "compression_ratio": 0.6923076923076923,
+        "word_probabilities": [
+          0.53515625,
+          0.461669921875,
+          0.67041015625,
+          0.8232421875,
+          0.861328125
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 67,
+    "extracted_voiced_seconds": 0.67,
+    "unremoved_raw_target_tokens": [
+      "l'alphabet",
+      "de",
+      "l'eau"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "l",
+      "alphabet",
+      "de",
+      "l",
+      "eau"
+    ],
+    "raw_transcript_alignment_suffix_match": false,
+    "duration_seconds": 3.3601814058956916,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.52,
+      "target_first_word_start_seconds": 2.22,
+      "gap_seconds": 0.5886621315192744,
+      "verified_silence_start_seconds": 1.5798639455782313,
+      "verified_silence_end_seconds": 2.1685260770975057,
+      "gap_rms_dbfs": -59.66,
+      "gap_peak_dbfs": -36.505,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.8741950113378685,
+      "cut_sample": 41326,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/alfabeto_leo/locales/fr/audio/activity-title.wav",
-    "bytes": 84758,
-    "sha256": "e479d95e9fb1bfd6ca63e8831b1bd51964afd3bae0352fcc1217684f6fc9967d"
+    "sha256": "bb381da24f7dfda4899e42ae84bc68f3c7ae45ade6e0d96d0b605bf559e653a6",
+    "bytes": 65610
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "3a3bab047324b428f5fef629f5264745c791d3376b4e355274d4e4c3f835dcf2",
+    "original_sha256": "e479d95e9fb1bfd6ca63e8831b1bd51964afd3bae0352fcc1217684f6fc9967d",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

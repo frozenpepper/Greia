@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T15:36:53.309392+00:00",
+  "created_utc": "2026-10-21T17:12:28.383859+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "¡Alto! ¡Detén los motores!",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. ¡Alto! ¡Detén los motores!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "¡Alto! ¡Detén los motores!",
+    "cue_id": "voice.order.stop.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "¡Alto! ¡Detén los motores!",
     "cue_id": "voice.order.stop.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/sottomarino_giramondo/audio/es/sub_order_stop.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-173639-a6dfa6b3",
-    "idempotency_key": "greia-b2935b28586e4076b45e2867a21ec366",
+    "job_id": "20261021-191207-80a68d29",
+    "idempotency_key": "greia-0d00e73ace874dd69f37696655b491dc",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,221 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1711708109,
+    "script_seed": 366818313,
     "language_direction": "Spanish",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in Spanish. Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 274515207,
-        "sha256": "60c4052ac6967e9cf6968392d3ac9a6486c08b5b82d362f73cb8fa32ef0c9a1f",
+        "seed": 784012086,
+        "sha256": "035385f35059bf870a1e1609ac60bb422e00734552cd0b7e15e45bb2f7e45e62",
         "generation": {
-          "elapsed_seconds": 13.006159625016153,
+          "elapsed_seconds": 19.359721957996953,
           "model_load_seconds": 0.0,
-          "rtf": 5.41885686758537,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.5586633910720176,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": "alto, deten los motores",
+    "metrics": {
+      "duration_seconds": 2.6467573696145124,
+      "rms_dbfs": -35.2,
+      "peak": 0.22046,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.06,
+      "trailing_silence_seconds": 0.18,
+      "longest_internal_pause_seconds": 0.58
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v1",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/sottomarino_giramondo/audio/es/sub_order_stop.wav.raw.wav",
+    "sha256": "2fa61878cdd94d6ae4c391d5c8c3eb86f2feec3d578a53c27fc313ba68e6211b",
+    "receipt_sha256": "4c5cf2605e86b81c30be0a37e48547af8ba5ca01cb2382c0d7f1d55e54fa3866"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/sottomarino_giramondo/audio/es/sub_order_stop.wav.extracted.wav",
+    "sha256": "740afbffe74f5e79f06cc9a759a3585c39f1717497f15dcbc17162e06c73461b"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/sottomarino_giramondo/audio/es/sub_order_stop.wav.delivery.wav",
+    "sha256": "740afbffe74f5e79f06cc9a759a3585c39f1717497f15dcbc17162e06c73461b"
+  },
+  "extraction": {
+    "schema_version": 1,
+    "algorithm_version": "greia-spoken-carrier-extractor-v7",
+    "comparison_policy": "locale-number-tokens-v1",
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-raw/activities/sottomarino_giramondo/audio/es/sub_order_stop.wav.raw.wav",
+    "source_sha256": "2fa61878cdd94d6ae4c391d5c8c3eb86f2feec3d578a53c27fc313ba68e6211b",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/sottomarino_giramondo/audio/es/sub_order_stop.wav.extracted.wav",
+    "output_sha256": "740afbffe74f5e79f06cc9a759a3585c39f1717497f15dcbc17162e06c73461b",
+    "output_bytes": 116766,
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "¡Alto! ¡Detén los motores!",
+    "remove_first_words": 5,
+    "ignore_accents": true,
+    "target_verification_requested": "warn",
+    "target_verification_policy": "warn",
+    "target_comparison_score": 1.0,
+    "target_word_count_matches": true,
+    "target_numbers_match": true,
+    "target_comparison_flags": [],
+    "target_transcript_warning": false,
+    "recognizer": "mlx-whisper-base",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extracted_transcript": "alto, deten los motores",
+    "expected_target_tokens": [
+      "alto",
+      "deten",
+      "los",
+      "motores"
+    ],
+    "extracted_target_tokens": [
+      "alto",
+      "deten",
+      "los",
+      "motores"
+    ],
+    "extracted_target_exact_match": true,
+    "transcription_settings": {
+      "language": "es",
+      "initial_prompt": null,
+      "word_timestamps": true,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "sample_rate": 22050,
+    "duration_seconds": 5.440181405895691,
+    "boundary": {
+      "search_strategy": "target-only-global-quiet-run-v7",
+      "verified_silence_start_seconds": 1.9854875283446711,
+      "verified_silence_end_seconds": 2.893424036281179,
+      "verified_silence_duration_seconds": 0.9079365079365079,
+      "cut_sample": 61595,
+      "cut_time_seconds": 2.7934240362811793,
+      "padding_seconds": 0.1,
+      "quiet_run_start_sample": 43780,
+      "quiet_run_end_sample": 63800,
+      "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+    },
+    "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/sottomarino_giramondo/audio/es/sub_order_stop.wav.extracted.wav.search/5180c0d93dc246168060cf42726d4f41",
+    "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/sottomarino_giramondo/audio/es/sub_order_stop.wav.extracted.wav.search/5180c0d93dc246168060cf42726d4f41/search.json",
+    "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-raw/activities/sottomarino_giramondo/audio/es/sub_order_stop.wav.raw.wav.receipt.json",
+    "source_provider_receipt_sha256": "4c5cf2605e86b81c30be0a37e48547af8ba5ca01cb2382c0d7f1d55e54fa3866",
+    "candidate_sha256": "740afbffe74f5e79f06cc9a759a3585c39f1717497f15dcbc17162e06c73461b",
+    "candidate_id": "candidate-01",
+    "candidate_count": 2,
+    "qualifying_quiet_run_count": 2,
+    "candidate_results": [
+      {
+        "candidate_id": "candidate-01",
+        "quiet_run": {
+          "start_sample": 43780,
+          "end_sample": 63800,
+          "start_seconds": 1.9854875283446711,
+          "end_seconds": 2.893424036281179,
+          "duration_seconds": 0.9079365079365079
+        },
+        "cut_sample": 61595,
+        "cut_time_seconds": 2.7934240362811793,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/sottomarino_giramondo/audio/es/sub_order_stop.wav.extracted.wav.search/5180c0d93dc246168060cf42726d4f41/candidate-01.wav",
+        "preceding_voiced_seconds": 1.24,
+        "retained_voiced_seconds": 1.2,
+        "retained_duration_seconds": 2.6467573696145124,
+        "candidate_sha256": "740afbffe74f5e79f06cc9a759a3585c39f1717497f15dcbc17162e06c73461b",
+        "extracted_transcript": "alto, deten los motores",
+        "canonical_transcript_tokens": [
+          "alto",
+          "deten",
+          "los",
+          "motores"
+        ],
+        "exact_target_match": true,
+        "target_comparison_score": 1.0,
+        "target_word_count_matches": true,
+        "target_numbers_match": true,
+        "target_comparison_flags": [],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": true,
+        "asr_segment_count": 1
+      },
+      {
+        "candidate_id": "candidate-02",
+        "quiet_run": {
+          "start_sample": 74800,
+          "end_sample": 90640,
+          "start_seconds": 3.3922902494331066,
+          "end_seconds": 4.110657596371882,
+          "duration_seconds": 0.7183673469387755
+        },
+        "cut_sample": 88435,
+        "cut_time_seconds": 4.010657596371882,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/sottomarino_giramondo/audio/es/sub_order_stop.wav.extracted.wav.search/5180c0d93dc246168060cf42726d4f41/candidate-02.wav",
+        "preceding_voiced_seconds": 1.57,
+        "retained_voiced_seconds": 0.86,
+        "retained_duration_seconds": 1.4295238095238094,
+        "candidate_sha256": "cb04ccedc5652b0d716412af2962d30cd9a99e588a510e1ab3764a56a377d5c7",
+        "extracted_transcript": "Deten los motores.",
+        "canonical_transcript_tokens": [
+          "deten",
+          "los",
+          "motores"
+        ],
+        "exact_target_match": false,
+        "target_comparison_score": 0.8667,
+        "target_word_count_matches": false,
+        "target_numbers_match": true,
+        "target_comparison_flags": [
+          "TARGET_WORD_COUNT_MISMATCH"
+        ],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": false,
+        "asr_segment_count": 1
+      }
+    ],
+    "human_review": "PENDING",
+    "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+    "target_verification_effective_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+    "target_verification_warning": false,
+    "saved_recovery_policy": "target-only-v7-saved-v1",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 0,
+      "removed_seconds": 0.0,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 61595,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/sottomarino_giramondo/audio/es/sub_order_stop.wav.delivery.wav",
+      "sha256": "740afbffe74f5e79f06cc9a759a3585c39f1717497f15dcbc17162e06c73461b"
+    }
+  },
   "output": {
     "path": "activities/sottomarino_giramondo/audio/es/sub_order_stop.wav",
-    "bytes": 105926,
-    "sha256": "7b9f8e7c13cab3b2cde2bd6b7512ad24a6417dc5f9b644305398440fc874b6f0"
+    "sha256": "1d3fd55e82fa0767f7d9a8bb864b74dd5c8543c28aafce73b63e3acfe3670c42",
+    "bytes": 116800
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "235ba858071cc29ba7b4d17d70933a8b51ee79f5ca94c3ff823eb5e73d74ec89",
+    "original_sha256": "b8a7a165d562f3b1c155f934ac5494c9df754d1a66565916ad3d07b73718a104",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

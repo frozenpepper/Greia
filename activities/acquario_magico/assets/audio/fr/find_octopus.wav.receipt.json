@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T07:48:41.972430+00:00",
+  "created_utc": "2026-10-22T17:12:34.604492+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
@@ -8,17 +8,21 @@
     "text": "Trouve la petite pieuvre",
     "cue_id": "greia.requested.find_octopus.fr",
     "output": "activities/acquario_magico/assets/audio/fr/find_octopus.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.tito.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261021-094832-2c204a08",
-    "idempotency_key": "greia-f6a88c1a6ec54d288da392495dda941a",
+    "job_id": "20261022-191219-635049eb",
+    "idempotency_key": "greia-e7ecb6015ab14927bc005a32677b25c3",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +45,343 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 996726758,
+    "script_seed": 2524963546,
     "language_direction": "French",
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in French. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "effective_delivery": "Speak in French. Lecture chaleureuse et calme. Diction claire et naturelle.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2888251799,
-        "sha256": "6ac96cc4f0d178e0308d3298fa8f3ba7a20c0996c1c606ed88c4d355c6f56acf",
+        "seed": 3455490809,
+        "sha256": "8e0f92bd96a1c557357fedc44fe27e437265390cff66c7b13f42abc8a90d9f42",
         "generation": {
-          "elapsed_seconds": 6.386047040999983,
+          "elapsed_seconds": 12.6492009999929,
           "model_load_seconds": 0.0,
-          "rtf": 4.43424166716814,
-          "peak_memory_gb": 7.648166916
+          "rtf": 3.764456425770418,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-base",
+    "transcript": " Trouve la petite pieuvre.",
+    "score": 1.0,
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "ignore_accents": true
   },
-  "attempts": 1,
+  "attempts": 2,
   "output": {
     "path": "activities/acquario_magico/assets/audio/fr/find_octopus.wav",
-    "bytes": 63590,
-    "sha256": "7d45d622a3c4d957e7226d0f3f471618c7b3d0844a392d00006279a9fc41fff1"
+    "bytes": 65354,
+    "sha256": "4606c423049a83e59e96bf409f2153b75503ed265eb09fd7ce1ae3fd612921b0"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "short_phrase": {
+    "mode": "automatic-carrier",
+    "composition_policy": "natural-context-period-v1",
+    "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-v1/automatic-evidence/568cce1a963541c8b6eeec5048a77410",
+    "prefix": "Nous allons chercher ensemble.",
+    "composite_text": "Nous allons chercher ensemble.\n\nTrouve la petite pieuvre",
+    "effective_delivery": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "extraction": {
+      "schema_version": 1,
+      "algorithm_version": "greia-spoken-carrier-extractor-v7",
+      "comparison_policy": "locale-number-tokens-v2",
+      "status": "EXTRACTED_PENDING_LISTENING",
+      "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-v1/automatic-evidence/568cce1a963541c8b6eeec5048a77410/attempt-02/raw.wav",
+      "source_sha256": "8e0f92bd96a1c557357fedc44fe27e437265390cff66c7b13f42abc8a90d9f42",
+      "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-v1/automatic-evidence/568cce1a963541c8b6eeec5048a77410/attempt-02/target.wav",
+      "output_sha256": "683201b51ad9adce53d52ad53f17aa0fcd844c158c6b332a9c255184f9766628",
+      "output_bytes": 142140,
+      "locale": "fr",
+      "prefix": "Nous allons chercher ensemble.",
+      "target": "Trouve la petite pieuvre",
+      "remove_first_words": 4,
+      "ignore_accents": true,
+      "target_verification_requested": "warn",
+      "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+      "target_comparison_score": 1.0,
+      "target_word_count_matches": true,
+      "target_numbers_match": true,
+      "target_comparison_flags": [],
+      "target_transcript_warning": false,
+      "recognizer": "mlx-whisper-base",
+      "recognizer_version": "0.4.3",
+      "model_id": "mlx-community/whisper-base-mlx",
+      "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+      "extracted_transcript": "Trouve la petite pieuvre.",
+      "expected_target_tokens": [
+        "trouve",
+        "la",
+        "petite",
+        "pieuvre"
+      ],
+      "extracted_target_tokens": [
+        "trouve",
+        "la",
+        "petite",
+        "pieuvre"
+      ],
+      "extracted_target_exact_match": true,
+      "transcription_settings": {
+        "language": "fr",
+        "initial_prompt": null,
+        "word_timestamps": true,
+        "temperature": 0.0,
+        "condition_on_previous_text": false
+      },
+      "sample_rate": 48000,
+      "duration_seconds": 3.3601666666666667,
+      "boundary": {
+        "search_strategy": "target-only-global-quiet-run-v7",
+        "verified_silence_start_seconds": 1.49,
+        "verified_silence_end_seconds": 1.98,
+        "verified_silence_duration_seconds": 0.49,
+        "cut_sample": 90240,
+        "cut_time_seconds": 1.88,
+        "padding_seconds": 0.1,
+        "quiet_run_start_sample": 71520,
+        "quiet_run_end_sample": 95040,
+        "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+      },
+      "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-v1/automatic-evidence/568cce1a963541c8b6eeec5048a77410/attempt-02/target.wav.search/d5e4c1e94d3b43acb670e8e0f96fb7be",
+      "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-v1/automatic-evidence/568cce1a963541c8b6eeec5048a77410/attempt-02/target.wav.search/d5e4c1e94d3b43acb670e8e0f96fb7be/search.json",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-v1/automatic-evidence/568cce1a963541c8b6eeec5048a77410/attempt-02/raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "5bc738b89e45f7d70ea308ad8f3e0b82b09bea3e3ead452086d71f4cad799ace",
+      "candidate_sha256": "683201b51ad9adce53d52ad53f17aa0fcd844c158c6b332a9c255184f9766628",
+      "candidate_id": "candidate-01",
+      "candidate_count": 1,
+      "qualifying_quiet_run_count": 1,
+      "candidate_results": [
+        {
+          "candidate_id": "candidate-01",
+          "quiet_run": {
+            "start_sample": 71520,
+            "end_sample": 95040,
+            "start_seconds": 1.49,
+            "end_seconds": 1.98,
+            "duration_seconds": 0.49
+          },
+          "cut_sample": 90240,
+          "cut_time_seconds": 1.88,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-v1/automatic-evidence/568cce1a963541c8b6eeec5048a77410/attempt-02/target.wav.search/d5e4c1e94d3b43acb670e8e0f96fb7be/candidate-01.wav",
+          "preceding_voiced_seconds": 1.44,
+          "retained_voiced_seconds": 0.85,
+          "retained_duration_seconds": 1.4801666666666666,
+          "candidate_sha256": "683201b51ad9adce53d52ad53f17aa0fcd844c158c6b332a9c255184f9766628",
+          "extracted_transcript": "Trouve la petite pieuvre.",
+          "canonical_transcript_tokens": [
+            "trouve",
+            "la",
+            "petite",
+            "pieuvre"
+          ],
+          "exact_target_match": true,
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": true,
+          "asr_segment_count": 1
+        }
+      ],
+      "human_review": "PENDING",
+      "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+      "delivery": {
+        "policy": "verified-carrier-gap-delivery-v1",
+        "removed_frames": 0,
+        "removed_seconds": 0.0,
+        "retained_verified_quiet_seconds": 0.1,
+        "raw_delivery_start_sample": 90240,
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-v1/automatic-evidence/568cce1a963541c8b6eeec5048a77410/attempt-02/delivery-target.wav",
+        "sha256": "683201b51ad9adce53d52ad53f17aa0fcd844c158c6b332a9c255184f9766628"
+      }
+    },
+    "quality": {
+      "disposition": "PASS",
+      "score": 1.0,
+      "transcript": " Trouve la petite pieuvre.",
+      "metrics": {
+        "duration_seconds": 1.4801814058956917,
+        "rms_dbfs": -29.37,
+        "peak": 0.19513,
+        "clipped_fraction": 0.0,
+        "leading_silence_seconds": 0.1,
+        "trailing_silence_seconds": 0.02,
+        "longest_internal_pause_seconds": 0.08
+      },
+      "flags": [],
+      "ignore_accents": true,
+      "comparison_policy": "locale-number-tokens-v2",
+      "model_id": "mlx-community/whisper-base-mlx",
+      "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+      "detail": "Packaged target scored with Base; human listening remains pending"
+    },
+    "history": [
+      {
+        "attempt": 1,
+        "status": "REJECTED_CUT",
+        "error": "no candidate suffix meets target verification policy",
+        "evidence": {
+          "candidate_transcripts": [],
+          "matching_candidate_ids": [],
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-v1/automatic-evidence/568cce1a963541c8b6eeec5048a77410/attempt-01/target.wav.search/8e7287c4d235402ba76c93a36517b4bb",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-v1/automatic-evidence/568cce1a963541c8b6eeec5048a77410/attempt-01/target.wav.search/8e7287c4d235402ba76c93a36517b4bb/search.json"
+        }
+      },
+      {
+        "attempt": 2,
+        "status": "PASS",
+        "quality": {
+          "disposition": "PASS",
+          "score": 1.0,
+          "transcript": " Trouve la petite pieuvre.",
+          "metrics": {
+            "duration_seconds": 1.4801814058956917,
+            "rms_dbfs": -29.37,
+            "peak": 0.19513,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.1,
+            "trailing_silence_seconds": 0.02,
+            "longest_internal_pause_seconds": 0.08
+          },
+          "flags": [],
+          "ignore_accents": true,
+          "comparison_policy": "locale-number-tokens-v2",
+          "model_id": "mlx-community/whisper-base-mlx",
+          "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+          "detail": "Packaged target scored with Base; human listening remains pending"
+        },
+        "extraction": {
+          "schema_version": 1,
+          "algorithm_version": "greia-spoken-carrier-extractor-v7",
+          "comparison_policy": "locale-number-tokens-v2",
+          "status": "EXTRACTED_PENDING_LISTENING",
+          "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-v1/automatic-evidence/568cce1a963541c8b6eeec5048a77410/attempt-02/raw.wav",
+          "source_sha256": "8e0f92bd96a1c557357fedc44fe27e437265390cff66c7b13f42abc8a90d9f42",
+          "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-v1/automatic-evidence/568cce1a963541c8b6eeec5048a77410/attempt-02/target.wav",
+          "output_sha256": "683201b51ad9adce53d52ad53f17aa0fcd844c158c6b332a9c255184f9766628",
+          "output_bytes": 142140,
+          "locale": "fr",
+          "prefix": "Nous allons chercher ensemble.",
+          "target": "Trouve la petite pieuvre",
+          "remove_first_words": 4,
+          "ignore_accents": true,
+          "target_verification_requested": "warn",
+          "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_transcript_warning": false,
+          "recognizer": "mlx-whisper-base",
+          "recognizer_version": "0.4.3",
+          "model_id": "mlx-community/whisper-base-mlx",
+          "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+          "extracted_transcript": "Trouve la petite pieuvre.",
+          "expected_target_tokens": [
+            "trouve",
+            "la",
+            "petite",
+            "pieuvre"
+          ],
+          "extracted_target_tokens": [
+            "trouve",
+            "la",
+            "petite",
+            "pieuvre"
+          ],
+          "extracted_target_exact_match": true,
+          "transcription_settings": {
+            "language": "fr",
+            "initial_prompt": null,
+            "word_timestamps": true,
+            "temperature": 0.0,
+            "condition_on_previous_text": false
+          },
+          "sample_rate": 48000,
+          "duration_seconds": 3.3601666666666667,
+          "boundary": {
+            "search_strategy": "target-only-global-quiet-run-v7",
+            "verified_silence_start_seconds": 1.49,
+            "verified_silence_end_seconds": 1.98,
+            "verified_silence_duration_seconds": 0.49,
+            "cut_sample": 90240,
+            "cut_time_seconds": 1.88,
+            "padding_seconds": 0.1,
+            "quiet_run_start_sample": 71520,
+            "quiet_run_end_sample": 95040,
+            "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+          },
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-v1/automatic-evidence/568cce1a963541c8b6eeec5048a77410/attempt-02/target.wav.search/d5e4c1e94d3b43acb670e8e0f96fb7be",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-v1/automatic-evidence/568cce1a963541c8b6eeec5048a77410/attempt-02/target.wav.search/d5e4c1e94d3b43acb670e8e0f96fb7be/search.json",
+          "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-v1/automatic-evidence/568cce1a963541c8b6eeec5048a77410/attempt-02/raw.wav.receipt.json",
+          "source_provider_receipt_sha256": "5bc738b89e45f7d70ea308ad8f3e0b82b09bea3e3ead452086d71f4cad799ace",
+          "candidate_sha256": "683201b51ad9adce53d52ad53f17aa0fcd844c158c6b332a9c255184f9766628",
+          "candidate_id": "candidate-01",
+          "candidate_count": 1,
+          "qualifying_quiet_run_count": 1,
+          "candidate_results": [
+            {
+              "candidate_id": "candidate-01",
+              "quiet_run": {
+                "start_sample": 71520,
+                "end_sample": 95040,
+                "start_seconds": 1.49,
+                "end_seconds": 1.98,
+                "duration_seconds": 0.49
+              },
+              "cut_sample": 90240,
+              "cut_time_seconds": 1.88,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-v1/automatic-evidence/568cce1a963541c8b6eeec5048a77410/attempt-02/target.wav.search/d5e4c1e94d3b43acb670e8e0f96fb7be/candidate-01.wav",
+              "preceding_voiced_seconds": 1.44,
+              "retained_voiced_seconds": 0.85,
+              "retained_duration_seconds": 1.4801666666666666,
+              "candidate_sha256": "683201b51ad9adce53d52ad53f17aa0fcd844c158c6b332a9c255184f9766628",
+              "extracted_transcript": "Trouve la petite pieuvre.",
+              "canonical_transcript_tokens": [
+                "trouve",
+                "la",
+                "petite",
+                "pieuvre"
+              ],
+              "exact_target_match": true,
+              "target_comparison_score": 1.0,
+              "target_word_count_matches": true,
+              "target_numbers_match": true,
+              "target_comparison_flags": [],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": true,
+              "asr_segment_count": 1
+            }
+          ],
+          "human_review": "PENDING",
+          "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+          "delivery": {
+            "policy": "verified-carrier-gap-delivery-v1",
+            "removed_frames": 0,
+            "removed_seconds": 0.0,
+            "retained_verified_quiet_seconds": 0.1,
+            "raw_delivery_start_sample": 90240,
+            "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-v1/automatic-evidence/568cce1a963541c8b6eeec5048a77410/attempt-02/delivery-target.wav",
+            "sha256": "683201b51ad9adce53d52ad53f17aa0fcd844c158c6b332a9c255184f9766628"
+          }
+        },
+        "candidate": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-v1/automatic-evidence/568cce1a963541c8b6eeec5048a77410/attempt-02/candidate.wav"
+      }
+    ]
+  },
   "corpus_replacement": {
-    "original_sha256": "2c900bbad1beb705e164147b7e534d7dea946011fa60eafe6892d11fbf3799c4",
+    "original_sha256": "3c0a287aff60172216b07fbce6cf8e094a4ebcf4dec17834976c5a43278dfede",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

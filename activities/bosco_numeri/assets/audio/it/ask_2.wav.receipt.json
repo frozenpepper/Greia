@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T08:17:06.246904+00:00",
+  "created_utc": "2026-10-21T15:48:39.679104+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "Dov'è il numero 2?",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. Dov'è il numero 2?",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Dov'è il numero 2?",
+    "cue_id": "bosco_numeri.ask_2",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Dov'è il numero 2?",
     "cue_id": "bosco_numeri.ask_2",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/bosco_numeri/assets/audio/it/ask_2.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.tito.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261021-101701-437956ee",
-    "idempotency_key": "greia-23dc32d9a4e84918b0b0043f99ef3425",
+    "job_id": "20261021-174823-9e390698",
+    "idempotency_key": "greia-96bad50399f3403b827b8dd4845cc88a",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,255 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3310005672,
+    "script_seed": 2917045762,
     "language_direction": "Italian",
-    "delivery_prompt": "Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
-    "effective_delivery": "Speak in Italian. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 258255217,
-        "sha256": "a9a3b0da2fe9ce873ce8616629ff4f990006888d852489810d3b6daf2d994235",
+        "seed": 2178944347,
+        "sha256": "419baee22600bf3252aacfc3a3ceee3fb2c00b181ae96183aa5b62cadd92c94e",
         "generation": {
-          "elapsed_seconds": 4.744899707999139,
+          "elapsed_seconds": 15.929512917005923,
           "model_load_seconds": 0.0,
-          "rtf": 3.706470283556156,
-          "peak_memory_gb": 7.648166916
+          "rtf": 4.328475952268264,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8636,
+    "transcript": " Dove il numero 2",
+    "metrics": {
+      "duration_seconds": 1.650748299319728,
+      "rms_dbfs": -23.83,
+      "peak": 0.26971,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.3,
+      "trailing_silence_seconds": 0.18,
+      "longest_internal_pause_seconds": 0.0
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/bosco_numeri/assets/audio/it/ask_2.wav.raw.wav",
+    "sha256": "56dcbb15387cf9bdbd014134590b6d867b4bccbfe12a4c0e12ec26bfe717a5bb",
+    "receipt_sha256": "86c5ed0805a745a150ff264855142ad131ace069985868241175dee20051d269"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/bosco_numeri/assets/audio/it/ask_2.wav.extracted.wav",
+    "sha256": "dde61d0a587f2ce0c4b9feee29a9ba4f7ec537caba1b2f233a09078f1898145c"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/bosco_numeri/assets/audio/it/ask_2.wav.raw.wav",
+    "source_sha256": "56dcbb15387cf9bdbd014134590b6d867b4bccbfe12a4c0e12ec26bfe717a5bb",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-extracted/activities/bosco_numeri/assets/audio/it/ask_2.wav.extracted.wav",
+    "output_sha256": "dde61d0a587f2ce0c4b9feee29a9ba4f7ec537caba1b2f233a09078f1898145c",
+    "target_request": {
+      "speaker": "tito",
+      "kind": "character_dialogue",
+      "text": "Dov'è il numero 2?",
+      "locale": "it",
+      "cue_id": "bosco_numeri.ask_2",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/bosco_numeri/assets/audio/it/ask_2.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "86c5ed0805a745a150ff264855142ad131ace069985868241175dee20051d269"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "Dov'è il numero 2?",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " ascolta questa frase in italiano. Dove il numero due?",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Dove il numero 2",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.56
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.56,
+        "end_seconds": 0.82
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.82,
+        "end_seconds": 1.08
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.08,
+        "end_seconds": 1.28
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.28,
+        "end_seconds": 1.78
+      },
+      {
+        "word": "dove",
+        "start_seconds": 2.24,
+        "end_seconds": 2.64
+      },
+      {
+        "word": "il",
+        "start_seconds": 2.64,
+        "end_seconds": 2.82
+      },
+      {
+        "word": "numero",
+        "start_seconds": 2.82,
+        "end_seconds": 3.04
+      },
+      {
+        "word": "due",
+        "start_seconds": 3.04,
+        "end_seconds": 3.4
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "dove",
+        "start_seconds": 0.0,
+        "end_seconds": 0.64
+      },
+      {
+        "word": "il",
+        "start_seconds": 0.64,
+        "end_seconds": 0.78
+      },
+      {
+        "word": "numero",
+        "start_seconds": 0.78,
+        "end_seconds": 1.0
+      },
+      {
+        "word": "2",
+        "start_seconds": 1.0,
+        "end_seconds": 1.34
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.4673597952898811,
+        "no_speech_prob": 0.013617184944450855,
+        "compression_ratio": 0.9137931034482759,
+        "word_probabilities": [
+          0.5673828125,
+          0.99658203125,
+          0.9736328125,
+          0.98779296875,
+          0.9931640625,
+          0.9462890625,
+          0.9453125,
+          0.97216796875,
+          0.85400390625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.37279772758483887,
+        "no_speech_prob": 0.1389094740152359,
+        "compression_ratio": 0.6666666666666666,
+        "word_probabilities": [
+          0.853515625,
+          0.640625,
+          0.9599609375,
+          0.447265625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 114,
+    "extracted_voiced_seconds": 1.14,
+    "unremoved_raw_target_tokens": [
+      "dove",
+      "il",
+      "numero",
+      "due"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "dove",
+      "il",
+      "numero",
+      "due"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.6801814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.78,
+      "search_end_seconds": 2.24,
+      "prefix_last_word_end_seconds": 1.78,
+      "target_first_word_start_seconds": 2.24,
+      "gap_seconds": 0.31927437641723355,
+      "verified_silence_start_seconds": 1.869795918367347,
+      "verified_silence_end_seconds": 2.1890702947845804,
+      "gap_rms_dbfs": -57.964,
+      "gap_peak_dbfs": -39.063,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.0294331065759637,
+      "cut_sample": 44749,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/bosco_numeri/assets/audio/it/ask_2.wav",
-    "bytes": 56534,
-    "sha256": "a576a88af7be3e4c111a5206e9cd8e44b8b7bd7b159fef4b7bea011880216281"
+    "sha256": "7e009f37dffb405b7e8c1627f76f65fefe81082961e218a336952d28bb0d5f2e",
+    "bytes": 72876
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "593e28198cd24cfb8fa6da72b8d954daf0d5ac2201b637ce617dad310e848812",
+    "original_sha256": "5490b0472d0556f9e4a48eca24a682b7c31ccacd27f45775ec32545cafc8cbf1",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

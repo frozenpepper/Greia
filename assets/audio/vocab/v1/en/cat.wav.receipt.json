@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T20:24:30.659835+00:00",
+  "created_utc": "2026-10-21T18:33:28.724766+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Listen to this phrase in English.",
+    "prefix_word_count": 6,
+    "target": "cat",
+    "target_word_count": 1,
+    "target_verification": "warn",
+    "composite_text": "Listen to this phrase in English. cat",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "cat",
+    "cue_id": "festa_delle_rime.cat.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "cat",
     "cue_id": "festa_delle_rime.cat.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "assets/audio/vocab/v1/en/cat.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-222426-03528cdd",
-    "idempotency_key": "greia-d302495843724091be8185dbdf71ded0",
+    "job_id": "20261021-203314-a5c67dfd",
+    "idempotency_key": "greia-4b36b3619c6a4379a53a2bbeab85871f",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,239 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1097838270,
+    "script_seed": 2510782954,
     "language_direction": "English",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
-    "effective_delivery": "Speak in English. Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in English. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 995904270,
-        "sha256": "e00f68dd4e6d26ce1fa4f3dc49b0b2f59a8f2f8e72882a8324d1c009157165a9",
+        "seed": 1237288764,
+        "sha256": "15879529a6f9aa4d68b3ddafeb3bf64115fca49ff074478a6eb91ebe29ccc838",
         "generation": {
-          "elapsed_seconds": 3.898029666976072,
+          "elapsed_seconds": 13.375191667000763,
           "model_load_seconds": 0.0,
-          "rtf": 6.089085655260722,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.980514359506204,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " Cat",
+    "metrics": {
+      "duration_seconds": 1.0117460317460318,
+      "rms_dbfs": -37.58,
+      "peak": 0.16583,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.3,
+      "trailing_silence_seconds": 0.24,
+      "longest_internal_pause_seconds": 0.04
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/vocab/v1/en/cat.wav.raw.wav",
+    "sha256": "7182d25488cfeaf5bd9d3131ff2905eb7d9b91e4984b0cae05cd56886a676d1e",
+    "receipt_sha256": "9e4ba4a13350b08fd1414f05e2646d5247624504e1dc6d06ecaa3ab4cca605de"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/vocab/v1/en/cat.wav.extracted.wav",
+    "sha256": "644bfb8da1bb33e5b62ce3b6db68c60da5361e66e25e755e193f93dc53d63f9f"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/assets/audio/vocab/v1/en/cat.wav.delivery.wav",
+    "sha256": "7c48463c3934fd68bd27d2b1337cde48a1055855435147fc9025d165ac547c35"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/assets/audio/vocab/v1/en/cat.wav.raw.wav",
+    "source_sha256": "7182d25488cfeaf5bd9d3131ff2905eb7d9b91e4984b0cae05cd56886a676d1e",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/assets/audio/vocab/v1/en/cat.wav.extracted.wav",
+    "output_sha256": "644bfb8da1bb33e5b62ce3b6db68c60da5361e66e25e755e193f93dc53d63f9f",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "cat",
+      "locale": "en",
+      "cue_id": "festa_delle_rime.cat.en",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/assets/audio/vocab/v1/en/cat.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "9e4ba4a13350b08fd1414f05e2646d5247624504e1dc6d06ecaa3ab4cca605de"
+    },
+    "locale": "en",
+    "prefix": "Listen to this phrase in English.",
+    "target": "cat",
+    "remove_first_words": 6,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Listen to this phrase in English. Cat.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Cat",
+    "raw_word_alignment": [
+      {
+        "word": "listen",
+        "start_seconds": 0.0,
+        "end_seconds": 0.52
+      },
+      {
+        "word": "to",
+        "start_seconds": 0.52,
+        "end_seconds": 0.74
+      },
+      {
+        "word": "this",
+        "start_seconds": 0.74,
+        "end_seconds": 0.96
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.96,
+        "end_seconds": 1.24
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.24,
+        "end_seconds": 1.46
+      },
+      {
+        "word": "english",
+        "start_seconds": 1.46,
+        "end_seconds": 1.76
+      },
+      {
+        "word": "cat",
+        "start_seconds": 2.5,
+        "end_seconds": 2.86
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "cat",
+        "start_seconds": 0.0,
+        "end_seconds": 0.66
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5180486951555524,
+        "no_speech_prob": 0.049072764813899994,
+        "compression_ratio": 0.8260869565217391,
+        "word_probabilities": [
+          0.88916015625,
+          0.99755859375,
+          0.99609375,
+          0.998046875,
+          0.9990234375,
+          0.99365234375
+        ]
+      },
+      {
+        "avg_logprob": -0.5180486951555524,
+        "no_speech_prob": 0.049072764813899994,
+        "compression_ratio": 0.8260869565217391,
+        "word_probabilities": [
+          0.52685546875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6781721115112305,
+        "no_speech_prob": 0.24620825052261353,
+        "compression_ratio": 0.2727272727272727,
+        "word_probabilities": [
+          0.3515625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 6,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 30,
+    "extracted_voiced_seconds": 0.3,
+    "unremoved_raw_target_tokens": [
+      "cat"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "cat"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.3601814058956916,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.76,
+      "search_end_seconds": 2.5,
+      "prefix_last_word_end_seconds": 1.76,
+      "target_first_word_start_seconds": 2.5,
+      "gap_seconds": 0.4689342403628118,
+      "verified_silence_start_seconds": 1.979501133786848,
+      "verified_silence_end_seconds": 2.44843537414966,
+      "gap_rms_dbfs": -59.105,
+      "gap_peak_dbfs": -36.757,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.213968253968254,
+      "cut_sample": 48818,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 2965,
+      "removed_seconds": 0.13446712018140589,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 51783,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/assets/audio/vocab/v1/en/cat.wav.delivery.wav",
+      "sha256": "7c48463c3934fd68bd27d2b1337cde48a1055855435147fc9025d165ac547c35"
+    }
+  },
   "output": {
     "path": "assets/audio/vocab/v1/en/cat.wav",
-    "bytes": 28310,
-    "sha256": "c7971bce70a0aec44ff25d39f2c1b0e76a87a9ba64a0173e7b89bde54fdd0e92"
+    "sha256": "5ae15e8d40566869ab49f41f9cc217999f753ce25556474d1ac4f98627ba3129",
+    "bytes": 44696
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "156d1a7f07fa7b7cdb51ad1aa0d191d60e5636d39cfb628800658f03a37a0c84",
+    "original_sha256": "d0875c0fe92fe1bc9bccbd79cf59deb2a1379770fdb846a8cd09292e3eee14d0",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

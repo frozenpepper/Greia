@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:25:47.701443+00:00",
+  "created_utc": "2026-10-21T16:17:48.044427+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "O de Oso",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. O de Oso",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "O de Oso",
+    "cue_id": "foresta_parole.find_o",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "O de Oso",
     "cue_id": "foresta_parole.find_o",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/foresta_parole/assets/audio/es/find_o.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-142542-16efc197",
-    "idempotency_key": "greia-3e06257eec7c4669af70e6ccea8badc9",
+    "job_id": "20261021-181731-2f856050",
+    "idempotency_key": "greia-aa2f79be91654e8689725ba763f23571",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,255 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1822408638,
+    "script_seed": 1946361918,
     "language_direction": "Spanish",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak in Spanish. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3517796326,
-        "sha256": "0af7b19753465acf8820dc29e18a1711b54e23cae97f1e555f65c3d032892ed6",
+        "seed": 4053190913,
+        "sha256": "3f282b8a6ee6a6941c4b0b7c68c8deaa9a5d06fb3e1ea250c43ee886f67af9c6",
         "generation": {
-          "elapsed_seconds": 4.631195292051416,
+          "elapsed_seconds": 15.954431666003074,
           "model_load_seconds": 0.0,
-          "rtf": 4.134380561271908,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.9884417314286256,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8021,
+    "transcript": " o de ozo",
+    "metrics": {
+      "duration_seconds": 1.2310204081632654,
+      "rms_dbfs": -33.64,
+      "peak": 0.1384,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.34,
+      "trailing_silence_seconds": 0.12,
+      "longest_internal_pause_seconds": 0.0
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/foresta_parole/assets/audio/es/find_o.wav.raw.wav",
+    "sha256": "b18b67d48a651a73065ee8052d01df96d6b7849b420a42911c140d4ab1e2bc37",
+    "receipt_sha256": "de35fdb63ed28cc65131f68b36756194aa980d20cf780bb14529441d04d0e20f"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/foresta_parole/assets/audio/es/find_o.wav.extracted.wav",
+    "sha256": "1e63feaa9adecef9e41fcc0fd5c72adcaa393142ee3abade9a68407ac408a88d"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/foresta_parole/assets/audio/es/find_o.wav.delivery.wav",
+    "sha256": "53e210a7f39f0b8c0a024fed8e4d5164d0ce3574fcf06b83774cc56c6b1fd0e6"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/foresta_parole/assets/audio/es/find_o.wav.raw.wav",
+    "source_sha256": "b18b67d48a651a73065ee8052d01df96d6b7849b420a42911c140d4ab1e2bc37",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/foresta_parole/assets/audio/es/find_o.wav.extracted.wav",
+    "output_sha256": "1e63feaa9adecef9e41fcc0fd5c72adcaa393142ee3abade9a68407ac408a88d",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "O de Oso",
+      "locale": "es",
+      "cue_id": "foresta_parole.find_o",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/foresta_parole/assets/audio/es/find_o.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "de35fdb63ed28cc65131f68b36756194aa980d20cf780bb14529441d04d0e20f"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "O de Oso",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Escucha esta frase en español. O de ozo.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " o deoso",
+    "raw_word_alignment": [
+      {
+        "word": "escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.66
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.66,
+        "end_seconds": 1.08
+      },
+      {
+        "word": "frase",
+        "start_seconds": 1.08,
+        "end_seconds": 1.58
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.58,
+        "end_seconds": 1.98
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.98,
+        "end_seconds": 2.5
+      },
+      {
+        "word": "o",
+        "start_seconds": 2.92,
+        "end_seconds": 3.22
+      },
+      {
+        "word": "de",
+        "start_seconds": 3.22,
+        "end_seconds": 3.4
+      },
+      {
+        "word": "ozo",
+        "start_seconds": 3.4,
+        "end_seconds": 3.8
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "o",
+        "start_seconds": 0.0,
+        "end_seconds": 0.5
+      },
+      {
+        "word": "deoso",
+        "start_seconds": 0.5,
+        "end_seconds": 1.04
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.6479746874640969,
+        "no_speech_prob": 0.05104048550128937,
+        "compression_ratio": 0.8541666666666666,
+        "word_probabilities": [
+          0.77734375,
+          0.97607421875,
+          0.99609375,
+          0.97265625,
+          0.99169921875
+        ]
+      },
+      {
+        "avg_logprob": -0.6479746874640969,
+        "no_speech_prob": 0.05104048550128937,
+        "compression_ratio": 0.8541666666666666,
+        "word_probabilities": [
+          0.433837890625,
+          0.8935546875,
+          0.419921875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.7350702285766602,
+        "no_speech_prob": 0.5142945647239685,
+        "compression_ratio": 0.4666666666666667,
+        "word_probabilities": [
+          0.253173828125,
+          0.60986328125
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 74,
+    "extracted_voiced_seconds": 0.74,
+    "unremoved_raw_target_tokens": [
+      "o",
+      "de",
+      "ozo"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "o",
+      "de",
+      "ozo"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 4.000181405895692,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 2.5,
+      "search_end_seconds": 2.92,
+      "prefix_last_word_end_seconds": 2.5,
+      "target_first_word_start_seconds": 2.92,
+      "gap_seconds": 0.29931972789115646,
+      "verified_silence_start_seconds": 2.56984126984127,
+      "verified_silence_end_seconds": 2.8691609977324264,
+      "gap_rms_dbfs": -53.55,
+      "gap_peak_dbfs": -35.84,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.7195011337868484,
+      "cut_sample": 59965,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 1095,
+      "removed_seconds": 0.04965986394557823,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 61060,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/foresta_parole/assets/audio/es/find_o.wav.delivery.wav",
+      "sha256": "53e210a7f39f0b8c0a024fed8e4d5164d0ce3574fcf06b83774cc56c6b1fd0e6"
+    }
+  },
   "output": {
     "path": "activities/foresta_parole/assets/audio/es/find_o.wav",
-    "bytes": 49478,
-    "sha256": "55ef3871d43d8c63b33cf52eb15007ec7e2ab7b5e21d1fe336285cff4feec6cb"
+    "sha256": "7335a6038b44db44eb2698bf184ec5ceeb163f85ec7f1fc3e635b26cf518bb6d",
+    "bytes": 54366
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "08b43cc63e12fb79efa17afab89ffb14eb8e10afc223e817cd87e91ce617e5e3",
+    "original_sha256": "55ef3871d43d8c63b33cf52eb15007ec7e2ab7b5e21d1fe336285cff4feec6cb",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

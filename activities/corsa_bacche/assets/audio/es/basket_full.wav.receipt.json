@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T08:46:42.142559+00:00",
+  "created_utc": "2026-10-22T15:46:33.744288+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
@@ -8,17 +8,21 @@
     "text": "¡Cesta llena!",
     "cue_id": "greia.requested.basket_full.es",
     "output": "activities/corsa_bacche/assets/audio/es/basket_full.wav",
-    "verification": "off",
+    "verification": "required",
     "max_attempts": 1,
-    "delivery_prompt": "Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace."
+    "delivery_prompt": "Read clearly in a warm, calm tone. Pronounce every word carefully and naturally.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.momo.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261021-104634-b869ed5b",
-    "idempotency_key": "greia-c49f559610304190b5a05ccb68fcae0d",
+    "job_id": "20261022-174614-b5c148cb",
+    "idempotency_key": "greia-39b21f966a404e3ba8b2bafa2cad30f3",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +45,320 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2574625715,
+    "script_seed": 1346661944,
     "language_direction": "Spanish",
-    "delivery_prompt": "Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace.",
-    "effective_delivery": "Speak in Spanish. Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace.",
+    "delivery_prompt": "Read clearly in a warm, calm tone. Pronounce every word carefully and naturally. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "effective_delivery": "Speak in Spanish. Read clearly in a warm, calm tone. Pronounce every word carefully and naturally. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1973258930,
-        "sha256": "ca3bc68246a479eb0185fb70ac3db44c3a1cabbf51e78a6a48a033bb5ad94518",
+        "seed": 3283132056,
+        "sha256": "3002a952f325c5a31eff375a3a0a9adbb0bcb8e650744a111c8ecab4b92a63f2",
         "generation": {
-          "elapsed_seconds": 6.5213264580015675,
+          "elapsed_seconds": 17.92163383300067,
           "model_load_seconds": 0.0,
-          "rtf": 3.7049482764898594,
-          "peak_memory_gb": 7.648166916
+          "rtf": 5.091132190616165,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-base",
+    "transcript": " Cesta llena.",
+    "score": 1.0,
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "ignore_accents": true
   },
   "attempts": 1,
   "output": {
     "path": "activities/corsa_bacche/assets/audio/es/basket_full.wav",
-    "bytes": 77702,
-    "sha256": "bfd7baa9aec8d047a4baa1b246ddabf1689597da675faa9d3889f7dc554b232e"
+    "bytes": 45068,
+    "sha256": "7c64a136d75c9ea285a6715fcf5634bb425250965b69cd3b488fbe34c8c58ab3"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "short_phrase": {
+    "mode": "automatic-carrier",
+    "composition_policy": "period-separated-intro-v1",
+    "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/e0e17b9f322b4ffe882d6097211a45b1",
+    "prefix": "Escucha esta frase en español.",
+    "composite_text": "Escucha esta frase en español.\n\n¡Cesta llena!",
+    "effective_delivery": "Read clearly in a warm, calm tone. Pronounce every word carefully and naturally. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "extraction": {
+      "schema_version": 1,
+      "algorithm_version": "greia-spoken-carrier-extractor-v7",
+      "comparison_policy": "locale-number-tokens-v1",
+      "status": "EXTRACTED_PENDING_LISTENING",
+      "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/e0e17b9f322b4ffe882d6097211a45b1/attempt-01/raw.wav",
+      "source_sha256": "3002a952f325c5a31eff375a3a0a9adbb0bcb8e650744a111c8ecab4b92a63f2",
+      "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/e0e17b9f322b4ffe882d6097211a45b1/attempt-01/target.wav",
+      "output_sha256": "bea0a2be57f5bf2f3314692ed43df915e80993c36b85e74908c050b88833cacf",
+      "output_bytes": 97980,
+      "locale": "es",
+      "prefix": "Escucha esta frase en español.",
+      "target": "¡Cesta llena!",
+      "remove_first_words": 5,
+      "ignore_accents": true,
+      "target_verification_requested": "warn",
+      "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+      "target_comparison_score": 1.0,
+      "target_word_count_matches": true,
+      "target_numbers_match": true,
+      "target_comparison_flags": [],
+      "target_transcript_warning": false,
+      "recognizer": "mlx-whisper-base",
+      "recognizer_version": "0.4.3",
+      "model_id": "mlx-community/whisper-base-mlx",
+      "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+      "extracted_transcript": "Cesta llena.",
+      "expected_target_tokens": [
+        "cesta",
+        "llena"
+      ],
+      "extracted_target_tokens": [
+        "cesta",
+        "llena"
+      ],
+      "extracted_target_exact_match": true,
+      "transcription_settings": {
+        "language": "es",
+        "initial_prompt": null,
+        "word_timestamps": true,
+        "temperature": 0.0,
+        "condition_on_previous_text": false
+      },
+      "sample_rate": 48000,
+      "duration_seconds": 3.520166666666667,
+      "boundary": {
+        "search_strategy": "target-only-global-quiet-run-v7",
+        "verified_silence_start_seconds": 1.77,
+        "verified_silence_end_seconds": 2.6,
+        "verified_silence_duration_seconds": 0.83,
+        "cut_sample": 120000,
+        "cut_time_seconds": 2.5,
+        "padding_seconds": 0.1,
+        "quiet_run_start_sample": 84960,
+        "quiet_run_end_sample": 124800,
+        "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+      },
+      "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/e0e17b9f322b4ffe882d6097211a45b1/attempt-01/target.wav.search/09ca10098e3348708e85de8d70002fb6",
+      "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/e0e17b9f322b4ffe882d6097211a45b1/attempt-01/target.wav.search/09ca10098e3348708e85de8d70002fb6/search.json",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/e0e17b9f322b4ffe882d6097211a45b1/attempt-01/raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "3b89f6f7735ebd1d3d7f439dd7155caa375b066e6364709ae29189b3dbb5da2f",
+      "candidate_sha256": "bea0a2be57f5bf2f3314692ed43df915e80993c36b85e74908c050b88833cacf",
+      "candidate_id": "candidate-01",
+      "candidate_count": 1,
+      "qualifying_quiet_run_count": 1,
+      "candidate_results": [
+        {
+          "candidate_id": "candidate-01",
+          "quiet_run": {
+            "start_sample": 84960,
+            "end_sample": 124800,
+            "start_seconds": 1.77,
+            "end_seconds": 2.6,
+            "duration_seconds": 0.83
+          },
+          "cut_sample": 120000,
+          "cut_time_seconds": 2.5,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/e0e17b9f322b4ffe882d6097211a45b1/attempt-01/target.wav.search/09ca10098e3348708e85de8d70002fb6/candidate-01.wav",
+          "preceding_voiced_seconds": 1.26,
+          "retained_voiced_seconds": 0.66,
+          "retained_duration_seconds": 1.0201666666666667,
+          "candidate_sha256": "bea0a2be57f5bf2f3314692ed43df915e80993c36b85e74908c050b88833cacf",
+          "extracted_transcript": "Cesta llena.",
+          "canonical_transcript_tokens": [
+            "cesta",
+            "llena"
+          ],
+          "exact_target_match": true,
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": true,
+          "asr_segment_count": 1
+        }
+      ],
+      "human_review": "PENDING",
+      "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+      "delivery": {
+        "policy": "verified-carrier-gap-delivery-v1",
+        "removed_frames": 0,
+        "removed_seconds": 0.0,
+        "retained_verified_quiet_seconds": 0.1,
+        "raw_delivery_start_sample": 120000,
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/e0e17b9f322b4ffe882d6097211a45b1/attempt-01/delivery-target.wav",
+        "sha256": "bea0a2be57f5bf2f3314692ed43df915e80993c36b85e74908c050b88833cacf"
+      }
+    },
+    "quality": {
+      "disposition": "PASS",
+      "score": 1.0,
+      "transcript": " Cesta llena.",
+      "metrics": {
+        "duration_seconds": 1.0201814058956915,
+        "rms_dbfs": -28.04,
+        "peak": 0.23969,
+        "clipped_fraction": 0.0,
+        "leading_silence_seconds": 0.06,
+        "trailing_silence_seconds": 0.14,
+        "longest_internal_pause_seconds": 0.08
+      },
+      "flags": [],
+      "ignore_accents": true,
+      "comparison_policy": "locale-number-tokens-v1",
+      "model_id": "mlx-community/whisper-base-mlx",
+      "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+      "detail": "Packaged target scored with Base; human listening remains pending"
+    },
+    "history": [
+      {
+        "attempt": 1,
+        "status": "PASS",
+        "quality": {
+          "disposition": "PASS",
+          "score": 1.0,
+          "transcript": " Cesta llena.",
+          "metrics": {
+            "duration_seconds": 1.0201814058956915,
+            "rms_dbfs": -28.04,
+            "peak": 0.23969,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.06,
+            "trailing_silence_seconds": 0.14,
+            "longest_internal_pause_seconds": 0.08
+          },
+          "flags": [],
+          "ignore_accents": true,
+          "comparison_policy": "locale-number-tokens-v1",
+          "model_id": "mlx-community/whisper-base-mlx",
+          "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+          "detail": "Packaged target scored with Base; human listening remains pending"
+        },
+        "extraction": {
+          "schema_version": 1,
+          "algorithm_version": "greia-spoken-carrier-extractor-v7",
+          "comparison_policy": "locale-number-tokens-v1",
+          "status": "EXTRACTED_PENDING_LISTENING",
+          "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/e0e17b9f322b4ffe882d6097211a45b1/attempt-01/raw.wav",
+          "source_sha256": "3002a952f325c5a31eff375a3a0a9adbb0bcb8e650744a111c8ecab4b92a63f2",
+          "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/e0e17b9f322b4ffe882d6097211a45b1/attempt-01/target.wav",
+          "output_sha256": "bea0a2be57f5bf2f3314692ed43df915e80993c36b85e74908c050b88833cacf",
+          "output_bytes": 97980,
+          "locale": "es",
+          "prefix": "Escucha esta frase en español.",
+          "target": "¡Cesta llena!",
+          "remove_first_words": 5,
+          "ignore_accents": true,
+          "target_verification_requested": "warn",
+          "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_transcript_warning": false,
+          "recognizer": "mlx-whisper-base",
+          "recognizer_version": "0.4.3",
+          "model_id": "mlx-community/whisper-base-mlx",
+          "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+          "extracted_transcript": "Cesta llena.",
+          "expected_target_tokens": [
+            "cesta",
+            "llena"
+          ],
+          "extracted_target_tokens": [
+            "cesta",
+            "llena"
+          ],
+          "extracted_target_exact_match": true,
+          "transcription_settings": {
+            "language": "es",
+            "initial_prompt": null,
+            "word_timestamps": true,
+            "temperature": 0.0,
+            "condition_on_previous_text": false
+          },
+          "sample_rate": 48000,
+          "duration_seconds": 3.520166666666667,
+          "boundary": {
+            "search_strategy": "target-only-global-quiet-run-v7",
+            "verified_silence_start_seconds": 1.77,
+            "verified_silence_end_seconds": 2.6,
+            "verified_silence_duration_seconds": 0.83,
+            "cut_sample": 120000,
+            "cut_time_seconds": 2.5,
+            "padding_seconds": 0.1,
+            "quiet_run_start_sample": 84960,
+            "quiet_run_end_sample": 124800,
+            "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+          },
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/e0e17b9f322b4ffe882d6097211a45b1/attempt-01/target.wav.search/09ca10098e3348708e85de8d70002fb6",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/e0e17b9f322b4ffe882d6097211a45b1/attempt-01/target.wav.search/09ca10098e3348708e85de8d70002fb6/search.json",
+          "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/e0e17b9f322b4ffe882d6097211a45b1/attempt-01/raw.wav.receipt.json",
+          "source_provider_receipt_sha256": "3b89f6f7735ebd1d3d7f439dd7155caa375b066e6364709ae29189b3dbb5da2f",
+          "candidate_sha256": "bea0a2be57f5bf2f3314692ed43df915e80993c36b85e74908c050b88833cacf",
+          "candidate_id": "candidate-01",
+          "candidate_count": 1,
+          "qualifying_quiet_run_count": 1,
+          "candidate_results": [
+            {
+              "candidate_id": "candidate-01",
+              "quiet_run": {
+                "start_sample": 84960,
+                "end_sample": 124800,
+                "start_seconds": 1.77,
+                "end_seconds": 2.6,
+                "duration_seconds": 0.83
+              },
+              "cut_sample": 120000,
+              "cut_time_seconds": 2.5,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/e0e17b9f322b4ffe882d6097211a45b1/attempt-01/target.wav.search/09ca10098e3348708e85de8d70002fb6/candidate-01.wav",
+              "preceding_voiced_seconds": 1.26,
+              "retained_voiced_seconds": 0.66,
+              "retained_duration_seconds": 1.0201666666666667,
+              "candidate_sha256": "bea0a2be57f5bf2f3314692ed43df915e80993c36b85e74908c050b88833cacf",
+              "extracted_transcript": "Cesta llena.",
+              "canonical_transcript_tokens": [
+                "cesta",
+                "llena"
+              ],
+              "exact_target_match": true,
+              "target_comparison_score": 1.0,
+              "target_word_count_matches": true,
+              "target_numbers_match": true,
+              "target_comparison_flags": [],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": true,
+              "asr_segment_count": 1
+            }
+          ],
+          "human_review": "PENDING",
+          "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+          "delivery": {
+            "policy": "verified-carrier-gap-delivery-v1",
+            "removed_frames": 0,
+            "removed_seconds": 0.0,
+            "retained_verified_quiet_seconds": 0.1,
+            "raw_delivery_start_sample": 120000,
+            "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/e0e17b9f322b4ffe882d6097211a45b1/attempt-01/delivery-target.wav",
+            "sha256": "bea0a2be57f5bf2f3314692ed43df915e80993c36b85e74908c050b88833cacf"
+          }
+        },
+        "candidate": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/e0e17b9f322b4ffe882d6097211a45b1/attempt-01/candidate.wav"
+      }
+    ]
+  },
   "corpus_replacement": {
-    "original_sha256": "ae258446d9db6e12e30282775caf5dcff69255d30cfee9f2b03157ebcb0b4d68",
+    "original_sha256": "e4789d0fb18e489303a6fdb1479d8037736bd934146fd706ca9c2b3b7ae5fe32",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

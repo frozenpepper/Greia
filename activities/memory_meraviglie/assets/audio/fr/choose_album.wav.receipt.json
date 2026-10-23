@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T13:14:07.558217+00:00",
+  "created_utc": "2026-10-21T16:41:52.132459+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "Choisis un album !",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. Choisis un album !",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "lilli",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Choisis un album !",
+    "cue_id": "greia.requested.choose_album.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Choisis un album !",
     "cue_id": "greia.requested.choose_album.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/memory_meraviglie/assets/audio/fr/choose_album.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.lilli.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "job_id": "20261020-151356-f774056d",
-    "idempotency_key": "greia-4af2524d6da64c1f9348ae903b319c92",
+    "job_id": "20261021-184138-ef4ff98b",
+    "idempotency_key": "greia-c2fedb9cd82a46fc9d03b79b6866b4ae",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,255 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3920357201,
+    "script_seed": 3451630201,
     "language_direction": "French",
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in French. Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2288317465,
-        "sha256": "b619cffa0aa372ac2428bb3decf454270e7ac762cf92eedaafe807b2ec7abd15",
+        "seed": 2097475979,
+        "sha256": "e42ac712242623f5de4d18621a07958dc05dc5bee3b11b9ac55524504aa9185a",
         "generation": {
-          "elapsed_seconds": 10.92237645800924,
+          "elapsed_seconds": 12.178892124997219,
           "model_load_seconds": 0.0,
-          "rtf": 4.550674171797475,
-          "peak_memory_gb": 8.44494914
+          "rtf": 4.0059948878890035,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8204,
+    "transcript": " choici un album",
+    "metrics": {
+      "duration_seconds": 1.630702947845805,
+      "rms_dbfs": -25.28,
+      "peak": 0.29031,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.32,
+      "trailing_silence_seconds": 0.26,
+      "longest_internal_pause_seconds": 0.0
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/memory_meraviglie/assets/audio/fr/choose_album.wav.raw.wav",
+    "sha256": "b72bcf1c6c4c7a92b09eb1e61ffac08c4e587e6f7b8a69d96c07445d5dbfeb2d",
+    "receipt_sha256": "840498b30cd7042690c89449fde6300cafa230dc5958792cb660d67e4efe3183"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/memory_meraviglie/assets/audio/fr/choose_album.wav.extracted.wav",
+    "sha256": "f7771661ac4bc5b1a793f54d070d31b205629df490bd0c9feedabd549eb073dc"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/memory_meraviglie/assets/audio/fr/choose_album.wav.raw.wav",
+    "source_sha256": "b72bcf1c6c4c7a92b09eb1e61ffac08c4e587e6f7b8a69d96c07445d5dbfeb2d",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-extracted/activities/memory_meraviglie/assets/audio/fr/choose_album.wav.extracted.wav",
+    "output_sha256": "f7771661ac4bc5b1a793f54d070d31b205629df490bd0c9feedabd549eb073dc",
+    "target_request": {
+      "speaker": "lilli",
+      "kind": "character_dialogue",
+      "text": "Choisis un album !",
+      "locale": "fr",
+      "cue_id": "greia.requested.choose_album.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/memory_meraviglie/assets/audio/fr/choose_album.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "840498b30cd7042690c89449fde6300cafa230dc5958792cb660d67e4efe3183"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "Choisis un album !",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français. Chois-ci un album.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " choici un album",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.26
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.26,
+        "end_seconds": 0.54
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.54,
+        "end_seconds": 0.7
+      },
+      {
+        "word": "en",
+        "start_seconds": 0.7,
+        "end_seconds": 0.8
+      },
+      {
+        "word": "français",
+        "start_seconds": 0.8,
+        "end_seconds": 1.18
+      },
+      {
+        "word": "chois",
+        "start_seconds": 1.62,
+        "end_seconds": 1.94
+      },
+      {
+        "word": "ci",
+        "start_seconds": 1.94,
+        "end_seconds": 2.14
+      },
+      {
+        "word": "un",
+        "start_seconds": 2.14,
+        "end_seconds": 2.3
+      },
+      {
+        "word": "album",
+        "start_seconds": 2.3,
+        "end_seconds": 2.56
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "choici",
+        "start_seconds": 0.0,
+        "end_seconds": 0.74
+      },
+      {
+        "word": "un",
+        "start_seconds": 0.74,
+        "end_seconds": 0.9
+      },
+      {
+        "word": "album",
+        "start_seconds": 0.9,
+        "end_seconds": 1.16
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5098661316765679,
+        "no_speech_prob": 0.019301751628518105,
+        "compression_ratio": 0.8596491228070176,
+        "word_probabilities": [
+          0.76513671875,
+          0.9453125,
+          0.98681640625,
+          0.9873046875,
+          0.9482421875
+        ]
+      },
+      {
+        "avg_logprob": -0.5098661316765679,
+        "no_speech_prob": 0.019301751628518105,
+        "compression_ratio": 0.8596491228070176,
+        "word_probabilities": [
+          0.54345703125,
+          0.84765625,
+          0.89990234375,
+          0.95458984375
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6947543961661202,
+        "no_speech_prob": 0.08620547503232956,
+        "compression_ratio": 0.6521739130434783,
+        "word_probabilities": [
+          0.263671875,
+          0.5595703125,
+          0.953125
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 97,
+    "extracted_voiced_seconds": 0.97,
+    "unremoved_raw_target_tokens": [
+      "ci",
+      "un",
+      "album"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "chois",
+      "ci",
+      "un",
+      "album"
+    ],
+    "raw_transcript_alignment_suffix_match": false,
+    "duration_seconds": 3.0401814058956917,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.18,
+      "search_end_seconds": 1.62,
+      "prefix_last_word_end_seconds": 1.18,
+      "target_first_word_start_seconds": 1.62,
+      "gap_seconds": 0.31927437641723355,
+      "verified_silence_start_seconds": 1.2498412698412698,
+      "verified_silence_end_seconds": 1.5691156462585034,
+      "gap_rms_dbfs": -60.667,
+      "gap_peak_dbfs": -36.434,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.4094784580498865,
+      "cut_sample": 31079,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/memory_meraviglie/assets/audio/fr/choose_album.wav",
-    "bytes": 105926,
-    "sha256": "04fe24ccefa3a941ec965dba1bd42e15708dfa7f49b487be6414906e8def2cf4"
+    "sha256": "67d6528cf4a47f704890d8e6b90e266cf732fa0cadc9792e58db21cfa72397a9",
+    "bytes": 71992
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "5fabfcdfe652ec7962b75d56b21e95e28672fe9f0a3bd6ff8f5d5ef47092cd1d",
+    "original_sha256": "04fe24ccefa3a941ec965dba1bd42e15708dfa7f49b487be6414906e8def2cf4",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

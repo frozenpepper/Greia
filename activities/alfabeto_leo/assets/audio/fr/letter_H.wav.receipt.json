@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T23:15:53.310028+00:00",
+  "created_utc": "2026-10-21T15:26:10.015616+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "H comme Hérisson",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. H comme Hérisson",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "H comme Hérisson",
+    "cue_id": "alfabeto_leo.letter_H.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "H comme Hérisson",
     "cue_id": "alfabeto_leo.letter_H.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/alfabeto_leo/assets/audio/fr/letter_H.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-011534-653c2241",
-    "idempotency_key": "greia-f3e7ab93dfa74c55932149f878d62ccf",
+    "job_id": "20261021-172552-ac49011f",
+    "idempotency_key": "greia-874a1e4db2dd4706914d16fd55480977",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,216 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2800083415,
+    "script_seed": 691083923,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak naturally in French. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1076434964,
-        "sha256": "95784a86416558b2bf2caa24a93218dee1b2acc39b2560b54d58c5fd9a2011c1",
+        "seed": 2213942393,
+        "sha256": "d9e8c5ed10bc5c48baa004b9f1e5d0cc6da0dc5ec3f24ab5e7145927a52f96ff",
         "generation": {
-          "elapsed_seconds": 17.616070749994833,
+          "elapsed_seconds": 16.328105583997967,
           "model_load_seconds": 0.0,
-          "rtf": 5.2426181488998065,
-          "peak_memory_gb": 8.21220922
+          "rtf": 4.251926283754516,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8624,
+    "transcript": "H comme Erisson.",
+    "metrics": {
+      "duration_seconds": 1.7551473922902494,
+      "rms_dbfs": -36.8,
+      "peak": 0.12344,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.08,
+      "trailing_silence_seconds": 0.14,
+      "longest_internal_pause_seconds": 0.22
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v1",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/alfabeto_leo/assets/audio/fr/letter_H.wav.raw.wav",
+    "sha256": "cee35928334082ba01a6d95af9d27d2755b4bacd4750011e370a58a2f739d4cc",
+    "receipt_sha256": "487b2699700187e75f9e62e657470babfc61654451927dc8492ecd8098e8e380"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/assets/audio/fr/letter_H.wav.extracted.wav",
+    "sha256": "ff874eb3454f9cdc0845b1f392e4439ae97add7e43512314966458ec3165c18f"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/assets/audio/fr/letter_H.wav.delivery.wav",
+    "sha256": "ff874eb3454f9cdc0845b1f392e4439ae97add7e43512314966458ec3165c18f"
+  },
+  "extraction": {
+    "schema_version": 1,
+    "algorithm_version": "greia-spoken-carrier-extractor-v7",
+    "comparison_policy": "locale-number-tokens-v1",
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-raw/activities/alfabeto_leo/assets/audio/fr/letter_H.wav.raw.wav",
+    "source_sha256": "cee35928334082ba01a6d95af9d27d2755b4bacd4750011e370a58a2f739d4cc",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/alfabeto_leo/assets/audio/fr/letter_H.wav.extracted.wav",
+    "output_sha256": "ff874eb3454f9cdc0845b1f392e4439ae97add7e43512314966458ec3165c18f",
+    "output_bytes": 77446,
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "H comme Hérisson",
+    "remove_first_words": 5,
+    "ignore_accents": true,
+    "target_verification_requested": "warn",
+    "target_verification_policy": "warn",
+    "target_comparison_score": 0.8624,
+    "target_word_count_matches": true,
+    "target_numbers_match": true,
+    "target_comparison_flags": [],
+    "target_transcript_warning": true,
+    "recognizer": "mlx-whisper-base",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extracted_transcript": "H comme Erisson.",
+    "expected_target_tokens": [
+      "h",
+      "comme",
+      "herisson"
+    ],
+    "extracted_target_tokens": [
+      "h",
+      "comme",
+      "erisson"
+    ],
+    "extracted_target_exact_match": false,
+    "transcription_settings": {
+      "language": "fr",
+      "initial_prompt": null,
+      "word_timestamps": true,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "sample_rate": 22050,
+    "duration_seconds": 3.8401814058956916,
+    "boundary": {
+      "search_strategy": "target-only-global-quiet-run-v7",
+      "verified_silence_start_seconds": 1.506575963718821,
+      "verified_silence_end_seconds": 2.185034013605442,
+      "verified_silence_duration_seconds": 0.6784580498866213,
+      "cut_sample": 45975,
+      "cut_time_seconds": 2.0850340136054424,
+      "padding_seconds": 0.1,
+      "quiet_run_start_sample": 33220,
+      "quiet_run_end_sample": 48180,
+      "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+    },
+    "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/alfabeto_leo/assets/audio/fr/letter_H.wav.extracted.wav.search/2e58102663a140d6902e12fceac4b157",
+    "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/alfabeto_leo/assets/audio/fr/letter_H.wav.extracted.wav.search/2e58102663a140d6902e12fceac4b157/search.json",
+    "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-raw/activities/alfabeto_leo/assets/audio/fr/letter_H.wav.raw.wav.receipt.json",
+    "source_provider_receipt_sha256": "487b2699700187e75f9e62e657470babfc61654451927dc8492ecd8098e8e380",
+    "candidate_sha256": "ff874eb3454f9cdc0845b1f392e4439ae97add7e43512314966458ec3165c18f",
+    "candidate_id": "candidate-01",
+    "candidate_count": 2,
+    "qualifying_quiet_run_count": 2,
+    "candidate_results": [
+      {
+        "candidate_id": "candidate-01",
+        "quiet_run": {
+          "start_sample": 33220,
+          "end_sample": 48180,
+          "start_seconds": 1.506575963718821,
+          "end_seconds": 2.185034013605442,
+          "duration_seconds": 0.6784580498866213
+        },
+        "cut_sample": 45975,
+        "cut_time_seconds": 2.0850340136054424,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/alfabeto_leo/assets/audio/fr/letter_H.wav.extracted.wav.search/2e58102663a140d6902e12fceac4b157/candidate-01.wav",
+        "preceding_voiced_seconds": 0.91,
+        "retained_voiced_seconds": 0.96,
+        "retained_duration_seconds": 1.7551473922902494,
+        "candidate_sha256": "ff874eb3454f9cdc0845b1f392e4439ae97add7e43512314966458ec3165c18f",
+        "extracted_transcript": "H comme Erisson.",
+        "canonical_transcript_tokens": [
+          "h",
+          "comme",
+          "erisson"
+        ],
+        "exact_target_match": false,
+        "target_comparison_score": 0.8624,
+        "target_word_count_matches": true,
+        "target_numbers_match": true,
+        "target_comparison_flags": [],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": true,
+        "asr_segment_count": 1
+      },
+      {
+        "candidate_id": "candidate-02",
+        "quiet_run": {
+          "start_sample": 57860,
+          "end_sample": 63580,
+          "start_seconds": 2.6240362811791385,
+          "end_seconds": 2.8834467120181406,
+          "duration_seconds": 0.2594104308390023
+        },
+        "cut_sample": 61375,
+        "cut_time_seconds": 2.7834467120181405,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/alfabeto_leo/assets/audio/fr/letter_H.wav.extracted.wav.search/2e58102663a140d6902e12fceac4b157/candidate-02.wav",
+        "preceding_voiced_seconds": 1.28,
+        "retained_voiced_seconds": 0.59,
+        "retained_duration_seconds": 1.056734693877551,
+        "candidate_sha256": "051410fc1a206f890cc5a949acbb97d04e04edd1616a9eb8f00a5eb0c4b67fa2",
+        "extracted_transcript": "Comme éri son.",
+        "canonical_transcript_tokens": [
+          "comme",
+          "eri",
+          "son"
+        ],
+        "exact_target_match": false,
+        "target_comparison_score": 0.6546,
+        "target_word_count_matches": true,
+        "target_numbers_match": true,
+        "target_comparison_flags": [],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": false,
+        "asr_segment_count": 1
+      }
+    ],
+    "human_review": "PENDING",
+    "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+    "target_verification_effective_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+    "target_verification_warning": true,
+    "saved_recovery_policy": "target-only-v7-saved-v1",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 0,
+      "removed_seconds": 0.0,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 45975,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/alfabeto_leo/assets/audio/fr/letter_H.wav.delivery.wav",
+      "sha256": "ff874eb3454f9cdc0845b1f392e4439ae97add7e43512314966458ec3165c18f"
+    }
+  },
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/fr/letter_H.wav",
-    "bytes": 148262,
-    "sha256": "3006448ffb2bfb5ea94045d2d979f19bd81cf17043c04c21c8d317f9798cd6a6"
+    "sha256": "21e515a21794ad557cd1cbbe2649fa643f4be5bc5d28a35b3173fa1067aab80c",
+    "bytes": 77480
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "1f307db2f34d7b8d3b7a5655525393dc19180bd27468c8377ed067ee18d0bc92",
+    "original_sha256": "823fd5ace8437dd46f7edc9d8f72a5522e2955760d8aa802c39a9d3f5bf83cc7",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

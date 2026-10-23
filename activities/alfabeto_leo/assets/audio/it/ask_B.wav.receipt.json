@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T23:20:32.654694+00:00",
+  "created_utc": "2026-10-21T15:31:23.693747+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "Dov'è la lettera B?",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. Dov'è la lettera B?",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Dov'è la lettera B?",
+    "cue_id": "alfabeto_leo.ask_B",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Dov'è la lettera B?",
     "cue_id": "alfabeto_leo.ask_B",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/alfabeto_leo/assets/audio/it/ask_B.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-012012-914e4f73",
-    "idempotency_key": "greia-b93b3ae087a345ebba573f6a09829fc8",
+    "job_id": "20261021-173107-a9a490fb",
+    "idempotency_key": "greia-8253dc9f46b94dd493a0ed4d9f898ebd",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,255 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2145205747,
+    "script_seed": 650884592,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
-    "effective_delivery": "Speak naturally in Italian. Leo, a warm, curious cartoon guide. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 490540486,
-        "sha256": "b487fdce8d516389e48f26e8186c2eeefe189531554daa3786bb3371d8871032",
+        "seed": 1022292636,
+        "sha256": "ae4a97fd295e2c857fd8e03618fbcf0bb4bd5e6ec849b206d732364355483ee5",
         "generation": {
-          "elapsed_seconds": 18.788133207999635,
+          "elapsed_seconds": 15.696021665993612,
           "model_load_seconds": 0.0,
-          "rtf": 6.5232798592672765,
-          "peak_memory_gb": 8.21220922
+          "rtf": 3.923841923084941,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8648,
+    "transcript": " dove la lettera B?",
+    "metrics": {
+      "duration_seconds": 1.6058503401360544,
+      "rms_dbfs": -33.26,
+      "peak": 0.23654,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.38,
+      "trailing_silence_seconds": 0.18,
+      "longest_internal_pause_seconds": 0.06
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/alfabeto_leo/assets/audio/it/ask_B.wav.raw.wav",
+    "sha256": "b1df8666bc21be8eaa66281e549a42b33673eac08658cce746ae6a4a79da7dcb",
+    "receipt_sha256": "b93ce3af2bdaa52394123285adf53025c6234a87324339b49ed61531728857a3"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/assets/audio/it/ask_B.wav.extracted.wav",
+    "sha256": "6b2bd016b60fb112b10cd91b7177bb56c1ed64501ec0ff97904d1c8359bcf4b2"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/alfabeto_leo/assets/audio/it/ask_B.wav.raw.wav",
+    "source_sha256": "b1df8666bc21be8eaa66281e549a42b33673eac08658cce746ae6a4a79da7dcb",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-extracted/activities/alfabeto_leo/assets/audio/it/ask_B.wav.extracted.wav",
+    "output_sha256": "6b2bd016b60fb112b10cd91b7177bb56c1ed64501ec0ff97904d1c8359bcf4b2",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Dov'è la lettera B?",
+      "locale": "it",
+      "cue_id": "alfabeto_leo.ask_B",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/alfabeto_leo/assets/audio/it/ask_B.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "b93ce3af2bdaa52394123285adf53025c6234a87324339b49ed61531728857a3"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "Dov'è la lettera B?",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " ascolta questa frase in italiano, dove la lettera B.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " dove la lettera B?",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.68
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.68,
+        "end_seconds": 1.02
+      },
+      {
+        "word": "frase",
+        "start_seconds": 1.02,
+        "end_seconds": 1.36
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.36,
+        "end_seconds": 1.54
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.54,
+        "end_seconds": 2.1
+      },
+      {
+        "word": "dove",
+        "start_seconds": 2.68,
+        "end_seconds": 2.98
+      },
+      {
+        "word": "la",
+        "start_seconds": 2.98,
+        "end_seconds": 3.2
+      },
+      {
+        "word": "lettera",
+        "start_seconds": 3.2,
+        "end_seconds": 3.64
+      },
+      {
+        "word": "b",
+        "start_seconds": 3.64,
+        "end_seconds": 3.8
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "dove",
+        "start_seconds": 0.0,
+        "end_seconds": 0.6
+      },
+      {
+        "word": "la",
+        "start_seconds": 0.6,
+        "end_seconds": 0.8
+      },
+      {
+        "word": "lettera",
+        "start_seconds": 0.8,
+        "end_seconds": 1.24
+      },
+      {
+        "word": "b",
+        "start_seconds": 1.24,
+        "end_seconds": 1.38
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5335958705228918,
+        "no_speech_prob": 0.009223074652254581,
+        "compression_ratio": 0.896551724137931,
+        "word_probabilities": [
+          0.5576171875,
+          0.97998046875,
+          0.880859375,
+          0.96630859375,
+          0.99365234375,
+          0.8154296875,
+          0.791015625,
+          0.7109375,
+          0.8212890625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.49235714806450737,
+        "no_speech_prob": 0.05951733887195587,
+        "compression_ratio": 0.6923076923076923,
+        "word_probabilities": [
+          0.39990234375,
+          0.89306640625,
+          0.81494140625,
+          0.72509765625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 74,
+    "extracted_voiced_seconds": 0.74,
+    "unremoved_raw_target_tokens": [
+      "dove",
+      "la",
+      "lettera",
+      "b"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "dove",
+      "la",
+      "lettera",
+      "b"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 4.000181405895692,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 2.1,
+      "search_end_seconds": 2.68,
+      "prefix_last_word_end_seconds": 2.1,
+      "target_first_word_start_seconds": 2.68,
+      "gap_seconds": 0.4689342403628118,
+      "verified_silence_start_seconds": 2.1598639455782314,
+      "verified_silence_end_seconds": 2.628798185941043,
+      "gap_rms_dbfs": -67.953,
+      "gap_peak_dbfs": -51.419,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.394331065759637,
+      "cut_sample": 52795,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/it/ask_B.wav",
-    "bytes": 127094,
-    "sha256": "b1c02053ebe887f5462e3c5b46193a01697bcd70f581effeb6a08e2d38495622"
+    "sha256": "971b87b0b1be063f7c37b79686f3f55016e50918dbaf1c2ce6337e361d30636e",
+    "bytes": 70896
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "5183c8bb3f25a6a6fd0cb471f58f56bbecce4836ca29117d835e75542d9816df",
+    "original_sha256": "d5424f6654eef711b9d02f9144c926ffd9a30ebfc776cd13201e128aacbbfd5d",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

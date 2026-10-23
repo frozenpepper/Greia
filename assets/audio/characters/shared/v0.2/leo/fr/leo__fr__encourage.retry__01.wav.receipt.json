@@ -1,82 +1,99 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T18:54:47.837163+00:00",
+  "created_utc": "2026-10-23T13:34:02.566026+00:00",
   "request": {
     "speaker": "leo",
-    "kind": "shared_character_utterance",
+    "kind": "character_dialogue",
     "locale": "fr",
     "text": "On réessaie !",
     "cue_id": "greia.shared.leo__fr__encourage.retry__01.fr",
     "output": "assets/audio/characters/shared/v0.2/leo/fr/leo__fr__encourage.retry__01.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace."
+    "delivery_prompt": "",
+    "ignore_accents": true,
+    "short_text_mode": "off",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "owner_authorization": "owner-2026-10-23-native-system-tts-missing-52",
+    "spoken_text": "On réessaie !"
   },
-  "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+  "provider_id": "macos-native-say",
+  "voice_id": "Thomas",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": null,
   "generation_parameters": {
-    "job_id": "20261020-205440-47353512",
-    "idempotency_key": "greia-1c7e0e54e7da47c2a181ed180256d81d",
-    "backend": {
-      "backend": "mlx",
-      "adapter_version": "0.1.0",
-      "model": "mlx-community/VoxCPM2-8bit",
-      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
-      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
-      "mlx": "0.32.1",
-      "tokenizer_loader": "PreTrainedTokenizerFast",
-      "mlx_audio": "0.5.0",
-      "quantization": "8bit",
-      "sample_rate": 48000,
-      "native_audio_streaming": false,
-      "reference_encoding_cache": 16,
-      "compiled_hot_paths": true
-    },
-    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
-    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
-    "settings": {
-      "steps": 10,
-      "cfg": 2.0,
-      "max_tokens": 300
-    },
-    "script_seed": 2784340300,
-    "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
-    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
-    "mode": "reference",
-    "recordings": [
-      {
-        "file": "speech-001-take-01.wav",
-        "seed": 2044070259,
-        "sha256": "dcd92c67cb1c794596630337be8fec50320b8e5d7f1e77cf4154b217879272eb",
-        "generation": {
-          "elapsed_seconds": 6.631281584035605,
-          "model_load_seconds": 0.0,
-          "rtf": 4.144119310927365,
-          "peak_memory_gb": 8.843167284
-        }
-      }
-    ]
+    "voice": "Thomas",
+    "rate_wpm": 175,
+    "synthesis_text": "On réessaie !"
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
+    "disposition": "NOT_RUN",
+    "verifier_id": "owner-listening-review-waiver",
     "transcript": null,
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "owner waived ASR/listening review; audio format/integrity checks only",
+    "model_id": null,
+    "model_revision": null,
+    "ignore_accents": null,
+    "comparison_policy": null,
+    "flags": [],
+    "metrics": null
   },
   "attempts": 1,
   "output": {
     "path": "assets/audio/characters/shared/v0.2/leo/fr/leo__fr__encourage.retry__01.wav",
-    "bytes": 70646,
-    "sha256": "0e0342379584a8e7cf1cbe874afbd111f7526a81777dfbc6cd14d4c34da78403"
+    "bytes": 29162,
+    "sha256": "dd7ad2307d8923dfb1ca31d6e45b9e030c1f4a2ae8a9c37f0a055adabd0ad830"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "human_review": "WAIVED_BY_OWNER",
+  "acceptance_note": "Owner explicitly waived listening review for this deterministic system-voice replacement; verification was not run and this is not a machine PASS.",
+  "owner_authorization": "owner-2026-10-23-native-system-tts-missing-52",
+  "generation_evidence": {
+    "path": "/Users/taio84/Library/Application Support/Greia/voice-production/generation-evidence/4a52d4493f844511a7d826ec6adeabfd",
+    "history": "/Users/taio84/Library/Application Support/Greia/voice-production/generation-evidence/4a52d4493f844511a7d826ec6adeabfd/history.json"
+  },
+  "semantic_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "On réessaie !",
+    "cue_id": "greia.shared.leo__fr__encourage.retry__01.fr",
+    "output": null,
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "comparison_policy": "locale-number-tokens-v4-spoken-target-v1"
+  },
+  "system_tts_fallback": {
+    "policy": "deterministic-native-system-tts-owner-waived-v1",
+    "spoken_target_policy": "locale-spoken-letter-and-cardinal-v1",
+    "semantic_text": "On réessaie !",
+    "spoken_text": "On réessaie !",
+    "locale": "fr",
+    "native_voice": "Thomas",
+    "signal_metrics": {
+      "duration_seconds": 0.659501133786848,
+      "rms_dbfs": -14.52,
+      "peak": 0.75342,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.0,
+      "trailing_silence_seconds": 0.02,
+      "longest_internal_pause_seconds": 0.0
+    },
+    "signal_flags": [],
+    "verification": "NOT_RUN",
+    "human_review": "WAIVED_BY_OWNER",
+    "authorization": "owner-2026-10-23-native-system-tts-missing-52"
+  },
   "corpus_replacement": {
-    "original_sha256": "187c03ad386b4cae1b3ea23966c682330fa14afa7549b98a1ea2aff1349bb649",
-    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+    "original_sha256": "0e0342379584a8e7cf1cbe874afbd111f7526a81777dfbc6cd14d4c34da78403",
+    "owner_authorization": "owner-2026-10-23-native-system-tts-missing-52",
+    "human_review": "WAIVED_BY_OWNER",
+    "source_run": "natural-v4-run-02"
   }
 }

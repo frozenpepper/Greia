@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T13:07:41.621306+00:00",
+  "created_utc": "2026-10-21T18:12:00.435103+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "¡Allá vamos!",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. ¡Allá vamos!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "momo",
+    "kind": "shared_character_utterance",
+    "locale": "es",
+    "text": "¡Allá vamos!",
+    "cue_id": "greia.shared.momo__es__ready.go__03.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "momo",
     "kind": "shared_character_utterance",
     "locale": "es",
     "text": "¡Allá vamos!",
     "cue_id": "greia.shared.momo__es__ready.go__03.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "assets/audio/characters/shared/v0.2/momo/es/momo__es__ready.go__03.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Brief, natural conversational reaction; relaxed pace and clear words."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.momo.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261021-150735-c0f5f71d",
-    "idempotency_key": "greia-0a7f0c0368494cddae60581c46d418ed",
+    "job_id": "20261021-201141-2152a75d",
+    "idempotency_key": "greia-7a15fc39dc2644e7a499fee89cfe7dd4",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,212 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3037837410,
+    "script_seed": 1227542207,
     "language_direction": "Spanish",
-    "delivery_prompt": "Brief, natural conversational reaction; relaxed pace and clear words.",
-    "effective_delivery": "Speak in Spanish. Brief, natural conversational reaction; relaxed pace and clear words.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2247674653,
-        "sha256": "1b9cebbcd1184833ac06477dab64c0a856dcea3e5b3d03758b2030380f687655",
+        "seed": 3339839244,
+        "sha256": "e0e7d4d92cc8e5d5e1b51bf1ff66e12e6d0b97ea24fb9793452041d1b025da52",
         "generation": {
-          "elapsed_seconds": 5.647555416995601,
+          "elapsed_seconds": 17.523073083008057,
           "model_load_seconds": 0.0,
-          "rtf": 3.5293544945290707,
+          "rtf": 5.47567514702611,
           "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Allá vamos.",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/characters/shared/v0.2/momo/es/momo__es__ready.go__03.wav.raw.wav",
+    "sha256": "2ed5346ae0747ac4fac2421acecf48c10ec5a95b032cb35579c6236de975b35a",
+    "receipt_sha256": "732c52831ad222965cb284db8fd7230f94388adafe36afe950b824e68415e450"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/characters/shared/v0.2/momo/es/momo__es__ready.go__03.wav.extracted.wav",
+    "sha256": "d38ac2357ecad75d1d7acf0b7c7491d066d491367715642306f4e6d7de6ff1cc"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/assets/audio/characters/shared/v0.2/momo/es/momo__es__ready.go__03.wav.raw.wav",
+    "source_sha256": "2ed5346ae0747ac4fac2421acecf48c10ec5a95b032cb35579c6236de975b35a",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/assets/audio/characters/shared/v0.2/momo/es/momo__es__ready.go__03.wav.extracted.wav",
+    "output_sha256": "d38ac2357ecad75d1d7acf0b7c7491d066d491367715642306f4e6d7de6ff1cc",
+    "target_request": {
+      "speaker": "momo",
+      "kind": "shared_character_utterance",
+      "text": "¡Allá vamos!",
+      "locale": "es",
+      "cue_id": "greia.shared.momo__es__ready.go__03.es",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/assets/audio/characters/shared/v0.2/momo/es/momo__es__ready.go__03.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "732c52831ad222965cb284db8fd7230f94388adafe36afe950b824e68415e450"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "¡Allá vamos!",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Escucha esta frase en español. Allá vamos.",
+    "extracted_transcript": " Allá vamos.",
+    "raw_word_alignment": [
+      {
+        "word": "escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.56
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.56,
+        "end_seconds": 0.88
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.88,
+        "end_seconds": 1.2
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.2,
+        "end_seconds": 1.42
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.42,
+        "end_seconds": 1.9
+      },
+      {
+        "word": "allá",
+        "start_seconds": 2.4,
+        "end_seconds": 2.62
+      },
+      {
+        "word": "vamos",
+        "start_seconds": 2.62,
+        "end_seconds": 2.86
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "allá",
+        "start_seconds": 0.0,
+        "end_seconds": 0.46
+      },
+      {
+        "word": "vamos",
+        "start_seconds": 0.46,
+        "end_seconds": 0.7
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5775808095932007,
+        "no_speech_prob": 0.006598385516554117,
+        "compression_ratio": 0.8627450980392157,
+        "word_probabilities": [
+          0.7294921875,
+          0.8857421875,
+          0.97705078125,
+          0.97021484375,
+          0.98583984375
+        ]
+      },
+      {
+        "avg_logprob": -0.5775808095932007,
+        "no_speech_prob": 0.006598385516554117,
+        "compression_ratio": 0.8627450980392157,
+        "word_probabilities": [
+          0.5947265625,
+          0.7646484375
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.7967645100184849,
+        "no_speech_prob": 0.1615789532661438,
+        "compression_ratio": 0.6,
+        "word_probabilities": [
+          0.5078125,
+          0.5322265625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 63,
+    "extracted_voiced_seconds": 0.63,
+    "unremoved_raw_target_tokens": [
+      "allá",
+      "vamos"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "allá",
+      "vamos"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.2001814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.9,
+      "target_first_word_start_seconds": 2.4,
+      "gap_seconds": 0.3791383219954649,
+      "verified_silence_start_seconds": 1.9598639455782314,
+      "verified_silence_end_seconds": 2.3390022675736963,
+      "gap_rms_dbfs": -66.416,
+      "gap_peak_dbfs": -55.04,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.1494331065759638,
+      "cut_sample": 47395,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "assets/audio/characters/shared/v0.2/momo/es/momo__es__ready.go__03.wav",
-    "bytes": 70646,
-    "sha256": "512aba31ac60ce5d9d3408ac841abd1fbb4ccae8684fc9e0c1b91dde5034d96b"
+    "sha256": "ead8cd722cff5272709f66395e0e9ba284cc7348de9f8f054373f5095851439c",
+    "bytes": 46416
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "4f6134b7cf6a8a998e9004a2200119a60c838d28536ab1a6dbaa7abc20664d53",
+    "original_sha256": "512aba31ac60ce5d9d3408ac841abd1fbb4ccae8684fc9e0c1b91dde5034d96b",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

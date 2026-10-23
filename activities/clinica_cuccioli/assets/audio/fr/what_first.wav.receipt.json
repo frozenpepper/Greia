@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T08:43:38.816670+00:00",
+  "created_utc": "2026-10-21T15:53:45.735773+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "On fait quoi d'abord ?",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. On fait quoi d'abord ?",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v4",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "momo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "On fait quoi d'abord ?",
+    "cue_id": "greia.requested.what_first.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "On fait quoi d'abord ?",
     "cue_id": "greia.requested.what_first.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/clinica_cuccioli/assets/audio/fr/what_first.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.momo.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261021-104332-79bc50ad",
-    "idempotency_key": "greia-6b8093affd6243f4a374f84a0c4e809f",
+    "job_id": "20261021-175334-6aea9726",
+    "idempotency_key": "greia-ba393b1f1b4544eb800e58f16169acbc",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,252 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1396354123,
+    "script_seed": 3617658617,
     "language_direction": "French",
-    "delivery_prompt": "Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
-    "effective_delivery": "Speak in French. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3017801715,
-        "sha256": "7e0991a8b08c44176bb3c33c239da44f6af4244b1b7ed4ab7defb11e8162ad73",
+        "seed": 2430553088,
+        "sha256": "add6c4dd99b66c8d4fbaceede8b6c30605a3ddbfddfa0600130eb220e5f0b6da",
         "generation": {
-          "elapsed_seconds": 5.371427083002345,
+          "elapsed_seconds": 10.386156790991663,
           "model_load_seconds": 0.0,
-          "rtf": 3.729726015277638,
-          "peak_memory_gb": 7.648166916
+          "rtf": 3.606095755219604,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " On fait quoi d'abord.",
+    "score": 1.0,
+    "detail": "Exact raw/extracted target token checks; saved audio recovery only; human review pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/clinica_cuccioli/assets/audio/fr/what_first.wav.raw.wav",
+    "sha256": "48a1ef93a9d96d4e96fa8e8af250df7fbe950a399cd5bd8ebd62bf346906e4a2",
+    "receipt_sha256": "2ecb793273efef29ed96d66aa18110a99e0872004a51711ed1b848e78ded4366"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/clinica_cuccioli/assets/audio/fr/what_first.wav.extracted.wav",
+    "sha256": "7447940e9a02467f5efa437ae70c1f316608e15fb054f0f1db1508ee2335c253"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v4",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/clinica_cuccioli/assets/audio/fr/what_first.wav.raw.wav",
+    "source_sha256": "48a1ef93a9d96d4e96fa8e8af250df7fbe950a399cd5bd8ebd62bf346906e4a2",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/parent-boundary-audit-v4/outputs/7adc8d729db83f8578daeb5ed8f6ab90bead4abde53de75ac80278dda4224c32-proposed.wav",
+    "output_sha256": "7447940e9a02467f5efa437ae70c1f316608e15fb054f0f1db1508ee2335c253",
+    "target_request": {
+      "speaker": "momo",
+      "kind": "character_dialogue",
+      "text": "On fait quoi d'abord ?",
+      "locale": "fr",
+      "cue_id": "greia.requested.what_first.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/clinica_cuccioli/assets/audio/fr/what_first.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "2ecb793273efef29ed96d66aa18110a99e0872004a51711ed1b848e78ded4366"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "On fait quoi d'abord ?",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " cette phrase est en français. On fait quoi d'abord ?",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " On fait quoi d'abord.",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.24
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.24,
+        "end_seconds": 0.52
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.52,
+        "end_seconds": 0.72
+      },
+      {
+        "word": "en",
+        "start_seconds": 0.72,
+        "end_seconds": 0.8
+      },
+      {
+        "word": "français",
+        "start_seconds": 0.8,
+        "end_seconds": 1.34
+      },
+      {
+        "word": "on",
+        "start_seconds": 1.88,
+        "end_seconds": 2.04
+      },
+      {
+        "word": "fait",
+        "start_seconds": 2.04,
+        "end_seconds": 2.18
+      },
+      {
+        "word": "quoi",
+        "start_seconds": 2.18,
+        "end_seconds": 2.34
+      },
+      {
+        "word": "d'abord",
+        "start_seconds": 2.34,
+        "end_seconds": 2.62
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "on",
+        "start_seconds": 0.0,
+        "end_seconds": 0.4
+      },
+      {
+        "word": "fait",
+        "start_seconds": 0.4,
+        "end_seconds": 0.56
+      },
+      {
+        "word": "quoi",
+        "start_seconds": 0.56,
+        "end_seconds": 0.74
+      },
+      {
+        "word": "d'abord",
+        "start_seconds": 0.74,
+        "end_seconds": 1.0
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.47046534220377606,
+        "no_speech_prob": 0.020810572430491447,
+        "compression_ratio": 0.8833333333333333,
+        "word_probabilities": [
+          0.329833984375,
+          0.89208984375,
+          0.89501953125,
+          0.87939453125,
+          0.953125
+        ]
+      },
+      {
+        "avg_logprob": -0.47046534220377606,
+        "no_speech_prob": 0.020810572430491447,
+        "compression_ratio": 0.8833333333333333,
+        "word_probabilities": [
+          0.93115234375,
+          0.98828125,
+          0.9755859375,
+          0.958984375,
+          0.99609375,
+          0.634765625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.4363094329833984,
+        "no_speech_prob": 0.098161481320858,
+        "compression_ratio": 0.7241379310344828,
+        "word_probabilities": [
+          0.64306640625,
+          0.97509765625,
+          0.751953125,
+          0.97412109375,
+          0.9912109375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 68,
+    "extracted_voiced_seconds": 0.68,
+    "unremoved_raw_target_tokens": [
+      "on",
+      "fait",
+      "quoi",
+      "d'abord"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "on",
+      "fait",
+      "quoi",
+      "d'abord"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 2.8801814058956916,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "inter-word-gap",
+      "search_end_seconds": 1.88,
+      "prefix_last_word_end_seconds": 1.34,
+      "target_first_word_start_seconds": 1.88,
+      "gap_seconds": 0.4290249433106576,
+      "verified_silence_start_seconds": 1.3998639455782314,
+      "verified_silence_end_seconds": 1.8288888888888888,
+      "gap_rms_dbfs": -65.802,
+      "gap_peak_dbfs": -47.386,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.6143764172335602,
+      "cut_sample": 35597,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/clinica_cuccioli/assets/audio/fr/what_first.wav",
-    "bytes": 63590,
-    "sha256": "00cf2803822653e5edb10a270a937b2785365a863d5332afff8625e1229dceb0"
+    "sha256": "7c509e6b3558bb3a214621825d146c6adc468bdcc9b2e67b29323c9db1556d3b",
+    "bytes": 55900
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "recovery_provenance": {
+    "audit": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/parent-boundary-audit-v4",
+    "no_new_synthesis": true,
+    "original_provider_receipt_sha256": "2ecb793273efef29ed96d66aa18110a99e0872004a51711ed1b848e78ded4366"
+  },
   "corpus_replacement": {
-    "original_sha256": "d467d36427fa8e37237e0b186f6568cf40cc08a8c541c79377e0cac094f213d9",
+    "original_sha256": "00cf2803822653e5edb10a270a937b2785365a863d5332afff8625e1229dceb0",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

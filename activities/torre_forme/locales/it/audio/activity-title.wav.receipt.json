@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T17:17:54.162077+00:00",
+  "created_utc": "2026-10-21T17:30:20.294475+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "La Torre delle Forme",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. La Torre delle Forme",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "lilli",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "La Torre delle Forme",
+    "cue_id": "torre_forme.activity-title",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "La Torre delle Forme",
     "cue_id": "torre_forme.activity-title",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/torre_forme/locales/it/audio/activity-title.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.lilli.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "job_id": "20261020-191741-abcac47f",
-    "idempotency_key": "greia-074966263f2e4067ba68af8d58c288b9",
+    "job_id": "20261021-192959-6dbdd3c1",
+    "idempotency_key": "greia-6e64267bbb514ed0828dac1bc42c5df6",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,261 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3238715170,
+    "script_seed": 4049497130,
     "language_direction": "Italian",
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "effective_delivery": "Speak in Italian. Lilli, a sparkly, affectionate storybook unicorn. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3490924627,
-        "sha256": "008b5e9a08d82177322043cfe6a62680072d28d895123908d5ebbe0165bb8aa4",
+        "seed": 1405584239,
+        "sha256": "631ec51eef274986ae9d64332f0ae1895e2c19808a9a4dab546cb2e5cf203e4f",
         "generation": {
-          "elapsed_seconds": 9.014224708022084,
+          "elapsed_seconds": 20.303278417006368,
           "model_load_seconds": 0.0,
-          "rtf": 6.259153830359045,
-          "peak_memory_gb": 8.44494914
+          "rtf": 4.3755493876670455,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " la torre delle forme",
+    "metrics": {
+      "duration_seconds": 1.9111111111111112,
+      "rms_dbfs": -23.2,
+      "peak": 0.35559,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.18,
+      "trailing_silence_seconds": 0.2,
+      "longest_internal_pause_seconds": 0.12
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/torre_forme/locales/it/audio/activity-title.wav.raw.wav",
+    "sha256": "c3bf90bc112a298553beca16604328412b89de013d21a6fe971c6ffc16d7b823",
+    "receipt_sha256": "b5c38c672d26850107fc3745bd99c9668348d7689b10220f71792c93ef2508a2"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/torre_forme/locales/it/audio/activity-title.wav.extracted.wav",
+    "sha256": "4307f868d50114ca27721d022786af9451426d7ffd6f153ba6598c5b6e8c30f4"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/torre_forme/locales/it/audio/activity-title.wav.raw.wav",
+    "source_sha256": "c3bf90bc112a298553beca16604328412b89de013d21a6fe971c6ffc16d7b823",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-extracted/activities/torre_forme/locales/it/audio/activity-title.wav.extracted.wav",
+    "output_sha256": "4307f868d50114ca27721d022786af9451426d7ffd6f153ba6598c5b6e8c30f4",
+    "target_request": {
+      "speaker": "lilli",
+      "kind": "character_dialogue",
+      "text": "La Torre delle Forme",
+      "locale": "it",
+      "cue_id": "torre_forme.activity-title",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/torre_forme/locales/it/audio/activity-title.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "b5c38c672d26850107fc3745bd99c9668348d7689b10220f71792c93ef2508a2"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "La Torre delle Forme",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " O scolta questa frase in italiano! La torre delle forme!",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " la torre delle forme",
+    "raw_word_alignment": [
+      {
+        "word": "o",
+        "start_seconds": 0.0,
+        "end_seconds": 0.12
+      },
+      {
+        "word": "scolta",
+        "start_seconds": 0.12,
+        "end_seconds": 0.66
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.66,
+        "end_seconds": 1.04
+      },
+      {
+        "word": "frase",
+        "start_seconds": 1.04,
+        "end_seconds": 1.48
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.48,
+        "end_seconds": 1.78
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.78,
+        "end_seconds": 2.32
+      },
+      {
+        "word": "la",
+        "start_seconds": 2.9,
+        "end_seconds": 3.02
+      },
+      {
+        "word": "torre",
+        "start_seconds": 3.02,
+        "end_seconds": 3.48
+      },
+      {
+        "word": "delle",
+        "start_seconds": 3.48,
+        "end_seconds": 3.7
+      },
+      {
+        "word": "forme",
+        "start_seconds": 3.7,
+        "end_seconds": 4.16
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "la",
+        "start_seconds": 0.0,
+        "end_seconds": 0.3
+      },
+      {
+        "word": "torre",
+        "start_seconds": 0.3,
+        "end_seconds": 0.76
+      },
+      {
+        "word": "delle",
+        "start_seconds": 0.76,
+        "end_seconds": 0.98
+      },
+      {
+        "word": "forme",
+        "start_seconds": 0.98,
+        "end_seconds": 1.44
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.43065698941548664,
+        "no_speech_prob": 0.03028738684952259,
+        "compression_ratio": 0.9333333333333333,
+        "word_probabilities": [
+          0.166259765625,
+          0.7548828125,
+          0.99267578125,
+          0.9775390625,
+          0.9453125,
+          0.98681640625,
+          0.431396484375,
+          0.95068359375,
+          0.99072265625,
+          0.97314453125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.44331252574920654,
+        "no_speech_prob": 0.08144007623195648,
+        "compression_ratio": 0.7142857142857143,
+        "word_probabilities": [
+          0.3857421875,
+          0.7099609375,
+          0.82666015625,
+          0.97265625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": false,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 6,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 125,
+    "extracted_voiced_seconds": 1.25,
+    "unremoved_raw_target_tokens": [
+      "la",
+      "torre",
+      "delle",
+      "forme"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "la",
+      "torre",
+      "delle",
+      "forme"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 4.640181405895691,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 2.32,
+      "search_end_seconds": 2.9,
+      "prefix_last_word_end_seconds": 2.32,
+      "target_first_word_start_seconds": 2.9,
+      "gap_seconds": 0.23945578231292516,
+      "verified_silence_start_seconds": 2.609342403628118,
+      "verified_silence_end_seconds": 2.848798185941043,
+      "gap_rms_dbfs": -57.141,
+      "gap_peak_dbfs": -35.807,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.7290702947845804,
+      "cut_sample": 60176,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/torre_forme/locales/it/audio/activity-title.wav",
-    "bytes": 63590,
-    "sha256": "8fe535109dcad144ec9f69585bc314b1a3be6535d361f131ab33e8420f39489a"
+    "sha256": "fe2c9f206f0ae4b9f3fe0fd4667d2d77a34b46a975601c037e0e1ce412b64b90",
+    "bytes": 84358
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "9c408d51ec1dab71413b6e9c2b6aa9f0e0a14b64e68390ff7a1f54b077d4fda6",
+    "original_sha256": "8fe535109dcad144ec9f69585bc314b1a3be6535d361f131ab33e8420f39489a",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

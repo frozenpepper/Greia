@@ -1,24 +1,29 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T18:46:03.534731+00:00",
+  "created_utc": "2026-10-23T02:35:16.361520+00:00",
   "request": {
     "speaker": "flash",
-    "kind": "shared_character_utterance",
+    "kind": "character_dialogue",
     "locale": "it",
     "text": "Ce l'hai fatta!",
     "cue_id": "shared.celebrate.success.01",
     "output": "assets/audio/characters/shared/v0.2/flash/it/flash__it__celebrate.success__01.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Flash, a springy, eager little rabbit. A happy celebration with the child: joyful, proud and warm. Lively but clear."
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic"
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.flash.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
   "generation_parameters": {
-    "job_id": "20261020-204555-0dec5512",
-    "idempotency_key": "greia-9f366d18dc0a4fa29b95653cda64d06e",
+    "job_id": "20261023-043505-9573a6c0",
+    "idempotency_key": "greia-b713807643984e17bbe84c69b123b5ec",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +46,346 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 194316661,
+    "script_seed": 3900847145,
     "language_direction": "Italian",
-    "delivery_prompt": "Flash, a springy, eager little rabbit. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
-    "effective_delivery": "Speak in Italian. Flash, a springy, eager little rabbit. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "delivery_prompt": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "effective_delivery": "Speak in Italian. Voce calda e calma. Pronuncia chiara e naturale.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2354551431,
-        "sha256": "e5c7daf859eabc98fc0d0eb23ddbcb0dbd26ce590b418e05dcdf9eb449a513ee",
+        "seed": 3096097490,
+        "sha256": "10f3e8992fa6e851f90d0913d07d524797f00a481b3a789a386670ed0c4f6371",
         "generation": {
-          "elapsed_seconds": 7.703702625003643,
+          "elapsed_seconds": 10.011712959007127,
           "model_load_seconds": 0.0,
-          "rtf": 5.349174372181676,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.4760880593740384,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-audio-parakeet-tdt-v3",
+    "transcript": "Se l'hai fatta!",
+    "score": 0.8661,
+    "detail": "Delivered target transcribed and screened; human listening remains pending",
+    "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+    "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+    "flags": [],
+    "metrics": {
+      "duration_seconds": 1.110204081632653,
+      "rms_dbfs": -31.22,
+      "peak": 0.19064,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.08,
+      "trailing_silence_seconds": 0.2,
+      "longest_internal_pause_seconds": 0.1
+    }
   },
-  "attempts": 1,
+  "attempts": 2,
   "output": {
     "path": "assets/audio/characters/shared/v0.2/flash/it/flash__it__celebrate.success__01.wav",
-    "bytes": 63590,
-    "sha256": "5b244bc784898b4b92a47c4285b1096f10c76e4fd4acc7b3abf4d15112dfc2a5"
+    "bytes": 49038,
+    "sha256": "d3d31766e4655c1d7fc177f80b25c556f71aa464f009e4dfe74a749ac2d519b4"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "short_phrase": {
+    "mode": "automatic-carrier",
+    "composition_policy": "natural-context-period-v1",
+    "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/55ea74e3242544c8a18e1745b0b8c497",
+    "prefix": "Parliamo con calma insieme.",
+    "composite_text": "Parliamo con calma insieme.\n\nCe l'hai fatta!",
+    "effective_delivery": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "extraction": {
+      "schema_version": 1,
+      "algorithm_version": "greia-spoken-carrier-extractor-v7",
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "status": "EXTRACTED_PENDING_LISTENING",
+      "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/55ea74e3242544c8a18e1745b0b8c497/attempt-02/raw.wav",
+      "source_sha256": "10f3e8992fa6e851f90d0913d07d524797f00a481b3a789a386670ed0c4f6371",
+      "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/55ea74e3242544c8a18e1745b0b8c497/attempt-02/target.wav",
+      "output_sha256": "e1f3cff71d382d8401dde13525aad1e92b2873cfad810ec751e3f9326fae6c7d",
+      "output_bytes": 106620,
+      "locale": "it",
+      "prefix": "Parliamo con calma insieme.",
+      "target": "Ce l'hai fatta!",
+      "remove_first_words": 4,
+      "ignore_accents": true,
+      "target_verification_requested": "warn",
+      "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+      "target_comparison_score": 0.8661,
+      "target_word_count_matches": true,
+      "target_numbers_match": true,
+      "target_comparison_flags": [],
+      "target_transcript_warning": true,
+      "recognizer": "mlx-audio-parakeet-tdt-v3",
+      "recognizer_version": "0.5.0",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "extracted_transcript": "Se l'hai fatta!",
+      "expected_target_tokens": [
+        "ke",
+        "l'hai",
+        "fatta"
+      ],
+      "extracted_target_tokens": [
+        "se",
+        "l'hai",
+        "fatta"
+      ],
+      "extracted_target_exact_match": false,
+      "transcription_settings": {
+        "language_detection": "automatic",
+        "expected_text_prompt": null,
+        "timestamps": "model-provided-token-timestamps"
+      },
+      "sample_rate": 48000,
+      "duration_seconds": 2.8801666666666668,
+      "boundary": {
+        "search_strategy": "target-only-global-quiet-run-v7",
+        "verified_silence_start_seconds": 1.6,
+        "verified_silence_end_seconds": 1.87,
+        "verified_silence_duration_seconds": 0.27,
+        "cut_sample": 84960,
+        "cut_time_seconds": 1.77,
+        "padding_seconds": 0.1,
+        "quiet_run_start_sample": 76800,
+        "quiet_run_end_sample": 89760,
+        "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+      },
+      "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/55ea74e3242544c8a18e1745b0b8c497/attempt-02/target.wav.search/a3a535575e9e4caebd32df22f410bac4",
+      "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/55ea74e3242544c8a18e1745b0b8c497/attempt-02/target.wav.search/a3a535575e9e4caebd32df22f410bac4/search.json",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/55ea74e3242544c8a18e1745b0b8c497/attempt-02/raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "18cbdad978db9b18961b5c7ab666e73318933e1fcce49bec73ce2855bc194d64",
+      "candidate_sha256": "e1f3cff71d382d8401dde13525aad1e92b2873cfad810ec751e3f9326fae6c7d",
+      "candidate_id": "candidate-01",
+      "candidate_count": 1,
+      "qualifying_quiet_run_count": 1,
+      "candidate_results": [
+        {
+          "candidate_id": "candidate-01",
+          "quiet_run": {
+            "start_sample": 76800,
+            "end_sample": 89760,
+            "start_seconds": 1.6,
+            "end_seconds": 1.87,
+            "duration_seconds": 0.27
+          },
+          "cut_sample": 84960,
+          "cut_time_seconds": 1.77,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/55ea74e3242544c8a18e1745b0b8c497/attempt-02/target.wav.search/a3a535575e9e4caebd32df22f410bac4/candidate-01.wav",
+          "preceding_voiced_seconds": 1.21,
+          "retained_voiced_seconds": 0.57,
+          "retained_duration_seconds": 1.1101666666666667,
+          "candidate_sha256": "e1f3cff71d382d8401dde13525aad1e92b2873cfad810ec751e3f9326fae6c7d",
+          "extracted_transcript": "Se l'hai fatta!",
+          "canonical_transcript_tokens": [
+            "se",
+            "l'hai",
+            "fatta"
+          ],
+          "exact_target_match": false,
+          "target_comparison_score": 0.8661,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": true,
+          "asr_segment_count": 1
+        }
+      ],
+      "human_review": "PENDING",
+      "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+      "delivery": {
+        "policy": "verified-carrier-gap-delivery-v1",
+        "removed_frames": 0,
+        "removed_seconds": 0.0,
+        "retained_verified_quiet_seconds": 0.1,
+        "raw_delivery_start_sample": 84960,
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/55ea74e3242544c8a18e1745b0b8c497/attempt-02/delivery-target.wav",
+        "sha256": "e1f3cff71d382d8401dde13525aad1e92b2873cfad810ec751e3f9326fae6c7d"
+      }
+    },
+    "quality": {
+      "disposition": "PASS",
+      "score": 0.8661,
+      "transcript": "Se l'hai fatta!",
+      "metrics": {
+        "duration_seconds": 1.110204081632653,
+        "rms_dbfs": -31.22,
+        "peak": 0.19064,
+        "clipped_fraction": 0.0,
+        "leading_silence_seconds": 0.08,
+        "trailing_silence_seconds": 0.2,
+        "longest_internal_pause_seconds": 0.1
+      },
+      "flags": [],
+      "ignore_accents": true,
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "detail": "Delivered target transcribed and screened; human listening remains pending"
+    },
+    "history": [
+      {
+        "attempt": 1,
+        "status": "REJECTED_CUT",
+        "error": "no candidate suffix meets target verification policy",
+        "evidence": {
+          "candidate_transcripts": [
+            "Ne ha fatta!"
+          ],
+          "matching_candidate_ids": [],
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/55ea74e3242544c8a18e1745b0b8c497/attempt-01/target.wav.search/234e2748816047ea8332afdfc0973154",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/55ea74e3242544c8a18e1745b0b8c497/attempt-01/target.wav.search/234e2748816047ea8332afdfc0973154/search.json"
+        }
+      },
+      {
+        "attempt": 2,
+        "status": "PASS",
+        "quality": {
+          "disposition": "PASS",
+          "score": 0.8661,
+          "transcript": "Se l'hai fatta!",
+          "metrics": {
+            "duration_seconds": 1.110204081632653,
+            "rms_dbfs": -31.22,
+            "peak": 0.19064,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.08,
+            "trailing_silence_seconds": 0.2,
+            "longest_internal_pause_seconds": 0.1
+          },
+          "flags": [],
+          "ignore_accents": true,
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "detail": "Delivered target transcribed and screened; human listening remains pending"
+        },
+        "extraction": {
+          "schema_version": 1,
+          "algorithm_version": "greia-spoken-carrier-extractor-v7",
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "status": "EXTRACTED_PENDING_LISTENING",
+          "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/55ea74e3242544c8a18e1745b0b8c497/attempt-02/raw.wav",
+          "source_sha256": "10f3e8992fa6e851f90d0913d07d524797f00a481b3a789a386670ed0c4f6371",
+          "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/55ea74e3242544c8a18e1745b0b8c497/attempt-02/target.wav",
+          "output_sha256": "e1f3cff71d382d8401dde13525aad1e92b2873cfad810ec751e3f9326fae6c7d",
+          "output_bytes": 106620,
+          "locale": "it",
+          "prefix": "Parliamo con calma insieme.",
+          "target": "Ce l'hai fatta!",
+          "remove_first_words": 4,
+          "ignore_accents": true,
+          "target_verification_requested": "warn",
+          "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+          "target_comparison_score": 0.8661,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_transcript_warning": true,
+          "recognizer": "mlx-audio-parakeet-tdt-v3",
+          "recognizer_version": "0.5.0",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "extracted_transcript": "Se l'hai fatta!",
+          "expected_target_tokens": [
+            "ke",
+            "l'hai",
+            "fatta"
+          ],
+          "extracted_target_tokens": [
+            "se",
+            "l'hai",
+            "fatta"
+          ],
+          "extracted_target_exact_match": false,
+          "transcription_settings": {
+            "language_detection": "automatic",
+            "expected_text_prompt": null,
+            "timestamps": "model-provided-token-timestamps"
+          },
+          "sample_rate": 48000,
+          "duration_seconds": 2.8801666666666668,
+          "boundary": {
+            "search_strategy": "target-only-global-quiet-run-v7",
+            "verified_silence_start_seconds": 1.6,
+            "verified_silence_end_seconds": 1.87,
+            "verified_silence_duration_seconds": 0.27,
+            "cut_sample": 84960,
+            "cut_time_seconds": 1.77,
+            "padding_seconds": 0.1,
+            "quiet_run_start_sample": 76800,
+            "quiet_run_end_sample": 89760,
+            "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+          },
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/55ea74e3242544c8a18e1745b0b8c497/attempt-02/target.wav.search/a3a535575e9e4caebd32df22f410bac4",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/55ea74e3242544c8a18e1745b0b8c497/attempt-02/target.wav.search/a3a535575e9e4caebd32df22f410bac4/search.json",
+          "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/55ea74e3242544c8a18e1745b0b8c497/attempt-02/raw.wav.receipt.json",
+          "source_provider_receipt_sha256": "18cbdad978db9b18961b5c7ab666e73318933e1fcce49bec73ce2855bc194d64",
+          "candidate_sha256": "e1f3cff71d382d8401dde13525aad1e92b2873cfad810ec751e3f9326fae6c7d",
+          "candidate_id": "candidate-01",
+          "candidate_count": 1,
+          "qualifying_quiet_run_count": 1,
+          "candidate_results": [
+            {
+              "candidate_id": "candidate-01",
+              "quiet_run": {
+                "start_sample": 76800,
+                "end_sample": 89760,
+                "start_seconds": 1.6,
+                "end_seconds": 1.87,
+                "duration_seconds": 0.27
+              },
+              "cut_sample": 84960,
+              "cut_time_seconds": 1.77,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/55ea74e3242544c8a18e1745b0b8c497/attempt-02/target.wav.search/a3a535575e9e4caebd32df22f410bac4/candidate-01.wav",
+              "preceding_voiced_seconds": 1.21,
+              "retained_voiced_seconds": 0.57,
+              "retained_duration_seconds": 1.1101666666666667,
+              "candidate_sha256": "e1f3cff71d382d8401dde13525aad1e92b2873cfad810ec751e3f9326fae6c7d",
+              "extracted_transcript": "Se l'hai fatta!",
+              "canonical_transcript_tokens": [
+                "se",
+                "l'hai",
+                "fatta"
+              ],
+              "exact_target_match": false,
+              "target_comparison_score": 0.8661,
+              "target_word_count_matches": true,
+              "target_numbers_match": true,
+              "target_comparison_flags": [],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": true,
+              "asr_segment_count": 1
+            }
+          ],
+          "human_review": "PENDING",
+          "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+          "delivery": {
+            "policy": "verified-carrier-gap-delivery-v1",
+            "removed_frames": 0,
+            "removed_seconds": 0.0,
+            "retained_verified_quiet_seconds": 0.1,
+            "raw_delivery_start_sample": 84960,
+            "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/55ea74e3242544c8a18e1745b0b8c497/attempt-02/delivery-target.wav",
+            "sha256": "e1f3cff71d382d8401dde13525aad1e92b2873cfad810ec751e3f9326fae6c7d"
+          }
+        },
+        "candidate": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/55ea74e3242544c8a18e1745b0b8c497/attempt-02/candidate.wav"
+      }
+    ]
+  },
   "corpus_replacement": {
-    "original_sha256": "7a9807136d63e0fe5afd33495da8f9c4b1803d594faddff3272eeb00b88a93c7",
+    "original_sha256": "801810715d71564c6f7736ed6100edd7ef2edf22c7ef8449c8672d81709579d3",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

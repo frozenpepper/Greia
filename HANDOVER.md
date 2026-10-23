@@ -180,6 +180,33 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-23 — Publish the remaining voice replacements and normalize approved delivery
+
+Owner requested committing the remaining voice work after the parent's direct
+45-Activity audit. This publication includes 683 replacement audio/receipt pairs
+(all 667 priority paths plus 16 earlier short-carrier replacements), matching
+catalogue metadata, and a path/hash/voice/review CSV. Human PENDING, APPROVED and
+WAIVED_BY_OWNER states are preserved; committing does not claim listening approval.
+
+Twelve approved saved cuts were repackaged from 48 kHz to canonical 22,050 Hz mono
+PCM16 without synthesis or ASR. Their original bytes/receipts and transaction
+backups are external under
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-parent-audio-publication-v1/`.
+Generation dates and owner approvals remain unchanged, with source/delivery hash
+provenance added. Eleven already-stale Officina dei Suoni checksum rows were
+refreshed against unchanged recordings.
+
+Post-repair verification: 4,743 receipt/audio pairs agree, all audio catalogues
+agree, Activity titles 180/180 complete, collection labels 84/84 complete. Full
+`make verify`: NOT GREEN, 5,845 tests, 6 failures/3 errors/8 skips. Three
+Word Forest subtests still expect PENDING instead of the explicit native
+WAIVED_BY_OWNER state; other failures/errors are MBR/Parent Wi-Fi source-contract,
+ARM64 profile and macOS lsblk dependencies. Receipts retain the true owner waiver.
+Exact test identities and log are recorded in the publication review.
+See `docs/reviews/2026-10-23_VOICE_BATCH_PUBLICATION.md` and its exact CSV inventory.
+The unrelated October 19 draft review and video artifacts remain uncommitted.
+
+
 ### 2026-10-23 — Self-signed HTTPS for Parents implemented in GitHub; physical acceptance outstanding
 
 **Owner-approved scope:** family/home-LAN HTTPS, without public PKI, QR/Allow ceremony, extra passwords or companion applications. Separate Parent client repository HEAD is `5518a9eed8ba61503249a1c827b7ef4fef5dab36` and Greia's `runtime/parent-app-client.toml`, integrity manifest, vendor runtime and installer overlay now match that source's production bundle.

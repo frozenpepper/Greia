@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T12:02:30.186760+00:00",
+  "created_utc": "2026-10-22T07:55:24.254000+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "Les lumières de Momo",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français...\n\nLes lumières de Momo",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "momo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Les lumières de Momo",
+    "cue_id": "luci_di_momo.title.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Les lumières de Momo",
     "cue_id": "luci_di_momo.title.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/luci_di_momo/locales/fr/audio/activity-title.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.momo.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261021-140222-eeb3a605",
-    "idempotency_key": "greia-75b213630225463784c7458869155b00",
+    "job_id": "20261022-095510-341aff7a",
+    "idempotency_key": "greia-2b4d2c4ddef24d8d9318de1c0388b902",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,268 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2880012061,
+    "script_seed": 2946276147,
     "language_direction": "French",
-    "delivery_prompt": "Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "effective_delivery": "Speak in French. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3089475396,
-        "sha256": "4004dd88aebc305fbecc91c15b0b6310c0dee0daf7d19b511a2547bb41c868ae",
+        "seed": 974066282,
+        "sha256": "89891ccda3c44c525a62fe63195cb52c96173ddf9055b72762f79f1a698de3a8",
         "generation": {
-          "elapsed_seconds": 6.751816583004256,
+          "elapsed_seconds": 12.572821458001272,
           "model_load_seconds": 0.0,
-          "rtf": 3.51626590556597,
-          "peak_memory_gb": 7.648166916
+          "rtf": 3.571655165380788,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " Les lumières de Momo",
+    "metrics": {
+      "duration_seconds": 1.5918367346938775,
+      "rms_dbfs": -34.94,
+      "peak": 0.121,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.16,
+      "trailing_silence_seconds": 0.1,
+      "longest_internal_pause_seconds": 0.06
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/luci_di_momo/locales/fr/audio/activity-title.wav.raw.wav",
+    "sha256": "05a00f7c64e7582ffe16263435bbc101a439da697afbb0a4557c416fc0651a1a",
+    "receipt_sha256": "99cce2c5bf0f02d90aaf42a55f6062e215c04f6c1463a043a50c7ffac45d0bb7"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/luci_di_momo/locales/fr/audio/activity-title.wav.extracted.wav",
+    "sha256": "de1da6fec8fb63541a189ba49f68276ac126cedf3b129fb10917eb51380218e9"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/luci_di_momo/locales/fr/audio/activity-title.wav.delivery.wav",
+    "sha256": "a530507ed64d3f51f02a0c62d254b333f33ae6bc82f0afeed6b7de3ddc2e5c9f"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/activities/luci_di_momo/locales/fr/audio/activity-title.wav.raw.wav",
+    "source_sha256": "05a00f7c64e7582ffe16263435bbc101a439da697afbb0a4557c416fc0651a1a",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/activities/luci_di_momo/locales/fr/audio/activity-title.wav.extracted.wav",
+    "output_sha256": "de1da6fec8fb63541a189ba49f68276ac126cedf3b129fb10917eb51380218e9",
+    "target_request": {
+      "speaker": "momo",
+      "kind": "character_dialogue",
+      "text": "Les lumières de Momo",
+      "locale": "fr",
+      "cue_id": "luci_di_momo.title.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/activities/luci_di_momo/locales/fr/audio/activity-title.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "99cce2c5bf0f02d90aaf42a55f6062e215c04f6c1463a043a50c7ffac45d0bb7"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "Les lumières de Momo",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français, les lumières de Momo.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Les lumières de Momo",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.14
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.14,
+        "end_seconds": 0.46
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.46,
+        "end_seconds": 0.7
+      },
+      {
+        "word": "en",
+        "start_seconds": 0.7,
+        "end_seconds": 0.82
+      },
+      {
+        "word": "français",
+        "start_seconds": 0.82,
+        "end_seconds": 1.3
+      },
+      {
+        "word": "les",
+        "start_seconds": 2.08,
+        "end_seconds": 2.24
+      },
+      {
+        "word": "lumières",
+        "start_seconds": 2.24,
+        "end_seconds": 2.74
+      },
+      {
+        "word": "de",
+        "start_seconds": 2.74,
+        "end_seconds": 2.92
+      },
+      {
+        "word": "momo",
+        "start_seconds": 2.92,
+        "end_seconds": 3.14
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "les",
+        "start_seconds": 0.0,
+        "end_seconds": 0.52
+      },
+      {
+        "word": "lumières",
+        "start_seconds": 0.52,
+        "end_seconds": 1.04
+      },
+      {
+        "word": "de",
+        "start_seconds": 1.04,
+        "end_seconds": 1.2
+      },
+      {
+        "word": "momo",
+        "start_seconds": 1.2,
+        "end_seconds": 1.42
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.4096645712852478,
+        "no_speech_prob": 0.024344535544514656,
+        "compression_ratio": 0.8833333333333333,
+        "word_probabilities": [
+          0.6484375,
+          0.98046875,
+          0.95361328125,
+          0.9677734375,
+          0.9755859375,
+          0.34033203125,
+          0.8212890625,
+          0.986328125,
+          0.65283203125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.3444289631313748,
+        "no_speech_prob": 0.15395769476890564,
+        "compression_ratio": 0.75,
+        "word_probabilities": [
+          0.486572265625,
+          0.87841796875,
+          0.98193359375,
+          0.43115234375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 113,
+    "extracted_voiced_seconds": 1.13,
+    "unremoved_raw_target_tokens": [
+      "les",
+      "lumières",
+      "de",
+      "momo"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "les",
+      "lumières",
+      "de",
+      "momo"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.5201814058956917,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.3,
+      "search_end_seconds": 2.08,
+      "prefix_last_word_end_seconds": 1.3,
+      "target_first_word_start_seconds": 2.08,
+      "gap_seconds": 0.6086167800453515,
+      "verified_silence_start_seconds": 1.4197278911564626,
+      "verified_silence_end_seconds": 2.0283446712018143,
+      "gap_rms_dbfs": -58.179,
+      "gap_peak_dbfs": -34.158,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.7240362811791385,
+      "cut_sample": 38015,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 4505,
+      "removed_seconds": 0.20430839002267573,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 42520,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/activities/luci_di_momo/locales/fr/audio/activity-title.wav.delivery.wav",
+      "sha256": "a530507ed64d3f51f02a0c62d254b333f33ae6bc82f0afeed6b7de3ddc2e5c9f"
+    }
+  },
   "output": {
     "path": "activities/luci_di_momo/locales/fr/audio/activity-title.wav",
-    "bytes": 84758,
-    "sha256": "e4e3edcd6e8a295ddb8fce3cdc8933571eadfa2bc613683b2f32ab94c1c07a78"
+    "sha256": "419e9780a66b9bf17f74b41d3df78bded538a704003205ee93fcdb7a863ca649",
+    "bytes": 70278
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "7b4ae414d6f13cbc32784b5fb759342a8a24429e64041ef86f9681ee65ea4d30",
+    "original_sha256": "c840d6fb885430184e914b8f1455e6bbe2f27683e402c7d0a0b4f5f3aca379b9",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

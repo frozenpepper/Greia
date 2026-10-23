@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T08:03:23.952031+00:00",
+  "created_utc": "2026-10-21T14:57:42.008040+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "Trova Luna",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. Trova Luna",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Trova Luna",
+    "cue_id": "greia.requested.find_luna.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Trova Luna",
     "cue_id": "greia.requested.find_luna.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/baia_delle_orche/assets/audio/it/find_luna.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.tito.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261021-100314-9a4487d9",
-    "idempotency_key": "greia-d2b1c9d9a49744f0a500436657842bed",
+    "job_id": "20261021-165718-8d7c943c",
+    "idempotency_key": "greia-c5aa6c551ac54aa08d3c4cd6da1d0b12",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,212 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1837971462,
+    "script_seed": 2206585347,
     "language_direction": "Italian",
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in Italian. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 366189042,
-        "sha256": "e7b3f64648b21ab353868a42938520d2463ccd6e7591a19ea139042c9f06df7a",
+        "seed": 3799718039,
+        "sha256": "4ed1e0ee2ef9b858bb923a874da0441af8ea6e3e36c73e30acec4c7ffe8feb8c",
         "generation": {
-          "elapsed_seconds": 4.784620500002347,
+          "elapsed_seconds": 21.763822749999235,
           "model_load_seconds": 0.0,
-          "rtf": 4.271346972178855,
-          "peak_memory_gb": 7.648166916
+          "rtf": 4.6903105671490035,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Trova Luna",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/baia_delle_orche/assets/audio/it/find_luna.wav.raw.wav",
+    "sha256": "493ddbbfa7bfbf04af1c2f721575d8758593d9e83c31bec1bda150e0efd0bb72",
+    "receipt_sha256": "7dd5699efb12010cf730598ce7b54572f88f389e810f3e0e8829b5509c86e607"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/baia_delle_orche/assets/audio/it/find_luna.wav.extracted.wav",
+    "sha256": "a863e258dd544195ef8da43db1c21ea735f9a82d8a856361fdb5b72c27a39597"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-corpus-v1/run/carrier-raw/activities/baia_delle_orche/assets/audio/it/find_luna.wav.raw.wav",
+    "source_sha256": "493ddbbfa7bfbf04af1c2f721575d8758593d9e83c31bec1bda150e0efd0bb72",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-corpus-v1/run/carrier-extracted/activities/baia_delle_orche/assets/audio/it/find_luna.wav.extracted.wav",
+    "output_sha256": "a863e258dd544195ef8da43db1c21ea735f9a82d8a856361fdb5b72c27a39597",
+    "target_request": {
+      "speaker": "tito",
+      "kind": "character_dialogue",
+      "text": "Trova Luna",
+      "locale": "it",
+      "cue_id": "greia.requested.find_luna.it",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-corpus-v1/run/carrier-raw/activities/baia_delle_orche/assets/audio/it/find_luna.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "7dd5699efb12010cf730598ce7b54572f88f389e810f3e0e8829b5509c86e607"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "Trova Luna",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " ascolta questa frase in italiano. Trova Luna.",
+    "extracted_transcript": " Trova Luna",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.72
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.72,
+        "end_seconds": 1.06
+      },
+      {
+        "word": "frase",
+        "start_seconds": 1.06,
+        "end_seconds": 1.46
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.46,
+        "end_seconds": 1.66
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.66,
+        "end_seconds": 2.1
+      },
+      {
+        "word": "trova",
+        "start_seconds": 3.44,
+        "end_seconds": 4.0
+      },
+      {
+        "word": "luna",
+        "start_seconds": 4.0,
+        "end_seconds": 4.38
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "trova",
+        "start_seconds": 0.0,
+        "end_seconds": 1.18
+      },
+      {
+        "word": "luna",
+        "start_seconds": 1.18,
+        "end_seconds": 1.54
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5653674742754768,
+        "no_speech_prob": 0.001516357995569706,
+        "compression_ratio": 0.8823529411764706,
+        "word_probabilities": [
+          0.69091796875,
+          0.96923828125,
+          0.89404296875,
+          0.74853515625,
+          0.97314453125
+        ]
+      },
+      {
+        "avg_logprob": -0.5653674742754768,
+        "no_speech_prob": 0.001516357995569706,
+        "compression_ratio": 0.8823529411764706,
+        "word_probabilities": [
+          0.7919921875,
+          0.46826171875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.5840934117635092,
+        "no_speech_prob": 0.12737321853637695,
+        "compression_ratio": 0.5555555555555556,
+        "word_probabilities": [
+          0.732421875,
+          0.477294921875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 77,
+    "extracted_voiced_seconds": 0.77,
+    "unremoved_raw_target_tokens": [
+      "trova",
+      "luna"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "trova",
+      "luna"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 4.640181405895691,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 2.1,
+      "target_first_word_start_seconds": 3.44,
+      "gap_seconds": 1.1573696145124717,
+      "verified_silence_start_seconds": 2.229705215419501,
+      "verified_silence_end_seconds": 3.3870748299319726,
+      "gap_rms_dbfs": -64.199,
+      "gap_peak_dbfs": -38.69,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.808390022675737,
+      "cut_sample": 61925,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/baia_delle_orche/assets/audio/it/find_luna.wav",
-    "bytes": 49478,
-    "sha256": "d2ae4a885d5aaf2ba811e2ad7c4393a7a7c8c5e1360e95dea49c6bbb22fce578"
+    "sha256": "cd10f1f2157fa4f40dc887a534010e8c9f5b3f66e54c25f1a1ffe671808afb64",
+    "bytes": 80860
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "184ef12aad11cc2fa24eb10cb2fa9cf3006b60feff2f74437b718a320c31e9ba",
+    "original_sha256": "d2ae4a885d5aaf2ba811e2ad7c4393a7a7c8c5e1360e95dea49c6bbb22fce578",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

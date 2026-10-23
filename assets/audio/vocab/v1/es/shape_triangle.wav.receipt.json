@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T20:55:12.461634+00:00",
+  "created_utc": "2026-10-21T18:41:54.947307+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "Triángulo",
+    "target_word_count": 1,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. Triángulo",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "Triángulo",
+    "cue_id": "greia.vocab.shape_triangle.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "Triángulo",
     "cue_id": "greia.vocab.shape_triangle.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "assets/audio/vocab/v1/es/shape_triangle.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-225504-d793fe0a",
-    "idempotency_key": "greia-5e9ec087b3f8492085f086c21aaf8163",
+    "job_id": "20261021-204140-90ce4c11",
+    "idempotency_key": "greia-6b4530fed6ba4f2cb1ded00cd75f25d7",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,191 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1011456442,
+    "script_seed": 3975657718,
     "language_direction": "Spanish",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
-    "effective_delivery": "Speak in Spanish. Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3970985697,
-        "sha256": "f2f1b606bd66a3821e465a40c2f693341da60312e492133964094f91bea3963f",
+        "seed": 1380731948,
+        "sha256": "f1599b3e8fbca871fd97c9419f63f5b9934396ed62d32e1d884f408f4a445462",
         "generation": {
-          "elapsed_seconds": 7.990311375004239,
+          "elapsed_seconds": 13.115410208993126,
           "model_load_seconds": 0.0,
-          "rtf": 5.548185192688976,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.7257923987481063,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Triángulo",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/vocab/v1/es/shape_triangle.wav.raw.wav",
+    "sha256": "8452bb7a8a8008b8ee3662122baac20904b042fe98ec91512a29382c88ed4dfc",
+    "receipt_sha256": "0898c88c910db7e51427a4502b70b45c9310b1b9d56e7b19920b34412b3b19b0"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/vocab/v1/es/shape_triangle.wav.extracted.wav",
+    "sha256": "3ae42f25c0afad2914c84b74e26e81cabb8e9a9749f0aa3237b313d74b1272a2"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/assets/audio/vocab/v1/es/shape_triangle.wav.raw.wav",
+    "source_sha256": "8452bb7a8a8008b8ee3662122baac20904b042fe98ec91512a29382c88ed4dfc",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/assets/audio/vocab/v1/es/shape_triangle.wav.extracted.wav",
+    "output_sha256": "3ae42f25c0afad2914c84b74e26e81cabb8e9a9749f0aa3237b313d74b1272a2",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Triángulo",
+      "locale": "es",
+      "cue_id": "greia.vocab.shape_triangle.es",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/assets/audio/vocab/v1/es/shape_triangle.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "0898c88c910db7e51427a4502b70b45c9310b1b9d56e7b19920b34412b3b19b0"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "Triángulo",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " escucha esta frase en español. Triángulo",
+    "extracted_transcript": " Triángulo",
+    "raw_word_alignment": [
+      {
+        "word": "escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.64
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.64,
+        "end_seconds": 0.92
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.92,
+        "end_seconds": 1.28
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.28,
+        "end_seconds": 1.48
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.48,
+        "end_seconds": 2.0
+      },
+      {
+        "word": "triángulo",
+        "start_seconds": 2.68,
+        "end_seconds": 3.26
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "triángulo",
+        "start_seconds": 0.0,
+        "end_seconds": 0.96
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.47011103996863735,
+        "no_speech_prob": 0.020151333883404732,
+        "compression_ratio": 0.8571428571428571,
+        "word_probabilities": [
+          0.646484375,
+          0.8984375,
+          0.994140625,
+          0.97509765625,
+          0.9931640625,
+          0.80419921875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.5396242141723633,
+        "no_speech_prob": 0.44918498396873474,
+        "compression_ratio": 0.5555555555555556,
+        "word_probabilities": [
+          0.82080078125
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 67,
+    "extracted_voiced_seconds": 0.67,
+    "unremoved_raw_target_tokens": [
+      "triángulo"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "triángulo"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.5201814058956917,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 2.0,
+      "target_first_word_start_seconds": 2.68,
+      "gap_seconds": 0.5687074829931973,
+      "verified_silence_start_seconds": 2.0598639455782313,
+      "verified_silence_end_seconds": 2.6285714285714286,
+      "gap_rms_dbfs": -65.282,
+      "gap_peak_dbfs": -45.013,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.34421768707483,
+      "cut_sample": 51690,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "assets/audio/vocab/v1/es/shape_triangle.wav",
-    "bytes": 63590,
-    "sha256": "073b5549374ee8a9d17d47180f7024ea9da15e06c0274171fc078dc022826042"
+    "sha256": "1b26a99926d2c1d01728415140709191b965ddb0aff3f7fae521b0066b664f62",
+    "bytes": 51938
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "b91cf646e2c3fa8a9e9530ee1c0a956f18c61a01fa7abc7cb2ec1c92b2f06417",
+    "original_sha256": "073b5549374ee8a9d17d47180f7024ea9da15e06c0274171fc078dc022826042",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

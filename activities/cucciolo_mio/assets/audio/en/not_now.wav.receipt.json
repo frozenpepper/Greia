@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T03:28:17.600896+00:00",
+  "created_utc": "2026-10-22T04:39:03.966872+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Listen to this phrase in English.",
+    "prefix_word_count": 6,
+    "target": "Not now, thank you",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Listen to this phrase in English...\n\nNot now, thank you",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "lilli",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Not now, thank you",
+    "cue_id": "greia.requested.not_now.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "Not now, thank you",
     "cue_id": "greia.requested.not_now.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/cucciolo_mio/assets/audio/en/not_now.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.lilli.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "job_id": "20261020-052806-fe115da7",
-    "idempotency_key": "greia-673acfdfb6d44409872ab2993c1c2c1f",
+    "job_id": "20261022-063540-12461534",
+    "idempotency_key": "greia-11e19d6f4f3a4c108ab296b185d9d189",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,287 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 542217493,
+    "script_seed": 1617620825,
     "language_direction": "English",
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
-    "effective_delivery": "Speak naturally in English. Lilli, a sparkly, affectionate storybook unicorn. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "effective_delivery": "Speak in English. Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3347753460,
-        "sha256": "5bc04a08f482deedc2b39c60aab2ddc6b529d765e678aae87cfde0a5f02e2c3c",
+        "seed": 1918489490,
+        "sha256": "be572610ab3792176f633706f5eccd3c759bb9097f5ecd0a3979055b4922ee30",
         "generation": {
-          "elapsed_seconds": 10.44459883403033,
+          "elapsed_seconds": 21.10684191698965,
           "model_load_seconds": 0.0,
-          "rtf": 5.933869236263799,
-          "peak_memory_gb": 6.61593154
+          "rtf": 4.885654546581456,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " Not now, thank you.",
+    "metrics": {
+      "duration_seconds": 1.432108843537415,
+      "rms_dbfs": -26.18,
+      "peak": 0.2793,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.1,
+      "trailing_silence_seconds": 0.26,
+      "longest_internal_pause_seconds": 0.1
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/cucciolo_mio/assets/audio/en/not_now.wav.raw.wav",
+    "sha256": "f977fd1fdf67005de71046c0d6cbbd079090a1e4b780dba7cbbc7e47c00f709f",
+    "receipt_sha256": "2524edfbc3b0bdd503fa5e145088e6484669ec5988cce7ee0d3024ef9eb4a2b5"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/cucciolo_mio/assets/audio/en/not_now.wav.extracted.wav",
+    "sha256": "67cda6bcb6b664b176a1664eecf2750bdb30c73d17222c0343b0b5fb16f1505c"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/cucciolo_mio/assets/audio/en/not_now.wav.delivery.wav",
+    "sha256": "a28ae5d40526205ecf487a17392c6f0c6ff211386bf89bf3f246c4d07a5590ac"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/activities/cucciolo_mio/assets/audio/en/not_now.wav.raw.wav",
+    "source_sha256": "f977fd1fdf67005de71046c0d6cbbd079090a1e4b780dba7cbbc7e47c00f709f",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/activities/cucciolo_mio/assets/audio/en/not_now.wav.extracted.wav",
+    "output_sha256": "67cda6bcb6b664b176a1664eecf2750bdb30c73d17222c0343b0b5fb16f1505c",
+    "target_request": {
+      "speaker": "lilli",
+      "kind": "character_dialogue",
+      "text": "Not now, thank you",
+      "locale": "en",
+      "cue_id": "greia.requested.not_now.en",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/activities/cucciolo_mio/assets/audio/en/not_now.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "2524edfbc3b0bdd503fa5e145088e6484669ec5988cce7ee0d3024ef9eb4a2b5"
+    },
+    "locale": "en",
+    "prefix": "Listen to this phrase in English.",
+    "target": "Not now, thank you",
+    "remove_first_words": 6,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Listen to this phrase in English. English, not now. Thank you.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Not now, thank you.",
+    "raw_word_alignment": [
+      {
+        "word": "listen",
+        "start_seconds": 0.0,
+        "end_seconds": 0.24
+      },
+      {
+        "word": "to",
+        "start_seconds": 0.24,
+        "end_seconds": 0.44
+      },
+      {
+        "word": "this",
+        "start_seconds": 0.44,
+        "end_seconds": 0.62
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.62,
+        "end_seconds": 0.88
+      },
+      {
+        "word": "in",
+        "start_seconds": 0.88,
+        "end_seconds": 1.08
+      },
+      {
+        "word": "english",
+        "start_seconds": 1.08,
+        "end_seconds": 1.4
+      },
+      {
+        "word": "english",
+        "start_seconds": 2.1400000000000006,
+        "end_seconds": 2.62
+      },
+      {
+        "word": "not",
+        "start_seconds": 2.94,
+        "end_seconds": 3.14
+      },
+      {
+        "word": "now",
+        "start_seconds": 3.14,
+        "end_seconds": 3.38
+      },
+      {
+        "word": "thank",
+        "start_seconds": 3.58,
+        "end_seconds": 3.72
+      },
+      {
+        "word": "you",
+        "start_seconds": 3.72,
+        "end_seconds": 4.02
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "not",
+        "start_seconds": 0.0,
+        "end_seconds": 0.3
+      },
+      {
+        "word": "now",
+        "start_seconds": 0.3,
+        "end_seconds": 0.56
+      },
+      {
+        "word": "thank",
+        "start_seconds": 0.74,
+        "end_seconds": 0.88
+      },
+      {
+        "word": "you",
+        "start_seconds": 0.88,
+        "end_seconds": 1.18
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5426224708557129,
+        "no_speech_prob": 0.0770205482840538,
+        "compression_ratio": 1.0,
+        "word_probabilities": [
+          0.9580078125,
+          0.9970703125,
+          0.99560546875,
+          0.99658203125,
+          0.99755859375,
+          0.99462890625
+        ]
+      },
+      {
+        "avg_logprob": -0.5426224708557129,
+        "no_speech_prob": 0.0770205482840538,
+        "compression_ratio": 1.0,
+        "word_probabilities": [
+          0.1259765625,
+          0.96435546875,
+          0.96240234375,
+          0.99609375,
+          0.9765625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.5194112989637587,
+        "no_speech_prob": 0.19508032500743866,
+        "compression_ratio": 0.7037037037037037,
+        "word_probabilities": [
+          0.736328125,
+          0.97607421875,
+          0.8466796875,
+          0.9873046875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": false,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 7,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 82,
+    "extracted_voiced_seconds": 0.82,
+    "unremoved_raw_target_tokens": [
+      "not",
+      "now",
+      "thank",
+      "you"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "not",
+      "now",
+      "thank",
+      "you"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 4.320181405895692,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-expanded-boundary",
+      "search_start_seconds": 2.1400000000000006,
+      "search_end_seconds": 3.14,
+      "prefix_last_word_end_seconds": 2.62,
+      "target_first_word_start_seconds": 2.94,
+      "gap_seconds": 0.2893424036281179,
+      "verified_silence_start_seconds": 2.6987301587301586,
+      "verified_silence_end_seconds": 2.9880725623582767,
+      "gap_rms_dbfs": -54.407,
+      "gap_peak_dbfs": -30.609,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.8434013605442177,
+      "cut_sample": 62697,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 985,
+      "removed_seconds": 0.04467120181405896,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 63682,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/activities/cucciolo_mio/assets/audio/en/not_now.wav.delivery.wav",
+      "sha256": "a28ae5d40526205ecf487a17392c6f0c6ff211386bf89bf3f246c4d07a5590ac"
+    }
+  },
   "output": {
     "path": "activities/cucciolo_mio/assets/audio/en/not_now.wav",
-    "bytes": 77702,
-    "sha256": "d1d09387c6a6b273b24895633646079f427876badbbe62ebd78b215324d5f974"
+    "sha256": "7969a3eae152181db7b402fbd820819ff94fe79bf4de3a631d05ff52ead156f5",
+    "bytes": 63234
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "eab1b62a589f4b4eb4a2d8daeac72d62ff676dfed799e8f6c0f6a994ee40b8cc",
+    "original_sha256": "d1d09387c6a6b273b24895633646079f427876badbbe62ebd78b215324d5f974",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

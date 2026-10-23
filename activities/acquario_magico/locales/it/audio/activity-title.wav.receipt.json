@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T20:39:34.501224+00:00",
+  "created_utc": "2026-10-21T15:12:18.188629+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "L'Acquario Magico",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. L'Acquario Magico",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "L'Acquario Magico",
+    "cue_id": "activity.title",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "L'Acquario Magico",
     "cue_id": "activity.title",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/acquario_magico/locales/it/audio/activity-title.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261019-223926-bd457a34",
-    "idempotency_key": "greia-4b318f1a36a2424986dceeeb46a46843",
+    "job_id": "20261021-171200-0344cc75",
+    "idempotency_key": "greia-903d565576e948dd9796dc2f4999a7a6",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,229 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 561248327,
+    "script_seed": 3343978414,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "effective_delivery": "Speak naturally in Italian. Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 731368151,
-        "sha256": "15050a592b905dc118675f50a95a54c9b642737cdadcbdeaf336a0f87bc6122a",
+        "seed": 2058170652,
+        "sha256": "85541e7b7c69d9d116129f41649fe6e6f1cb8c1fbaadf2e642abc43e2e3d820a",
         "generation": {
-          "elapsed_seconds": 7.400014207989443,
+          "elapsed_seconds": 16.19331724999938,
           "model_load_seconds": 0.0,
-          "rtf": 3.853839531979573,
-          "peak_memory_gb": 8.21220922
+          "rtf": 4.048160639139881,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " L'acquario Magico",
+    "metrics": {
+      "duration_seconds": 1.5658956916099773,
+      "rms_dbfs": -32.16,
+      "peak": 0.21451,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.3,
+      "trailing_silence_seconds": 0.14,
+      "longest_internal_pause_seconds": 0.02
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/acquario_magico/locales/it/audio/activity-title.wav.raw.wav",
+    "sha256": "e6ac2b6e26ec89ff0a53e37d94b73015921424afc67b07def0f3c1a025fe4d18",
+    "receipt_sha256": "7fa8bff4d23584e628fb19e35b28894906a7e79142434bf0de29e0fda6590c5f"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/acquario_magico/locales/it/audio/activity-title.wav.extracted.wav",
+    "sha256": "ae3bf5ae701f47e0b19bfb486b134576191c110fd0e893360b9e86b000c87d2c"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/acquario_magico/locales/it/audio/activity-title.wav.raw.wav",
+    "source_sha256": "e6ac2b6e26ec89ff0a53e37d94b73015921424afc67b07def0f3c1a025fe4d18",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-extracted/activities/acquario_magico/locales/it/audio/activity-title.wav.extracted.wav",
+    "output_sha256": "ae3bf5ae701f47e0b19bfb486b134576191c110fd0e893360b9e86b000c87d2c",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "L'Acquario Magico",
+      "locale": "it",
+      "cue_id": "activity.title",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/acquario_magico/locales/it/audio/activity-title.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "7fa8bff4d23584e628fb19e35b28894906a7e79142434bf0de29e0fda6590c5f"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "L'Acquario Magico",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " ascolta questa frase in italiano. L'acquario magico",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " L'acquario Magico",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.58
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.58,
+        "end_seconds": 0.96
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.96,
+        "end_seconds": 1.34
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.34,
+        "end_seconds": 1.62
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.62,
+        "end_seconds": 2.12
+      },
+      {
+        "word": "l'acquario",
+        "start_seconds": 2.74,
+        "end_seconds": 3.14
+      },
+      {
+        "word": "magico",
+        "start_seconds": 3.14,
+        "end_seconds": 3.76
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "l'acquario",
+        "start_seconds": 0.0,
+        "end_seconds": 0.7
+      },
+      {
+        "word": "magico",
+        "start_seconds": 0.7,
+        "end_seconds": 1.32
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.3748784065246582,
+        "no_speech_prob": 0.02051873505115509,
+        "compression_ratio": 0.8947368421052632,
+        "word_probabilities": [
+          0.486083984375,
+          0.98974609375,
+          0.974609375,
+          0.9736328125,
+          0.9921875,
+          0.8779296875,
+          0.92041015625,
+          0.814453125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.33472652435302735,
+        "no_speech_prob": 0.059410467743873596,
+        "compression_ratio": 0.68,
+        "word_probabilities": [
+          0.369384765625,
+          0.92626953125,
+          0.7490234375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 96,
+    "extracted_voiced_seconds": 0.96,
+    "unremoved_raw_target_tokens": [
+      "l'acquario",
+      "magico"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "l'acquario",
+      "magico"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 4.000181405895692,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 2.12,
+      "search_end_seconds": 2.74,
+      "prefix_last_word_end_seconds": 2.12,
+      "target_first_word_start_seconds": 2.74,
+      "gap_seconds": 0.508843537414966,
+      "verified_silence_start_seconds": 2.1798639455782314,
+      "verified_silence_end_seconds": 2.6887074829931974,
+      "gap_rms_dbfs": -69.614,
+      "gap_peak_dbfs": -49.095,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.434285714285714,
+      "cut_sample": 53676,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/acquario_magico/locales/it/audio/activity-title.wav",
-    "bytes": 84758,
-    "sha256": "9e58ce4b57f316ced86ef29ead305859557f663a162c01d13c8712af7491570c"
+    "sha256": "32afa0443f7447f9c0a8a82a8b828044b5d41af0b110dc4bf7d64c06d221b17a",
+    "bytes": 69134
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "0f0f5e124a62f0bc0ffc73496121a0728f2a135e407997a7903d03971e5421a0",
+    "original_sha256": "afd9b7b144207d8a14184a1a0e80cbee3c30dba46c941f85016dddd686cf5288",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

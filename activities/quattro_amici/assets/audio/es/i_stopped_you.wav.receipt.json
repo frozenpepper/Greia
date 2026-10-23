@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T14:14:59.257994+00:00",
+  "created_utc": "2026-10-23T04:49:12.708534+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
@@ -8,17 +8,22 @@
     "text": "¡Te he parado!",
     "cue_id": "greia.requested.i_stopped_you.es",
     "output": "activities/quattro_amici/assets/audio/es/i_stopped_you.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Lectura cálida y tranquila. Pronunciación clara y natural.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "comparison_policy": "locale-number-tokens-v4-spoken-target-v1"
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-161453-63c7178f",
-    "idempotency_key": "greia-372ebd710197472a8797716b94830ed8",
+    "job_id": "20261023-064853-8c1fb093",
+    "idempotency_key": "greia-d29d564529274eba9fc4a11bd96b82bc",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +46,408 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 4212082767,
+    "script_seed": 2788229994,
     "language_direction": "Spanish",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in Spanish. Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Lectura cálida y tranquila. Pronunciación clara y natural.",
+    "effective_delivery": "Speak in Spanish. Lectura cálida y tranquila. Pronunciación clara y natural.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3837912489,
-        "sha256": "6bd654765dfe050a4c7b72f409df90f76544f5fcfb3906f8c8f4c814f9204207",
+        "seed": 2122496337,
+        "sha256": "1a9a145d0982735ac94ed816d0aa2a9050a3cf46ed35a9031e9ee359401a9528",
         "generation": {
-          "elapsed_seconds": 5.878683666989673,
+          "elapsed_seconds": 17.420187582989456,
           "model_load_seconds": 0.0,
-          "rtf": 5.248043743778907,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.754215922486144,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-audio-parakeet-tdt-v3",
+    "transcript": "Te he parado.",
+    "score": 1.0,
+    "detail": "Delivered target transcribed and screened; human listening remains pending",
+    "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+    "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v4-spoken-target-v1",
+    "flags": [],
+    "metrics": {
+      "duration_seconds": 1.2001814058956917,
+      "rms_dbfs": -31.89,
+      "peak": 0.17053,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.08,
+      "trailing_silence_seconds": 0.12,
+      "longest_internal_pause_seconds": 0.04
+    }
   },
   "attempts": 1,
   "output": {
     "path": "activities/quattro_amici/assets/audio/es/i_stopped_you.wav",
-    "bytes": 49478,
-    "sha256": "8dddf9da360f700b02bd002ae1a936b7c90a2f8ff55122e0716a10ae55f6ca6d"
+    "bytes": 53006,
+    "sha256": "d71a3ee77b723f2083d04a20233f4e1a641ecbc9f03873ef94d69dcb83dd3bdf"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "short_phrase": {
+    "mode": "automatic-carrier",
+    "composition_policy": "natural-context-period-v1",
+    "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/c0bb31d0eaac47ec9e990d9d8caa6c1a",
+    "prefix": "Vamos a hablar con calma.",
+    "composite_text": "Vamos a hablar con calma.\n\n¡Te he parado!",
+    "effective_delivery": "Lectura cálida y tranquila. Pronunciación clara y natural.",
+    "semantic_target": "¡Te he parado!",
+    "spoken_target": "¡Te he parado!",
+    "spoken_target_policy": "locale-spoken-letter-and-cardinal-v1",
+    "extraction": {
+      "schema_version": 1,
+      "algorithm_version": "greia-spoken-carrier-extractor-v7",
+      "comparison_policy": "locale-number-tokens-v4-spoken-target-v1",
+      "status": "EXTRACTED_PENDING_LISTENING",
+      "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/c0bb31d0eaac47ec9e990d9d8caa6c1a/attempt-01/raw.wav",
+      "source_sha256": "1a9a145d0982735ac94ed816d0aa2a9050a3cf46ed35a9031e9ee359401a9528",
+      "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/c0bb31d0eaac47ec9e990d9d8caa6c1a/attempt-01/target.wav",
+      "output_sha256": "71037d9684e25dc9a5fb27a62a07257ce64345c6f980b6fb6a855085d91903fd",
+      "output_bytes": 115260,
+      "locale": "es",
+      "prefix": "Vamos a hablar con calma.",
+      "target": "¡Te he parado!",
+      "remove_first_words": 5,
+      "ignore_accents": true,
+      "target_verification_requested": "warn",
+      "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+      "target_comparison_score": 1.0,
+      "target_word_count_matches": true,
+      "target_numbers_match": true,
+      "target_comparison_flags": [],
+      "target_transcript_warning": false,
+      "recognizer": "mlx-audio-parakeet-tdt-v3",
+      "recognizer_version": "0.5.0",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "extracted_transcript": "Te he parado.",
+      "expected_target_tokens": [
+        "te",
+        "he",
+        "parado"
+      ],
+      "extracted_target_tokens": [
+        "te",
+        "he",
+        "parado"
+      ],
+      "extracted_target_exact_match": true,
+      "transcription_settings": {
+        "language_detection": "automatic",
+        "expected_text_prompt": null,
+        "timestamps": "model-provided-token-timestamps"
+      },
+      "sample_rate": 48000,
+      "duration_seconds": 4.6401666666666666,
+      "boundary": {
+        "search_strategy": "target-only-global-quiet-run-v7",
+        "verified_silence_start_seconds": 2.69,
+        "verified_silence_end_seconds": 3.54,
+        "verified_silence_duration_seconds": 0.85,
+        "cut_sample": 165120,
+        "cut_time_seconds": 3.44,
+        "padding_seconds": 0.1,
+        "quiet_run_start_sample": 129120,
+        "quiet_run_end_sample": 169920,
+        "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+      },
+      "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/c0bb31d0eaac47ec9e990d9d8caa6c1a/attempt-01/target.wav.search/f0dae1383b99480299221222d795fd86",
+      "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/c0bb31d0eaac47ec9e990d9d8caa6c1a/attempt-01/target.wav.search/f0dae1383b99480299221222d795fd86/search.json",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/c0bb31d0eaac47ec9e990d9d8caa6c1a/attempt-01/raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "db3aa9c8da1aee6a7b66c158de3ea5b2853c091b9ede74d35b4701f84c8ee360",
+      "candidate_sha256": "71037d9684e25dc9a5fb27a62a07257ce64345c6f980b6fb6a855085d91903fd",
+      "candidate_id": "candidate-02",
+      "candidate_count": 2,
+      "qualifying_quiet_run_count": 2,
+      "candidate_results": [
+        {
+          "candidate_id": "candidate-01",
+          "quiet_run": {
+            "start_sample": 75840,
+            "end_sample": 107040,
+            "start_seconds": 1.58,
+            "end_seconds": 2.23,
+            "duration_seconds": 0.65
+          },
+          "cut_sample": 102240,
+          "cut_time_seconds": 2.13,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/c0bb31d0eaac47ec9e990d9d8caa6c1a/attempt-01/target.wav.search/f0dae1383b99480299221222d795fd86/candidate-01.wav",
+          "preceding_voiced_seconds": 1.21,
+          "retained_voiced_seconds": 0.97,
+          "retained_duration_seconds": 2.5101666666666667,
+          "candidate_sha256": "a43cc24f6b5b53d5360fb95191a6d782a4ff656d728b175606e515217ccc3d15",
+          "extracted_transcript": "Le pay. Te he parado.",
+          "canonical_transcript_tokens": [
+            "le",
+            "pay",
+            "te",
+            "he",
+            "parado"
+          ],
+          "exact_target_match": false,
+          "target_comparison_score": 0.7657,
+          "target_word_count_matches": false,
+          "target_numbers_match": true,
+          "target_comparison_flags": [
+            "TARGET_WORD_COUNT_MISMATCH"
+          ],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": false,
+          "asr_segment_count": 2
+        },
+        {
+          "candidate_id": "candidate-02",
+          "quiet_run": {
+            "start_sample": 129120,
+            "end_sample": 169920,
+            "start_seconds": 2.69,
+            "end_seconds": 3.54,
+            "duration_seconds": 0.85
+          },
+          "cut_sample": 165120,
+          "cut_time_seconds": 3.44,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/c0bb31d0eaac47ec9e990d9d8caa6c1a/attempt-01/target.wav.search/f0dae1383b99480299221222d795fd86/candidate-02.wav",
+          "preceding_voiced_seconds": 1.48,
+          "retained_voiced_seconds": 0.7,
+          "retained_duration_seconds": 1.2001666666666666,
+          "candidate_sha256": "71037d9684e25dc9a5fb27a62a07257ce64345c6f980b6fb6a855085d91903fd",
+          "extracted_transcript": "Te he parado.",
+          "canonical_transcript_tokens": [
+            "te",
+            "he",
+            "parado"
+          ],
+          "exact_target_match": true,
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": true,
+          "asr_segment_count": 1
+        }
+      ],
+      "human_review": "PENDING",
+      "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+      "delivery": {
+        "policy": "verified-carrier-gap-delivery-v1",
+        "removed_frames": 0,
+        "removed_seconds": 0.0,
+        "retained_verified_quiet_seconds": 0.1,
+        "raw_delivery_start_sample": 165120,
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/c0bb31d0eaac47ec9e990d9d8caa6c1a/attempt-01/delivery-target.wav",
+        "sha256": "71037d9684e25dc9a5fb27a62a07257ce64345c6f980b6fb6a855085d91903fd"
+      }
+    },
+    "quality": {
+      "disposition": "PASS",
+      "score": 1.0,
+      "transcript": "Te he parado.",
+      "metrics": {
+        "duration_seconds": 1.2001814058956917,
+        "rms_dbfs": -31.89,
+        "peak": 0.17053,
+        "clipped_fraction": 0.0,
+        "leading_silence_seconds": 0.08,
+        "trailing_silence_seconds": 0.12,
+        "longest_internal_pause_seconds": 0.04
+      },
+      "flags": [],
+      "ignore_accents": true,
+      "comparison_policy": "locale-number-tokens-v4-spoken-target-v1",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "detail": "Delivered target transcribed and screened; human listening remains pending"
+    },
+    "history": [
+      {
+        "attempt": 1,
+        "status": "PASS",
+        "quality": {
+          "disposition": "PASS",
+          "score": 1.0,
+          "transcript": "Te he parado.",
+          "metrics": {
+            "duration_seconds": 1.2001814058956917,
+            "rms_dbfs": -31.89,
+            "peak": 0.17053,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.08,
+            "trailing_silence_seconds": 0.12,
+            "longest_internal_pause_seconds": 0.04
+          },
+          "flags": [],
+          "ignore_accents": true,
+          "comparison_policy": "locale-number-tokens-v4-spoken-target-v1",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "detail": "Delivered target transcribed and screened; human listening remains pending"
+        },
+        "extraction": {
+          "schema_version": 1,
+          "algorithm_version": "greia-spoken-carrier-extractor-v7",
+          "comparison_policy": "locale-number-tokens-v4-spoken-target-v1",
+          "status": "EXTRACTED_PENDING_LISTENING",
+          "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/c0bb31d0eaac47ec9e990d9d8caa6c1a/attempt-01/raw.wav",
+          "source_sha256": "1a9a145d0982735ac94ed816d0aa2a9050a3cf46ed35a9031e9ee359401a9528",
+          "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/c0bb31d0eaac47ec9e990d9d8caa6c1a/attempt-01/target.wav",
+          "output_sha256": "71037d9684e25dc9a5fb27a62a07257ce64345c6f980b6fb6a855085d91903fd",
+          "output_bytes": 115260,
+          "locale": "es",
+          "prefix": "Vamos a hablar con calma.",
+          "target": "¡Te he parado!",
+          "remove_first_words": 5,
+          "ignore_accents": true,
+          "target_verification_requested": "warn",
+          "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_transcript_warning": false,
+          "recognizer": "mlx-audio-parakeet-tdt-v3",
+          "recognizer_version": "0.5.0",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "extracted_transcript": "Te he parado.",
+          "expected_target_tokens": [
+            "te",
+            "he",
+            "parado"
+          ],
+          "extracted_target_tokens": [
+            "te",
+            "he",
+            "parado"
+          ],
+          "extracted_target_exact_match": true,
+          "transcription_settings": {
+            "language_detection": "automatic",
+            "expected_text_prompt": null,
+            "timestamps": "model-provided-token-timestamps"
+          },
+          "sample_rate": 48000,
+          "duration_seconds": 4.6401666666666666,
+          "boundary": {
+            "search_strategy": "target-only-global-quiet-run-v7",
+            "verified_silence_start_seconds": 2.69,
+            "verified_silence_end_seconds": 3.54,
+            "verified_silence_duration_seconds": 0.85,
+            "cut_sample": 165120,
+            "cut_time_seconds": 3.44,
+            "padding_seconds": 0.1,
+            "quiet_run_start_sample": 129120,
+            "quiet_run_end_sample": 169920,
+            "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+          },
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/c0bb31d0eaac47ec9e990d9d8caa6c1a/attempt-01/target.wav.search/f0dae1383b99480299221222d795fd86",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/c0bb31d0eaac47ec9e990d9d8caa6c1a/attempt-01/target.wav.search/f0dae1383b99480299221222d795fd86/search.json",
+          "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/c0bb31d0eaac47ec9e990d9d8caa6c1a/attempt-01/raw.wav.receipt.json",
+          "source_provider_receipt_sha256": "db3aa9c8da1aee6a7b66c158de3ea5b2853c091b9ede74d35b4701f84c8ee360",
+          "candidate_sha256": "71037d9684e25dc9a5fb27a62a07257ce64345c6f980b6fb6a855085d91903fd",
+          "candidate_id": "candidate-02",
+          "candidate_count": 2,
+          "qualifying_quiet_run_count": 2,
+          "candidate_results": [
+            {
+              "candidate_id": "candidate-01",
+              "quiet_run": {
+                "start_sample": 75840,
+                "end_sample": 107040,
+                "start_seconds": 1.58,
+                "end_seconds": 2.23,
+                "duration_seconds": 0.65
+              },
+              "cut_sample": 102240,
+              "cut_time_seconds": 2.13,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/c0bb31d0eaac47ec9e990d9d8caa6c1a/attempt-01/target.wav.search/f0dae1383b99480299221222d795fd86/candidate-01.wav",
+              "preceding_voiced_seconds": 1.21,
+              "retained_voiced_seconds": 0.97,
+              "retained_duration_seconds": 2.5101666666666667,
+              "candidate_sha256": "a43cc24f6b5b53d5360fb95191a6d782a4ff656d728b175606e515217ccc3d15",
+              "extracted_transcript": "Le pay. Te he parado.",
+              "canonical_transcript_tokens": [
+                "le",
+                "pay",
+                "te",
+                "he",
+                "parado"
+              ],
+              "exact_target_match": false,
+              "target_comparison_score": 0.7657,
+              "target_word_count_matches": false,
+              "target_numbers_match": true,
+              "target_comparison_flags": [
+                "TARGET_WORD_COUNT_MISMATCH"
+              ],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": false,
+              "asr_segment_count": 2
+            },
+            {
+              "candidate_id": "candidate-02",
+              "quiet_run": {
+                "start_sample": 129120,
+                "end_sample": 169920,
+                "start_seconds": 2.69,
+                "end_seconds": 3.54,
+                "duration_seconds": 0.85
+              },
+              "cut_sample": 165120,
+              "cut_time_seconds": 3.44,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/c0bb31d0eaac47ec9e990d9d8caa6c1a/attempt-01/target.wav.search/f0dae1383b99480299221222d795fd86/candidate-02.wav",
+              "preceding_voiced_seconds": 1.48,
+              "retained_voiced_seconds": 0.7,
+              "retained_duration_seconds": 1.2001666666666666,
+              "candidate_sha256": "71037d9684e25dc9a5fb27a62a07257ce64345c6f980b6fb6a855085d91903fd",
+              "extracted_transcript": "Te he parado.",
+              "canonical_transcript_tokens": [
+                "te",
+                "he",
+                "parado"
+              ],
+              "exact_target_match": true,
+              "target_comparison_score": 1.0,
+              "target_word_count_matches": true,
+              "target_numbers_match": true,
+              "target_comparison_flags": [],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": true,
+              "asr_segment_count": 1
+            }
+          ],
+          "human_review": "PENDING",
+          "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+          "delivery": {
+            "policy": "verified-carrier-gap-delivery-v1",
+            "removed_frames": 0,
+            "removed_seconds": 0.0,
+            "retained_verified_quiet_seconds": 0.1,
+            "raw_delivery_start_sample": 165120,
+            "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/c0bb31d0eaac47ec9e990d9d8caa6c1a/attempt-01/delivery-target.wav",
+            "sha256": "71037d9684e25dc9a5fb27a62a07257ce64345c6f980b6fb6a855085d91903fd"
+          }
+        },
+        "candidate": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/automatic-evidence/c0bb31d0eaac47ec9e990d9d8caa6c1a/attempt-01/candidate.wav"
+      }
+    ]
+  },
   "corpus_replacement": {
-    "original_sha256": "0d7318f46fdd3305ffcd12a9589c968c6e7c8c98c343d60d589ccb2981947964",
+    "original_sha256": "8dddf9da360f700b02bd002ae1a936b7c90a2f8ff55122e0716a10ae55f6ca6d",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

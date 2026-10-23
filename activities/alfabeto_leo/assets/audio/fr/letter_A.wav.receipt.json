@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T23:14:19.962611+00:00",
+  "created_utc": "2026-10-21T15:23:55.529182+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "A comme Avion",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. A comme Avion",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "A comme Avion",
+    "cue_id": "alfabeto_leo.letter_A.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "A comme Avion",
     "cue_id": "alfabeto_leo.letter_A.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/alfabeto_leo/assets/audio/fr/letter_A.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-011407-65691475",
-    "idempotency_key": "greia-429525b19f2048e18f3ceb126111646b",
+    "job_id": "20261021-172338-e73cc915",
+    "idempotency_key": "greia-f9d06ea3f39642f08fdb4eaf61387cba",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,261 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1458766749,
+    "script_seed": 2714172769,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak naturally in French. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3221716083,
-        "sha256": "ce4a4d88d91b51a31485025dfd6afd295a1a996d1f7fb1bb000507a98512d4d0",
+        "seed": 3906035626,
+        "sha256": "98b8811249f58697c98dbe282f26b79d6f7a804ba8fc93eaf8fac84b03200092",
         "generation": {
-          "elapsed_seconds": 11.220439500000793,
+          "elapsed_seconds": 15.132064750003337,
           "model_load_seconds": 0.0,
-          "rtf": 6.374646056245124,
-          "peak_memory_gb": 8.21220922
+          "rtf": 3.940470834600062,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " à comme avion.",
+    "metrics": {
+      "duration_seconds": 1.2720181405895692,
+      "rms_dbfs": -34.4,
+      "peak": 0.1442,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.28,
+      "trailing_silence_seconds": 0.0,
+      "longest_internal_pause_seconds": 0.04
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/alfabeto_leo/assets/audio/fr/letter_A.wav.raw.wav",
+    "sha256": "2d529770fa8145876b9ec30c760b9dc8d0587fe4c9bdcd62febdcfaa0ead0477",
+    "receipt_sha256": "f21e6c5968cfb0a7b116b0960d708fa38017c275b94507944a255519c6460c07"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/assets/audio/fr/letter_A.wav.extracted.wav",
+    "sha256": "b6f05702627b6362820f06a51f9dca35b4835f852d6ad558776976628dde0e42"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/assets/audio/fr/letter_A.wav.delivery.wav",
+    "sha256": "45c544e3b8003eba54c9b0b009b5760572baeb1f3bab1a3feab046044c8e5a36"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/alfabeto_leo/assets/audio/fr/letter_A.wav.raw.wav",
+    "source_sha256": "2d529770fa8145876b9ec30c760b9dc8d0587fe4c9bdcd62febdcfaa0ead0477",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/alfabeto_leo/assets/audio/fr/letter_A.wav.extracted.wav",
+    "output_sha256": "b6f05702627b6362820f06a51f9dca35b4835f852d6ad558776976628dde0e42",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "A comme Avion",
+      "locale": "fr",
+      "cue_id": "alfabeto_leo.letter_A.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/alfabeto_leo/assets/audio/fr/letter_A.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "f21e6c5968cfb0a7b116b0960d708fa38017c275b94507944a255519c6460c07"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "A comme Avion",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français. À comme avion.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " à comme avion",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.28
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.28,
+        "end_seconds": 0.64
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.64,
+        "end_seconds": 1.14
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.14,
+        "end_seconds": 1.32
+      },
+      {
+        "word": "français",
+        "start_seconds": 1.32,
+        "end_seconds": 1.86
+      },
+      {
+        "word": "à",
+        "start_seconds": 2.72,
+        "end_seconds": 2.96
+      },
+      {
+        "word": "comme",
+        "start_seconds": 2.96,
+        "end_seconds": 3.28
+      },
+      {
+        "word": "avion",
+        "start_seconds": 3.28,
+        "end_seconds": 3.7
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "à",
+        "start_seconds": 0.0,
+        "end_seconds": 0.66
+      },
+      {
+        "word": "comme",
+        "start_seconds": 0.66,
+        "end_seconds": 0.98
+      },
+      {
+        "word": "avion",
+        "start_seconds": 0.98,
+        "end_seconds": 1.4
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.645129919052124,
+        "no_speech_prob": 0.03628053143620491,
+        "compression_ratio": 0.8518518518518519,
+        "word_probabilities": [
+          0.736328125,
+          0.9951171875,
+          0.98828125,
+          0.931640625,
+          0.9521484375
+        ]
+      },
+      {
+        "avg_logprob": -0.645129919052124,
+        "no_speech_prob": 0.03628053143620491,
+        "compression_ratio": 0.8518518518518519,
+        "word_probabilities": [
+          0.54296875,
+          0.2445068359375,
+          0.8203125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.9165885107857841,
+        "no_speech_prob": 0.21710984408855438,
+        "compression_ratio": 0.6363636363636364,
+        "word_probabilities": [
+          0.08563232421875,
+          0.2088623046875,
+          0.716796875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 83,
+    "extracted_voiced_seconds": 0.83,
+    "unremoved_raw_target_tokens": [
+      "à",
+      "comme",
+      "avion"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "à",
+      "comme",
+      "avion"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.8401814058956916,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.86,
+      "search_end_seconds": 2.72,
+      "prefix_last_word_end_seconds": 1.86,
+      "target_first_word_start_seconds": 2.72,
+      "gap_seconds": 0.7482993197278912,
+      "verified_silence_start_seconds": 1.9198639455782314,
+      "verified_silence_end_seconds": 2.6681632653061222,
+      "gap_rms_dbfs": -57.107,
+      "gap_peak_dbfs": -36.226,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.294013605442177,
+      "cut_sample": 50583,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 6045,
+      "removed_seconds": 0.27414965986394557,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 56628,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/alfabeto_leo/assets/audio/fr/letter_A.wav.delivery.wav",
+      "sha256": "45c544e3b8003eba54c9b0b009b5760572baeb1f3bab1a3feab046044c8e5a36"
+    }
+  },
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/fr/letter_A.wav",
-    "bytes": 77702,
-    "sha256": "8d0a0ba157e3b38d89371606500c940717b53c795a206725f611a286ac4d2755"
+    "sha256": "7eb2ad92a1488e86522c0318df8c8d3ff501a572ee642dc2b695179d156f4a90",
+    "bytes": 56174
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "b0793d04bca62dbeaf1673230f16e525850bc31b710b3a9c3ca51e0a3c605a07",
+    "original_sha256": "1d65bc7102b7afd84c2aa57f7e01c7733669fe049aa424fbd343d5819d82fbe0",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

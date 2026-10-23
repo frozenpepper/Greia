@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T09:28:40.177701+00:00",
+  "created_utc": "2026-10-21T16:04:10.600835+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "Jupiter",
+    "target_word_count": 1,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. Jupiter",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Jupiter",
+    "cue_id": "encyclopedia.space.jupiter.name.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Jupiter",
     "cue_id": "encyclopedia.space.jupiter.name.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/enciclopedia_greia/assets/audio/fr/space/jupiter_name.ogg",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Reveals the name of what we are looking at, like a friendly museum guide: clear, warm wonder, unhurried."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-112836-761e3d4a",
-    "idempotency_key": "greia-f75be46f2796421d883e92cac0b55db2",
+    "job_id": "20261021-180356-b56ea31a",
+    "idempotency_key": "greia-2884d32352b047a583c3632aa7e723f3",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,51 +77,226 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 4130800456,
+    "script_seed": 2464987057,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Reveals the name of what we are looking at, like a friendly museum guide: clear, warm wonder, unhurried.",
-    "effective_delivery": "Speak naturally in French. Leo, a warm, curious cartoon guide. Reveals the name of what we are looking at, like a friendly museum guide: clear, warm wonder, unhurried.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3008563956,
-        "sha256": "94d23210225ed95c048761a3805b3b65ab483c9a2f116f49dec1e545b2b461f1",
+        "seed": 413054352,
+        "sha256": "9c580fb821df298fb5894a5c1d7d1746a6d9a831a9ea35b0f9e303014376c9f2",
         "generation": {
-          "elapsed_seconds": 3.1345978750032373,
+          "elapsed_seconds": 13.144016334001208,
           "model_load_seconds": 0.0,
-          "rtf": 3.9174312122514943,
-          "peak_memory_gb": 7.648602244
+          "rtf": 3.911715589703251,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " Jupiter",
+    "metrics": {
+      "duration_seconds": 1.1115192743764173,
+      "rms_dbfs": -39.72,
+      "peak": 0.10837,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.2,
+      "trailing_silence_seconds": 0.16,
+      "longest_internal_pause_seconds": 0.08
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/enciclopedia_greia/assets/audio/fr/space/jupiter_name.ogg.raw.wav",
+    "sha256": "0f9306cb88087c046a196767238765931c8b6d898b04292853ff359041f5e004",
+    "receipt_sha256": "31da6630e1356628a885cb0ed90bb1f5b84c7e42d8ac39f5b8215b392d4a072e"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/enciclopedia_greia/assets/audio/fr/space/jupiter_name.ogg.extracted.wav",
+    "sha256": "a64ce1f232cd954e9bf5ad6170b78868eab62970753e8cbc7f34f0957af26b77"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/enciclopedia_greia/assets/audio/fr/space/jupiter_name.ogg.delivery.wav",
+    "sha256": "1f7c2667f24667f8f3624e4cc9709306cdca465f2323676943a5f330bcfa5b07"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/enciclopedia_greia/assets/audio/fr/space/jupiter_name.ogg.raw.wav",
+    "source_sha256": "0f9306cb88087c046a196767238765931c8b6d898b04292853ff359041f5e004",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/enciclopedia_greia/assets/audio/fr/space/jupiter_name.ogg.extracted.wav",
+    "output_sha256": "a64ce1f232cd954e9bf5ad6170b78868eab62970753e8cbc7f34f0957af26b77",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Jupiter",
+      "locale": "fr",
+      "cue_id": "encyclopedia.space.jupiter.name.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/enciclopedia_greia/assets/audio/fr/space/jupiter_name.ogg.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "31da6630e1356628a885cb0ed90bb1f5b84c7e42d8ac39f5b8215b392d4a072e"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "Jupiter",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français, Jupiter.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Jupiter",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.38
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.38,
+        "end_seconds": 0.78
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.78,
+        "end_seconds": 1.12
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.12,
+        "end_seconds": 1.24
+      },
+      {
+        "word": "français",
+        "start_seconds": 1.24,
+        "end_seconds": 1.76
+      },
+      {
+        "word": "jupiter",
+        "start_seconds": 2.4,
+        "end_seconds": 2.96
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "jupiter",
+        "start_seconds": 0.0,
+        "end_seconds": 0.88
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.4923737265846946,
+        "no_speech_prob": 0.017620455473661423,
+        "compression_ratio": 0.8297872340425532,
+        "word_probabilities": [
+          0.76611328125,
+          0.9912109375,
+          0.87548828125,
+          0.984375,
+          0.9619140625,
+          0.453369140625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6526238918304443,
+        "no_speech_prob": 0.1014077216386795,
+        "compression_ratio": 0.4666666666666667,
+        "word_probabilities": [
+          0.459228515625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 42,
+    "extracted_voiced_seconds": 0.42,
+    "unremoved_raw_target_tokens": [
+      "jupiter"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "jupiter"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.3601814058956916,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.76,
+      "search_end_seconds": 2.4,
+      "prefix_last_word_end_seconds": 1.76,
+      "target_first_word_start_seconds": 2.4,
+      "gap_seconds": 0.5287981859410431,
+      "verified_silence_start_seconds": 1.8198639455782313,
+      "verified_silence_end_seconds": 2.348662131519274,
+      "gap_rms_dbfs": -67.12,
+      "gap_peak_dbfs": -43.99,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.0842630385487526,
+      "cut_sample": 45958,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 3625,
+      "removed_seconds": 0.16439909297052155,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 49583,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/enciclopedia_greia/assets/audio/fr/space/jupiter_name.ogg.delivery.wav",
+      "sha256": "1f7c2667f24667f8f3624e4cc9709306cdca465f2323676943a5f330bcfa5b07"
+    }
+  },
   "output": {
     "path": "activities/enciclopedia_greia/assets/audio/fr/space/jupiter_name.ogg",
-    "bytes": 7126,
-    "sha256": "90a716e2623a4eb2189616e19693416dfbf10e6b38303f84badc3a3ca46524a4"
+    "sha256": "71882aee1bbc8a3f2eafccf5f9b87a3292bd817ce55ec4fff2d47dfb4fb3813c",
+    "bytes": 10250
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "af52c0539ebe1413c9d7d8e772c88ab1b7ab590745d3efcb1cd72fa5a7c7d84a",
-    "owner_authorization": "2026-10-19 corpus regeneration; listening pending",
-    "audio_repackaging": {
-      "pipeline": "AudioPipeline",
-      "codec": "libvorbis",
-      "quality": 3,
-      "sample_rate_hz": 22050,
-      "source_mix_sha256": "94d23210225ed95c048761a3805b3b65ab483c9a2f116f49dec1e545b2b461f1",
-      "source_job_id": "20261020-112836-761e3d4a",
-      "repackaged_utc": "2026-10-20T22:30:30Z"
-    }
+    "original_sha256": "411cdd70f92696f669026ba591fb75ed7b0b088f88cc1936e7a758c4e43a3e33",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T16:38:12.754437+00:00",
+  "created_utc": "2026-10-21T17:21:30.991580+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "Prova questo posto!",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. Prova questo posto!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "lilli",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Prova questo posto!",
+    "cue_id": "greia.requested.try_this_spot.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Prova questo posto!",
     "cue_id": "greia.requested.try_this_spot.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/specchi_magici/assets/audio/it/try_this_spot.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.lilli.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "job_id": "20261020-183803-a090bb38",
-    "idempotency_key": "greia-1082dd170acb435fbfca28673026e08d",
+    "job_id": "20261021-192116-5e7171b4",
+    "idempotency_key": "greia-e48dc235e2a54c5e9b090ec7f2157733",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,226 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2672047943,
+    "script_seed": 2831424028,
     "language_direction": "Italian",
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in Italian. Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2670793691,
-        "sha256": "c10d4122b46c7d6a0d7fbccc58d53c8360dde1470e7b93b693401846965c2dc2",
+        "seed": 2676167281,
+        "sha256": "06852ec28a06b6f7b515ad60232e2f4f05914cdd43f811dc4fbe2f8c8fb06b88",
         "generation": {
-          "elapsed_seconds": 8.651761832996272,
+          "elapsed_seconds": 14.117337624993525,
           "model_load_seconds": 0.0,
-          "rtf": 4.915308303946372,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.6762304478955405,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Prava questo posto!",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/specchi_magici/assets/audio/it/try_this_spot.wav.raw.wav",
+    "sha256": "bf0635921a6d2d57b1f187a58047e28046204496ae7c0630c5bc3fc4475e4ac9",
+    "receipt_sha256": "b1d68af6906ed91ae60a84bc2df9e4db357f4a7341e830e5e26a1e93e050feae"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/specchi_magici/assets/audio/it/try_this_spot.wav.extracted.wav",
+    "sha256": "203c7cbea03e4f96193410f2143554dee89d78b4b5904cf75f16f2ba3dc42d24"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/specchi_magici/assets/audio/it/try_this_spot.wav.raw.wav",
+    "source_sha256": "bf0635921a6d2d57b1f187a58047e28046204496ae7c0630c5bc3fc4475e4ac9",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/specchi_magici/assets/audio/it/try_this_spot.wav.extracted.wav",
+    "output_sha256": "203c7cbea03e4f96193410f2143554dee89d78b4b5904cf75f16f2ba3dc42d24",
+    "target_request": {
+      "speaker": "lilli",
+      "kind": "character_dialogue",
+      "text": "Prova questo posto!",
+      "locale": "it",
+      "cue_id": "greia.requested.try_this_spot.it",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/specchi_magici/assets/audio/it/try_this_spot.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "b1d68af6906ed91ae60a84bc2df9e4db357f4a7341e830e5e26a1e93e050feae"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "Prova questo posto!",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " ascolta questa frase in italiano! Prova questo posto!",
+    "extracted_transcript": " Prava questo posto!",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.72
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.72,
+        "end_seconds": 0.98
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.98,
+        "end_seconds": 1.36
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.36,
+        "end_seconds": 1.54
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.54,
+        "end_seconds": 2.02
+      },
+      {
+        "word": "prova",
+        "start_seconds": 2.5,
+        "end_seconds": 2.72
+      },
+      {
+        "word": "questo",
+        "start_seconds": 2.72,
+        "end_seconds": 2.96
+      },
+      {
+        "word": "posto",
+        "start_seconds": 2.96,
+        "end_seconds": 3.62
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "prava",
+        "start_seconds": 0.0,
+        "end_seconds": 0.32
+      },
+      {
+        "word": "questo",
+        "start_seconds": 0.32,
+        "end_seconds": 0.66
+      },
+      {
+        "word": "posto",
+        "start_seconds": 0.66,
+        "end_seconds": 1.3
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5511080089368319,
+        "no_speech_prob": 0.0077413651160895824,
+        "compression_ratio": 1.0,
+        "word_probabilities": [
+          0.61865234375,
+          0.89892578125,
+          0.91748046875,
+          0.7607421875,
+          0.97607421875
+        ]
+      },
+      {
+        "avg_logprob": -0.5511080089368319,
+        "no_speech_prob": 0.0077413651160895824,
+        "compression_ratio": 1.0,
+        "word_probabilities": [
+          0.74853515625,
+          0.97998046875,
+          0.89306640625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.7450727886623807,
+        "no_speech_prob": 0.02922881580889225,
+        "compression_ratio": 0.76,
+        "word_probabilities": [
+          0.265380859375,
+          0.9130859375,
+          0.7958984375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 92,
+    "extracted_voiced_seconds": 0.92,
+    "unremoved_raw_target_tokens": [
+      "prova",
+      "questo",
+      "posto"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "prova",
+      "questo",
+      "posto"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.8401814058956916,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 2.02,
+      "target_first_word_start_seconds": 2.5,
+      "gap_seconds": 0.2693877551020408,
+      "verified_silence_start_seconds": 2.1796371882086167,
+      "verified_silence_end_seconds": 2.4490249433106577,
+      "gap_rms_dbfs": -62.546,
+      "gap_peak_dbfs": -36.849,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.314331065759637,
+      "cut_sample": 51031,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/specchi_magici/assets/audio/it/try_this_spot.wav",
-    "bytes": 77702,
-    "sha256": "aed43ccd321735f1902890ef869ce85e6114eeaa52f8f5a1c8430a32cc3cfbdc"
+    "sha256": "dc1dc32ee20cb1563c8ba7d7c3ace67b6ff6ac7c92a4b38ecf490095f4bec30e",
+    "bytes": 67368
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "8ecf3ec8d11e279b261e6cd03500d053862a3c7a27d4a83c85c14a69d0387fb1",
+    "original_sha256": "aed43ccd321735f1902890ef869ce85e6114eeaa52f8f5a1c8430a32cc3cfbdc",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

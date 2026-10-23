@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T23:18:42.123963+00:00",
+  "created_utc": "2026-10-21T20:54:38.503240+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "T comme Tortue",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. T comme Tortue",
+    "composite_delivery_prompt": "Clear, natural conversational delivery. Say the first sentence, pause for about one second, then say the final phrase exactly as written. Do not add words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v4",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "T comme Tortue",
+    "cue_id": "alfabeto_leo.letter_T.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "T comme Tortue",
     "cue_id": "alfabeto_leo.letter_T.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/alfabeto_leo/assets/audio/fr/letter_T.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-011827-12aa0b1a",
-    "idempotency_key": "greia-b0ca263b1dfb4ad6a852273cd9b3644b",
+    "job_id": "20261021-225426-369eba2f",
+    "idempotency_key": "greia-3a9f7a5db6644dd5bf434c3b49f1ac51",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,225 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2307537957,
+    "script_seed": 800304123,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak naturally in French. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Clear, natural conversational delivery. Say the first sentence, pause for about one second, then say the final phrase exactly as written. Do not add words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery. Say the first sentence, pause for about one second, then say the final phrase exactly as written. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2969277998,
-        "sha256": "b267a4640cde3ad5ecd9bbf3c5ba99736c6a4daf5503e769ee62a4039d1c0579",
+        "seed": 2031356344,
+        "sha256": "aaa05eaedce497e9bbb76bcada3a6582f15c945ad36ded8aeee8e1e0a65c5c50",
         "generation": {
-          "elapsed_seconds": 13.751009125029668,
+          "elapsed_seconds": 11.7421115830075,
           "model_load_seconds": 0.0,
-          "rtf": 5.055208305261811,
-          "peak_memory_gb": 8.21220922
+          "rtf": 3.6692187645458567,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " déconne tortue",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/alfabeto_leo/assets/audio/fr/letter_T.wav.raw.wav",
+    "sha256": "23877d296d9db2ccc8cf38b74a3a2fe7f30a7f48b7678a1d43d0623532133de2",
+    "receipt_sha256": "82bea5c1ed4a715e1a35f243b4cf64b142a684a9a88270352e2c24651edd8045"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/assets/audio/fr/letter_T.wav.extracted.wav",
+    "sha256": "cfe444890ed41b69b79145c2587ede4025488bc124698b3cd6de43f9b261ff6b"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v4",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/retry-v4/run/carrier-raw/activities/alfabeto_leo/assets/audio/fr/letter_T.wav.raw.wav",
+    "source_sha256": "23877d296d9db2ccc8cf38b74a3a2fe7f30a7f48b7678a1d43d0623532133de2",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/retry-v4/run/carrier-extracted/activities/alfabeto_leo/assets/audio/fr/letter_T.wav.extracted.wav",
+    "output_sha256": "cfe444890ed41b69b79145c2587ede4025488bc124698b3cd6de43f9b261ff6b",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "T comme Tortue",
+      "locale": "fr",
+      "cue_id": "alfabeto_leo.letter_T.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/retry-v4/run/carrier-raw/activities/alfabeto_leo/assets/audio/fr/letter_T.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "82bea5c1ed4a715e1a35f243b4cf64b142a684a9a88270352e2c24651edd8045"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "T comme Tortue",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français. T'es comme tortue.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " déconne tortue",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.4
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.4,
+        "end_seconds": 0.74
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.74,
+        "end_seconds": 0.94
+      },
+      {
+        "word": "en",
+        "start_seconds": 0.94,
+        "end_seconds": 1.06
+      },
+      {
+        "word": "français",
+        "start_seconds": 1.06,
+        "end_seconds": 1.6
+      },
+      {
+        "word": "t'es",
+        "start_seconds": 2.02,
+        "end_seconds": 2.32
+      },
+      {
+        "word": "comme",
+        "start_seconds": 2.32,
+        "end_seconds": 2.56
+      },
+      {
+        "word": "tortue",
+        "start_seconds": 2.56,
+        "end_seconds": 3.08
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "déconne",
+        "start_seconds": 0.0,
+        "end_seconds": 0.82
+      },
+      {
+        "word": "tortue",
+        "start_seconds": 0.82,
+        "end_seconds": 1.3
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.4457400639851888,
+        "no_speech_prob": 0.03236224874854088,
+        "compression_ratio": 0.8596491228070176,
+        "word_probabilities": [
+          0.6708984375,
+          0.9677734375,
+          0.9169921875,
+          0.94482421875,
+          0.92431640625
+        ]
+      },
+      {
+        "avg_logprob": -0.4457400639851888,
+        "no_speech_prob": 0.03236224874854088,
+        "compression_ratio": 0.8596491228070176,
+        "word_probabilities": [
+          0.8173828125,
+          0.8447265625,
+          0.98291015625,
+          0.689453125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -1.3901715278625488,
+        "no_speech_prob": 0.0937206894159317,
+        "compression_ratio": 0.6521739130434783,
+        "word_probabilities": [
+          0.128173828125,
+          0.3720703125
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 56,
+    "extracted_voiced_seconds": 0.56,
+    "unremoved_raw_target_tokens": [
+      "t'es",
+      "comme",
+      "tortue"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "t'es",
+      "comme",
+      "tortue"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.2001814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "inter-word-gap",
+      "search_end_seconds": 2.02,
+      "prefix_last_word_end_seconds": 1.6,
+      "target_first_word_start_seconds": 2.02,
+      "gap_seconds": 0.309297052154195,
+      "verified_silence_start_seconds": 1.6598639455782314,
+      "verified_silence_end_seconds": 1.9691609977324263,
+      "gap_rms_dbfs": -65.093,
+      "gap_peak_dbfs": -47.082,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.8145124716553287,
+      "cut_sample": 40010,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/fr/letter_T.wav",
-    "bytes": 120038,
-    "sha256": "e0fc5efe45867c7e458e981d4fc0713c986621bea131567e2f43f9bc3eee57d2"
+    "sha256": "7557b626465a4d32b5eacd4e830fa560bdf6fec6fea908d0ac8d014ab889a874",
+    "bytes": 61186
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "00b948e116bf4fc210cf1f65c43bd30fe7e28bc26d9cf18e7d17a1269443832d",
+    "original_sha256": "e0fc5efe45867c7e458e981d4fc0713c986621bea131567e2f43f9bc3eee57d2",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T17:14:07.110541+00:00",
+  "created_utc": "2026-10-23T02:29:31.889703+00:00",
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
@@ -8,17 +8,22 @@
     "text": "Il palco è pieno!",
     "cue_id": "greia.requested.stage_full.it",
     "output": "activities/teatrino_fiabe/assets/audio/it/stage_full.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. A happy celebration with the child: joyful, proud and warm. Lively but clear."
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic"
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.lilli.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "job_id": "20261020-191400-715010df",
-    "idempotency_key": "greia-d75271683b444650bb6074a2103d8187",
+    "job_id": "20261023-042915-ff1ee9c3",
+    "idempotency_key": "greia-9bab3c284afb482d8377189b521cf7ba",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +46,339 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2685171735,
+    "script_seed": 3208037631,
     "language_direction": "Italian",
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
-    "effective_delivery": "Speak in Italian. Lilli, a sparkly, affectionate storybook unicorn. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "delivery_prompt": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "effective_delivery": "Speak in Italian. Voce calda e calma. Pronuncia chiara e naturale.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3364810466,
-        "sha256": "b54a05dd4d5043f235446b66edc59aa9fcfd9aff63e115098a053600f10f4e7c",
+        "seed": 2718150149,
+        "sha256": "7a2bac0700272780ea206d9978c5b49868e42d032da13e3e077cafcc9f847bb3",
         "generation": {
-          "elapsed_seconds": 5.978427249996457,
+          "elapsed_seconds": 14.329178915999364,
           "model_load_seconds": 0.0,
-          "rtf": 4.670038211167653,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.893622276889461,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-audio-parakeet-tdt-v3",
+    "transcript": "Il palco è pieno!",
+    "score": 1.0,
+    "detail": "Delivered target transcribed and screened; human listening remains pending",
+    "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+    "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+    "flags": [],
+    "metrics": {
+      "duration_seconds": 1.6902040816326531,
+      "rms_dbfs": -25.14,
+      "peak": 0.28918,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.1,
+      "trailing_silence_seconds": 0.14,
+      "longest_internal_pause_seconds": 0.12
+    }
   },
   "attempts": 1,
   "output": {
     "path": "activities/teatrino_fiabe/assets/audio/it/stage_full.wav",
-    "bytes": 56534,
-    "sha256": "de552503cff2567e26f2e5eabe49856619fc640aa9867cbe80da6ccfb02eb594"
+    "bytes": 74616,
+    "sha256": "a24195ebe52e095e4c4b84c1dd2c2e979bb99d3956bf4b1a761b195538cd4a6c"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "short_phrase": {
+    "mode": "automatic-carrier",
+    "composition_policy": "natural-context-period-v1",
+    "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/1c3b689a46d9451ebb47ebb26895bde3",
+    "prefix": "Parliamo con calma insieme.",
+    "composite_text": "Parliamo con calma insieme.\n\nIl palco è pieno!",
+    "effective_delivery": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "extraction": {
+      "schema_version": 1,
+      "algorithm_version": "greia-spoken-carrier-extractor-v7",
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "status": "EXTRACTED_PENDING_LISTENING",
+      "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/1c3b689a46d9451ebb47ebb26895bde3/attempt-01/raw.wav",
+      "source_sha256": "7a2bac0700272780ea206d9978c5b49868e42d032da13e3e077cafcc9f847bb3",
+      "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/1c3b689a46d9451ebb47ebb26895bde3/attempt-01/target.wav",
+      "output_sha256": "bd14b933345e70ea09c36a26e503a64d7f70e58f54cae52b20eafbcd3fe76a45",
+      "output_bytes": 162300,
+      "locale": "it",
+      "prefix": "Parliamo con calma insieme.",
+      "target": "Il palco è pieno!",
+      "remove_first_words": 4,
+      "ignore_accents": true,
+      "target_verification_requested": "warn",
+      "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+      "target_comparison_score": 1.0,
+      "target_word_count_matches": true,
+      "target_numbers_match": true,
+      "target_comparison_flags": [],
+      "target_transcript_warning": false,
+      "recognizer": "mlx-audio-parakeet-tdt-v3",
+      "recognizer_version": "0.5.0",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "extracted_transcript": "Il palco è pieno!",
+      "expected_target_tokens": [
+        "il",
+        "palko",
+        "e",
+        "pieno"
+      ],
+      "extracted_target_tokens": [
+        "il",
+        "palko",
+        "e",
+        "pieno"
+      ],
+      "extracted_target_exact_match": true,
+      "transcription_settings": {
+        "language_detection": "automatic",
+        "expected_text_prompt": null,
+        "timestamps": "model-provided-token-timestamps"
+      },
+      "sample_rate": 48000,
+      "duration_seconds": 3.6801666666666666,
+      "boundary": {
+        "search_strategy": "target-only-global-quiet-run-v7",
+        "verified_silence_start_seconds": 1.77,
+        "verified_silence_end_seconds": 2.09,
+        "verified_silence_duration_seconds": 0.32,
+        "cut_sample": 95520,
+        "cut_time_seconds": 1.99,
+        "padding_seconds": 0.1,
+        "quiet_run_start_sample": 84960,
+        "quiet_run_end_sample": 100320,
+        "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+      },
+      "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/1c3b689a46d9451ebb47ebb26895bde3/attempt-01/target.wav.search/77a799227e1040058b97ab066437f121",
+      "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/1c3b689a46d9451ebb47ebb26895bde3/attempt-01/target.wav.search/77a799227e1040058b97ab066437f121/search.json",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/1c3b689a46d9451ebb47ebb26895bde3/attempt-01/raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "7144daf40784f93931ffb6298d415c81a2d01fd6e115415d49a4db232ee5c861",
+      "candidate_sha256": "bd14b933345e70ea09c36a26e503a64d7f70e58f54cae52b20eafbcd3fe76a45",
+      "candidate_id": "candidate-01",
+      "candidate_count": 1,
+      "qualifying_quiet_run_count": 1,
+      "candidate_results": [
+        {
+          "candidate_id": "candidate-01",
+          "quiet_run": {
+            "start_sample": 84960,
+            "end_sample": 100320,
+            "start_seconds": 1.77,
+            "end_seconds": 2.09,
+            "duration_seconds": 0.32
+          },
+          "cut_sample": 95520,
+          "cut_time_seconds": 1.99,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/1c3b689a46d9451ebb47ebb26895bde3/attempt-01/target.wav.search/77a799227e1040058b97ab066437f121/candidate-01.wav",
+          "preceding_voiced_seconds": 1.61,
+          "retained_voiced_seconds": 1.19,
+          "retained_duration_seconds": 1.6901666666666666,
+          "candidate_sha256": "bd14b933345e70ea09c36a26e503a64d7f70e58f54cae52b20eafbcd3fe76a45",
+          "extracted_transcript": "Il palco è pieno!",
+          "canonical_transcript_tokens": [
+            "il",
+            "palko",
+            "e",
+            "pieno"
+          ],
+          "exact_target_match": true,
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": true,
+          "asr_segment_count": 1
+        }
+      ],
+      "human_review": "PENDING",
+      "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+      "delivery": {
+        "policy": "verified-carrier-gap-delivery-v1",
+        "removed_frames": 0,
+        "removed_seconds": 0.0,
+        "retained_verified_quiet_seconds": 0.1,
+        "raw_delivery_start_sample": 95520,
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/1c3b689a46d9451ebb47ebb26895bde3/attempt-01/delivery-target.wav",
+        "sha256": "bd14b933345e70ea09c36a26e503a64d7f70e58f54cae52b20eafbcd3fe76a45"
+      }
+    },
+    "quality": {
+      "disposition": "PASS",
+      "score": 1.0,
+      "transcript": "Il palco è pieno!",
+      "metrics": {
+        "duration_seconds": 1.6902040816326531,
+        "rms_dbfs": -25.14,
+        "peak": 0.28918,
+        "clipped_fraction": 0.0,
+        "leading_silence_seconds": 0.1,
+        "trailing_silence_seconds": 0.14,
+        "longest_internal_pause_seconds": 0.12
+      },
+      "flags": [],
+      "ignore_accents": true,
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "detail": "Delivered target transcribed and screened; human listening remains pending"
+    },
+    "history": [
+      {
+        "attempt": 1,
+        "status": "PASS",
+        "quality": {
+          "disposition": "PASS",
+          "score": 1.0,
+          "transcript": "Il palco è pieno!",
+          "metrics": {
+            "duration_seconds": 1.6902040816326531,
+            "rms_dbfs": -25.14,
+            "peak": 0.28918,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.1,
+            "trailing_silence_seconds": 0.14,
+            "longest_internal_pause_seconds": 0.12
+          },
+          "flags": [],
+          "ignore_accents": true,
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "detail": "Delivered target transcribed and screened; human listening remains pending"
+        },
+        "extraction": {
+          "schema_version": 1,
+          "algorithm_version": "greia-spoken-carrier-extractor-v7",
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "status": "EXTRACTED_PENDING_LISTENING",
+          "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/1c3b689a46d9451ebb47ebb26895bde3/attempt-01/raw.wav",
+          "source_sha256": "7a2bac0700272780ea206d9978c5b49868e42d032da13e3e077cafcc9f847bb3",
+          "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/1c3b689a46d9451ebb47ebb26895bde3/attempt-01/target.wav",
+          "output_sha256": "bd14b933345e70ea09c36a26e503a64d7f70e58f54cae52b20eafbcd3fe76a45",
+          "output_bytes": 162300,
+          "locale": "it",
+          "prefix": "Parliamo con calma insieme.",
+          "target": "Il palco è pieno!",
+          "remove_first_words": 4,
+          "ignore_accents": true,
+          "target_verification_requested": "warn",
+          "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_transcript_warning": false,
+          "recognizer": "mlx-audio-parakeet-tdt-v3",
+          "recognizer_version": "0.5.0",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "extracted_transcript": "Il palco è pieno!",
+          "expected_target_tokens": [
+            "il",
+            "palko",
+            "e",
+            "pieno"
+          ],
+          "extracted_target_tokens": [
+            "il",
+            "palko",
+            "e",
+            "pieno"
+          ],
+          "extracted_target_exact_match": true,
+          "transcription_settings": {
+            "language_detection": "automatic",
+            "expected_text_prompt": null,
+            "timestamps": "model-provided-token-timestamps"
+          },
+          "sample_rate": 48000,
+          "duration_seconds": 3.6801666666666666,
+          "boundary": {
+            "search_strategy": "target-only-global-quiet-run-v7",
+            "verified_silence_start_seconds": 1.77,
+            "verified_silence_end_seconds": 2.09,
+            "verified_silence_duration_seconds": 0.32,
+            "cut_sample": 95520,
+            "cut_time_seconds": 1.99,
+            "padding_seconds": 0.1,
+            "quiet_run_start_sample": 84960,
+            "quiet_run_end_sample": 100320,
+            "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+          },
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/1c3b689a46d9451ebb47ebb26895bde3/attempt-01/target.wav.search/77a799227e1040058b97ab066437f121",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/1c3b689a46d9451ebb47ebb26895bde3/attempt-01/target.wav.search/77a799227e1040058b97ab066437f121/search.json",
+          "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/1c3b689a46d9451ebb47ebb26895bde3/attempt-01/raw.wav.receipt.json",
+          "source_provider_receipt_sha256": "7144daf40784f93931ffb6298d415c81a2d01fd6e115415d49a4db232ee5c861",
+          "candidate_sha256": "bd14b933345e70ea09c36a26e503a64d7f70e58f54cae52b20eafbcd3fe76a45",
+          "candidate_id": "candidate-01",
+          "candidate_count": 1,
+          "qualifying_quiet_run_count": 1,
+          "candidate_results": [
+            {
+              "candidate_id": "candidate-01",
+              "quiet_run": {
+                "start_sample": 84960,
+                "end_sample": 100320,
+                "start_seconds": 1.77,
+                "end_seconds": 2.09,
+                "duration_seconds": 0.32
+              },
+              "cut_sample": 95520,
+              "cut_time_seconds": 1.99,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/1c3b689a46d9451ebb47ebb26895bde3/attempt-01/target.wav.search/77a799227e1040058b97ab066437f121/candidate-01.wav",
+              "preceding_voiced_seconds": 1.61,
+              "retained_voiced_seconds": 1.19,
+              "retained_duration_seconds": 1.6901666666666666,
+              "candidate_sha256": "bd14b933345e70ea09c36a26e503a64d7f70e58f54cae52b20eafbcd3fe76a45",
+              "extracted_transcript": "Il palco è pieno!",
+              "canonical_transcript_tokens": [
+                "il",
+                "palko",
+                "e",
+                "pieno"
+              ],
+              "exact_target_match": true,
+              "target_comparison_score": 1.0,
+              "target_word_count_matches": true,
+              "target_numbers_match": true,
+              "target_comparison_flags": [],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": true,
+              "asr_segment_count": 1
+            }
+          ],
+          "human_review": "PENDING",
+          "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+          "delivery": {
+            "policy": "verified-carrier-gap-delivery-v1",
+            "removed_frames": 0,
+            "removed_seconds": 0.0,
+            "retained_verified_quiet_seconds": 0.1,
+            "raw_delivery_start_sample": 95520,
+            "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/1c3b689a46d9451ebb47ebb26895bde3/attempt-01/delivery-target.wav",
+            "sha256": "bd14b933345e70ea09c36a26e503a64d7f70e58f54cae52b20eafbcd3fe76a45"
+          }
+        },
+        "candidate": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/1c3b689a46d9451ebb47ebb26895bde3/attempt-01/candidate.wav"
+      }
+    ]
+  },
   "corpus_replacement": {
-    "original_sha256": "e502351e48cc0f6df889c23132ad8dc096134792fdc29c5ec8567560222309de",
+    "original_sha256": "de552503cff2567e26f2e5eabe49856619fc640aa9867cbe80da6ccfb02eb594",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

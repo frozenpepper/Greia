@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T03:34:40.564373+00:00",
+  "created_utc": "2026-10-23T01:22:22.256338+00:00",
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
@@ -8,17 +8,22 @@
     "text": "Sono tutto sporco!",
     "cue_id": "greia.requested.muddy.it",
     "output": "activities/cucciolo_mio/assets/audio/it/muddy.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic"
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.lilli.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "job_id": "20261020-053426-4714101b",
-    "idempotency_key": "greia-7e50e92747944b7a83ac9e43b22f37be",
+    "job_id": "20261023-032207-0ab470c0",
+    "idempotency_key": "greia-25eb8fb97a564553b1eb1f49bb905022",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +46,333 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2124928272,
+    "script_seed": 2454029918,
     "language_direction": "Italian",
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak naturally in Italian. Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "effective_delivery": "Speak in Italian. Voce calda e calma. Pronuncia chiara e naturale.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 854812190,
-        "sha256": "d6205cbc6cd73a8d213e3bf26c22e0ffcc077ae1f02d51cac3556cd875e33c79",
+        "seed": 510233783,
+        "sha256": "515e1f27d325affe06ff7ff6c4e60fa2bfecd56e1b62836f8c4f9d5289665b0d",
         "generation": {
-          "elapsed_seconds": 12.96241141599603,
+          "elapsed_seconds": 12.61919008300174,
           "model_load_seconds": 0.0,
-          "rtf": 7.364309108604884,
-          "peak_memory_gb": 6.61593154
+          "rtf": 3.5848274465229126,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-audio-parakeet-tdt-v3",
+    "transcript": "SONO TOTT SPORCO!",
+    "score": 0.8242,
+    "detail": "Delivered target transcribed and screened; human listening remains pending",
+    "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+    "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+    "flags": [],
+    "metrics": {
+      "duration_seconds": 1.6401814058956916,
+      "rms_dbfs": -23.63,
+      "peak": 0.27548,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.08,
+      "trailing_silence_seconds": 0.06,
+      "longest_internal_pause_seconds": 0.08
+    }
   },
   "attempts": 1,
   "output": {
     "path": "activities/cucciolo_mio/assets/audio/it/muddy.wav",
-    "bytes": 77702,
-    "sha256": "09b7256412218143a7bb9cb3d1683335c87e990fe429a693f0988a99972715a0"
+    "bytes": 72410,
+    "sha256": "2ca16e1e18d8e0a3bd779eb13bdbe73fba96a129a77ca5942bdce79f1cb86d38"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "short_phrase": {
+    "mode": "automatic-carrier",
+    "composition_policy": "natural-context-period-v1",
+    "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/27d5d2991c0e4943880512f19226847e",
+    "prefix": "Parliamo con calma insieme.",
+    "composite_text": "Parliamo con calma insieme.\n\nSono tutto sporco!",
+    "effective_delivery": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "extraction": {
+      "schema_version": 1,
+      "algorithm_version": "greia-spoken-carrier-extractor-v7",
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "status": "EXTRACTED_PENDING_LISTENING",
+      "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/27d5d2991c0e4943880512f19226847e/attempt-01/raw.wav",
+      "source_sha256": "515e1f27d325affe06ff7ff6c4e60fa2bfecd56e1b62836f8c4f9d5289665b0d",
+      "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/27d5d2991c0e4943880512f19226847e/attempt-01/target.wav",
+      "output_sha256": "016169587bb521945fbd2c00aa95af7209fd892d7ee2971945c3dcdb526ac171",
+      "output_bytes": 157500,
+      "locale": "it",
+      "prefix": "Parliamo con calma insieme.",
+      "target": "Sono tutto sporco!",
+      "remove_first_words": 4,
+      "ignore_accents": true,
+      "target_verification_requested": "warn",
+      "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+      "target_comparison_score": 0.8242,
+      "target_word_count_matches": true,
+      "target_numbers_match": true,
+      "target_comparison_flags": [],
+      "target_transcript_warning": true,
+      "recognizer": "mlx-audio-parakeet-tdt-v3",
+      "recognizer_version": "0.5.0",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "extracted_transcript": "SONO TOTT SPORCO!",
+      "expected_target_tokens": [
+        "sono",
+        "tutto",
+        "sporko"
+      ],
+      "extracted_target_tokens": [
+        "sono",
+        "tott",
+        "sporko"
+      ],
+      "extracted_target_exact_match": false,
+      "transcription_settings": {
+        "language_detection": "automatic",
+        "expected_text_prompt": null,
+        "timestamps": "model-provided-token-timestamps"
+      },
+      "sample_rate": 48000,
+      "duration_seconds": 3.520166666666667,
+      "boundary": {
+        "search_strategy": "target-only-global-quiet-run-v7",
+        "verified_silence_start_seconds": 1.62,
+        "verified_silence_end_seconds": 1.98,
+        "verified_silence_duration_seconds": 0.36,
+        "cut_sample": 90240,
+        "cut_time_seconds": 1.88,
+        "padding_seconds": 0.1,
+        "quiet_run_start_sample": 77760,
+        "quiet_run_end_sample": 95040,
+        "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+      },
+      "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/27d5d2991c0e4943880512f19226847e/attempt-01/target.wav.search/d026eb1608434f34a21209d09c481a83",
+      "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/27d5d2991c0e4943880512f19226847e/attempt-01/target.wav.search/d026eb1608434f34a21209d09c481a83/search.json",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/27d5d2991c0e4943880512f19226847e/attempt-01/raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "be068a4dab39b14080cf99b74eb1b1feea099c06ee914c69245a67d201f9c304",
+      "candidate_sha256": "016169587bb521945fbd2c00aa95af7209fd892d7ee2971945c3dcdb526ac171",
+      "candidate_id": "candidate-01",
+      "candidate_count": 1,
+      "qualifying_quiet_run_count": 1,
+      "candidate_results": [
+        {
+          "candidate_id": "candidate-01",
+          "quiet_run": {
+            "start_sample": 77760,
+            "end_sample": 95040,
+            "start_seconds": 1.62,
+            "end_seconds": 1.98,
+            "duration_seconds": 0.36
+          },
+          "cut_sample": 90240,
+          "cut_time_seconds": 1.88,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/27d5d2991c0e4943880512f19226847e/attempt-01/target.wav.search/d026eb1608434f34a21209d09c481a83/candidate-01.wav",
+          "preceding_voiced_seconds": 1.38,
+          "retained_voiced_seconds": 1.05,
+          "retained_duration_seconds": 1.6401666666666668,
+          "candidate_sha256": "016169587bb521945fbd2c00aa95af7209fd892d7ee2971945c3dcdb526ac171",
+          "extracted_transcript": "SONO TOTT SPORCO!",
+          "canonical_transcript_tokens": [
+            "sono",
+            "tott",
+            "sporko"
+          ],
+          "exact_target_match": false,
+          "target_comparison_score": 0.8242,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": true,
+          "asr_segment_count": 1
+        }
+      ],
+      "human_review": "PENDING",
+      "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+      "delivery": {
+        "policy": "verified-carrier-gap-delivery-v1",
+        "removed_frames": 0,
+        "removed_seconds": 0.0,
+        "retained_verified_quiet_seconds": 0.1,
+        "raw_delivery_start_sample": 90240,
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/27d5d2991c0e4943880512f19226847e/attempt-01/delivery-target.wav",
+        "sha256": "016169587bb521945fbd2c00aa95af7209fd892d7ee2971945c3dcdb526ac171"
+      }
+    },
+    "quality": {
+      "disposition": "PASS",
+      "score": 0.8242,
+      "transcript": "SONO TOTT SPORCO!",
+      "metrics": {
+        "duration_seconds": 1.6401814058956916,
+        "rms_dbfs": -23.63,
+        "peak": 0.27548,
+        "clipped_fraction": 0.0,
+        "leading_silence_seconds": 0.08,
+        "trailing_silence_seconds": 0.06,
+        "longest_internal_pause_seconds": 0.08
+      },
+      "flags": [],
+      "ignore_accents": true,
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "detail": "Delivered target transcribed and screened; human listening remains pending"
+    },
+    "history": [
+      {
+        "attempt": 1,
+        "status": "PASS",
+        "quality": {
+          "disposition": "PASS",
+          "score": 0.8242,
+          "transcript": "SONO TOTT SPORCO!",
+          "metrics": {
+            "duration_seconds": 1.6401814058956916,
+            "rms_dbfs": -23.63,
+            "peak": 0.27548,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.08,
+            "trailing_silence_seconds": 0.06,
+            "longest_internal_pause_seconds": 0.08
+          },
+          "flags": [],
+          "ignore_accents": true,
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "detail": "Delivered target transcribed and screened; human listening remains pending"
+        },
+        "extraction": {
+          "schema_version": 1,
+          "algorithm_version": "greia-spoken-carrier-extractor-v7",
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "status": "EXTRACTED_PENDING_LISTENING",
+          "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/27d5d2991c0e4943880512f19226847e/attempt-01/raw.wav",
+          "source_sha256": "515e1f27d325affe06ff7ff6c4e60fa2bfecd56e1b62836f8c4f9d5289665b0d",
+          "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/27d5d2991c0e4943880512f19226847e/attempt-01/target.wav",
+          "output_sha256": "016169587bb521945fbd2c00aa95af7209fd892d7ee2971945c3dcdb526ac171",
+          "output_bytes": 157500,
+          "locale": "it",
+          "prefix": "Parliamo con calma insieme.",
+          "target": "Sono tutto sporco!",
+          "remove_first_words": 4,
+          "ignore_accents": true,
+          "target_verification_requested": "warn",
+          "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+          "target_comparison_score": 0.8242,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_transcript_warning": true,
+          "recognizer": "mlx-audio-parakeet-tdt-v3",
+          "recognizer_version": "0.5.0",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "extracted_transcript": "SONO TOTT SPORCO!",
+          "expected_target_tokens": [
+            "sono",
+            "tutto",
+            "sporko"
+          ],
+          "extracted_target_tokens": [
+            "sono",
+            "tott",
+            "sporko"
+          ],
+          "extracted_target_exact_match": false,
+          "transcription_settings": {
+            "language_detection": "automatic",
+            "expected_text_prompt": null,
+            "timestamps": "model-provided-token-timestamps"
+          },
+          "sample_rate": 48000,
+          "duration_seconds": 3.520166666666667,
+          "boundary": {
+            "search_strategy": "target-only-global-quiet-run-v7",
+            "verified_silence_start_seconds": 1.62,
+            "verified_silence_end_seconds": 1.98,
+            "verified_silence_duration_seconds": 0.36,
+            "cut_sample": 90240,
+            "cut_time_seconds": 1.88,
+            "padding_seconds": 0.1,
+            "quiet_run_start_sample": 77760,
+            "quiet_run_end_sample": 95040,
+            "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+          },
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/27d5d2991c0e4943880512f19226847e/attempt-01/target.wav.search/d026eb1608434f34a21209d09c481a83",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/27d5d2991c0e4943880512f19226847e/attempt-01/target.wav.search/d026eb1608434f34a21209d09c481a83/search.json",
+          "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/27d5d2991c0e4943880512f19226847e/attempt-01/raw.wav.receipt.json",
+          "source_provider_receipt_sha256": "be068a4dab39b14080cf99b74eb1b1feea099c06ee914c69245a67d201f9c304",
+          "candidate_sha256": "016169587bb521945fbd2c00aa95af7209fd892d7ee2971945c3dcdb526ac171",
+          "candidate_id": "candidate-01",
+          "candidate_count": 1,
+          "qualifying_quiet_run_count": 1,
+          "candidate_results": [
+            {
+              "candidate_id": "candidate-01",
+              "quiet_run": {
+                "start_sample": 77760,
+                "end_sample": 95040,
+                "start_seconds": 1.62,
+                "end_seconds": 1.98,
+                "duration_seconds": 0.36
+              },
+              "cut_sample": 90240,
+              "cut_time_seconds": 1.88,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/27d5d2991c0e4943880512f19226847e/attempt-01/target.wav.search/d026eb1608434f34a21209d09c481a83/candidate-01.wav",
+              "preceding_voiced_seconds": 1.38,
+              "retained_voiced_seconds": 1.05,
+              "retained_duration_seconds": 1.6401666666666668,
+              "candidate_sha256": "016169587bb521945fbd2c00aa95af7209fd892d7ee2971945c3dcdb526ac171",
+              "extracted_transcript": "SONO TOTT SPORCO!",
+              "canonical_transcript_tokens": [
+                "sono",
+                "tott",
+                "sporko"
+              ],
+              "exact_target_match": false,
+              "target_comparison_score": 0.8242,
+              "target_word_count_matches": true,
+              "target_numbers_match": true,
+              "target_comparison_flags": [],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": true,
+              "asr_segment_count": 1
+            }
+          ],
+          "human_review": "PENDING",
+          "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+          "delivery": {
+            "policy": "verified-carrier-gap-delivery-v1",
+            "removed_frames": 0,
+            "removed_seconds": 0.0,
+            "retained_verified_quiet_seconds": 0.1,
+            "raw_delivery_start_sample": 90240,
+            "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/27d5d2991c0e4943880512f19226847e/attempt-01/delivery-target.wav",
+            "sha256": "016169587bb521945fbd2c00aa95af7209fd892d7ee2971945c3dcdb526ac171"
+          }
+        },
+        "candidate": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/27d5d2991c0e4943880512f19226847e/attempt-01/candidate.wav"
+      }
+    ]
+  },
   "corpus_replacement": {
-    "original_sha256": "8f9282043f2456a0450f23ae96fc1ec81b62b6975253b17bd26ef3863d554547",
+    "original_sha256": "09b7256412218143a7bb9cb3d1683335c87e990fe429a693f0988a99972715a0",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

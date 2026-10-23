@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T14:11:35.386654+00:00",
+  "created_utc": "2026-10-23T01:59:21.693083+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
@@ -8,17 +8,22 @@
     "text": "¡Allá va!",
     "cue_id": "greia.requested.off_it_goes.es",
     "output": "activities/posta_di_leo/assets/audio/es/off_it_goes.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. A short, lively reaction: expressive and clear, one breath, no extra words."
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Lectura cálida y tranquila. Pronunciación clara y natural.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic"
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-161129-57042cbe",
-    "idempotency_key": "greia-cf350594b65149faa6308903c48ef610",
+    "job_id": "20261023-035901-df9af3d2",
+    "idempotency_key": "greia-8164a05ceb4743da9c49aa99e972053f",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +46,327 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 679150517,
+    "script_seed": 270835365,
     "language_direction": "Spanish",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. A short, lively reaction: expressive and clear, one breath, no extra words.",
-    "effective_delivery": "Speak in Spanish. Leo, a warm, curious cartoon guide. A short, lively reaction: expressive and clear, one breath, no extra words.",
+    "delivery_prompt": "Lectura cálida y tranquila. Pronunciación clara y natural.",
+    "effective_delivery": "Speak in Spanish. Lectura cálida y tranquila. Pronunciación clara y natural.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3175063487,
-        "sha256": "67e1132a525266d8dbba27d213e9948deb4f0efbbb01246a3528d38fc9b066bc",
+        "seed": 1264996239,
+        "sha256": "dba286a0c1978b19990fc3451c7559aec7f796d652af6a47d571ca26f781a69e",
         "generation": {
-          "elapsed_seconds": 5.567260832991451,
+          "elapsed_seconds": 16.730792207992636,
           "model_load_seconds": 0.0,
-          "rtf": 4.348856268447951,
-          "peak_memory_gb": 8.44494914
+          "rtf": 4.546205029118057,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-audio-parakeet-tdt-v3",
+    "transcript": "Allá va.",
+    "score": 1.0,
+    "detail": "Delivered target transcribed and screened; human listening remains pending",
+    "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+    "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+    "flags": [],
+    "metrics": {
+      "duration_seconds": 0.8401814058956916,
+      "rms_dbfs": -28.55,
+      "peak": 0.24112,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.08,
+      "trailing_silence_seconds": 0.18,
+      "longest_internal_pause_seconds": 0.0
+    }
   },
   "attempts": 1,
   "output": {
     "path": "activities/posta_di_leo/assets/audio/es/off_it_goes.wav",
-    "bytes": 56534,
-    "sha256": "d2b61464351ecf89006d0a9e8d9c58adacad7c703dbe06c464b481665210eb96"
+    "bytes": 37130,
+    "sha256": "5d0b5e0928009b21c95bd22aad242c13eac085a002884e61009c581eba8d6e81"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "short_phrase": {
+    "mode": "automatic-carrier",
+    "composition_policy": "natural-context-period-v1",
+    "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/db172c6008d140f8a4e399598fa10bf6",
+    "prefix": "Vamos a hablar con calma.",
+    "composite_text": "Vamos a hablar con calma.\n\n¡Allá va!",
+    "effective_delivery": "Lectura cálida y tranquila. Pronunciación clara y natural.",
+    "extraction": {
+      "schema_version": 1,
+      "algorithm_version": "greia-spoken-carrier-extractor-v7",
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "status": "EXTRACTED_PENDING_LISTENING",
+      "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/db172c6008d140f8a4e399598fa10bf6/attempt-01/raw.wav",
+      "source_sha256": "dba286a0c1978b19990fc3451c7559aec7f796d652af6a47d571ca26f781a69e",
+      "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/db172c6008d140f8a4e399598fa10bf6/attempt-01/target.wav",
+      "output_sha256": "3cbd270333f93f4195e3e6db44cfbfb99d3a805708d616ab39ab3937d264d577",
+      "output_bytes": 80700,
+      "locale": "es",
+      "prefix": "Vamos a hablar con calma.",
+      "target": "¡Allá va!",
+      "remove_first_words": 5,
+      "ignore_accents": true,
+      "target_verification_requested": "warn",
+      "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+      "target_comparison_score": 1.0,
+      "target_word_count_matches": true,
+      "target_numbers_match": true,
+      "target_comparison_flags": [],
+      "target_transcript_warning": false,
+      "recognizer": "mlx-audio-parakeet-tdt-v3",
+      "recognizer_version": "0.5.0",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "extracted_transcript": "Allá va.",
+      "expected_target_tokens": [
+        "alla",
+        "va"
+      ],
+      "extracted_target_tokens": [
+        "alla",
+        "va"
+      ],
+      "extracted_target_exact_match": true,
+      "transcription_settings": {
+        "language_detection": "automatic",
+        "expected_text_prompt": null,
+        "timestamps": "model-provided-token-timestamps"
+      },
+      "sample_rate": 48000,
+      "duration_seconds": 3.6801666666666666,
+      "boundary": {
+        "search_strategy": "target-only-global-quiet-run-v7",
+        "verified_silence_start_seconds": 1.59,
+        "verified_silence_end_seconds": 2.94,
+        "verified_silence_duration_seconds": 1.35,
+        "cut_sample": 136320,
+        "cut_time_seconds": 2.84,
+        "padding_seconds": 0.1,
+        "quiet_run_start_sample": 76320,
+        "quiet_run_end_sample": 141120,
+        "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+      },
+      "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/db172c6008d140f8a4e399598fa10bf6/attempt-01/target.wav.search/4e7960d9c42e4ce18a3e5c3e427d195e",
+      "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/db172c6008d140f8a4e399598fa10bf6/attempt-01/target.wav.search/4e7960d9c42e4ce18a3e5c3e427d195e/search.json",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/db172c6008d140f8a4e399598fa10bf6/attempt-01/raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "d510f8bd4b6eaa7e56b2527f941ccaf0e6f1c62aa0f79f545fde5a46438d5484",
+      "candidate_sha256": "3cbd270333f93f4195e3e6db44cfbfb99d3a805708d616ab39ab3937d264d577",
+      "candidate_id": "candidate-01",
+      "candidate_count": 1,
+      "qualifying_quiet_run_count": 1,
+      "candidate_results": [
+        {
+          "candidate_id": "candidate-01",
+          "quiet_run": {
+            "start_sample": 76320,
+            "end_sample": 141120,
+            "start_seconds": 1.59,
+            "end_seconds": 2.94,
+            "duration_seconds": 1.35
+          },
+          "cut_sample": 136320,
+          "cut_time_seconds": 2.84,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/db172c6008d140f8a4e399598fa10bf6/attempt-01/target.wav.search/4e7960d9c42e4ce18a3e5c3e427d195e/candidate-01.wav",
+          "preceding_voiced_seconds": 1.27,
+          "retained_voiced_seconds": 0.52,
+          "retained_duration_seconds": 0.8401666666666666,
+          "candidate_sha256": "3cbd270333f93f4195e3e6db44cfbfb99d3a805708d616ab39ab3937d264d577",
+          "extracted_transcript": "Allá va.",
+          "canonical_transcript_tokens": [
+            "alla",
+            "va"
+          ],
+          "exact_target_match": true,
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": true,
+          "asr_segment_count": 1
+        }
+      ],
+      "human_review": "PENDING",
+      "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+      "delivery": {
+        "policy": "verified-carrier-gap-delivery-v1",
+        "removed_frames": 0,
+        "removed_seconds": 0.0,
+        "retained_verified_quiet_seconds": 0.1,
+        "raw_delivery_start_sample": 136320,
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/db172c6008d140f8a4e399598fa10bf6/attempt-01/delivery-target.wav",
+        "sha256": "3cbd270333f93f4195e3e6db44cfbfb99d3a805708d616ab39ab3937d264d577"
+      }
+    },
+    "quality": {
+      "disposition": "PASS",
+      "score": 1.0,
+      "transcript": "Allá va.",
+      "metrics": {
+        "duration_seconds": 0.8401814058956916,
+        "rms_dbfs": -28.55,
+        "peak": 0.24112,
+        "clipped_fraction": 0.0,
+        "leading_silence_seconds": 0.08,
+        "trailing_silence_seconds": 0.18,
+        "longest_internal_pause_seconds": 0.0
+      },
+      "flags": [],
+      "ignore_accents": true,
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "detail": "Delivered target transcribed and screened; human listening remains pending"
+    },
+    "history": [
+      {
+        "attempt": 1,
+        "status": "PASS",
+        "quality": {
+          "disposition": "PASS",
+          "score": 1.0,
+          "transcript": "Allá va.",
+          "metrics": {
+            "duration_seconds": 0.8401814058956916,
+            "rms_dbfs": -28.55,
+            "peak": 0.24112,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.08,
+            "trailing_silence_seconds": 0.18,
+            "longest_internal_pause_seconds": 0.0
+          },
+          "flags": [],
+          "ignore_accents": true,
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "detail": "Delivered target transcribed and screened; human listening remains pending"
+        },
+        "extraction": {
+          "schema_version": 1,
+          "algorithm_version": "greia-spoken-carrier-extractor-v7",
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "status": "EXTRACTED_PENDING_LISTENING",
+          "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/db172c6008d140f8a4e399598fa10bf6/attempt-01/raw.wav",
+          "source_sha256": "dba286a0c1978b19990fc3451c7559aec7f796d652af6a47d571ca26f781a69e",
+          "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/db172c6008d140f8a4e399598fa10bf6/attempt-01/target.wav",
+          "output_sha256": "3cbd270333f93f4195e3e6db44cfbfb99d3a805708d616ab39ab3937d264d577",
+          "output_bytes": 80700,
+          "locale": "es",
+          "prefix": "Vamos a hablar con calma.",
+          "target": "¡Allá va!",
+          "remove_first_words": 5,
+          "ignore_accents": true,
+          "target_verification_requested": "warn",
+          "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_transcript_warning": false,
+          "recognizer": "mlx-audio-parakeet-tdt-v3",
+          "recognizer_version": "0.5.0",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "extracted_transcript": "Allá va.",
+          "expected_target_tokens": [
+            "alla",
+            "va"
+          ],
+          "extracted_target_tokens": [
+            "alla",
+            "va"
+          ],
+          "extracted_target_exact_match": true,
+          "transcription_settings": {
+            "language_detection": "automatic",
+            "expected_text_prompt": null,
+            "timestamps": "model-provided-token-timestamps"
+          },
+          "sample_rate": 48000,
+          "duration_seconds": 3.6801666666666666,
+          "boundary": {
+            "search_strategy": "target-only-global-quiet-run-v7",
+            "verified_silence_start_seconds": 1.59,
+            "verified_silence_end_seconds": 2.94,
+            "verified_silence_duration_seconds": 1.35,
+            "cut_sample": 136320,
+            "cut_time_seconds": 2.84,
+            "padding_seconds": 0.1,
+            "quiet_run_start_sample": 76320,
+            "quiet_run_end_sample": 141120,
+            "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+          },
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/db172c6008d140f8a4e399598fa10bf6/attempt-01/target.wav.search/4e7960d9c42e4ce18a3e5c3e427d195e",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/db172c6008d140f8a4e399598fa10bf6/attempt-01/target.wav.search/4e7960d9c42e4ce18a3e5c3e427d195e/search.json",
+          "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/db172c6008d140f8a4e399598fa10bf6/attempt-01/raw.wav.receipt.json",
+          "source_provider_receipt_sha256": "d510f8bd4b6eaa7e56b2527f941ccaf0e6f1c62aa0f79f545fde5a46438d5484",
+          "candidate_sha256": "3cbd270333f93f4195e3e6db44cfbfb99d3a805708d616ab39ab3937d264d577",
+          "candidate_id": "candidate-01",
+          "candidate_count": 1,
+          "qualifying_quiet_run_count": 1,
+          "candidate_results": [
+            {
+              "candidate_id": "candidate-01",
+              "quiet_run": {
+                "start_sample": 76320,
+                "end_sample": 141120,
+                "start_seconds": 1.59,
+                "end_seconds": 2.94,
+                "duration_seconds": 1.35
+              },
+              "cut_sample": 136320,
+              "cut_time_seconds": 2.84,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/db172c6008d140f8a4e399598fa10bf6/attempt-01/target.wav.search/4e7960d9c42e4ce18a3e5c3e427d195e/candidate-01.wav",
+              "preceding_voiced_seconds": 1.27,
+              "retained_voiced_seconds": 0.52,
+              "retained_duration_seconds": 0.8401666666666666,
+              "candidate_sha256": "3cbd270333f93f4195e3e6db44cfbfb99d3a805708d616ab39ab3937d264d577",
+              "extracted_transcript": "Allá va.",
+              "canonical_transcript_tokens": [
+                "alla",
+                "va"
+              ],
+              "exact_target_match": true,
+              "target_comparison_score": 1.0,
+              "target_word_count_matches": true,
+              "target_numbers_match": true,
+              "target_comparison_flags": [],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": true,
+              "asr_segment_count": 1
+            }
+          ],
+          "human_review": "PENDING",
+          "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+          "delivery": {
+            "policy": "verified-carrier-gap-delivery-v1",
+            "removed_frames": 0,
+            "removed_seconds": 0.0,
+            "retained_verified_quiet_seconds": 0.1,
+            "raw_delivery_start_sample": 136320,
+            "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/db172c6008d140f8a4e399598fa10bf6/attempt-01/delivery-target.wav",
+            "sha256": "3cbd270333f93f4195e3e6db44cfbfb99d3a805708d616ab39ab3937d264d577"
+          }
+        },
+        "candidate": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/db172c6008d140f8a4e399598fa10bf6/attempt-01/candidate.wav"
+      }
+    ]
+  },
   "corpus_replacement": {
-    "original_sha256": "5a9c90b4299c07dbe3ddfc4d0a2b0ae8f4ec9f4b3d0d0630fe6e8a397707d18b",
+    "original_sha256": "d2b61464351ecf89006d0a9e8d9c58adacad7c703dbe06c464b481665210eb96",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

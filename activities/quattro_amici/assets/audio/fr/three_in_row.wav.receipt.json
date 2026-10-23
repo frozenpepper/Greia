@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T14:16:50.449078+00:00",
+  "created_utc": "2026-10-21T17:04:33.465679+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "Trois alignés !",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. Trois alignés !",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Trois alignés !",
+    "cue_id": "greia.requested.three_in_row.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Trois alignés !",
     "cue_id": "greia.requested.three_in_row.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/quattro_amici/assets/audio/fr/three_in_row.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. A happy celebration with the child: joyful, proud and warm. Lively but clear."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-161644-1eddc1de",
-    "idempotency_key": "greia-89b946440627446ea4f76fd4e4c5bdd0",
+    "job_id": "20261021-190420-43cab343",
+    "idempotency_key": "greia-4e5a80e067ff4d2d8b852bd959354a9b",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,240 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1827857903,
+    "script_seed": 1041570960,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
-    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 91297685,
-        "sha256": "53992126dafe3028e6ff5bc1505d04133d15630dbd32a1016c4d79ee7ee04986",
+        "seed": 1886047692,
+        "sha256": "074481608ef3d41dd24561ad743c06f7b7210f3915c98f54677526a0ee2d002c",
         "generation": {
-          "elapsed_seconds": 5.688083541986998,
+          "elapsed_seconds": 12.993730542002595,
           "model_load_seconds": 0.0,
-          "rtf": 4.443236720729331,
-          "peak_memory_gb": 8.44494914
+          "rtf": 4.511450914415576,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " Trois alignés.",
+    "metrics": {
+      "duration_seconds": 1.111201814058957,
+      "rms_dbfs": -33.67,
+      "peak": 0.1561,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.16,
+      "trailing_silence_seconds": 0.14,
+      "longest_internal_pause_seconds": 0.06
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/quattro_amici/assets/audio/fr/three_in_row.wav.raw.wav",
+    "sha256": "c448dc8afd0e413c2eb19b11ee5f485b6558358e080b0788d3bb9e51e19a6964",
+    "receipt_sha256": "3edb8b8f0ee3a6529acad227244d3f57a58a44b493644e7a90075c4ac0a4c9ab"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/quattro_amici/assets/audio/fr/three_in_row.wav.extracted.wav",
+    "sha256": "d1b4c54dfd68bde20963ffe0d02c564f895e11ba23ff7f4bcaa890fafede8e52"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/quattro_amici/assets/audio/fr/three_in_row.wav.delivery.wav",
+    "sha256": "ff16cd68bb3cc89b6c5d574421b3739d3a1bd3e931e5f06af180447401f237ca"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/quattro_amici/assets/audio/fr/three_in_row.wav.raw.wav",
+    "source_sha256": "c448dc8afd0e413c2eb19b11ee5f485b6558358e080b0788d3bb9e51e19a6964",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/quattro_amici/assets/audio/fr/three_in_row.wav.extracted.wav",
+    "output_sha256": "d1b4c54dfd68bde20963ffe0d02c564f895e11ba23ff7f4bcaa890fafede8e52",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Trois alignés !",
+      "locale": "fr",
+      "cue_id": "greia.requested.three_in_row.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/quattro_amici/assets/audio/fr/three_in_row.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "3edb8b8f0ee3a6529acad227244d3f57a58a44b493644e7a90075c4ac0a4c9ab"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "Trois alignés !",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français, trois alignés.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " 3 alignés",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.32
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.32,
+        "end_seconds": 0.6
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.6,
+        "end_seconds": 0.82
+      },
+      {
+        "word": "en",
+        "start_seconds": 0.82,
+        "end_seconds": 0.94
+      },
+      {
+        "word": "français",
+        "start_seconds": 0.94,
+        "end_seconds": 1.42
+      },
+      {
+        "word": "trois",
+        "start_seconds": 1.92,
+        "end_seconds": 2.16
+      },
+      {
+        "word": "alignés",
+        "start_seconds": 2.16,
+        "end_seconds": 2.76
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "3",
+        "start_seconds": 0.0,
+        "end_seconds": 0.48
+      },
+      {
+        "word": "alignés",
+        "start_seconds": 0.48,
+        "end_seconds": 1.12
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.421044789827787,
+        "no_speech_prob": 0.012982652522623539,
+        "compression_ratio": 0.8518518518518519,
+        "word_probabilities": [
+          0.83544921875,
+          0.98876953125,
+          0.88525390625,
+          0.98291015625,
+          0.96826171875,
+          0.7255859375,
+          0.70458984375
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6222720146179199,
+        "no_speech_prob": 0.10912704467773438,
+        "compression_ratio": 0.5555555555555556,
+        "word_probabilities": [
+          0.360107421875,
+          0.6142578125
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 67,
+    "extracted_voiced_seconds": 0.67,
+    "unremoved_raw_target_tokens": [
+      "trois",
+      "alignés"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "trois",
+      "alignés"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 2.8801814058956916,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.42,
+      "search_end_seconds": 1.92,
+      "prefix_last_word_end_seconds": 1.42,
+      "target_first_word_start_seconds": 1.92,
+      "gap_seconds": 0.3891156462585034,
+      "verified_silence_start_seconds": 1.4798639455782312,
+      "verified_silence_end_seconds": 1.8689795918367347,
+      "gap_rms_dbfs": -54.868,
+      "gap_peak_dbfs": -33.345,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.674421768707483,
+      "cut_sample": 36921,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 2085,
+      "removed_seconds": 0.0945578231292517,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 39006,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/quattro_amici/assets/audio/fr/three_in_row.wav.delivery.wav",
+      "sha256": "ff16cd68bb3cc89b6c5d574421b3739d3a1bd3e931e5f06af180447401f237ca"
+    }
+  },
   "output": {
     "path": "activities/quattro_amici/assets/audio/fr/three_in_row.wav",
-    "bytes": 56534,
-    "sha256": "d55c9a42df4852aab723076c13e6ba1f6631e0baa0f96227bb490666ecb338ac"
+    "sha256": "9df28f18290e62ad5895a233606bd750b0e6d9cd5bcb791c067dfff2341644b2",
+    "bytes": 49082
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "04382de76a68bc59c75ff50aecdba5ce54438a31b63e70fc50314ebc8df8e15d",
+    "original_sha256": "c7152a908dd18320ff405419f39d2ea7a5f5fdc2ef73dd1768e91d45b30c3b26",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

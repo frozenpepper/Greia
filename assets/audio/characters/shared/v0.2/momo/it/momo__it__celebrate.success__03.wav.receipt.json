@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T13:09:37.420121+00:00",
+  "created_utc": "2026-10-21T18:15:21.972921+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "Che meraviglia!",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. Che meraviglia!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "momo",
+    "kind": "shared_character_utterance",
+    "locale": "it",
+    "text": "Che meraviglia!",
+    "cue_id": "shared.celebrate.success.03",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "momo",
     "kind": "shared_character_utterance",
     "locale": "it",
     "text": "Che meraviglia!",
     "cue_id": "shared.celebrate.success.03",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "assets/audio/characters/shared/v0.2/momo/it/momo__it__celebrate.success__03.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.momo.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261021-150932-74e0cfdd",
-    "idempotency_key": "greia-9a7c35d76c9b407ab5107244b5b2ca05",
+    "job_id": "20261021-201502-b897adfb",
+    "idempotency_key": "greia-c4e98c6e04454541bed4b1015f0cb8ac",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,227 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3052862271,
+    "script_seed": 4256906628,
     "language_direction": "Italian",
-    "delivery_prompt": "Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace.",
-    "effective_delivery": "Speak in Italian. Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1664286356,
-        "sha256": "389f830e57b54e7c25c4d05dc0ce4d919f1a0e6cc34f8b121b1bdcf197978f61",
+        "seed": 72747715,
+        "sha256": "9c1161c464dcab4ea2561f3034b1e325eb073cf5a56ed590903aa8d9a74dce79",
         "generation": {
-          "elapsed_seconds": 4.223175708000781,
+          "elapsed_seconds": 18.249884582997765,
           "model_load_seconds": 0.0,
-          "rtf": 3.7701315649463893,
+          "rtf": 4.958983175489633,
           "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " Che meraviglia!",
+    "metrics": {
+      "duration_seconds": 1.2758730158730158,
+      "rms_dbfs": -27.08,
+      "peak": 0.22052,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.28,
+      "trailing_silence_seconds": 0.1,
+      "longest_internal_pause_seconds": 0.0
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/characters/shared/v0.2/momo/it/momo__it__celebrate.success__03.wav.raw.wav",
+    "sha256": "f48b6b2e5936392ee8990ea82f194e399cbc5b61e03219b364839ab6ab7a4529",
+    "receipt_sha256": "06f4d0f4e6123e37eeb60ac7e5daf092a1e56b852209fb7556a18a591c923ae6"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/characters/shared/v0.2/momo/it/momo__it__celebrate.success__03.wav.extracted.wav",
+    "sha256": "ea18e63c4106bc5beb03c5df3c7eca47aa22d980a6151956c697dce32d684fc7"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/assets/audio/characters/shared/v0.2/momo/it/momo__it__celebrate.success__03.wav.raw.wav",
+    "source_sha256": "f48b6b2e5936392ee8990ea82f194e399cbc5b61e03219b364839ab6ab7a4529",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-extracted/assets/audio/characters/shared/v0.2/momo/it/momo__it__celebrate.success__03.wav.extracted.wav",
+    "output_sha256": "ea18e63c4106bc5beb03c5df3c7eca47aa22d980a6151956c697dce32d684fc7",
+    "target_request": {
+      "speaker": "momo",
+      "kind": "shared_character_utterance",
+      "text": "Che meraviglia!",
+      "locale": "it",
+      "cue_id": "shared.celebrate.success.03",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/assets/audio/characters/shared/v0.2/momo/it/momo__it__celebrate.success__03.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "06f4d0f4e6123e37eeb60ac7e5daf092a1e56b852209fb7556a18a591c923ae6"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "Che meraviglia!",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " ascolta questa frase in italiano. Che meraviglia!",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Che meraviglia!",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.7
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.7,
+        "end_seconds": 1.02
+      },
+      {
+        "word": "frase",
+        "start_seconds": 1.02,
+        "end_seconds": 1.34
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.34,
+        "end_seconds": 1.58
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.58,
+        "end_seconds": 2.1
+      },
+      {
+        "word": "che",
+        "start_seconds": 2.64,
+        "end_seconds": 2.8
+      },
+      {
+        "word": "meraviglia",
+        "start_seconds": 2.8,
+        "end_seconds": 3.48
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "che",
+        "start_seconds": 0.0,
+        "end_seconds": 0.4
+      },
+      {
+        "word": "meraviglia",
+        "start_seconds": 0.4,
+        "end_seconds": 1.1
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.42632341384887695,
+        "no_speech_prob": 0.04792113974690437,
+        "compression_ratio": 0.9074074074074074,
+        "word_probabilities": [
+          0.58544921875,
+          0.994140625,
+          0.9794921875,
+          0.98681640625,
+          0.99267578125,
+          0.9287109375,
+          0.9326171875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.516395197974311,
+        "no_speech_prob": 0.2726563811302185,
+        "compression_ratio": 0.6521739130434783,
+        "word_probabilities": [
+          0.485595703125,
+          0.8291015625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 87,
+    "extracted_voiced_seconds": 0.87,
+    "unremoved_raw_target_tokens": [
+      "che",
+      "meraviglia"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "che",
+      "meraviglia"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.6801814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 2.1,
+      "search_end_seconds": 2.64,
+      "prefix_last_word_end_seconds": 2.1,
+      "target_first_word_start_seconds": 2.64,
+      "gap_seconds": 0.3691609977324263,
+      "verified_silence_start_seconds": 2.2197278911564626,
+      "verified_silence_end_seconds": 2.588888888888889,
+      "gap_rms_dbfs": -58.399,
+      "gap_peak_dbfs": -39.756,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.404308390022676,
+      "cut_sample": 53015,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "assets/audio/characters/shared/v0.2/momo/it/momo__it__celebrate.success__03.wav",
-    "bytes": 49478,
-    "sha256": "addda19e8dd96a05851ea04353ab35edba7869a85c29044ad5cfc4befeeafe6e"
+    "sha256": "af3ef121a27aaa77f4dd58a01588d71b90b9f9472f81de89c32a3be5cd79cc07",
+    "bytes": 56344
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "ba5baa8b16c1bd8697aaa0034a22f8197a6f9203c5ad0bc4f1252126fd858fd7",
+    "original_sha256": "addda19e8dd96a05851ea04353ab35edba7869a85c29044ad5cfc4befeeafe6e",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

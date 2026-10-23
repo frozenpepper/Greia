@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T20:41:17.311406+00:00",
+  "created_utc": "2026-10-21T18:40:18.814896+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Listen to this phrase in English.",
+    "prefix_word_count": 6,
+    "target": "Wind",
+    "target_word_count": 1,
+    "target_verification": "warn",
+    "composite_text": "Listen to this phrase in English. Wind",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Wind",
+    "cue_id": "greia.vocab.wind.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "Wind",
     "cue_id": "greia.vocab.wind.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "assets/audio/vocab/v1/en/wind.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-224108-02c5eed7",
-    "idempotency_key": "greia-a285dbeb2c954a75b57349f420d3a684",
+    "job_id": "20261021-204003-9f2e7f2d",
+    "idempotency_key": "greia-8aa6d5a9a9a743b78f5878414284371c",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,204 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3730584985,
+    "script_seed": 1911231589,
     "language_direction": "English",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
-    "effective_delivery": "Speak in English. Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in English. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 744140669,
-        "sha256": "63e4eaec6b98ac53c6f41f94ad3337bbbed8e61bf95a4c3080e3646bc1b6dd89",
+        "seed": 2696636446,
+        "sha256": "f37f1fa9bec1dbf045124718f69f23c3e1a558ee104cbdcb1a8fa603c36f9c20",
         "generation": {
-          "elapsed_seconds": 7.152032042038627,
+          "elapsed_seconds": 14.837998917006189,
           "model_load_seconds": 0.0,
-          "rtf": 5.586797585240433,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.863894514215404,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Wind",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/vocab/v1/en/wind.wav.raw.wav",
+    "sha256": "9d1a6819784282760e9edd6f440d45ab079447bf8512db8ffdf771aa434032f2",
+    "receipt_sha256": "ef28bb2a98e3404efb9a45a66b4ddd3e21d34d226f399f030ba0ceb31304847f"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/vocab/v1/en/wind.wav.extracted.wav",
+    "sha256": "b781a6655099c951cae9b2f28bc03daf98e21e17430167dd5b9226ac5ff1ee9e"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/assets/audio/vocab/v1/en/wind.wav.raw.wav",
+    "source_sha256": "9d1a6819784282760e9edd6f440d45ab079447bf8512db8ffdf771aa434032f2",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/assets/audio/vocab/v1/en/wind.wav.extracted.wav",
+    "output_sha256": "b781a6655099c951cae9b2f28bc03daf98e21e17430167dd5b9226ac5ff1ee9e",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Wind",
+      "locale": "en",
+      "cue_id": "greia.vocab.wind.en",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/assets/audio/vocab/v1/en/wind.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "ef28bb2a98e3404efb9a45a66b4ddd3e21d34d226f399f030ba0ceb31304847f"
+    },
+    "locale": "en",
+    "prefix": "Listen to this phrase in English.",
+    "target": "Wind",
+    "remove_first_words": 6,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Listen to this phrase in English. Wind.",
+    "extracted_transcript": " Wind",
+    "raw_word_alignment": [
+      {
+        "word": "listen",
+        "start_seconds": 0.0,
+        "end_seconds": 0.52
+      },
+      {
+        "word": "to",
+        "start_seconds": 0.52,
+        "end_seconds": 0.84
+      },
+      {
+        "word": "this",
+        "start_seconds": 0.84,
+        "end_seconds": 1.04
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 1.04,
+        "end_seconds": 1.46
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.46,
+        "end_seconds": 1.86
+      },
+      {
+        "word": "english",
+        "start_seconds": 1.86,
+        "end_seconds": 2.38
+      },
+      {
+        "word": "wind",
+        "start_seconds": 3.2,
+        "end_seconds": 3.52
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "wind",
+        "start_seconds": 0.0,
+        "end_seconds": 0.66
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5313920974731445,
+        "no_speech_prob": 0.005080454517155886,
+        "compression_ratio": 0.8297872340425532,
+        "word_probabilities": [
+          0.8916015625,
+          0.99072265625,
+          0.97900390625,
+          0.9990234375,
+          0.9873046875,
+          0.9921875
+        ]
+      },
+      {
+        "avg_logprob": -0.5313920974731445,
+        "no_speech_prob": 0.005080454517155886,
+        "compression_ratio": 0.8297872340425532,
+        "word_probabilities": [
+          0.39306640625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.4985809326171875,
+        "no_speech_prob": 0.3720405697822571,
+        "compression_ratio": 0.3333333333333333,
+        "word_probabilities": [
+          0.46630859375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 35,
+    "extracted_voiced_seconds": 0.35,
+    "unremoved_raw_target_tokens": [
+      "wind"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "wind"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.8401814058956916,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 2.38,
+      "target_first_word_start_seconds": 3.2,
+      "gap_seconds": 0.7083900226757369,
+      "verified_silence_start_seconds": 2.439863945578231,
+      "verified_silence_end_seconds": 3.148253968253968,
+      "gap_rms_dbfs": -56.37,
+      "gap_peak_dbfs": -34.936,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.7940589569161,
+      "cut_sample": 61609,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "assets/audio/vocab/v1/en/wind.wav",
-    "bytes": 56534,
-    "sha256": "e028a4df83d0cafce68e46d48f5b1c9b3afbdea193810b7e579f07573b8a6957"
+    "sha256": "132175f2aff9260d649a647d5f080ae919bbf1233556baa52ec361849a2995d2",
+    "bytes": 46212
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "790ee32fac43224f2c20d973ff1b8fd79c82b8bb5d0005ce41ecfb5e5caa26ec",
+    "original_sha256": "e028a4df83d0cafce68e46d48f5b1c9b3afbdea193810b7e579f07573b8a6957",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

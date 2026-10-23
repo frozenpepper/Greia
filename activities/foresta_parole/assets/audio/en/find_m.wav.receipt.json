@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:22:07.188152+00:00",
+  "created_utc": "2026-10-22T06:09:26.502768+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Listen to this phrase in English.",
+    "prefix_word_count": 6,
+    "target": "M as Moon",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Listen to this phrase in English...\n\nM as Moon",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "M as Moon",
+    "cue_id": "foresta_parole.find_m",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "M as Moon",
     "cue_id": "foresta_parole.find_m",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/foresta_parole/assets/audio/en/find_m.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-142201-ce84e9fa",
-    "idempotency_key": "greia-7cce75c10e334d548ccd89f9d9cb0cf3",
+    "job_id": "20261022-080909-0adda0ca",
+    "idempotency_key": "greia-bbbdb91ab72a4e9298c793847aa110ad",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,184 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 440949786,
+    "script_seed": 2626445640,
     "language_direction": "English",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak in English. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "effective_delivery": "Speak in English. Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 194416282,
-        "sha256": "3639f8ee4122380eb92820ca8e04fa7777ee2638ca3ccc2689f6658880db2851",
+        "seed": 672187256,
+        "sha256": "da10737bcc13668a14dc3bd1c143a0f66d9c130c4ccbacce204bded8e9244d9c",
         "generation": {
-          "elapsed_seconds": 4.699115250026807,
+          "elapsed_seconds": 17.194651416997658,
           "model_load_seconds": 0.0,
-          "rtf": 4.195014358006374,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.7056107360362756,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8183,
+    "transcript": "CRM as Moon.",
+    "metrics": {
+      "duration_seconds": 2.185986394557823,
+      "rms_dbfs": -35.43,
+      "peak": 0.12357,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.06,
+      "trailing_silence_seconds": 0.34,
+      "longest_internal_pause_seconds": 0.04
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v1",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/foresta_parole/assets/audio/en/find_m.wav.raw.wav",
+    "sha256": "638ff21716625bc8d3e4d64c968d619db7db1958b08071f735086b73914994f3",
+    "receipt_sha256": "912767c12c73777234e00ebfefebedeea43dcb7be29f78ae1c5b1cf7f842b769"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/foresta_parole/assets/audio/en/find_m.wav.extracted.wav",
+    "sha256": "b6610d2f4a48bbe7866fc77d367fd7f9521a5272a9affa9e2d277aa759d922fe"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/foresta_parole/assets/audio/en/find_m.wav.delivery.wav",
+    "sha256": "b6610d2f4a48bbe7866fc77d367fd7f9521a5272a9affa9e2d277aa759d922fe"
+  },
+  "extraction": {
+    "schema_version": 1,
+    "algorithm_version": "greia-spoken-carrier-extractor-v7",
+    "comparison_policy": "locale-number-tokens-v1",
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-raw/activities/foresta_parole/assets/audio/en/find_m.wav.raw.wav",
+    "source_sha256": "638ff21716625bc8d3e4d64c968d619db7db1958b08071f735086b73914994f3",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/foresta_parole/assets/audio/en/find_m.wav.extracted.wav",
+    "output_sha256": "b6610d2f4a48bbe7866fc77d367fd7f9521a5272a9affa9e2d277aa759d922fe",
+    "output_bytes": 96446,
+    "locale": "en",
+    "prefix": "Listen to this phrase in English.",
+    "target": "M as Moon",
+    "remove_first_words": 6,
+    "ignore_accents": true,
+    "target_verification_requested": "warn",
+    "target_verification_policy": "warn",
+    "target_comparison_score": 0.8183,
+    "target_word_count_matches": true,
+    "target_numbers_match": true,
+    "target_comparison_flags": [],
+    "target_transcript_warning": true,
+    "recognizer": "mlx-whisper-base",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extracted_transcript": "CRM as Moon.",
+    "expected_target_tokens": [
+      "m",
+      "as",
+      "moon"
+    ],
+    "extracted_target_tokens": [
+      "crm",
+      "as",
+      "moon"
+    ],
+    "extracted_target_exact_match": false,
+    "transcription_settings": {
+      "language": "en",
+      "initial_prompt": null,
+      "word_timestamps": true,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "sample_rate": 22050,
+    "duration_seconds": 4.640181405895691,
+    "boundary": {
+      "search_strategy": "target-only-global-quiet-run-v7",
+      "verified_silence_start_seconds": 1.6961451247165533,
+      "verified_silence_end_seconds": 2.5541950113378684,
+      "verified_silence_duration_seconds": 0.8580498866213152,
+      "cut_sample": 54115,
+      "cut_time_seconds": 2.4541950113378683,
+      "padding_seconds": 0.1,
+      "quiet_run_start_sample": 37400,
+      "quiet_run_end_sample": 56320,
+      "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+    },
+    "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/foresta_parole/assets/audio/en/find_m.wav.extracted.wav.search/c02798f141c8433bbd8c913a97db3292",
+    "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/foresta_parole/assets/audio/en/find_m.wav.extracted.wav.search/c02798f141c8433bbd8c913a97db3292/search.json",
+    "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-raw/activities/foresta_parole/assets/audio/en/find_m.wav.raw.wav.receipt.json",
+    "source_provider_receipt_sha256": "912767c12c73777234e00ebfefebedeea43dcb7be29f78ae1c5b1cf7f842b769",
+    "candidate_sha256": "b6610d2f4a48bbe7866fc77d367fd7f9521a5272a9affa9e2d277aa759d922fe",
+    "candidate_id": "candidate-01",
+    "candidate_count": 1,
+    "qualifying_quiet_run_count": 1,
+    "candidate_results": [
+      {
+        "candidate_id": "candidate-01",
+        "quiet_run": {
+          "start_sample": 37400,
+          "end_sample": 56320,
+          "start_seconds": 1.6961451247165533,
+          "end_seconds": 2.5541950113378684,
+          "duration_seconds": 0.8580498866213152
+        },
+        "cut_sample": 54115,
+        "cut_time_seconds": 2.4541950113378683,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/foresta_parole/assets/audio/en/find_m.wav.extracted.wav.search/c02798f141c8433bbd8c913a97db3292/candidate-01.wav",
+        "preceding_voiced_seconds": 1.46,
+        "retained_voiced_seconds": 1.37,
+        "retained_duration_seconds": 2.185986394557823,
+        "candidate_sha256": "b6610d2f4a48bbe7866fc77d367fd7f9521a5272a9affa9e2d277aa759d922fe",
+        "extracted_transcript": "CRM as Moon.",
+        "canonical_transcript_tokens": [
+          "crm",
+          "as",
+          "moon"
+        ],
+        "exact_target_match": false,
+        "target_comparison_score": 0.8183,
+        "target_word_count_matches": true,
+        "target_numbers_match": true,
+        "target_comparison_flags": [],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": true,
+        "asr_segment_count": 1
+      }
+    ],
+    "human_review": "PENDING",
+    "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+    "target_verification_effective_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+    "target_verification_warning": true,
+    "saved_recovery_policy": "target-only-v7-saved-v1",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 0,
+      "removed_seconds": 0.0,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 54115,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/foresta_parole/assets/audio/en/find_m.wav.delivery.wav",
+      "sha256": "b6610d2f4a48bbe7866fc77d367fd7f9521a5272a9affa9e2d277aa759d922fe"
+    }
+  },
   "output": {
     "path": "activities/foresta_parole/assets/audio/en/find_m.wav",
-    "bytes": 49478,
-    "sha256": "94c3c3998ead4303c5920ee9a07cc154bd9b85c933a98a52d285412315f4eeae"
+    "sha256": "16471d334445571373470324ff2d5b83d2e533da6f76f5d4af40e18c40511257",
+    "bytes": 96480
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "28240136895ca44b595f19283eb2e26c9a9a0e055aed42dec8425af07f078cf5",
+    "original_sha256": "a3e24e22bdecb776665422cf3d2c5b414add7460a78c66bfbd0a004e83efc1be",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T14:15:56.871921+00:00",
+  "created_utc": "2026-10-21T17:03:06.769577+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "¡Te toca!",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. ¡Te toca!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "¡Te toca!",
+    "cue_id": "greia.requested.your_turn.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "¡Te toca!",
     "cue_id": "greia.requested.your_turn.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/quattro_amici/assets/audio/es/your_turn.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. A short, lively reaction: expressive and clear, one breath, no extra words."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-161550-6994d864",
-    "idempotency_key": "greia-17e7dcd2cfaa4f1da22cf441e279df24",
+    "job_id": "20261021-190252-6bb8bc1f",
+    "idempotency_key": "greia-d21134e571a348668c20031c21b8f1ef",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,212 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 647005867,
+    "script_seed": 222027253,
     "language_direction": "Spanish",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. A short, lively reaction: expressive and clear, one breath, no extra words.",
-    "effective_delivery": "Speak in Spanish. Leo, a warm, curious cartoon guide. A short, lively reaction: expressive and clear, one breath, no extra words.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1656728094,
-        "sha256": "e95bf3670d0a946f86ce870a768aff7af9034c216904917bf9c21bc791b393bb",
+        "seed": 3197162876,
+        "sha256": "d9bee0dea182910742640b76d3125867262862d8608ca8b70cfdb22cd379e991",
         "generation": {
-          "elapsed_seconds": 5.322294708981644,
+          "elapsed_seconds": 13.827341875003185,
           "model_load_seconds": 0.0,
-          "rtf": 4.751341802393969,
-          "peak_memory_gb": 8.44494914
+          "rtf": 4.320819293266971,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " de toca.",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/quattro_amici/assets/audio/es/your_turn.wav.raw.wav",
+    "sha256": "27d3d16c7e3804a92a83ba66560d86ea66337d8e9e40283b3215fcb2bdefcc6b",
+    "receipt_sha256": "a3918f45d50cd0d367ebb911c2c8b6942215d1ed70c1818e76dfa9b7d1c3e7aa"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/quattro_amici/assets/audio/es/your_turn.wav.extracted.wav",
+    "sha256": "72e6a63c015a71930c643dd9b38f920a49094e2c8e98c5352afac581cc19f5dd"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/quattro_amici/assets/audio/es/your_turn.wav.raw.wav",
+    "source_sha256": "27d3d16c7e3804a92a83ba66560d86ea66337d8e9e40283b3215fcb2bdefcc6b",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/quattro_amici/assets/audio/es/your_turn.wav.extracted.wav",
+    "output_sha256": "72e6a63c015a71930c643dd9b38f920a49094e2c8e98c5352afac581cc19f5dd",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "¡Te toca!",
+      "locale": "es",
+      "cue_id": "greia.requested.your_turn.es",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/quattro_amici/assets/audio/es/your_turn.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "a3918f45d50cd0d367ebb911c2c8b6942215d1ed70c1818e76dfa9b7d1c3e7aa"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "¡Te toca!",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Escucha esta frase en español. Te toca.",
+    "extracted_transcript": " de toca.",
+    "raw_word_alignment": [
+      {
+        "word": "escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.58
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.58,
+        "end_seconds": 0.88
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.88,
+        "end_seconds": 1.2
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.2,
+        "end_seconds": 1.38
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.38,
+        "end_seconds": 1.9
+      },
+      {
+        "word": "te",
+        "start_seconds": 2.48,
+        "end_seconds": 2.66
+      },
+      {
+        "word": "toca",
+        "start_seconds": 2.66,
+        "end_seconds": 2.92
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "de",
+        "start_seconds": 0.0,
+        "end_seconds": 0.42
+      },
+      {
+        "word": "toca",
+        "start_seconds": 0.42,
+        "end_seconds": 0.7
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5958820343017578,
+        "no_speech_prob": 0.0073086898773908615,
+        "compression_ratio": 0.851063829787234,
+        "word_probabilities": [
+          0.666015625,
+          0.91015625,
+          0.91162109375,
+          0.92236328125,
+          0.978515625
+        ]
+      },
+      {
+        "avg_logprob": -0.5958820343017578,
+        "no_speech_prob": 0.0073086898773908615,
+        "compression_ratio": 0.851063829787234,
+        "word_probabilities": [
+          0.3798828125,
+          0.8486328125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.7871065139770508,
+        "no_speech_prob": 0.0921223983168602,
+        "compression_ratio": 0.5,
+        "word_probabilities": [
+          0.4345703125,
+          0.399169921875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 30,
+    "extracted_voiced_seconds": 0.3,
+    "unremoved_raw_target_tokens": [
+      "te",
+      "toca"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "te",
+      "toca"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.2001814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.9,
+      "target_first_word_start_seconds": 2.48,
+      "gap_seconds": 0.4689342403628118,
+      "verified_silence_start_seconds": 1.9598639455782314,
+      "verified_silence_end_seconds": 2.428798185941043,
+      "gap_rms_dbfs": -76.579,
+      "gap_peak_dbfs": -54.892,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.1943310657596373,
+      "cut_sample": 48385,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/quattro_amici/assets/audio/es/your_turn.wav",
-    "bytes": 49478,
-    "sha256": "8893048c68bc2ae98a84b705c1803081af31bbb3712733a3448090e5dc43d116"
+    "sha256": "1b967b3cb82bd85296e64c2056e1a62f17f3160f0653ac7baf9a72adf5a5910d",
+    "bytes": 44436
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "e51bb4a378e44207df72f9db9cea2b8d529d2c0db26fa4edcd0e8ed430dbdf42",
+    "original_sha256": "8893048c68bc2ae98a84b705c1803081af31bbb3712733a3448090e5dc43d116",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T23:28:16.269659+00:00",
+  "created_utc": "2026-10-21T15:40:34.104773+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "N come Nave",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. N come Nave",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "N come Nave",
+    "cue_id": "alfabeto_leo.letter_N.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "N come Nave",
     "cue_id": "alfabeto_leo.letter_N.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/alfabeto_leo/assets/audio/it/letter_N.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-012805-272d7727",
-    "idempotency_key": "greia-c3e4b40a989745c6a22bba3b6e6c34c1",
+    "job_id": "20261021-174019-3cdb06fa",
+    "idempotency_key": "greia-dcf8fa9c4a9f4e0d91a02ea0b897d3d6",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,241 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2161061723,
+    "script_seed": 1041320523,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak naturally in Italian. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3609031112,
-        "sha256": "2e7617f000fef9226a8a81e3eb93642f289b7038cfbdea0a40416fae59bea341",
+        "seed": 3717983591,
+        "sha256": "cd5ca8bdb533158870a98e0205fb88a7998fc26df13c571d9d82c0d8c457aae6",
         "generation": {
-          "elapsed_seconds": 9.944030583952554,
+          "elapsed_seconds": 13.75832445800188,
           "model_load_seconds": 0.0,
-          "rtf": 7.767762466308465,
-          "peak_memory_gb": 8.21220922
+          "rtf": 4.094536320024368,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " N come nave.",
+    "metrics": {
+      "duration_seconds": 1.525578231292517,
+      "rms_dbfs": -35.23,
+      "peak": 0.17215,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.12,
+      "trailing_silence_seconds": 0.2,
+      "longest_internal_pause_seconds": 0.18
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/alfabeto_leo/assets/audio/it/letter_N.wav.raw.wav",
+    "sha256": "363223422da48ed70ed6cd842b471334cd15b7df6a098b1e2e74d403f70be2ee",
+    "receipt_sha256": "39056453992e8d762bda500c9c2e56dc2c3cd580d764f9ab80c1681ac2497341"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/assets/audio/it/letter_N.wav.extracted.wav",
+    "sha256": "fc9b4fca208c74fd3017824635857e14c7940c12b646a441af4226d37bda2482"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/alfabeto_leo/assets/audio/it/letter_N.wav.raw.wav",
+    "source_sha256": "363223422da48ed70ed6cd842b471334cd15b7df6a098b1e2e74d403f70be2ee",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-extracted/activities/alfabeto_leo/assets/audio/it/letter_N.wav.extracted.wav",
+    "output_sha256": "fc9b4fca208c74fd3017824635857e14c7940c12b646a441af4226d37bda2482",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "N come Nave",
+      "locale": "it",
+      "cue_id": "alfabeto_leo.letter_N.it",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/alfabeto_leo/assets/audio/it/letter_N.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "39056453992e8d762bda500c9c2e56dc2c3cd580d764f9ab80c1681ac2497341"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "N come Nave",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Ascolta questa frase in italiano, N come nave.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " N come nave.",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.54
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.54,
+        "end_seconds": 0.8
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.8,
+        "end_seconds": 1.06
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.06,
+        "end_seconds": 1.24
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.24,
+        "end_seconds": 1.66
+      },
+      {
+        "word": "n",
+        "start_seconds": 2.02,
+        "end_seconds": 2.22
+      },
+      {
+        "word": "come",
+        "start_seconds": 2.22,
+        "end_seconds": 2.66
+      },
+      {
+        "word": "nave",
+        "start_seconds": 2.66,
+        "end_seconds": 3.02
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "n",
+        "start_seconds": 0.0,
+        "end_seconds": 0.38
+      },
+      {
+        "word": "come",
+        "start_seconds": 0.38,
+        "end_seconds": 0.82
+      },
+      {
+        "word": "nave",
+        "start_seconds": 0.82,
+        "end_seconds": 1.16
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5299470901489258,
+        "no_speech_prob": 0.014627406373620033,
+        "compression_ratio": 0.8846153846153846,
+        "word_probabilities": [
+          0.7705078125,
+          0.93408203125,
+          0.92236328125,
+          0.98193359375,
+          0.9921875,
+          0.1783447265625,
+          0.52734375,
+          0.625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.9711736951555524,
+        "no_speech_prob": 0.22422242164611816,
+        "compression_ratio": 0.6,
+        "word_probabilities": [
+          0.10162353515625,
+          0.68798828125,
+          0.85302734375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 84,
+    "extracted_voiced_seconds": 0.84,
+    "unremoved_raw_target_tokens": [
+      "n",
+      "come",
+      "nave"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "n",
+      "come",
+      "nave"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.3601814058956916,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.66,
+      "search_end_seconds": 2.02,
+      "prefix_last_word_end_seconds": 1.66,
+      "target_first_word_start_seconds": 2.02,
+      "gap_seconds": 0.22947845804988662,
+      "verified_silence_start_seconds": 1.7198639455782312,
+      "verified_silence_end_seconds": 1.949342403628118,
+      "gap_rms_dbfs": -45.914,
+      "gap_peak_dbfs": -32.334,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.8346031746031746,
+      "cut_sample": 40453,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/it/letter_N.wav",
-    "bytes": 56534,
-    "sha256": "b9d72cfbbb47bf9008c21af662d297fe29658156ad5e47a4f3d2746c19712441"
+    "sha256": "2d318a9796814a94521fac97a120a5dccd190b262ffdad3a81b0a4c0137d7211",
+    "bytes": 67356
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "27c3467b58577e259cbad52feb4e76fcf555f0f26eb9e70b9effad2a565e0ea7",
+    "original_sha256": "b9d72cfbbb47bf9008c21af662d297fe29658156ad5e47a4f3d2746c19712441",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

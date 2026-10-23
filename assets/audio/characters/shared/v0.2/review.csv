@@ -1,22 +1,22 @@
 scope,character,locale,family,variant,text,file,result,note,verification_disposition,verification_score
 shared,lilli,it,praise.general,1,Complimenti!,lilli/it/lilli__it__praise.general__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,lilli,it,praise.general,2,Ottimo lavoro!,lilli/it/lilli__it__praise.general__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,lilli,it,praise.general,3,Ben fatto!,lilli/it/lilli__it__praise.general__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,lilli,it,celebrate.success,1,Ce l'hai fatta!,lilli/it/lilli__it__celebrate.success__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,lilli,it,praise.general,2,Ottimo lavoro!,lilli/it/lilli__it__praise.general__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
+shared,lilli,it,praise.general,3,Ben fatto!,lilli/it/lilli__it__praise.general__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
+shared,lilli,it,celebrate.success,1,Ce l'hai fatta!,lilli/it/lilli__it__celebrate.success__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,0.8661
 shared,lilli,it,celebrate.success,2,Evviva!,lilli/it/lilli__it__celebrate.success__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,lilli,it,celebrate.success,3,Che meraviglia!,lilli/it/lilli__it__celebrate.success__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,lilli,it,celebrate.success,3,Che meraviglia!,lilli/it/lilli__it__celebrate.success__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
 shared,lilli,it,encourage.retry,1,Riproviamo!,lilli/it/lilli__it__encourage.retry__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,lilli,it,encourage.retry,2,Quasi! Proviamo ancora!,lilli/it/lilli__it__encourage.retry__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,lilli,it,encourage.retry,3,Ancora una volta!,lilli/it/lilli__it__encourage.retry__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,lilli,it,encourage.progress,1,Continua così!,lilli/it/lilli__it__encourage.progress__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,lilli,it,encourage.retry,3,Ancora una volta!,lilli/it/lilli__it__encourage.retry__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
+shared,lilli,it,encourage.progress,1,Continua così!,lilli/it/lilli__it__encourage.progress__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
 shared,lilli,it,encourage.progress,2,Ci sei quasi!,lilli/it/lilli__it__encourage.progress__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,lilli,it,encourage.progress,3,Vai avanti!,lilli/it/lilli__it__encourage.progress__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,lilli,it,encourage.progress,3,Vai avanti!,lilli/it/lilli__it__encourage.progress__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
 shared,lilli,it,ready.go,1,"Forza, andiamo!",lilli/it/lilli__it__ready.go__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,lilli,it,ready.go,2,Ci siamo? Via!,lilli/it/lilli__it__ready.go__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,lilli,it,ready.go,3,Si parte!,lilli/it/lilli__it__ready.go__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,lilli,it,ready.go,3,Si parte!,lilli/it/lilli__it__ready.go__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
 shared,lilli,en,praise.general,1,Congratulations!,lilli/en/lilli__en__praise.general__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,lilli,en,praise.general,2,Great work!,lilli/en/lilli__en__praise.general__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,lilli,en,praise.general,3,Well done!,lilli/en/lilli__en__praise.general__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,lilli,en,praise.general,3,Well done!,lilli/en/lilli__en__praise.general__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
 shared,lilli,en,celebrate.success,1,You did it!,lilli/en/lilli__en__celebrate.success__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,lilli,en,celebrate.success,2,Hooray!,lilli/en/lilli__en__celebrate.success__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,lilli,en,celebrate.success,3,Wonderful!,lilli/en/lilli__en__celebrate.success__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
@@ -30,20 +30,20 @@ shared,lilli,en,ready.go,1,"Come on, let's go!",lilli/en/lilli__en__ready.go__01
 shared,lilli,en,ready.go,2,Ready? Go!,lilli/en/lilli__en__ready.go__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,lilli,en,ready.go,3,Here we go!,lilli/en/lilli__en__ready.go__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,leo,it,praise.general,1,Complimenti!,leo/it/leo__it__praise.general__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,leo,it,praise.general,2,Ottimo lavoro!,leo/it/leo__it__praise.general__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,leo,it,praise.general,2,Ottimo lavoro!,leo/it/leo__it__praise.general__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,WARN,
 shared,leo,it,praise.general,3,Ben fatto!,leo/it/leo__it__praise.general__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,leo,it,celebrate.success,1,Ce l'hai fatta!,leo/it/leo__it__celebrate.success__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,leo,it,celebrate.success,1,Ce l'hai fatta!,leo/it/leo__it__celebrate.success__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,0.8661
 shared,leo,it,celebrate.success,2,Evviva!,leo/it/leo__it__celebrate.success__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,leo,it,celebrate.success,3,Che meraviglia!,leo/it/leo__it__celebrate.success__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,leo,it,celebrate.success,3,Che meraviglia!,leo/it/leo__it__celebrate.success__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,WARN,
 shared,leo,it,encourage.retry,1,Riproviamo!,leo/it/leo__it__encourage.retry__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,leo,it,encourage.retry,2,Quasi! Proviamo ancora!,leo/it/leo__it__encourage.retry__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,leo,it,encourage.retry,3,Ancora una volta!,leo/it/leo__it__encourage.retry__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,leo,it,encourage.progress,1,Continua così!,leo/it/leo__it__encourage.progress__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,leo,it,encourage.progress,2,Ci sei quasi!,leo/it/leo__it__encourage.progress__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,leo,it,encourage.progress,3,Vai avanti!,leo/it/leo__it__encourage.progress__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,leo,it,ready.go,1,"Forza, andiamo!",leo/it/leo__it__ready.go__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,leo,it,encourage.progress,3,Vai avanti!,leo/it/leo__it__encourage.progress__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,WARN,
+shared,leo,it,ready.go,1,"Forza, andiamo!",leo/it/leo__it__ready.go__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
 shared,leo,it,ready.go,2,Ci siamo? Via!,leo/it/leo__it__ready.go__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,leo,it,ready.go,3,Si parte!,leo/it/leo__it__ready.go__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,leo,it,ready.go,3,Si parte!,leo/it/leo__it__ready.go__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,WARN,
 shared,leo,en,praise.general,1,Congratulations!,leo/en/leo__en__praise.general__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,leo,en,praise.general,2,Great work!,leo/en/leo__en__praise.general__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,leo,en,praise.general,3,Well done!,leo/en/leo__en__praise.general__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
@@ -62,15 +62,15 @@ shared,leo,en,ready.go,3,Here we go!,leo/en/leo__en__ready.go__03.wav,REVIEW_PEN
 shared,flash,it,praise.general,1,Complimenti!,flash/it/flash__it__praise.general__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,flash,it,praise.general,2,Ottimo lavoro!,flash/it/flash__it__praise.general__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,flash,it,praise.general,3,Complimenti!,flash/it/flash__it__praise.general__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,flash,it,celebrate.success,1,Ce l'hai fatta!,flash/it/flash__it__celebrate.success__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,flash,it,celebrate.success,1,Ce l'hai fatta!,flash/it/flash__it__celebrate.success__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,0.8661
 shared,flash,it,celebrate.success,2,Evviva!,flash/it/flash__it__celebrate.success__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,flash,it,celebrate.success,3,Che meraviglia!,flash/it/flash__it__celebrate.success__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,flash,it,celebrate.success,3,Che meraviglia!,flash/it/flash__it__celebrate.success__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
 shared,flash,it,encourage.retry,1,Riproviamo!,flash/it/flash__it__encourage.retry__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,flash,it,encourage.retry,2,Quasi! Proviamo ancora!,flash/it/flash__it__encourage.retry__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,flash,it,encourage.retry,3,Ancora una volta!,flash/it/flash__it__encourage.retry__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,flash,it,encourage.progress,1,Continua così!,flash/it/flash__it__encourage.progress__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,flash,it,encourage.progress,2,Ci sei quasi!,flash/it/flash__it__encourage.progress__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,flash,it,encourage.progress,3,Vai avanti!,flash/it/flash__it__encourage.progress__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,flash,it,encourage.progress,3,Vai avanti!,flash/it/flash__it__encourage.progress__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
 shared,flash,it,ready.go,1,"Forza, andiamo!",flash/it/flash__it__ready.go__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,flash,it,ready.go,2,Ci siamo? Via!,flash/it/flash__it__ready.go__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,flash,it,ready.go,3,Si parte!,flash/it/flash__it__ready.go__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
@@ -92,15 +92,15 @@ shared,flash,en,ready.go,3,Here we go!,flash/en/flash__en__ready.go__03.wav,REVI
 shared,tito,it,praise.general,1,Complimenti!,tito/it/tito__it__praise.general__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,tito,it,praise.general,2,Ottimo lavoro!,tito/it/tito__it__praise.general__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,tito,it,praise.general,3,Ben fatto!,tito/it/tito__it__praise.general__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,tito,it,celebrate.success,1,Ce l'hai fatta!,tito/it/tito__it__celebrate.success__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,tito,it,celebrate.success,1,Ce l'hai fatta!,tito/it/tito__it__celebrate.success__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,0.8661
 shared,tito,it,celebrate.success,2,Evviva!,tito/it/tito__it__celebrate.success__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,tito,it,celebrate.success,3,Che meraviglia!,tito/it/tito__it__celebrate.success__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,tito,it,celebrate.success,3,Che meraviglia!,tito/it/tito__it__celebrate.success__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
 shared,tito,it,encourage.retry,1,Riproviamo!,tito/it/tito__it__encourage.retry__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,tito,it,encourage.retry,2,Quasi! Proviamo ancora!,tito/it/tito__it__encourage.retry__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,tito,it,encourage.retry,3,Ancora una volta!,tito/it/tito__it__encourage.retry__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,tito,it,encourage.progress,1,Continua così!,tito/it/tito__it__encourage.progress__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,tito,it,encourage.progress,1,Continua così!,tito/it/tito__it__encourage.progress__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
 shared,tito,it,encourage.progress,2,Ci sei quasi!,tito/it/tito__it__encourage.progress__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,tito,it,encourage.progress,3,Vai avanti!,tito/it/tito__it__encourage.progress__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,tito,it,encourage.progress,3,Vai avanti!,tito/it/tito__it__encourage.progress__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
 shared,tito,it,ready.go,1,"Forza, andiamo!",tito/it/tito__it__ready.go__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,tito,it,ready.go,2,Ci siamo? Via!,tito/it/tito__it__ready.go__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,tito,it,ready.go,3,Si parte!,tito/it/tito__it__ready.go__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
@@ -120,19 +120,19 @@ shared,tito,en,ready.go,1,"Come on, let's go!",tito/en/tito__en__ready.go__01.wa
 shared,tito,en,ready.go,2,Ready? Go!,tito/en/tito__en__ready.go__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,tito,en,ready.go,3,Here we go!,tito/en/tito__en__ready.go__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,momo,it,praise.general,1,Complimenti!,momo/it/momo__it__praise.general__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,momo,it,praise.general,2,Ottimo lavoro!,momo/it/momo__it__praise.general__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,momo,it,praise.general,3,Ben fatto!,momo/it/momo__it__praise.general__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,momo,it,celebrate.success,1,Ce l'hai fatta!,momo/it/momo__it__celebrate.success__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,momo,it,praise.general,2,Ottimo lavoro!,momo/it/momo__it__praise.general__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,WARN,
+shared,momo,it,praise.general,3,Ben fatto!,momo/it/momo__it__praise.general__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
+shared,momo,it,celebrate.success,1,Ce l'hai fatta!,momo/it/momo__it__celebrate.success__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,0.8661
 shared,momo,it,celebrate.success,2,Evviva!,momo/it/momo__it__celebrate.success__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,momo,it,celebrate.success,3,Che meraviglia!,momo/it/momo__it__celebrate.success__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,momo,it,celebrate.success,3,Che meraviglia!,momo/it/momo__it__celebrate.success__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
 shared,momo,it,encourage.retry,1,Riproviamo!,momo/it/momo__it__encourage.retry__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,momo,it,encourage.retry,2,Quasi! Proviamo ancora!,momo/it/momo__it__encourage.retry__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,momo,it,encourage.retry,3,Ancora una volta!,momo/it/momo__it__encourage.retry__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,momo,it,encourage.progress,1,Continua così!,momo/it/momo__it__encourage.progress__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,momo,it,encourage.progress,2,Ci sei quasi!,momo/it/momo__it__encourage.progress__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,momo,it,encourage.progress,3,Vai avanti!,momo/it/momo__it__encourage.progress__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,momo,it,encourage.progress,3,Vai avanti!,momo/it/momo__it__encourage.progress__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,WARN,
 shared,momo,it,ready.go,1,"Forza, andiamo!",momo/it/momo__it__ready.go__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,momo,it,ready.go,2,Ci siamo? Via!,momo/it/momo__it__ready.go__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,momo,it,ready.go,2,Ci siamo? Via!,momo/it/momo__it__ready.go__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
 shared,momo,it,ready.go,3,Si parte!,momo/it/momo__it__ready.go__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,momo,en,praise.general,1,Congratulations!,momo/en/momo__en__praise.general__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,momo,en,praise.general,2,Great work!,momo/en/momo__en__praise.general__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
@@ -158,7 +158,7 @@ shared,dani,it,celebrate.success,3,Che meraviglia!,dani/it/dani__it__celebrate.s
 shared,dani,it,encourage.retry,1,Riproviamo!,dani/it/dani__it__encourage.retry__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,dani,it,encourage.retry,2,Quasi! Proviamo ancora!,dani/it/dani__it__encourage.retry__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,dani,it,encourage.retry,3,Ancora una volta!,dani/it/dani__it__encourage.retry__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,dani,it,encourage.progress,1,Continua così!,dani/it/dani__it__encourage.progress__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,dani,it,encourage.progress,1,Continua così!,dani/it/dani__it__encourage.progress__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,WARN,
 shared,dani,it,encourage.progress,2,Ci sei quasi!,dani/it/dani__it__encourage.progress__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,dani,it,encourage.progress,3,Vai avanti!,dani/it/dani__it__encourage.progress__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,dani,it,ready.go,1,"Forza, andiamo!",dani/it/dani__it__ready.go__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
@@ -208,8 +208,8 @@ shared,dani,es,ready.go,2,¿Todo listo? ¡Ya!,dani/es/dani__es__ready.go__02.wav
 shared,dani,es,ready.go,3,¡Allá vamos!,dani/es/dani__es__ready.go__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,flash,es,celebrate.success,1,¡Lo lograste!,flash/es/flash__es__celebrate.success__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,flash,es,celebrate.success,2,¡Hurra!,flash/es/flash__es__celebrate.success__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,flash,es,celebrate.success,3,¡Qué maravilla!,flash/es/flash__es__celebrate.success__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,flash,es,encourage.progress,1,¡Sigue así!,flash/es/flash__es__encourage.progress__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,flash,es,celebrate.success,3,¡Qué maravilla!,flash/es/flash__es__celebrate.success__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
+shared,flash,es,encourage.progress,1,¡Sigue así!,flash/es/flash__es__encourage.progress__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
 shared,flash,es,encourage.progress,2,¡Ya casi está!,flash/es/flash__es__encourage.progress__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,flash,es,encourage.progress,3,¡Adelante!,flash/es/flash__es__encourage.progress__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,flash,es,encourage.retry,1,¡Probemos otra vez!,flash/es/flash__es__encourage.retry__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
@@ -219,58 +219,58 @@ shared,flash,es,praise.general,1,¡Felicidades!,flash/es/flash__es__praise.gener
 shared,flash,es,praise.general,2,¡Buen trabajo!,flash/es/flash__es__praise.general__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,flash,es,praise.general,3,¡Muy bien hecho!,flash/es/flash__es__praise.general__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,flash,es,ready.go,1,"¡Venga, vamos!",flash/es/flash__es__ready.go__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,flash,es,ready.go,2,¿Todo listo? ¡Ya!,flash/es/flash__es__ready.go__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,flash,es,ready.go,3,¡Allá vamos!,flash/es/flash__es__ready.go__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,leo,es,celebrate.success,1,¡Lo lograste!,leo/es/leo__es__celebrate.success__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,flash,es,ready.go,2,¿Todo listo? ¡Ya!,flash/es/flash__es__ready.go__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,WARN,
+shared,flash,es,ready.go,3,¡Allá vamos!,flash/es/flash__es__ready.go__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,WARN,
+shared,leo,es,celebrate.success,1,¡Lo lograste!,leo/es/leo__es__celebrate.success__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,WARN,
 shared,leo,es,celebrate.success,2,¡Hurra!,leo/es/leo__es__celebrate.success__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,leo,es,celebrate.success,3,¡Qué maravilla!,leo/es/leo__es__celebrate.success__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,leo,es,encourage.progress,1,¡Sigue así!,leo/es/leo__es__encourage.progress__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,leo,es,encourage.progress,2,¡Ya casi está!,leo/es/leo__es__encourage.progress__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,leo,es,encourage.progress,3,¡Adelante!,leo/es/leo__es__encourage.progress__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,leo,es,encourage.retry,1,¡Probemos otra vez!,leo/es/leo__es__encourage.retry__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,leo,es,encourage.retry,2,¡Casi! ¡Probemos otra vez!,leo/es/leo__es__encourage.retry__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,leo,es,encourage.retry,3,¡Una vez más!,leo/es/leo__es__encourage.retry__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,leo,es,encourage.retry,2,¡Casi! ¡Probemos otra vez!,leo/es/leo__es__encourage.retry__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
+shared,leo,es,encourage.retry,3,¡Una vez más!,leo/es/leo__es__encourage.retry__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
 shared,leo,es,praise.general,1,¡Felicidades!,leo/es/leo__es__praise.general__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,leo,es,praise.general,2,¡Buen trabajo!,leo/es/leo__es__praise.general__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,leo,es,praise.general,3,¡Muy bien hecho!,leo/es/leo__es__praise.general__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,leo,es,ready.go,1,"¡Venga, vamos!",leo/es/leo__es__ready.go__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,leo,es,ready.go,2,¿Todo listo? ¡Ya!,leo/es/leo__es__ready.go__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,leo,es,ready.go,3,¡Allá vamos!,leo/es/leo__es__ready.go__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,lilli,es,celebrate.success,1,¡Lo lograste!,lilli/es/lilli__es__celebrate.success__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,lilli,es,celebrate.success,1,¡Lo lograste!,lilli/es/lilli__es__celebrate.success__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,WARN,
 shared,lilli,es,celebrate.success,2,¡Hurra!,lilli/es/lilli__es__celebrate.success__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,lilli,es,celebrate.success,3,¡Qué maravilla!,lilli/es/lilli__es__celebrate.success__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,lilli,es,encourage.progress,1,¡Sigue así!,lilli/es/lilli__es__encourage.progress__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,lilli,es,encourage.progress,2,¡Ya casi está!,lilli/es/lilli__es__encourage.progress__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,lilli,es,celebrate.success,3,¡Qué maravilla!,lilli/es/lilli__es__celebrate.success__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
+shared,lilli,es,encourage.progress,1,¡Sigue así!,lilli/es/lilli__es__encourage.progress__01.wav,OWNER_WAIVED,Owner explicitly waived listening review for this deterministic system-voice replacement; verification was not run and this is not a machine PASS.,NOT_RUN,
+shared,lilli,es,encourage.progress,2,¡Ya casi está!,lilli/es/lilli__es__encourage.progress__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
 shared,lilli,es,encourage.progress,3,¡Adelante!,lilli/es/lilli__es__encourage.progress__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,lilli,es,encourage.retry,1,¡Probemos otra vez!,lilli/es/lilli__es__encourage.retry__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,lilli,es,encourage.retry,2,¡Casi! ¡Probemos otra vez!,lilli/es/lilli__es__encourage.retry__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,lilli,es,encourage.retry,3,¡Una vez más!,lilli/es/lilli__es__encourage.retry__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,lilli,es,encourage.retry,1,¡Probemos otra vez!,lilli/es/lilli__es__encourage.retry__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,0.8451
+shared,lilli,es,encourage.retry,2,¡Casi! ¡Probemos otra vez!,lilli/es/lilli__es__encourage.retry__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,WARN,
+shared,lilli,es,encourage.retry,3,¡Una vez más!,lilli/es/lilli__es__encourage.retry__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
 shared,lilli,es,praise.general,1,¡Felicidades!,lilli/es/lilli__es__praise.general__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,lilli,es,praise.general,2,¡Buen trabajo!,lilli/es/lilli__es__praise.general__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,lilli,es,praise.general,3,¡Muy bien hecho!,lilli/es/lilli__es__praise.general__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,lilli,es,praise.general,2,¡Buen trabajo!,lilli/es/lilli__es__praise.general__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
+shared,lilli,es,praise.general,3,¡Muy bien hecho!,lilli/es/lilli__es__praise.general__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,0.8111
 shared,lilli,es,ready.go,1,"¡Venga, vamos!",lilli/es/lilli__es__ready.go__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,lilli,es,ready.go,2,¿Todo listo? ¡Ya!,lilli/es/lilli__es__ready.go__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,lilli,es,ready.go,3,¡Allá vamos!,lilli/es/lilli__es__ready.go__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,lilli,es,ready.go,2,¿Todo listo? ¡Ya!,lilli/es/lilli__es__ready.go__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,WARN,
+shared,lilli,es,ready.go,3,¡Allá vamos!,lilli/es/lilli__es__ready.go__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
 shared,momo,es,celebrate.success,1,¡Lo lograste!,momo/es/momo__es__celebrate.success__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,momo,es,celebrate.success,2,¡Hurra!,momo/es/momo__es__celebrate.success__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,momo,es,celebrate.success,3,¡Qué maravilla!,momo/es/momo__es__celebrate.success__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,momo,es,encourage.progress,1,¡Sigue así!,momo/es/momo__es__encourage.progress__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,momo,es,encourage.progress,2,¡Ya casi está!,momo/es/momo__es__encourage.progress__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,momo,es,encourage.progress,1,¡Sigue así!,momo/es/momo__es__encourage.progress__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
+shared,momo,es,encourage.progress,2,¡Ya casi está!,momo/es/momo__es__encourage.progress__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
 shared,momo,es,encourage.progress,3,¡Adelante!,momo/es/momo__es__encourage.progress__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,momo,es,encourage.retry,1,¡Probemos otra vez!,momo/es/momo__es__encourage.retry__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,momo,es,encourage.retry,1,¡Probemos otra vez!,momo/es/momo__es__encourage.retry__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,WARN,
 shared,momo,es,encourage.retry,2,¡Casi! ¡Probemos otra vez!,momo/es/momo__es__encourage.retry__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,momo,es,encourage.retry,3,¡Una vez más!,momo/es/momo__es__encourage.retry__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,momo,es,praise.general,1,¡Felicidades!,momo/es/momo__es__praise.general__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,momo,es,praise.general,2,¡Buen trabajo!,momo/es/momo__es__praise.general__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,momo,es,praise.general,3,¡Muy bien hecho!,momo/es/momo__es__praise.general__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,momo,es,ready.go,1,"¡Venga, vamos!",momo/es/momo__es__ready.go__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,momo,es,ready.go,2,¿Todo listo? ¡Ya!,momo/es/momo__es__ready.go__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,momo,es,ready.go,3,¡Allá vamos!,momo/es/momo__es__ready.go__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,tito,es,celebrate.success,1,¡Lo lograste!,tito/es/tito__es__celebrate.success__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,momo,es,ready.go,1,"¡Venga, vamos!",momo/es/momo__es__ready.go__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,WARN,
+shared,momo,es,ready.go,2,¿Todo listo? ¡Ya!,momo/es/momo__es__ready.go__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,WARN,
+shared,momo,es,ready.go,3,¡Allá vamos!,momo/es/momo__es__ready.go__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,WARN,
+shared,tito,es,celebrate.success,1,¡Lo lograste!,tito/es/tito__es__celebrate.success__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
 shared,tito,es,celebrate.success,2,¡Hurra!,tito/es/tito__es__celebrate.success__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,tito,es,celebrate.success,3,¡Qué maravilla!,tito/es/tito__es__celebrate.success__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,tito,es,celebrate.success,3,¡Qué maravilla!,tito/es/tito__es__celebrate.success__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
 shared,tito,es,encourage.progress,1,¡Sigue así!,tito/es/tito__es__encourage.progress__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,tito,es,encourage.progress,2,¡Ya casi está!,tito/es/tito__es__encourage.progress__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,tito,es,encourage.progress,2,¡Ya casi está!,tito/es/tito__es__encourage.progress__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,WARN,
 shared,tito,es,encourage.progress,3,¡Adelante!,tito/es/tito__es__encourage.progress__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,tito,es,encourage.retry,1,¡Probemos otra vez!,tito/es/tito__es__encourage.retry__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,tito,es,encourage.retry,2,¡Casi! ¡Probemos otra vez!,tito/es/tito__es__encourage.retry__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
@@ -279,8 +279,8 @@ shared,tito,es,praise.general,1,¡Felicidades!,tito/es/tito__es__praise.general_
 shared,tito,es,praise.general,2,¡Buen trabajo!,tito/es/tito__es__praise.general__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,tito,es,praise.general,3,¡Muy bien hecho!,tito/es/tito__es__praise.general__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,tito,es,ready.go,1,"¡Venga, vamos!",tito/es/tito__es__ready.go__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,tito,es,ready.go,2,¿Todo listo? ¡Ya!,tito/es/tito__es__ready.go__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,tito,es,ready.go,3,¡Allá vamos!,tito/es/tito__es__ready.go__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,tito,es,ready.go,2,¿Todo listo? ¡Ya!,tito/es/tito__es__ready.go__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,WARN,
+shared,tito,es,ready.go,3,¡Allá vamos!,tito/es/tito__es__ready.go__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,WARN,
 intro,dani,es,character.intro,1,"¡Bip-bop! ¡Soy Dani! Me gustan los números, los patrones, los rompecabezas y las cosas que encajan justo en su sitio. Modo amistad: ¡activado!",_intros/es/dani.ogg,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 intro,flash,es,character.intro,1,"¡Ey! ¡Soy Flash! Me encanta correr, jugar y probar retos superrápidos. Si oyes a alguien gritar ya, ¡seguro que yo ya he salido!",_intros/es/flash.ogg,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 intro,leo,es,character.intro,1,"¡Oh, hola! Soy Leo. Me gustan los cuentos, las palabras y todas esas preguntas que empiezan con por qué. Si hay algo por descubrir, ¡estoy listo!",_intros/es/leo.ogg,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
@@ -302,17 +302,17 @@ shared,dani,fr,praise.general,3,Bien joué !,dani/fr/dani__fr__praise.general__0
 shared,dani,fr,ready.go,1,"Allez, on y va !",dani/fr/dani__fr__ready.go__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,dani,fr,ready.go,2,C'est prêt ? Partez !,dani/fr/dani__fr__ready.go__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,dani,fr,ready.go,3,C'est parti !,dani/fr/dani__fr__ready.go__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,flash,fr,celebrate.success,1,Tu as réussi !,flash/fr/flash__fr__celebrate.success__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,flash,fr,celebrate.success,1,Tu as réussi !,flash/fr/flash__fr__celebrate.success__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
 shared,flash,fr,celebrate.success,2,Hourra !,flash/fr/flash__fr__celebrate.success__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,flash,fr,celebrate.success,3,Merveilleux !,flash/fr/flash__fr__celebrate.success__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,flash,fr,encourage.progress,1,Continue comme ça !,flash/fr/flash__fr__encourage.progress__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,flash,fr,encourage.progress,2,Tu y es presque !,flash/fr/flash__fr__encourage.progress__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,flash,fr,encourage.progress,3,"Vas-y, continue !",flash/fr/flash__fr__encourage.progress__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,flash,fr,encourage.retry,1,On réessaie !,flash/fr/flash__fr__encourage.retry__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,flash,fr,encourage.retry,2,Presque ! On essaie encore !,flash/fr/flash__fr__encourage.retry__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,flash,fr,encourage.retry,3,Encore une fois !,flash/fr/flash__fr__encourage.retry__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,flash,fr,encourage.retry,1,On réessaie !,flash/fr/flash__fr__encourage.retry__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
+shared,flash,fr,encourage.retry,2,Presque ! On essaie encore !,flash/fr/flash__fr__encourage.retry__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,0.8403
+shared,flash,fr,encourage.retry,3,Encore une fois !,flash/fr/flash__fr__encourage.retry__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
 shared,flash,fr,praise.general,1,Félicitations !,flash/fr/flash__fr__praise.general__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,flash,fr,praise.general,2,Super travail !,flash/fr/flash__fr__praise.general__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,flash,fr,praise.general,2,Super travail !,flash/fr/flash__fr__praise.general__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,WARN,
 shared,flash,fr,praise.general,3,Bien joué !,flash/fr/flash__fr__praise.general__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,flash,fr,ready.go,1,"Allez, on y va !",flash/fr/flash__fr__ready.go__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,flash,fr,ready.go,2,C'est prêt ? Partez !,flash/fr/flash__fr__ready.go__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
@@ -320,10 +320,10 @@ shared,flash,fr,ready.go,3,C'est parti !,flash/fr/flash__fr__ready.go__03.wav,RE
 shared,leo,fr,celebrate.success,1,Tu as réussi !,leo/fr/leo__fr__celebrate.success__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,leo,fr,celebrate.success,2,Hourra !,leo/fr/leo__fr__celebrate.success__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,leo,fr,celebrate.success,3,Merveilleux !,leo/fr/leo__fr__celebrate.success__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,leo,fr,encourage.progress,1,Continue comme ça !,leo/fr/leo__fr__encourage.progress__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,leo,fr,encourage.progress,2,Tu y es presque !,leo/fr/leo__fr__encourage.progress__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,leo,fr,encourage.progress,1,Continue comme ça !,leo/fr/leo__fr__encourage.progress__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,WARN,
+shared,leo,fr,encourage.progress,2,Tu y es presque !,leo/fr/leo__fr__encourage.progress__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,WARN,
 shared,leo,fr,encourage.progress,3,"Vas-y, continue !",leo/fr/leo__fr__encourage.progress__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,leo,fr,encourage.retry,1,On réessaie !,leo/fr/leo__fr__encourage.retry__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,leo,fr,encourage.retry,1,On réessaie !,leo/fr/leo__fr__encourage.retry__01.wav,OWNER_WAIVED,Owner explicitly waived listening review for this deterministic system-voice replacement; verification was not run and this is not a machine PASS.,NOT_RUN,
 shared,leo,fr,encourage.retry,2,Presque ! On essaie encore !,leo/fr/leo__fr__encourage.retry__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,leo,fr,encourage.retry,3,Encore une fois !,leo/fr/leo__fr__encourage.retry__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,leo,fr,praise.general,1,Félicitations !,leo/fr/leo__fr__praise.general__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
@@ -332,49 +332,49 @@ shared,leo,fr,praise.general,3,Bien joué !,leo/fr/leo__fr__praise.general__03.w
 shared,leo,fr,ready.go,1,"Allez, on y va !",leo/fr/leo__fr__ready.go__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,leo,fr,ready.go,2,C'est prêt ? Partez !,leo/fr/leo__fr__ready.go__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,leo,fr,ready.go,3,C'est parti !,leo/fr/leo__fr__ready.go__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,lilli,fr,celebrate.success,1,Tu as réussi !,lilli/fr/lilli__fr__celebrate.success__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,lilli,fr,celebrate.success,1,Tu as réussi !,lilli/fr/lilli__fr__celebrate.success__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
 shared,lilli,fr,celebrate.success,2,Hourra !,lilli/fr/lilli__fr__celebrate.success__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,lilli,fr,celebrate.success,3,Merveilleux !,lilli/fr/lilli__fr__celebrate.success__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,lilli,fr,encourage.progress,1,Continue comme ça !,lilli/fr/lilli__fr__encourage.progress__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,lilli,fr,encourage.progress,2,Tu y es presque !,lilli/fr/lilli__fr__encourage.progress__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,lilli,fr,encourage.progress,3,"Vas-y, continue !",lilli/fr/lilli__fr__encourage.progress__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,lilli,fr,encourage.retry,1,On réessaie !,lilli/fr/lilli__fr__encourage.retry__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,lilli,fr,encourage.retry,2,Presque ! On essaie encore !,lilli/fr/lilli__fr__encourage.retry__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,lilli,fr,encourage.retry,3,Encore une fois !,lilli/fr/lilli__fr__encourage.retry__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,lilli,fr,encourage.progress,1,Continue comme ça !,lilli/fr/lilli__fr__encourage.progress__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
+shared,lilli,fr,encourage.progress,2,Tu y es presque !,lilli/fr/lilli__fr__encourage.progress__02.wav,OWNER_WAIVED,Owner explicitly waived listening review for this deterministic system-voice replacement; verification was not run and this is not a machine PASS.,NOT_RUN,
+shared,lilli,fr,encourage.progress,3,"Vas-y, continue !",lilli/fr/lilli__fr__encourage.progress__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
+shared,lilli,fr,encourage.retry,1,On réessaie !,lilli/fr/lilli__fr__encourage.retry__01.wav,OWNER_WAIVED,Owner explicitly waived listening review for this deterministic system-voice replacement; verification was not run and this is not a machine PASS.,NOT_RUN,
+shared,lilli,fr,encourage.retry,2,Presque ! On essaie encore !,lilli/fr/lilli__fr__encourage.retry__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
+shared,lilli,fr,encourage.retry,3,Encore une fois !,lilli/fr/lilli__fr__encourage.retry__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
 shared,lilli,fr,praise.general,1,Félicitations !,lilli/fr/lilli__fr__praise.general__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,lilli,fr,praise.general,2,Super travail !,lilli/fr/lilli__fr__praise.general__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,lilli,fr,praise.general,3,Bien joué !,lilli/fr/lilli__fr__praise.general__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,lilli,fr,praise.general,2,Super travail !,lilli/fr/lilli__fr__praise.general__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
+shared,lilli,fr,praise.general,3,Bien joué !,lilli/fr/lilli__fr__praise.general__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
 shared,lilli,fr,ready.go,1,"Allez, on y va !",lilli/fr/lilli__fr__ready.go__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,lilli,fr,ready.go,2,C'est prêt ? Partez !,lilli/fr/lilli__fr__ready.go__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,lilli,fr,ready.go,3,C'est parti !,lilli/fr/lilli__fr__ready.go__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,momo,fr,celebrate.success,1,Tu as réussi !,momo/fr/momo__fr__celebrate.success__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,momo,fr,celebrate.success,1,Tu as réussi !,momo/fr/momo__fr__celebrate.success__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
 shared,momo,fr,celebrate.success,2,Hourra !,momo/fr/momo__fr__celebrate.success__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,momo,fr,celebrate.success,3,Merveilleux !,momo/fr/momo__fr__celebrate.success__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,momo,fr,encourage.progress,1,Continue comme ça !,momo/fr/momo__fr__encourage.progress__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,momo,fr,encourage.progress,2,Tu y es presque !,momo/fr/momo__fr__encourage.progress__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,momo,fr,encourage.progress,1,Continue comme ça !,momo/fr/momo__fr__encourage.progress__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,WARN,
+shared,momo,fr,encourage.progress,2,Tu y es presque !,momo/fr/momo__fr__encourage.progress__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,0.8453
 shared,momo,fr,encourage.progress,3,"Vas-y, continue !",momo/fr/momo__fr__encourage.progress__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,momo,fr,encourage.retry,1,On réessaie !,momo/fr/momo__fr__encourage.retry__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,momo,fr,encourage.retry,2,Presque ! On essaie encore !,momo/fr/momo__fr__encourage.retry__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,momo,fr,encourage.retry,1,On réessaie !,momo/fr/momo__fr__encourage.retry__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
+shared,momo,fr,encourage.retry,2,Presque ! On essaie encore !,momo/fr/momo__fr__encourage.retry__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,0.8854
 shared,momo,fr,encourage.retry,3,Encore une fois !,momo/fr/momo__fr__encourage.retry__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,momo,fr,praise.general,1,Félicitations !,momo/fr/momo__fr__praise.general__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,momo,fr,praise.general,2,Super travail !,momo/fr/momo__fr__praise.general__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,momo,fr,praise.general,3,Bien joué !,momo/fr/momo__fr__praise.general__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,momo,fr,praise.general,2,Super travail !,momo/fr/momo__fr__praise.general__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,WARN,
+shared,momo,fr,praise.general,3,Bien joué !,momo/fr/momo__fr__praise.general__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,WARN,
 shared,momo,fr,ready.go,1,"Allez, on y va !",momo/fr/momo__fr__ready.go__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,momo,fr,ready.go,2,C'est prêt ? Partez !,momo/fr/momo__fr__ready.go__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,momo,fr,ready.go,3,C'est parti !,momo/fr/momo__fr__ready.go__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,tito,fr,celebrate.success,1,Tu as réussi !,tito/fr/tito__fr__celebrate.success__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,tito,fr,celebrate.success,2,Hourra !,tito/fr/tito__fr__celebrate.success__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,tito,fr,celebrate.success,3,Merveilleux !,tito/fr/tito__fr__celebrate.success__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,tito,fr,encourage.progress,1,Continue comme ça !,tito/fr/tito__fr__encourage.progress__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,tito,fr,encourage.progress,2,Tu y es presque !,tito/fr/tito__fr__encourage.progress__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,tito,fr,encourage.progress,1,Continue comme ça !,tito/fr/tito__fr__encourage.progress__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,WARN,
+shared,tito,fr,encourage.progress,2,Tu y es presque !,tito/fr/tito__fr__encourage.progress__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,0.9036
 shared,tito,fr,encourage.progress,3,"Vas-y, continue !",tito/fr/tito__fr__encourage.progress__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,tito,fr,encourage.retry,1,On réessaie !,tito/fr/tito__fr__encourage.retry__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,tito,fr,encourage.retry,1,On réessaie !,tito/fr/tito__fr__encourage.retry__01.wav,OWNER_WAIVED,Owner explicitly waived listening review for this deterministic system-voice replacement; verification was not run and this is not a machine PASS.,NOT_RUN,
 shared,tito,fr,encourage.retry,2,Presque ! On essaie encore !,tito/fr/tito__fr__encourage.retry__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,tito,fr,encourage.retry,3,Encore une fois !,tito/fr/tito__fr__encourage.retry__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,tito,fr,encourage.retry,3,Encore une fois !,tito/fr/tito__fr__encourage.retry__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
 shared,tito,fr,praise.general,1,Félicitations !,tito/fr/tito__fr__praise.general__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,tito,fr,praise.general,2,Super travail !,tito/fr/tito__fr__praise.general__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,tito,fr,praise.general,3,Bien joué !,tito/fr/tito__fr__praise.general__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
-shared,tito,fr,ready.go,1,"Allez, on y va !",tito/fr/tito__fr__ready.go__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
+shared,tito,fr,praise.general,2,Super travail !,tito/fr/tito__fr__praise.general__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,WARN,
+shared,tito,fr,praise.general,3,Bien joué !,tito/fr/tito__fr__praise.general__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
+shared,tito,fr,ready.go,1,"Allez, on y va !",tito/fr/tito__fr__ready.go__01.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,PASS,1.0
 shared,tito,fr,ready.go,2,C'est prêt ? Partez !,tito/fr/tito__fr__ready.go__02.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 shared,tito,fr,ready.go,3,C'est parti !,tito/fr/tito__fr__ready.go__03.wav,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,
 intro,dani,fr,character.intro,1,"Bip-bop ! Moi, c'est Dani ! J'aime les nombres, les motifs, les casse-têtes et les choses qui s'emboîtent pile au bon endroit. Mode amitié : activé !",_intros/fr/dani.ogg,REVIEW_PENDING,New VoxStage/master generation; listening required.,NOT_APPLICABLE,

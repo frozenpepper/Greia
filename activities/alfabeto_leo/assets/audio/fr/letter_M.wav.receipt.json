@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T23:17:11.498562+00:00",
+  "created_utc": "2026-10-23T01:02:21.185708+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
@@ -8,17 +8,22 @@
     "text": "M comme Maison",
     "cue_id": "alfabeto_leo.letter_M.fr",
     "output": "activities/alfabeto_leo/assets/audio/fr/letter_M.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic"
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-011654-18652433",
-    "idempotency_key": "greia-ffa2e68c0fc7480899827b656093c43c",
+    "job_id": "20261023-030203-3d706ed3",
+    "idempotency_key": "greia-37b891e3da9747919b80fd9f3316c4cc",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +46,345 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 133630347,
+    "script_seed": 1649466064,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak naturally in French. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "effective_delivery": "Speak in French. Lecture chaleureuse et calme. Diction claire et naturelle.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2612698493,
-        "sha256": "010631eae144964383d99a5e4b8bfcfcab7f413468dba30fb23656e317c0bc07",
+        "seed": 1391146153,
+        "sha256": "7b7bcd5001caf7b5b908fc12919e005f3b81bd743278e043c48833fe1d90dbe7",
         "generation": {
-          "elapsed_seconds": 14.743115167017095,
+          "elapsed_seconds": 15.646519458998227,
           "model_load_seconds": 0.0,
-          "rtf": 6.142538087778805,
-          "peak_memory_gb": 8.21220922
+          "rtf": 3.9114668869625997,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-audio-parakeet-tdt-v3",
+    "transcript": "M comme maison.",
+    "score": 1.0,
+    "detail": "Delivered target transcribed and screened; human listening remains pending",
+    "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+    "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+    "flags": [],
+    "metrics": {
+      "duration_seconds": 1.270204081632653,
+      "rms_dbfs": -35.2,
+      "peak": 0.14075,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.08,
+      "trailing_silence_seconds": 0.08,
+      "longest_internal_pause_seconds": 0.14
+    }
   },
-  "attempts": 1,
+  "attempts": 2,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/fr/letter_M.wav",
-    "bytes": 105926,
-    "sha256": "f0dc83171f2a5ad7bbdbbda2f7ecf3e70a4f3d98c53d3f4bff728c2c7f404051"
+    "bytes": 56094,
+    "sha256": "184a1d092edeb2b0320e801216e4595302c8d9230a2010b68ac393ecde10a09f"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "short_phrase": {
+    "mode": "automatic-carrier",
+    "composition_policy": "natural-context-period-v1",
+    "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/748e522339be4f2fb2c5f8d4f068f0ec",
+    "prefix": "Regardons les lettres ensemble.",
+    "composite_text": "Regardons les lettres ensemble.\n\nM comme Maison",
+    "effective_delivery": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "extraction": {
+      "schema_version": 1,
+      "algorithm_version": "greia-spoken-carrier-extractor-v7",
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "status": "EXTRACTED_PENDING_LISTENING",
+      "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/748e522339be4f2fb2c5f8d4f068f0ec/attempt-02/raw.wav",
+      "source_sha256": "7b7bcd5001caf7b5b908fc12919e005f3b81bd743278e043c48833fe1d90dbe7",
+      "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/748e522339be4f2fb2c5f8d4f068f0ec/attempt-02/target.wav",
+      "output_sha256": "4e2c34d64a24d8e29a28ccd5e1d5cc94a0c55e9bde3ec7bedfa13d344942616e",
+      "output_bytes": 121980,
+      "locale": "fr",
+      "prefix": "Regardons les lettres ensemble.",
+      "target": "M comme Maison",
+      "remove_first_words": 4,
+      "ignore_accents": true,
+      "target_verification_requested": "warn",
+      "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+      "target_comparison_score": 1.0,
+      "target_word_count_matches": true,
+      "target_numbers_match": true,
+      "target_comparison_flags": [],
+      "target_transcript_warning": false,
+      "recognizer": "mlx-audio-parakeet-tdt-v3",
+      "recognizer_version": "0.5.0",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "extracted_transcript": "M comme maison.",
+      "expected_target_tokens": [
+        "m",
+        "komme",
+        "maison"
+      ],
+      "extracted_target_tokens": [
+        "m",
+        "komme",
+        "maison"
+      ],
+      "extracted_target_exact_match": true,
+      "transcription_settings": {
+        "language_detection": "automatic",
+        "expected_text_prompt": null,
+        "timestamps": "model-provided-token-timestamps"
+      },
+      "sample_rate": 48000,
+      "duration_seconds": 4.000166666666667,
+      "boundary": {
+        "search_strategy": "target-only-global-quiet-run-v7",
+        "verified_silence_start_seconds": 1.67,
+        "verified_silence_end_seconds": 2.83,
+        "verified_silence_duration_seconds": 1.16,
+        "cut_sample": 131040,
+        "cut_time_seconds": 2.73,
+        "padding_seconds": 0.1,
+        "quiet_run_start_sample": 80160,
+        "quiet_run_end_sample": 135840,
+        "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+      },
+      "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/748e522339be4f2fb2c5f8d4f068f0ec/attempt-02/target.wav.search/186cf07f98404a1c8ebe4a72eb00cc13",
+      "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/748e522339be4f2fb2c5f8d4f068f0ec/attempt-02/target.wav.search/186cf07f98404a1c8ebe4a72eb00cc13/search.json",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/748e522339be4f2fb2c5f8d4f068f0ec/attempt-02/raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "31c4ed324b92e9e4b62ed49edddb8619fc2c18feac2f9e55b9c2e3daea1e835f",
+      "candidate_sha256": "4e2c34d64a24d8e29a28ccd5e1d5cc94a0c55e9bde3ec7bedfa13d344942616e",
+      "candidate_id": "candidate-01",
+      "candidate_count": 1,
+      "qualifying_quiet_run_count": 1,
+      "candidate_results": [
+        {
+          "candidate_id": "candidate-01",
+          "quiet_run": {
+            "start_sample": 80160,
+            "end_sample": 135840,
+            "start_seconds": 1.67,
+            "end_seconds": 2.83,
+            "duration_seconds": 1.16
+          },
+          "cut_sample": 131040,
+          "cut_time_seconds": 2.73,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/748e522339be4f2fb2c5f8d4f068f0ec/attempt-02/target.wav.search/186cf07f98404a1c8ebe4a72eb00cc13/candidate-01.wav",
+          "preceding_voiced_seconds": 1.41,
+          "retained_voiced_seconds": 0.88,
+          "retained_duration_seconds": 1.2701666666666667,
+          "candidate_sha256": "4e2c34d64a24d8e29a28ccd5e1d5cc94a0c55e9bde3ec7bedfa13d344942616e",
+          "extracted_transcript": "M comme maison.",
+          "canonical_transcript_tokens": [
+            "m",
+            "komme",
+            "maison"
+          ],
+          "exact_target_match": true,
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": true,
+          "asr_segment_count": 1
+        }
+      ],
+      "human_review": "PENDING",
+      "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+      "delivery": {
+        "policy": "verified-carrier-gap-delivery-v1",
+        "removed_frames": 0,
+        "removed_seconds": 0.0,
+        "retained_verified_quiet_seconds": 0.1,
+        "raw_delivery_start_sample": 131040,
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/748e522339be4f2fb2c5f8d4f068f0ec/attempt-02/delivery-target.wav",
+        "sha256": "4e2c34d64a24d8e29a28ccd5e1d5cc94a0c55e9bde3ec7bedfa13d344942616e"
+      }
+    },
+    "quality": {
+      "disposition": "PASS",
+      "score": 1.0,
+      "transcript": "M comme maison.",
+      "metrics": {
+        "duration_seconds": 1.270204081632653,
+        "rms_dbfs": -35.2,
+        "peak": 0.14075,
+        "clipped_fraction": 0.0,
+        "leading_silence_seconds": 0.08,
+        "trailing_silence_seconds": 0.08,
+        "longest_internal_pause_seconds": 0.14
+      },
+      "flags": [],
+      "ignore_accents": true,
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "detail": "Delivered target transcribed and screened; human listening remains pending"
+    },
+    "history": [
+      {
+        "attempt": 1,
+        "status": "REJECTED_CUT",
+        "error": "one or more quiet-run candidates failed the energetic-signal floor",
+        "evidence": {
+          "candidate_errors": [
+            "insufficient voiced duration in retained suffix"
+          ],
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/748e522339be4f2fb2c5f8d4f068f0ec/attempt-01/target.wav.search/b26386b9a91d4c0e8791c277c75a13b4",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/748e522339be4f2fb2c5f8d4f068f0ec/attempt-01/target.wav.search/b26386b9a91d4c0e8791c277c75a13b4/search.json"
+        }
+      },
+      {
+        "attempt": 2,
+        "status": "PASS",
+        "quality": {
+          "disposition": "PASS",
+          "score": 1.0,
+          "transcript": "M comme maison.",
+          "metrics": {
+            "duration_seconds": 1.270204081632653,
+            "rms_dbfs": -35.2,
+            "peak": 0.14075,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.08,
+            "trailing_silence_seconds": 0.08,
+            "longest_internal_pause_seconds": 0.14
+          },
+          "flags": [],
+          "ignore_accents": true,
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "detail": "Delivered target transcribed and screened; human listening remains pending"
+        },
+        "extraction": {
+          "schema_version": 1,
+          "algorithm_version": "greia-spoken-carrier-extractor-v7",
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "status": "EXTRACTED_PENDING_LISTENING",
+          "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/748e522339be4f2fb2c5f8d4f068f0ec/attempt-02/raw.wav",
+          "source_sha256": "7b7bcd5001caf7b5b908fc12919e005f3b81bd743278e043c48833fe1d90dbe7",
+          "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/748e522339be4f2fb2c5f8d4f068f0ec/attempt-02/target.wav",
+          "output_sha256": "4e2c34d64a24d8e29a28ccd5e1d5cc94a0c55e9bde3ec7bedfa13d344942616e",
+          "output_bytes": 121980,
+          "locale": "fr",
+          "prefix": "Regardons les lettres ensemble.",
+          "target": "M comme Maison",
+          "remove_first_words": 4,
+          "ignore_accents": true,
+          "target_verification_requested": "warn",
+          "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_transcript_warning": false,
+          "recognizer": "mlx-audio-parakeet-tdt-v3",
+          "recognizer_version": "0.5.0",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "extracted_transcript": "M comme maison.",
+          "expected_target_tokens": [
+            "m",
+            "komme",
+            "maison"
+          ],
+          "extracted_target_tokens": [
+            "m",
+            "komme",
+            "maison"
+          ],
+          "extracted_target_exact_match": true,
+          "transcription_settings": {
+            "language_detection": "automatic",
+            "expected_text_prompt": null,
+            "timestamps": "model-provided-token-timestamps"
+          },
+          "sample_rate": 48000,
+          "duration_seconds": 4.000166666666667,
+          "boundary": {
+            "search_strategy": "target-only-global-quiet-run-v7",
+            "verified_silence_start_seconds": 1.67,
+            "verified_silence_end_seconds": 2.83,
+            "verified_silence_duration_seconds": 1.16,
+            "cut_sample": 131040,
+            "cut_time_seconds": 2.73,
+            "padding_seconds": 0.1,
+            "quiet_run_start_sample": 80160,
+            "quiet_run_end_sample": 135840,
+            "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+          },
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/748e522339be4f2fb2c5f8d4f068f0ec/attempt-02/target.wav.search/186cf07f98404a1c8ebe4a72eb00cc13",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/748e522339be4f2fb2c5f8d4f068f0ec/attempt-02/target.wav.search/186cf07f98404a1c8ebe4a72eb00cc13/search.json",
+          "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/748e522339be4f2fb2c5f8d4f068f0ec/attempt-02/raw.wav.receipt.json",
+          "source_provider_receipt_sha256": "31c4ed324b92e9e4b62ed49edddb8619fc2c18feac2f9e55b9c2e3daea1e835f",
+          "candidate_sha256": "4e2c34d64a24d8e29a28ccd5e1d5cc94a0c55e9bde3ec7bedfa13d344942616e",
+          "candidate_id": "candidate-01",
+          "candidate_count": 1,
+          "qualifying_quiet_run_count": 1,
+          "candidate_results": [
+            {
+              "candidate_id": "candidate-01",
+              "quiet_run": {
+                "start_sample": 80160,
+                "end_sample": 135840,
+                "start_seconds": 1.67,
+                "end_seconds": 2.83,
+                "duration_seconds": 1.16
+              },
+              "cut_sample": 131040,
+              "cut_time_seconds": 2.73,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/748e522339be4f2fb2c5f8d4f068f0ec/attempt-02/target.wav.search/186cf07f98404a1c8ebe4a72eb00cc13/candidate-01.wav",
+              "preceding_voiced_seconds": 1.41,
+              "retained_voiced_seconds": 0.88,
+              "retained_duration_seconds": 1.2701666666666667,
+              "candidate_sha256": "4e2c34d64a24d8e29a28ccd5e1d5cc94a0c55e9bde3ec7bedfa13d344942616e",
+              "extracted_transcript": "M comme maison.",
+              "canonical_transcript_tokens": [
+                "m",
+                "komme",
+                "maison"
+              ],
+              "exact_target_match": true,
+              "target_comparison_score": 1.0,
+              "target_word_count_matches": true,
+              "target_numbers_match": true,
+              "target_comparison_flags": [],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": true,
+              "asr_segment_count": 1
+            }
+          ],
+          "human_review": "PENDING",
+          "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+          "delivery": {
+            "policy": "verified-carrier-gap-delivery-v1",
+            "removed_frames": 0,
+            "removed_seconds": 0.0,
+            "retained_verified_quiet_seconds": 0.1,
+            "raw_delivery_start_sample": 131040,
+            "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/748e522339be4f2fb2c5f8d4f068f0ec/attempt-02/delivery-target.wav",
+            "sha256": "4e2c34d64a24d8e29a28ccd5e1d5cc94a0c55e9bde3ec7bedfa13d344942616e"
+          }
+        },
+        "candidate": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/748e522339be4f2fb2c5f8d4f068f0ec/attempt-02/candidate.wav"
+      }
+    ]
+  },
   "corpus_replacement": {
-    "original_sha256": "be3a770caa253add38cb98b3d3f3dd94d6041b0efaa2ab0c0793865717db189b",
+    "original_sha256": "a003963cb6a8e111750ccbf9c011c68fbfa500b4fd4ff0e25b9f2b2e71afd539",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

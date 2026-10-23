@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T08:44:51.001786+00:00",
+  "created_utc": "2026-10-23T01:14:35.245675+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
@@ -8,17 +8,22 @@
     "text": "¡Llegaste al pícnic!",
     "cue_id": "greia.requested.made_it_picnic.es",
     "output": "activities/colline_allegre/assets/audio/es/made_it_picnic.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace."
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Lectura cálida y tranquila. Pronunciación clara y natural.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic"
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.tito.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261021-104445-cc5cf352",
-    "idempotency_key": "greia-5e01b28809c646568f94e57fa69940d6",
+    "job_id": "20261023-031421-54a984b2",
+    "idempotency_key": "greia-ecb8c9e3982e4997a70ff3fa7b17a932",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +46,346 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 4043404666,
+    "script_seed": 638764823,
     "language_direction": "Spanish",
-    "delivery_prompt": "Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace.",
-    "effective_delivery": "Speak in Spanish. Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace.",
+    "delivery_prompt": "Lectura cálida y tranquila. Pronunciación clara y natural.",
+    "effective_delivery": "Speak in Spanish. Lectura cálida y tranquila. Pronunciación clara y natural.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2951512255,
-        "sha256": "64489541ad1a4dede3445fcf768290035c18194f624631c27a7564847402ded7",
+        "seed": 4123622322,
+        "sha256": "0b9e67ecc9d435f2dc9343b49169338a25f9762e79283167204474a20d0fc6ba",
         "generation": {
-          "elapsed_seconds": 4.294364916997438,
+          "elapsed_seconds": 11.674486333999084,
           "model_load_seconds": 0.0,
-          "rtf": 3.833683901500465,
-          "peak_memory_gb": 7.648166916
+          "rtf": 3.8400810264785106,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-audio-parakeet-tdt-v3",
+    "transcript": "Llegaste al picnic.",
+    "score": 1.0,
+    "detail": "Delivered target transcribed and screened; human listening remains pending",
+    "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+    "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+    "flags": [],
+    "metrics": {
+      "duration_seconds": 1.2401814058956917,
+      "rms_dbfs": -29.19,
+      "peak": 0.2027,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.1,
+      "trailing_silence_seconds": 0.08,
+      "longest_internal_pause_seconds": 0.06
+    }
   },
-  "attempts": 1,
+  "attempts": 2,
   "output": {
     "path": "activities/colline_allegre/assets/audio/es/made_it_picnic.wav",
-    "bytes": 49478,
-    "sha256": "a6e3687710cffadfa1a33ffa0fb73faec0ce441704f2656586ad40b6dd961da7"
+    "bytes": 54770,
+    "sha256": "7ba7b523625c4430b832a15aa5cdb04e6bb02a11e66dda7b4d3b8cc79038aca5"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "short_phrase": {
+    "mode": "automatic-carrier",
+    "composition_policy": "natural-context-period-v1",
+    "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/fec4102520654fe397970adc561b717c",
+    "prefix": "Vamos a hablar con calma.",
+    "composite_text": "Vamos a hablar con calma.\n\n¡Llegaste al pícnic!",
+    "effective_delivery": "Lectura cálida y tranquila. Pronunciación clara y natural.",
+    "extraction": {
+      "schema_version": 1,
+      "algorithm_version": "greia-spoken-carrier-extractor-v7",
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "status": "EXTRACTED_PENDING_LISTENING",
+      "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/fec4102520654fe397970adc561b717c/attempt-02/raw.wav",
+      "source_sha256": "0b9e67ecc9d435f2dc9343b49169338a25f9762e79283167204474a20d0fc6ba",
+      "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/fec4102520654fe397970adc561b717c/attempt-02/target.wav",
+      "output_sha256": "cf6b5e875ab5e2cb858946ca2b8b154b36198033544ca90860305d809103f6fc",
+      "output_bytes": 119100,
+      "locale": "es",
+      "prefix": "Vamos a hablar con calma.",
+      "target": "¡Llegaste al pícnic!",
+      "remove_first_words": 5,
+      "ignore_accents": true,
+      "target_verification_requested": "warn",
+      "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+      "target_comparison_score": 1.0,
+      "target_word_count_matches": true,
+      "target_numbers_match": true,
+      "target_comparison_flags": [],
+      "target_transcript_warning": false,
+      "recognizer": "mlx-audio-parakeet-tdt-v3",
+      "recognizer_version": "0.5.0",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "extracted_transcript": "Llegaste al picnic.",
+      "expected_target_tokens": [
+        "llegaste",
+        "al",
+        "piknik"
+      ],
+      "extracted_target_tokens": [
+        "llegaste",
+        "al",
+        "piknik"
+      ],
+      "extracted_target_exact_match": true,
+      "transcription_settings": {
+        "language_detection": "automatic",
+        "expected_text_prompt": null,
+        "timestamps": "model-provided-token-timestamps"
+      },
+      "sample_rate": 48000,
+      "duration_seconds": 3.0401666666666665,
+      "boundary": {
+        "search_strategy": "target-only-global-quiet-run-v7",
+        "verified_silence_start_seconds": 1.46,
+        "verified_silence_end_seconds": 1.9,
+        "verified_silence_duration_seconds": 0.44,
+        "cut_sample": 86400,
+        "cut_time_seconds": 1.8,
+        "padding_seconds": 0.1,
+        "quiet_run_start_sample": 70080,
+        "quiet_run_end_sample": 91200,
+        "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+      },
+      "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/fec4102520654fe397970adc561b717c/attempt-02/target.wav.search/b92702ecb66e46e5900b13f9b2360a9e",
+      "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/fec4102520654fe397970adc561b717c/attempt-02/target.wav.search/b92702ecb66e46e5900b13f9b2360a9e/search.json",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/fec4102520654fe397970adc561b717c/attempt-02/raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "1be0509d8113e6868847b7e36f6b40d961a3add984b6545e51fe90f1e0cf6d87",
+      "candidate_sha256": "cf6b5e875ab5e2cb858946ca2b8b154b36198033544ca90860305d809103f6fc",
+      "candidate_id": "candidate-01",
+      "candidate_count": 1,
+      "qualifying_quiet_run_count": 1,
+      "candidate_results": [
+        {
+          "candidate_id": "candidate-01",
+          "quiet_run": {
+            "start_sample": 70080,
+            "end_sample": 91200,
+            "start_seconds": 1.46,
+            "end_seconds": 1.9,
+            "duration_seconds": 0.44
+          },
+          "cut_sample": 86400,
+          "cut_time_seconds": 1.8,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/fec4102520654fe397970adc561b717c/attempt-02/target.wav.search/b92702ecb66e46e5900b13f9b2360a9e/candidate-01.wav",
+          "preceding_voiced_seconds": 1.29,
+          "retained_voiced_seconds": 0.77,
+          "retained_duration_seconds": 1.2401666666666666,
+          "candidate_sha256": "cf6b5e875ab5e2cb858946ca2b8b154b36198033544ca90860305d809103f6fc",
+          "extracted_transcript": "Llegaste al picnic.",
+          "canonical_transcript_tokens": [
+            "llegaste",
+            "al",
+            "piknik"
+          ],
+          "exact_target_match": true,
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": true,
+          "asr_segment_count": 1
+        }
+      ],
+      "human_review": "PENDING",
+      "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+      "delivery": {
+        "policy": "verified-carrier-gap-delivery-v1",
+        "removed_frames": 0,
+        "removed_seconds": 0.0,
+        "retained_verified_quiet_seconds": 0.1,
+        "raw_delivery_start_sample": 86400,
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/fec4102520654fe397970adc561b717c/attempt-02/delivery-target.wav",
+        "sha256": "cf6b5e875ab5e2cb858946ca2b8b154b36198033544ca90860305d809103f6fc"
+      }
+    },
+    "quality": {
+      "disposition": "PASS",
+      "score": 1.0,
+      "transcript": "Llegaste al picnic.",
+      "metrics": {
+        "duration_seconds": 1.2401814058956917,
+        "rms_dbfs": -29.19,
+        "peak": 0.2027,
+        "clipped_fraction": 0.0,
+        "leading_silence_seconds": 0.1,
+        "trailing_silence_seconds": 0.08,
+        "longest_internal_pause_seconds": 0.06
+      },
+      "flags": [],
+      "ignore_accents": true,
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "detail": "Delivered target transcribed and screened; human listening remains pending"
+    },
+    "history": [
+      {
+        "attempt": 1,
+        "status": "REJECTED_CUT",
+        "error": "no candidate suffix meets target verification policy",
+        "evidence": {
+          "candidate_transcripts": [
+            "Ya te al picnic."
+          ],
+          "matching_candidate_ids": [],
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/fec4102520654fe397970adc561b717c/attempt-01/target.wav.search/1fc514a47a1f4be0b77d7af0d8849294",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/fec4102520654fe397970adc561b717c/attempt-01/target.wav.search/1fc514a47a1f4be0b77d7af0d8849294/search.json"
+        }
+      },
+      {
+        "attempt": 2,
+        "status": "PASS",
+        "quality": {
+          "disposition": "PASS",
+          "score": 1.0,
+          "transcript": "Llegaste al picnic.",
+          "metrics": {
+            "duration_seconds": 1.2401814058956917,
+            "rms_dbfs": -29.19,
+            "peak": 0.2027,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.1,
+            "trailing_silence_seconds": 0.08,
+            "longest_internal_pause_seconds": 0.06
+          },
+          "flags": [],
+          "ignore_accents": true,
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "detail": "Delivered target transcribed and screened; human listening remains pending"
+        },
+        "extraction": {
+          "schema_version": 1,
+          "algorithm_version": "greia-spoken-carrier-extractor-v7",
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "status": "EXTRACTED_PENDING_LISTENING",
+          "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/fec4102520654fe397970adc561b717c/attempt-02/raw.wav",
+          "source_sha256": "0b9e67ecc9d435f2dc9343b49169338a25f9762e79283167204474a20d0fc6ba",
+          "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/fec4102520654fe397970adc561b717c/attempt-02/target.wav",
+          "output_sha256": "cf6b5e875ab5e2cb858946ca2b8b154b36198033544ca90860305d809103f6fc",
+          "output_bytes": 119100,
+          "locale": "es",
+          "prefix": "Vamos a hablar con calma.",
+          "target": "¡Llegaste al pícnic!",
+          "remove_first_words": 5,
+          "ignore_accents": true,
+          "target_verification_requested": "warn",
+          "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_transcript_warning": false,
+          "recognizer": "mlx-audio-parakeet-tdt-v3",
+          "recognizer_version": "0.5.0",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "extracted_transcript": "Llegaste al picnic.",
+          "expected_target_tokens": [
+            "llegaste",
+            "al",
+            "piknik"
+          ],
+          "extracted_target_tokens": [
+            "llegaste",
+            "al",
+            "piknik"
+          ],
+          "extracted_target_exact_match": true,
+          "transcription_settings": {
+            "language_detection": "automatic",
+            "expected_text_prompt": null,
+            "timestamps": "model-provided-token-timestamps"
+          },
+          "sample_rate": 48000,
+          "duration_seconds": 3.0401666666666665,
+          "boundary": {
+            "search_strategy": "target-only-global-quiet-run-v7",
+            "verified_silence_start_seconds": 1.46,
+            "verified_silence_end_seconds": 1.9,
+            "verified_silence_duration_seconds": 0.44,
+            "cut_sample": 86400,
+            "cut_time_seconds": 1.8,
+            "padding_seconds": 0.1,
+            "quiet_run_start_sample": 70080,
+            "quiet_run_end_sample": 91200,
+            "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+          },
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/fec4102520654fe397970adc561b717c/attempt-02/target.wav.search/b92702ecb66e46e5900b13f9b2360a9e",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/fec4102520654fe397970adc561b717c/attempt-02/target.wav.search/b92702ecb66e46e5900b13f9b2360a9e/search.json",
+          "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/fec4102520654fe397970adc561b717c/attempt-02/raw.wav.receipt.json",
+          "source_provider_receipt_sha256": "1be0509d8113e6868847b7e36f6b40d961a3add984b6545e51fe90f1e0cf6d87",
+          "candidate_sha256": "cf6b5e875ab5e2cb858946ca2b8b154b36198033544ca90860305d809103f6fc",
+          "candidate_id": "candidate-01",
+          "candidate_count": 1,
+          "qualifying_quiet_run_count": 1,
+          "candidate_results": [
+            {
+              "candidate_id": "candidate-01",
+              "quiet_run": {
+                "start_sample": 70080,
+                "end_sample": 91200,
+                "start_seconds": 1.46,
+                "end_seconds": 1.9,
+                "duration_seconds": 0.44
+              },
+              "cut_sample": 86400,
+              "cut_time_seconds": 1.8,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/fec4102520654fe397970adc561b717c/attempt-02/target.wav.search/b92702ecb66e46e5900b13f9b2360a9e/candidate-01.wav",
+              "preceding_voiced_seconds": 1.29,
+              "retained_voiced_seconds": 0.77,
+              "retained_duration_seconds": 1.2401666666666666,
+              "candidate_sha256": "cf6b5e875ab5e2cb858946ca2b8b154b36198033544ca90860305d809103f6fc",
+              "extracted_transcript": "Llegaste al picnic.",
+              "canonical_transcript_tokens": [
+                "llegaste",
+                "al",
+                "piknik"
+              ],
+              "exact_target_match": true,
+              "target_comparison_score": 1.0,
+              "target_word_count_matches": true,
+              "target_numbers_match": true,
+              "target_comparison_flags": [],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": true,
+              "asr_segment_count": 1
+            }
+          ],
+          "human_review": "PENDING",
+          "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+          "delivery": {
+            "policy": "verified-carrier-gap-delivery-v1",
+            "removed_frames": 0,
+            "removed_seconds": 0.0,
+            "retained_verified_quiet_seconds": 0.1,
+            "raw_delivery_start_sample": 86400,
+            "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/fec4102520654fe397970adc561b717c/attempt-02/delivery-target.wav",
+            "sha256": "cf6b5e875ab5e2cb858946ca2b8b154b36198033544ca90860305d809103f6fc"
+          }
+        },
+        "candidate": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/fec4102520654fe397970adc561b717c/attempt-02/candidate.wav"
+      }
+    ]
+  },
   "corpus_replacement": {
-    "original_sha256": "dbf9aa6833b0050243448e908270afd099cf88895d6116a8f0b4b07191e52214",
+    "original_sha256": "aa14843e000c75be1c41533f3913dc5b98aea109d1eabb421327177f29cd6622",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

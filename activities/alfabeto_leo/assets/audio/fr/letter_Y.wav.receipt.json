@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T23:19:34.685702+00:00",
+  "created_utc": "2026-10-23T03:54:45.154116+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
@@ -8,17 +8,22 @@
     "text": "Y comme Yaourt",
     "cue_id": "alfabeto_leo.letter_Y.fr",
     "output": "activities/alfabeto_leo/assets/audio/fr/letter_Y.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic"
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-011927-98492548",
-    "idempotency_key": "greia-2dc0027ecace4c3e95072431f6ad5ad2",
+    "job_id": "20261023-030400-147c1c71",
+    "idempotency_key": "greia-4f2db30c85bb410c839a1e6f1d364dda",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +46,99 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1233071773,
+    "script_seed": 2354167231,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak naturally in French. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "effective_delivery": "Speak in French. Lecture chaleureuse et calme. Diction claire et naturelle.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2919696371,
-        "sha256": "27cda1956248949ed45716d14182b90be4a1557e75c0cc990553c2c6962f548f",
+        "seed": 4086598954,
+        "sha256": "1bd08fef448224a1cc66218285567a0e0a042d342cc2f33ff81ca87981e8c6bb",
         "generation": {
-          "elapsed_seconds": 6.510724332998507,
+          "elapsed_seconds": 17.331422417017166,
           "model_load_seconds": 0.0,
-          "rtf": 5.812281803004171,
-          "peak_memory_gb": 8.21220922
+          "rtf": 4.923466431613228,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "FAIL",
+    "verifier_id": "mlx-audio-parakeet-tdt-v3",
+    "transcript": "Ik kom ja woord.",
+    "score": 0.3586,
+    "detail": "Candidate extraction screening only; not packaged acceptance. Human listening pending.",
+    "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+    "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+    "flags": [
+      "TARGET_WORD_COUNT_MISMATCH"
+    ],
+    "metrics": {
+      "automated_status": "FAIL",
+      "takeboard_kind": "extracted_target_candidate"
+    }
   },
-  "attempts": 1,
+  "attempts": 2,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/fr/letter_Y.wav",
-    "bytes": 49478,
-    "sha256": "b0301dbf27c92e146a3affda750033ba133e718495516e6cf2b39487eab1e1df"
+    "bytes": 58740,
+    "sha256": "98bef5b74698152847b4f5c3679175a3c6f8303c6385f6f4dc4a2b01f67896db"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
-  "corpus_replacement": {
-    "original_sha256": "849d858541aeb873a2faf2b303845d2fa3867cb04258e8d7646a4d21c21c1062",
-    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by owner in Takeboard batch 8818; saved state and exact selected target retained.",
+  "human_review_provenance": {
+    "batch_id": "greia-natural-parakeet-full237-2026-10-23-v1",
+    "review_file": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/takeboard-listening.reviewed.json",
+    "review_file_sha256": "1b5499b5d84eca9091a3d876f5bda4e01da18438878be6ba9b7b1759bf401d85",
+    "record_id": "be622f0eedd6-a02-cut-candidate-01",
+    "decision": "approved",
+    "reviewer": "",
+    "score": null,
+    "notes": "",
+    "updated_at": "2026-10-23T03:54:45.154116+00:00",
+    "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0887ed6dbc224b0685ab2a6dcf8b6a04/attempt-02/target.wav.search/ac80f059477343a5bd11116ff35c199a/candidate-01.wav",
+    "candidate_sha256": "57ac40a6113d2a855fef870045c27a38b40113a7cf20f6c43a42924452923dc0",
+    "candidate_kind": "extracted_target_candidate",
+    "source_raw_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0887ed6dbc224b0685ab2a6dcf8b6a04/attempt-02/raw.wav",
+    "source_raw_sha256": "1bd08fef448224a1cc66218285567a0e0a042d342cc2f33ff81ca87981e8c6bb",
+    "source_raw_receipt_sha256": "ad909826e3a3a55e0090918a8cd64b527531b4553c5ebce905d210745537d146",
+    "job_id": "20261023-030400-147c1c71",
+    "parakeet_model": "mlx-community/parakeet-tdt-0.6b-v3",
+    "parakeet_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+    "automated_status": "FAIL",
+    "automated_transcript": "Ik kom ja woord.",
+    "automated_score": 0.3586,
+    "automated_flags": [
+      "TARGET_WORD_COUNT_MISMATCH"
+    ]
+  },
+  "source_generation": {
+    "request_text": "Regardons les lettres ensemble.\n\nY comme Yaourt",
+    "semantic_target": "Y comme Yaourt",
+    "carrier_prefix": "Regardons les lettres ensemble.",
+    "candidate_id": "candidate-01",
+    "candidate_kind": "extracted_target_candidate",
+    "search_witness_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0887ed6dbc224b0685ab2a6dcf8b6a04/attempt-02/target.wav.search/ac80f059477343a5bd11116ff35c199a/search.json",
+    "search_witness_sha256": "bf55e3904833e3de2d81d1817b1558aed48529dc57f7c407bca88419c2fe4a2c",
+    "raw_audio_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/0887ed6dbc224b0685ab2a6dcf8b6a04/attempt-02/raw.wav",
+    "raw_audio_sha256": "1bd08fef448224a1cc66218285567a0e0a042d342cc2f33ff81ca87981e8c6bb",
+    "raw_receipt_sha256": "ad909826e3a3a55e0090918a8cd64b527531b4553c5ebce905d210745537d146"
+  },
+  "delivery_format_normalization": {
+    "policy": "approved-source-to-canonical-pcm-v1",
+    "source_audio_sha256": "57ac40a6113d2a855fef870045c27a38b40113a7cf20f6c43a42924452923dc0",
+    "source_sample_rate_hz": 48000,
+    "target_sample_rate_hz": 22050,
+    "channels": 1,
+    "sample_width_bits": 16,
+    "packaged_utc": "2026-10-23T14:48:45.770098+00:00",
+    "original_generation_and_review_unchanged": true,
+    "prior_machine_verification_applies_to_source_audio_sha256": "57ac40a6113d2a855fef870045c27a38b40113a7cf20f6c43a42924452923dc0",
+    "no_synthesis_or_asr": true
   }
 }

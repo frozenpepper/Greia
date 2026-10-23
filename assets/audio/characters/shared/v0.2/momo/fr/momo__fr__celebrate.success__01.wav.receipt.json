@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T13:07:48.425934+00:00",
+  "created_utc": "2026-10-21T18:12:22.941261+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "Tu as réussi !",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. Tu as réussi !",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "momo",
+    "kind": "shared_character_utterance",
+    "locale": "fr",
+    "text": "Tu as réussi !",
+    "cue_id": "greia.shared.momo__fr__celebrate.success__01.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "momo",
     "kind": "shared_character_utterance",
     "locale": "fr",
     "text": "Tu as réussi !",
     "cue_id": "greia.shared.momo__fr__celebrate.success__01.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "assets/audio/characters/shared/v0.2/momo/fr/momo__fr__celebrate.success__01.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.momo.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261021-150742-5ac887eb",
-    "idempotency_key": "greia-4ec2815d41a542f8951921e9864379de",
+    "job_id": "20261021-201207-f6c16c6c",
+    "idempotency_key": "greia-94eee8220e784d55b39bc8749df22b4f",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,184 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3048273760,
+    "script_seed": 1459266359,
     "language_direction": "French",
-    "delivery_prompt": "Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak in French. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1836457014,
-        "sha256": "44e4f4a74949e89eba3dfbe13ccaac953ac12056ecf33caac9dc34c55c15f8a2",
+        "seed": 106724565,
+        "sha256": "f7acafe1e397c5f7d9409c2f86fe2abe48418f3bc51b516644e52ae5bb62968f",
         "generation": {
-          "elapsed_seconds": 5.226083499997912,
+          "elapsed_seconds": 14.97282675000315,
           "model_load_seconds": 0.0,
-          "rtf": 3.628804652237875,
+          "rtf": 5.198597332331398,
           "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": "Tu as réussi.",
+    "metrics": {
+      "duration_seconds": 1.0745124716553287,
+      "rms_dbfs": -26.52,
+      "peak": 0.27127,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.1,
+      "trailing_silence_seconds": 0.14,
+      "longest_internal_pause_seconds": 0.0
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v1",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/characters/shared/v0.2/momo/fr/momo__fr__celebrate.success__01.wav.raw.wav",
+    "sha256": "af830c647d7f327267d69709ca249ef98bf94b4f819b66468990ebbc5bf93b6b",
+    "receipt_sha256": "b5e19ebb63225ddd133ba2712614f085c52de041923bc446bcd790d685aa8fb4"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/characters/shared/v0.2/momo/fr/momo__fr__celebrate.success__01.wav.extracted.wav",
+    "sha256": "7ffd944ae3a3cf8d04c54b1ea6ff72ce4f542e74d59826f9828b1791ce4f9bd0"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/assets/audio/characters/shared/v0.2/momo/fr/momo__fr__celebrate.success__01.wav.delivery.wav",
+    "sha256": "7ffd944ae3a3cf8d04c54b1ea6ff72ce4f542e74d59826f9828b1791ce4f9bd0"
+  },
+  "extraction": {
+    "schema_version": 1,
+    "algorithm_version": "greia-spoken-carrier-extractor-v7",
+    "comparison_policy": "locale-number-tokens-v1",
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-raw/assets/audio/characters/shared/v0.2/momo/fr/momo__fr__celebrate.success__01.wav.raw.wav",
+    "source_sha256": "af830c647d7f327267d69709ca249ef98bf94b4f819b66468990ebbc5bf93b6b",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/assets/audio/characters/shared/v0.2/momo/fr/momo__fr__celebrate.success__01.wav.extracted.wav",
+    "output_sha256": "7ffd944ae3a3cf8d04c54b1ea6ff72ce4f542e74d59826f9828b1791ce4f9bd0",
+    "output_bytes": 47430,
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "Tu as réussi !",
+    "remove_first_words": 5,
+    "ignore_accents": true,
+    "target_verification_requested": "warn",
+    "target_verification_policy": "warn",
+    "target_comparison_score": 1.0,
+    "target_word_count_matches": true,
+    "target_numbers_match": true,
+    "target_comparison_flags": [],
+    "target_transcript_warning": false,
+    "recognizer": "mlx-whisper-base",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extracted_transcript": "Tu as réussi.",
+    "expected_target_tokens": [
+      "tu",
+      "as",
+      "reussi"
+    ],
+    "extracted_target_tokens": [
+      "tu",
+      "as",
+      "reussi"
+    ],
+    "extracted_target_exact_match": true,
+    "transcription_settings": {
+      "language": "fr",
+      "initial_prompt": null,
+      "word_timestamps": true,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "sample_rate": 22050,
+    "duration_seconds": 2.8801814058956916,
+    "boundary": {
+      "search_strategy": "target-only-global-quiet-run-v7",
+      "verified_silence_start_seconds": 1.1673469387755102,
+      "verified_silence_end_seconds": 1.9056689342403628,
+      "verified_silence_duration_seconds": 0.7383219954648526,
+      "cut_sample": 39815,
+      "cut_time_seconds": 1.805668934240363,
+      "padding_seconds": 0.1,
+      "quiet_run_start_sample": 25740,
+      "quiet_run_end_sample": 42020,
+      "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+    },
+    "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/assets/audio/characters/shared/v0.2/momo/fr/momo__fr__celebrate.success__01.wav.extracted.wav.search/7e3d43606a674eae82ac1c1feb94d8e0",
+    "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/assets/audio/characters/shared/v0.2/momo/fr/momo__fr__celebrate.success__01.wav.extracted.wav.search/7e3d43606a674eae82ac1c1feb94d8e0/search.json",
+    "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-raw/assets/audio/characters/shared/v0.2/momo/fr/momo__fr__celebrate.success__01.wav.raw.wav.receipt.json",
+    "source_provider_receipt_sha256": "b5e19ebb63225ddd133ba2712614f085c52de041923bc446bcd790d685aa8fb4",
+    "candidate_sha256": "7ffd944ae3a3cf8d04c54b1ea6ff72ce4f542e74d59826f9828b1791ce4f9bd0",
+    "candidate_id": "candidate-01",
+    "candidate_count": 1,
+    "qualifying_quiet_run_count": 1,
+    "candidate_results": [
+      {
+        "candidate_id": "candidate-01",
+        "quiet_run": {
+          "start_sample": 25740,
+          "end_sample": 42020,
+          "start_seconds": 1.1673469387755102,
+          "end_seconds": 1.9056689342403628,
+          "duration_seconds": 0.7383219954648526
+        },
+        "cut_sample": 39815,
+        "cut_time_seconds": 1.805668934240363,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/assets/audio/characters/shared/v0.2/momo/fr/momo__fr__celebrate.success__01.wav.extracted.wav.search/7e3d43606a674eae82ac1c1feb94d8e0/candidate-01.wav",
+        "preceding_voiced_seconds": 0.62,
+        "retained_voiced_seconds": 0.79,
+        "retained_duration_seconds": 1.0745124716553287,
+        "candidate_sha256": "7ffd944ae3a3cf8d04c54b1ea6ff72ce4f542e74d59826f9828b1791ce4f9bd0",
+        "extracted_transcript": "Tu as réussi.",
+        "canonical_transcript_tokens": [
+          "tu",
+          "as",
+          "reussi"
+        ],
+        "exact_target_match": true,
+        "target_comparison_score": 1.0,
+        "target_word_count_matches": true,
+        "target_numbers_match": true,
+        "target_comparison_flags": [],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": true,
+        "asr_segment_count": 1
+      }
+    ],
+    "human_review": "PENDING",
+    "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+    "target_verification_effective_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+    "target_verification_warning": false,
+    "saved_recovery_policy": "target-only-v7-saved-v1",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 0,
+      "removed_seconds": 0.0,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 39815,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/assets/audio/characters/shared/v0.2/momo/fr/momo__fr__celebrate.success__01.wav.delivery.wav",
+      "sha256": "7ffd944ae3a3cf8d04c54b1ea6ff72ce4f542e74d59826f9828b1791ce4f9bd0"
+    }
+  },
   "output": {
     "path": "assets/audio/characters/shared/v0.2/momo/fr/momo__fr__celebrate.success__01.wav",
-    "bytes": 63590,
-    "sha256": "861005e61ed9ab1d8d1d6935678461d78d3a7c231e716b930d10d293e2cdda8d"
+    "sha256": "8fda5f85c0b465391d0cdf6e9879929227024af8d56d60cff970252106dd4e53",
+    "bytes": 47464
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "adcde118140c555f1d1daab1d76deec9fa551964ff25f5a4188339e69a345bf6",
+    "original_sha256": "572cb3a87a6a2bad4209a7309071bc9a608725f2ee75b7559caa273cebf4ac74",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

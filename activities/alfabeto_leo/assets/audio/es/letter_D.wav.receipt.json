@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T20:52:42.639722+00:00",
+  "created_utc": "2026-10-21T15:16:37.043480+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "D de Dado",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. D de Dado",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "D de Dado",
+    "cue_id": "alfabeto_leo.letter_D.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "D de Dado",
     "cue_id": "alfabeto_leo.letter_D.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/alfabeto_leo/assets/audio/es/letter_D.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261019-225236-c8cab5a8",
-    "idempotency_key": "greia-a9fec54d92c846699308c3713c48a8aa",
+    "job_id": "20261021-171617-3bd22a59",
+    "idempotency_key": "greia-33848fdefd994e7d9285571bca546d22",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,184 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 4038557415,
+    "script_seed": 697117453,
     "language_direction": "Spanish",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak naturally in Spanish. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1078088640,
-        "sha256": "9a21f94c4801241caf239785d35c2fa5116ab6ed71413f3230e9aedee4345121",
+        "seed": 179760832,
+        "sha256": "ad00c019a3b58348379f4a9d6acaa30a18664e0d895447dc19d4518e1747f16c",
         "generation": {
-          "elapsed_seconds": 5.118334791972302,
+          "elapsed_seconds": 18.534872749994975,
           "model_load_seconds": 0.0,
-          "rtf": 4.569261828869783,
-          "peak_memory_gb": 8.21220922
+          "rtf": 4.455319758822557,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8958,
+    "transcript": "de de dado",
+    "metrics": {
+      "duration_seconds": 0.9676643990929705,
+      "rms_dbfs": -33.75,
+      "peak": 0.17517,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.04,
+      "trailing_silence_seconds": 0.1,
+      "longest_internal_pause_seconds": 0.0
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v1",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/alfabeto_leo/assets/audio/es/letter_D.wav.raw.wav",
+    "sha256": "381cb7ae4d7be6a737e2e011c374b0e99008e775d2e4112f8398c5d83a091983",
+    "receipt_sha256": "7878ee529cf5f884337aa8e562e03a60b68d903dfcd9069963d6d36117cf036a"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/assets/audio/es/letter_D.wav.extracted.wav",
+    "sha256": "59f3ffb9a79a8c01bb4a7d9471750e065861f6e726b820c0a06aa405d8b3cc49"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/assets/audio/es/letter_D.wav.delivery.wav",
+    "sha256": "59f3ffb9a79a8c01bb4a7d9471750e065861f6e726b820c0a06aa405d8b3cc49"
+  },
+  "extraction": {
+    "schema_version": 1,
+    "algorithm_version": "greia-spoken-carrier-extractor-v7",
+    "comparison_policy": "locale-number-tokens-v1",
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-raw/activities/alfabeto_leo/assets/audio/es/letter_D.wav.raw.wav",
+    "source_sha256": "381cb7ae4d7be6a737e2e011c374b0e99008e775d2e4112f8398c5d83a091983",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/alfabeto_leo/assets/audio/es/letter_D.wav.extracted.wav",
+    "output_sha256": "59f3ffb9a79a8c01bb4a7d9471750e065861f6e726b820c0a06aa405d8b3cc49",
+    "output_bytes": 42718,
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "D de Dado",
+    "remove_first_words": 5,
+    "ignore_accents": true,
+    "target_verification_requested": "warn",
+    "target_verification_policy": "warn",
+    "target_comparison_score": 0.8958,
+    "target_word_count_matches": true,
+    "target_numbers_match": true,
+    "target_comparison_flags": [],
+    "target_transcript_warning": true,
+    "recognizer": "mlx-whisper-base",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extracted_transcript": "de de dado",
+    "expected_target_tokens": [
+      "d",
+      "de",
+      "dado"
+    ],
+    "extracted_target_tokens": [
+      "de",
+      "de",
+      "dado"
+    ],
+    "extracted_target_exact_match": false,
+    "transcription_settings": {
+      "language": "es",
+      "initial_prompt": null,
+      "word_timestamps": true,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "sample_rate": 22050,
+    "duration_seconds": 4.160181405895692,
+    "boundary": {
+      "search_strategy": "target-only-global-quiet-run-v7",
+      "verified_silence_start_seconds": 2.005442176870748,
+      "verified_silence_end_seconds": 3.292517006802721,
+      "verified_silence_duration_seconds": 1.2870748299319728,
+      "cut_sample": 70395,
+      "cut_time_seconds": 3.192517006802721,
+      "padding_seconds": 0.1,
+      "quiet_run_start_sample": 44220,
+      "quiet_run_end_sample": 72600,
+      "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+    },
+    "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/alfabeto_leo/assets/audio/es/letter_D.wav.extracted.wav.search/4aa565f1ce3b4c72b48aad1a0e257a03",
+    "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/alfabeto_leo/assets/audio/es/letter_D.wav.extracted.wav.search/4aa565f1ce3b4c72b48aad1a0e257a03/search.json",
+    "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-raw/activities/alfabeto_leo/assets/audio/es/letter_D.wav.raw.wav.receipt.json",
+    "source_provider_receipt_sha256": "7878ee529cf5f884337aa8e562e03a60b68d903dfcd9069963d6d36117cf036a",
+    "candidate_sha256": "59f3ffb9a79a8c01bb4a7d9471750e065861f6e726b820c0a06aa405d8b3cc49",
+    "candidate_id": "candidate-01",
+    "candidate_count": 1,
+    "qualifying_quiet_run_count": 1,
+    "candidate_results": [
+      {
+        "candidate_id": "candidate-01",
+        "quiet_run": {
+          "start_sample": 44220,
+          "end_sample": 72600,
+          "start_seconds": 2.005442176870748,
+          "end_seconds": 3.292517006802721,
+          "duration_seconds": 1.2870748299319728
+        },
+        "cut_sample": 70395,
+        "cut_time_seconds": 3.192517006802721,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/alfabeto_leo/assets/audio/es/letter_D.wav.extracted.wav.search/4aa565f1ce3b4c72b48aad1a0e257a03/candidate-01.wav",
+        "preceding_voiced_seconds": 1.5,
+        "retained_voiced_seconds": 0.51,
+        "retained_duration_seconds": 0.9676643990929705,
+        "candidate_sha256": "59f3ffb9a79a8c01bb4a7d9471750e065861f6e726b820c0a06aa405d8b3cc49",
+        "extracted_transcript": "de de dado",
+        "canonical_transcript_tokens": [
+          "de",
+          "de",
+          "dado"
+        ],
+        "exact_target_match": false,
+        "target_comparison_score": 0.8958,
+        "target_word_count_matches": true,
+        "target_numbers_match": true,
+        "target_comparison_flags": [],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": true,
+        "asr_segment_count": 1
+      }
+    ],
+    "human_review": "PENDING",
+    "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+    "target_verification_effective_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+    "target_verification_warning": true,
+    "saved_recovery_policy": "target-only-v7-saved-v1",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 0,
+      "removed_seconds": 0.0,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 70395,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/alfabeto_leo/assets/audio/es/letter_D.wav.delivery.wav",
+      "sha256": "59f3ffb9a79a8c01bb4a7d9471750e065861f6e726b820c0a06aa405d8b3cc49"
+    }
+  },
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/es/letter_D.wav",
-    "bytes": 49478,
-    "sha256": "0c8ea2c9edf7c045e1592de44259774141de802f31c3de6fe1cb88ba3ca089af"
+    "sha256": "1817429aa11c51009cbb53b2f0eed48f09d4a86801124c3ccf53bc5d2eba4f7c",
+    "bytes": 42752
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "a147d6a991589dac65b97dab02542328094f0de28afab8531e07e92dda23772a",
+    "original_sha256": "591846e5d9d9c91742941d587e881f4fb51f4a630b09941e63845bcc078db85c",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

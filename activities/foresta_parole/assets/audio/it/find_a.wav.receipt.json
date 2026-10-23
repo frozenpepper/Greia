@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:31:36.765155+00:00",
+  "created_utc": "2026-10-21T16:22:59.391065+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "A come Ape",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. A come Ape",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "A come Ape",
+    "cue_id": "foresta_parole.find_a",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "A come Ape",
     "cue_id": "foresta_parole.find_a",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/foresta_parole/assets/audio/it/find_a.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-143131-0c2d8362",
-    "idempotency_key": "greia-2788cbcc7884462a926f5960d2b6e023",
+    "job_id": "20261021-182242-711ecdea",
+    "idempotency_key": "greia-294ee4e4aced46729b8e7c8a7d07d88e",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,261 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3594904424,
+    "script_seed": 2606295127,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 522021499,
-        "sha256": "6cbb494f4e59edf07ed5d683a9b161c93567fecb69dd10e740534ed242f9d8d5",
+        "seed": 167722988,
+        "sha256": "1aa5ec4018aec482289d478d034605cf64a81706bc491d6a9a78ee375b22fc27",
         "generation": {
-          "elapsed_seconds": 4.890560166968498,
+          "elapsed_seconds": 15.770120166998822,
           "model_load_seconds": 0.0,
-          "rtf": 5.093449227879012,
-          "peak_memory_gb": 8.44494914
+          "rtf": 4.28516466654558,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8183,
+    "transcript": " A come api?",
+    "metrics": {
+      "duration_seconds": 1.2918820861678004,
+      "rms_dbfs": -33.71,
+      "peak": 0.1402,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.18,
+      "trailing_silence_seconds": 0.1,
+      "longest_internal_pause_seconds": 0.04
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/foresta_parole/assets/audio/it/find_a.wav.raw.wav",
+    "sha256": "ac94f17a5f9ba79b29b288de109d7ca2041ba374fdf073207d405a3ad351e8ea",
+    "receipt_sha256": "997d68e4cc042fc50a0f4b9a79cdf5e63f224fb2a441dae28ee50b76b9de3d1a"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/foresta_parole/assets/audio/it/find_a.wav.extracted.wav",
+    "sha256": "b06560a75f1e67aee5cd85d07c35f8e1e61cd0451cb9d3e9ab04ea96fd735abf"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/foresta_parole/assets/audio/it/find_a.wav.delivery.wav",
+    "sha256": "7ceaf3e6fe8ff9441541c2d37cb9f759b49486484fa7bb861699a433d8d69c48"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/foresta_parole/assets/audio/it/find_a.wav.raw.wav",
+    "source_sha256": "ac94f17a5f9ba79b29b288de109d7ca2041ba374fdf073207d405a3ad351e8ea",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/foresta_parole/assets/audio/it/find_a.wav.extracted.wav",
+    "output_sha256": "b06560a75f1e67aee5cd85d07c35f8e1e61cd0451cb9d3e9ab04ea96fd735abf",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "A come Ape",
+      "locale": "it",
+      "cue_id": "foresta_parole.find_a",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/foresta_parole/assets/audio/it/find_a.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "997d68e4cc042fc50a0f4b9a79cdf5e63f224fb2a441dae28ee50b76b9de3d1a"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "A come Ape",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Ascolta questa frase in italiano. A come hape?",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " a come api?",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.44
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.44,
+        "end_seconds": 0.7
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.7,
+        "end_seconds": 0.98
+      },
+      {
+        "word": "in",
+        "start_seconds": 0.98,
+        "end_seconds": 1.2
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.2,
+        "end_seconds": 1.74
+      },
+      {
+        "word": "a",
+        "start_seconds": 2.54,
+        "end_seconds": 2.66
+      },
+      {
+        "word": "come",
+        "start_seconds": 2.66,
+        "end_seconds": 3.0
+      },
+      {
+        "word": "hape",
+        "start_seconds": 3.0,
+        "end_seconds": 3.48
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "a",
+        "start_seconds": 0.0,
+        "end_seconds": 0.5
+      },
+      {
+        "word": "come",
+        "start_seconds": 0.5,
+        "end_seconds": 0.82
+      },
+      {
+        "word": "api",
+        "start_seconds": 0.82,
+        "end_seconds": 1.44
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.7132667965359158,
+        "no_speech_prob": 0.040159523487091064,
+        "compression_ratio": 0.8846153846153846,
+        "word_probabilities": [
+          0.681640625,
+          0.978515625,
+          0.861328125,
+          0.97900390625,
+          0.99072265625
+        ]
+      },
+      {
+        "avg_logprob": -0.7132667965359158,
+        "no_speech_prob": 0.040159523487091064,
+        "compression_ratio": 0.8846153846153846,
+        "word_probabilities": [
+          0.28564453125,
+          0.69580078125,
+          0.564453125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.9893234968185425,
+        "no_speech_prob": 0.2613121569156647,
+        "compression_ratio": 0.5789473684210527,
+        "word_probabilities": [
+          0.1153564453125,
+          0.892578125,
+          0.31982421875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 71,
+    "extracted_voiced_seconds": 0.71,
+    "unremoved_raw_target_tokens": [
+      "a",
+      "come",
+      "hape"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "a",
+      "come",
+      "hape"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.6801814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.74,
+      "search_end_seconds": 2.54,
+      "prefix_last_word_end_seconds": 1.74,
+      "target_first_word_start_seconds": 2.54,
+      "gap_seconds": 0.6884353741496598,
+      "verified_silence_start_seconds": 1.7998639455782313,
+      "verified_silence_end_seconds": 2.4882993197278913,
+      "gap_rms_dbfs": -58.131,
+      "gap_peak_dbfs": -34.981,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.1440816326530614,
+      "cut_sample": 47277,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 5385,
+      "removed_seconds": 0.24421768707482994,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 52662,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/foresta_parole/assets/audio/it/find_a.wav.delivery.wav",
+      "sha256": "7ceaf3e6fe8ff9441541c2d37cb9f759b49486484fa7bb861699a433d8d69c48"
+    }
+  },
   "output": {
     "path": "activities/foresta_parole/assets/audio/it/find_a.wav",
-    "bytes": 42422,
-    "sha256": "2b5d0d933a938d6e5f1993febdc8d58335aa61cfa53eeccccaa5605d923f314c"
+    "sha256": "ec1debf8ae829a67d2ff8f0fe50963328a3702febc1a5ef6299c392b27f48055",
+    "bytes": 57050
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "08485a8fa9a3f4b64d21d48a7349880c5ab2795f98e017010f642b31b228ad1c",
+    "original_sha256": "187bf8d77f6d1ff65c84cdd43414e1e59c0098b86a104fafdb6489ceed9d8070",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

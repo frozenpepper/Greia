@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T18:00:15.275411+00:00",
+  "created_utc": "2026-10-22T10:15:09.399308+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "Quel joli dessin !",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français...\n\nQuel joli dessin !",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Quel joli dessin !",
+    "cue_id": "greia.requested.nice_picture.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Quel joli dessin !",
     "cue_id": "greia.requested.nice_picture.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/workshop_settings/assets/audio/fr/nice_picture.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-200001-c869faf8",
-    "idempotency_key": "greia-224d450e643e4d8c827021bea2d6392f",
+    "job_id": "20261022-121306-fd5f720f",
+    "idempotency_key": "greia-087fcdcf8cbe42d5bda87c5097c4752a",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,184 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3805887699,
+    "script_seed": 3903617377,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3575482314,
-        "sha256": "0b7237e78e5e47e2f3991178a4f5b703765b32db540994ee423543b720d333d0",
+        "seed": 3994728275,
+        "sha256": "70339f482ac6cb1a4a52ad2cd99a998708dda88620f641adb29f9a6aea40c696",
         "generation": {
-          "elapsed_seconds": 12.728945042006671,
+          "elapsed_seconds": 13.520391708996613,
           "model_load_seconds": 0.0,
-          "rtf": 9.943193627397479,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.3799570957034986,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": "Quel joli dessin ?",
+    "metrics": {
+      "duration_seconds": 1.1169614512471655,
+      "rms_dbfs": -37.14,
+      "peak": 0.09363,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.1,
+      "trailing_silence_seconds": 0.16,
+      "longest_internal_pause_seconds": 0.0
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v1",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/workshop_settings/assets/audio/fr/nice_picture.wav.raw.wav",
+    "sha256": "49ef12ce6f90c0eb3020c1b64cce3c6e15702cc64feab54b41ab5a28f162de69",
+    "receipt_sha256": "c351950a6926f9e4e3abaed31204aab642b8ba281c18bdff0580b5f553934dfa"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/workshop_settings/assets/audio/fr/nice_picture.wav.extracted.wav",
+    "sha256": "3450460f391b55cc1a0efb08a23f06912bb05cb598aea637085b90f895072859"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/workshop_settings/assets/audio/fr/nice_picture.wav.delivery.wav",
+    "sha256": "3450460f391b55cc1a0efb08a23f06912bb05cb598aea637085b90f895072859"
+  },
+  "extraction": {
+    "schema_version": 1,
+    "algorithm_version": "greia-spoken-carrier-extractor-v7",
+    "comparison_policy": "locale-number-tokens-v1",
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-raw/activities/workshop_settings/assets/audio/fr/nice_picture.wav.raw.wav",
+    "source_sha256": "49ef12ce6f90c0eb3020c1b64cce3c6e15702cc64feab54b41ab5a28f162de69",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/workshop_settings/assets/audio/fr/nice_picture.wav.extracted.wav",
+    "output_sha256": "3450460f391b55cc1a0efb08a23f06912bb05cb598aea637085b90f895072859",
+    "output_bytes": 49302,
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "Quel joli dessin !",
+    "remove_first_words": 5,
+    "ignore_accents": true,
+    "target_verification_requested": "warn",
+    "target_verification_policy": "warn",
+    "target_comparison_score": 1.0,
+    "target_word_count_matches": true,
+    "target_numbers_match": true,
+    "target_comparison_flags": [],
+    "target_transcript_warning": false,
+    "recognizer": "mlx-whisper-base",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extracted_transcript": "Quel joli dessin ?",
+    "expected_target_tokens": [
+      "quel",
+      "joli",
+      "dessin"
+    ],
+    "extracted_target_tokens": [
+      "quel",
+      "joli",
+      "dessin"
+    ],
+    "extracted_target_exact_match": true,
+    "transcription_settings": {
+      "language": "fr",
+      "initial_prompt": null,
+      "word_timestamps": true,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "sample_rate": 22050,
+    "duration_seconds": 4.000181405895692,
+    "boundary": {
+      "search_strategy": "target-only-global-quiet-run-v7",
+      "verified_silence_start_seconds": 1.526530612244898,
+      "verified_silence_end_seconds": 2.983219954648526,
+      "verified_silence_duration_seconds": 1.456689342403628,
+      "cut_sample": 63575,
+      "cut_time_seconds": 2.883219954648526,
+      "padding_seconds": 0.1,
+      "quiet_run_start_sample": 33660,
+      "quiet_run_end_sample": 65780,
+      "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+    },
+    "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/workshop_settings/assets/audio/fr/nice_picture.wav.extracted.wav.search/4f13665164bf421f814aaefb30571a87",
+    "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/workshop_settings/assets/audio/fr/nice_picture.wav.extracted.wav.search/4f13665164bf421f814aaefb30571a87/search.json",
+    "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-raw/activities/workshop_settings/assets/audio/fr/nice_picture.wav.raw.wav.receipt.json",
+    "source_provider_receipt_sha256": "c351950a6926f9e4e3abaed31204aab642b8ba281c18bdff0580b5f553934dfa",
+    "candidate_sha256": "3450460f391b55cc1a0efb08a23f06912bb05cb598aea637085b90f895072859",
+    "candidate_id": "candidate-01",
+    "candidate_count": 1,
+    "qualifying_quiet_run_count": 1,
+    "candidate_results": [
+      {
+        "candidate_id": "candidate-01",
+        "quiet_run": {
+          "start_sample": 33660,
+          "end_sample": 65780,
+          "start_seconds": 1.526530612244898,
+          "end_seconds": 2.983219954648526,
+          "duration_seconds": 1.456689342403628
+        },
+        "cut_sample": 63575,
+        "cut_time_seconds": 2.883219954648526,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/workshop_settings/assets/audio/fr/nice_picture.wav.extracted.wav.search/4f13665164bf421f814aaefb30571a87/candidate-01.wav",
+        "preceding_voiced_seconds": 0.86,
+        "retained_voiced_seconds": 0.75,
+        "retained_duration_seconds": 1.1169614512471655,
+        "candidate_sha256": "3450460f391b55cc1a0efb08a23f06912bb05cb598aea637085b90f895072859",
+        "extracted_transcript": "Quel joli dessin ?",
+        "canonical_transcript_tokens": [
+          "quel",
+          "joli",
+          "dessin"
+        ],
+        "exact_target_match": true,
+        "target_comparison_score": 1.0,
+        "target_word_count_matches": true,
+        "target_numbers_match": true,
+        "target_comparison_flags": [],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": true,
+        "asr_segment_count": 1
+      }
+    ],
+    "human_review": "PENDING",
+    "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+    "target_verification_effective_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+    "target_verification_warning": false,
+    "saved_recovery_policy": "target-only-v7-saved-v1",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 0,
+      "removed_seconds": 0.0,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 63575,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/workshop_settings/assets/audio/fr/nice_picture.wav.delivery.wav",
+      "sha256": "3450460f391b55cc1a0efb08a23f06912bb05cb598aea637085b90f895072859"
+    }
+  },
   "output": {
     "path": "activities/workshop_settings/assets/audio/fr/nice_picture.wav",
-    "bytes": 56534,
-    "sha256": "7c25b56f72d633ed503220310005e503bf7fa90545d080b7772a3d5d7c077b77"
+    "sha256": "44dcf0e6a7d1037ce7e6fd2f2992d2db737e34774da88e2a7923232029370f33",
+    "bytes": 49336
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "469a8b53ace07ba6466e2657e9f93578a7a603b66bb43c7fdb0be7696af8605a",
+    "original_sha256": "7c25b56f72d633ed503220310005e503bf7fa90545d080b7772a3d5d7c077b77",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

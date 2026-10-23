@@ -1,24 +1,66 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T07:49:48.064274+00:00",
+  "created_utc": "2026-10-22T17:15:37.629720+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Let's look for our friend.",
+    "prefix_word_count": 5,
+    "target": "Find Oskar",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Let's look for our friend.\n\nFind Oskar",
+    "composite_delivery_prompt": "Warm, calm, clear speech. Careful, natural pronunciation.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Find Oskar",
+    "cue_id": "greia.requested.find_oskar.en",
+    "delivery_prompt": "Warm, calm, clear speech. Careful, natural pronunciation.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null
+  },
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "Find Oskar",
     "cue_id": "greia.requested.find_oskar.en",
+    "delivery_prompt": "Warm, calm, clear speech. Careful, natural pronunciation.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
     "output": "activities/baia_delle_orche/assets/audio/en/find_oskar.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.tito.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261021-094930-61497d44",
-    "idempotency_key": "greia-b1974336abfb4a338c0be1870c66cb79",
+    "job_id": "20261022-191523-a16336f0",
+    "idempotency_key": "greia-286fa6c1c0e944919fad23a870a96622",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +83,181 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 394795278,
+    "script_seed": 1664697148,
     "language_direction": "English",
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in English. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Warm, calm, clear speech. Careful, natural pronunciation.",
+    "effective_delivery": "Speak in English. Warm, calm, clear speech. Careful, natural pronunciation.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1631617242,
-        "sha256": "35d36910868fbe0540557018b728ef37d9aeb097386ca35cb36c265a0699116c",
+        "seed": 1254974860,
+        "sha256": "7faeb8e90c672514710ad677cb811844b01e94bb9d0a7da173b200d9d8c70a23",
         "generation": {
-          "elapsed_seconds": 4.373887749999994,
+          "elapsed_seconds": 13.32054316601716,
           "model_load_seconds": 0.0,
-          "rtf": 3.9046758666864996,
-          "peak_memory_gb": 7.648166916
+          "rtf": 3.468740896493336,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " Find Oscar.",
+    "metrics": {
+      "duration_seconds": 1.1601814058956916,
+      "rms_dbfs": -28.65,
+      "peak": 0.20691,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.1,
+      "trailing_silence_seconds": 0.24,
+      "longest_internal_pause_seconds": 0.02
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v2-oskar-en-v1",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/baia_delle_orche/assets/audio/en/find_oskar.wav.raw.wav",
+    "sha256": "7faeb8e90c672514710ad677cb811844b01e94bb9d0a7da173b200d9d8c70a23",
+    "receipt_sha256": "5c3330e4dfdb77c0a18948d243f28bfe877c1b0c72fc1c2f357a98c8decd857f"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/baia_delle_orche/assets/audio/en/find_oskar.wav.extracted.wav",
+    "sha256": "b10ede91267aea843f55c009b32482b1ee92e771aa33a73dc8fb47c6a5e81e86"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/baia_delle_orche/assets/audio/en/find_oskar.wav.delivery.wav",
+    "sha256": "b10ede91267aea843f55c009b32482b1ee92e771aa33a73dc8fb47c6a5e81e86"
+  },
+  "extraction": {
+    "schema_version": 1,
+    "algorithm_version": "greia-spoken-carrier-extractor-v7",
+    "comparison_policy": "locale-number-tokens-v2-oskar-en-v1",
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/natural-oskar-recovery-v1/carrier-raw/activities/baia_delle_orche/assets/audio/en/find_oskar.wav.raw.wav",
+    "source_sha256": "7faeb8e90c672514710ad677cb811844b01e94bb9d0a7da173b200d9d8c70a23",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/natural-oskar-recovery-v1/carrier-extracted/activities/baia_delle_orche/assets/audio/en/find_oskar.wav.extracted.wav",
+    "output_sha256": "b10ede91267aea843f55c009b32482b1ee92e771aa33a73dc8fb47c6a5e81e86",
+    "output_bytes": 111420,
+    "locale": "en",
+    "prefix": "Let's look for our friend.",
+    "target": "Find Oskar",
+    "remove_first_words": 5,
+    "ignore_accents": true,
+    "target_verification_requested": "warn",
+    "target_verification_policy": "warn",
+    "target_comparison_score": 1.0,
+    "target_word_count_matches": true,
+    "target_numbers_match": true,
+    "target_comparison_flags": [],
+    "target_transcript_warning": false,
+    "recognizer": "mlx-whisper-base",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extracted_transcript": "Find Oscar.",
+    "expected_target_tokens": [
+      "find",
+      "oskar"
+    ],
+    "extracted_target_tokens": [
+      "find",
+      "oskar"
+    ],
+    "extracted_target_exact_match": true,
+    "transcription_settings": {
+      "language": "en",
+      "initial_prompt": null,
+      "word_timestamps": true,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "sample_rate": 48000,
+    "duration_seconds": 3.8401666666666667,
+    "boundary": {
+      "search_strategy": "target-only-global-quiet-run-v7",
+      "verified_silence_start_seconds": 2.14,
+      "verified_silence_end_seconds": 2.78,
+      "verified_silence_duration_seconds": 0.64,
+      "cut_sample": 128640,
+      "cut_time_seconds": 2.68,
+      "padding_seconds": 0.1,
+      "quiet_run_start_sample": 102720,
+      "quiet_run_end_sample": 133440,
+      "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+    },
+    "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/natural-oskar-recovery-v1/carrier-extracted/activities/baia_delle_orche/assets/audio/en/find_oskar.wav.extracted.wav.search/c448d61c29d048479205444cddd84473",
+    "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/natural-oskar-recovery-v1/carrier-extracted/activities/baia_delle_orche/assets/audio/en/find_oskar.wav.extracted.wav.search/c448d61c29d048479205444cddd84473/search.json",
+    "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/natural-oskar-recovery-v1/carrier-raw/activities/baia_delle_orche/assets/audio/en/find_oskar.wav.raw.wav.receipt.json",
+    "source_provider_receipt_sha256": "5c3330e4dfdb77c0a18948d243f28bfe877c1b0c72fc1c2f357a98c8decd857f",
+    "candidate_sha256": "b10ede91267aea843f55c009b32482b1ee92e771aa33a73dc8fb47c6a5e81e86",
+    "candidate_id": "candidate-01",
+    "candidate_count": 1,
+    "qualifying_quiet_run_count": 1,
+    "candidate_results": [
+      {
+        "candidate_id": "candidate-01",
+        "quiet_run": {
+          "start_sample": 102720,
+          "end_sample": 133440,
+          "start_seconds": 2.14,
+          "end_seconds": 2.78,
+          "duration_seconds": 0.64
+        },
+        "cut_sample": 128640,
+        "cut_time_seconds": 2.68,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/natural-oskar-recovery-v1/carrier-extracted/activities/baia_delle_orche/assets/audio/en/find_oskar.wav.extracted.wav.search/c448d61c29d048479205444cddd84473/candidate-01.wav",
+        "preceding_voiced_seconds": 1.03,
+        "retained_voiced_seconds": 0.75,
+        "retained_duration_seconds": 1.1601666666666666,
+        "candidate_sha256": "b10ede91267aea843f55c009b32482b1ee92e771aa33a73dc8fb47c6a5e81e86",
+        "extracted_transcript": "Find Oscar.",
+        "canonical_transcript_tokens": [
+          "find",
+          "oskar"
+        ],
+        "exact_target_match": true,
+        "target_comparison_score": 1.0,
+        "target_word_count_matches": true,
+        "target_numbers_match": true,
+        "target_comparison_flags": [],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": true,
+        "asr_segment_count": 1
+      }
+    ],
+    "human_review": "PENDING",
+    "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+    "target_verification_effective_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+    "target_verification_warning": false,
+    "saved_recovery_policy": "target-only-v7-saved-oskar-en-v1",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 0,
+      "removed_seconds": 0.0,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 128640,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/natural-oskar-recovery-v1/carrier-extracted/activities/baia_delle_orche/assets/audio/en/find_oskar.wav.delivery.wav",
+      "sha256": "b10ede91267aea843f55c009b32482b1ee92e771aa33a73dc8fb47c6a5e81e86"
+    }
+  },
   "output": {
     "path": "activities/baia_delle_orche/assets/audio/en/find_oskar.wav",
-    "bytes": 49478,
-    "sha256": "38619d563838657add1219f2a102991ec19faa4ec4b0951dfca6d9e3aa7497cb"
+    "sha256": "29607ba593c4a3d6ca976310b4bd9f19fcdcc79cbe49c540550b5aa79327042b",
+    "bytes": 51242
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "e14b919ab9d18c82eaa5e873d19089355ea52d1932ede9f84abf2cddf9eb5d4d",
+    "original_sha256": "6e85ae3ee030de253dba9766457a649543086ac048b83928c2ddc1b790d5dbb4",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

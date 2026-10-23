@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T18:56:07.380855+00:00",
+  "created_utc": "2026-10-21T17:43:44.054941+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "Ce l'hai fatta!",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. Ce l'hai fatta!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "shared_character_utterance",
+    "locale": "it",
+    "text": "Ce l'hai fatta!",
+    "cue_id": "shared.celebrate.success.01",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "shared_character_utterance",
     "locale": "it",
     "text": "Ce l'hai fatta!",
     "cue_id": "shared.celebrate.success.01",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "assets/audio/characters/shared/v0.2/leo/it/leo__it__celebrate.success__01.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. A happy celebration with the child: joyful, proud and warm. Lively but clear."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-205600-fa628e19",
-    "idempotency_key": "greia-0ac2ac368a714fe3ad9148289cdb05f5",
+    "job_id": "20261021-194327-8921dae8",
+    "idempotency_key": "greia-0c198dd08cab446aa8354e96fd16e841",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,243 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 708589117,
+    "script_seed": 1206488867,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
-    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1070820364,
-        "sha256": "2391ca45ca30fcfe338fc7a389fc0d0511f8ae274b7678cd961626b4ca7b8141",
+        "seed": 4040794481,
+        "sha256": "6085ccb0a725a785366ef8ad53cf42e7bbc53cc9f39cfb4a12ccc5066707db95",
         "generation": {
-          "elapsed_seconds": 6.5217737079947256,
+          "elapsed_seconds": 16.181254249997437,
           "model_load_seconds": 0.0,
-          "rtf": 5.822145848529735,
-          "peak_memory_gb": 8.843167284
+          "rtf": 4.596729581931945,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8661,
+    "transcript": " ci l'hai fatta",
+    "metrics": {
+      "duration_seconds": 1.2856689342403629,
+      "rms_dbfs": -31.4,
+      "peak": 0.20444,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.0,
+      "trailing_silence_seconds": 0.18,
+      "longest_internal_pause_seconds": 0.14
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/characters/shared/v0.2/leo/it/leo__it__celebrate.success__01.wav.raw.wav",
+    "sha256": "3f8c1a4245e44bf553619579549b47e04d25ef987f131c0795a25d7b15f11f83",
+    "receipt_sha256": "3262aaf97c4a64e774bea0dd21b2c29ddf3eb63495045d38586d684d7e1f9a66"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/characters/shared/v0.2/leo/it/leo__it__celebrate.success__01.wav.extracted.wav",
+    "sha256": "364ee307063969b6f55db24f5a0a50fbeabd9551b1188e74890772f7b563968c"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/assets/audio/characters/shared/v0.2/leo/it/leo__it__celebrate.success__01.wav.raw.wav",
+    "source_sha256": "3f8c1a4245e44bf553619579549b47e04d25ef987f131c0795a25d7b15f11f83",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-extracted/assets/audio/characters/shared/v0.2/leo/it/leo__it__celebrate.success__01.wav.extracted.wav",
+    "output_sha256": "364ee307063969b6f55db24f5a0a50fbeabd9551b1188e74890772f7b563968c",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "shared_character_utterance",
+      "text": "Ce l'hai fatta!",
+      "locale": "it",
+      "cue_id": "shared.celebrate.success.01",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/assets/audio/characters/shared/v0.2/leo/it/leo__it__celebrate.success__01.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "3262aaf97c4a64e774bea0dd21b2c29ddf3eb63495045d38586d684d7e1f9a66"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "Ce l'hai fatta!",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Ascolta questa frase in italiano, ce l'hai fatta?",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " ci l'hai fatta",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.7
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.7,
+        "end_seconds": 1.04
+      },
+      {
+        "word": "frase",
+        "start_seconds": 1.04,
+        "end_seconds": 1.3
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.3,
+        "end_seconds": 1.5
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.5,
+        "end_seconds": 2.02
+      },
+      {
+        "word": "ce",
+        "start_seconds": 2.44,
+        "end_seconds": 2.54
+      },
+      {
+        "word": "l'hai",
+        "start_seconds": 2.54,
+        "end_seconds": 2.72
+      },
+      {
+        "word": "fatta",
+        "start_seconds": 2.72,
+        "end_seconds": 3.28
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "ci",
+        "start_seconds": 0.0,
+        "end_seconds": 0.3
+      },
+      {
+        "word": "l'hai",
+        "start_seconds": 0.3,
+        "end_seconds": 0.5
+      },
+      {
+        "word": "fatta",
+        "start_seconds": 0.5,
+        "end_seconds": 1.1
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.4742838541666667,
+        "no_speech_prob": 0.021467652171850204,
+        "compression_ratio": 0.8909090909090909,
+        "word_probabilities": [
+          0.7587890625,
+          0.939453125,
+          0.5712890625,
+          0.9658203125,
+          0.98974609375,
+          0.292724609375,
+          0.84912109375,
+          0.9111328125,
+          0.8720703125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.5446864234076606,
+        "no_speech_prob": 0.016218317672610283,
+        "compression_ratio": 0.6363636363636364,
+        "word_probabilities": [
+          0.157958984375,
+          0.61962890625,
+          0.7802734375,
+          0.84375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 68,
+    "extracted_voiced_seconds": 0.68,
+    "unremoved_raw_target_tokens": [
+      "ce",
+      "l'hai",
+      "fatta"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "ce",
+      "l'hai",
+      "fatta"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.5201814058956917,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 2.02,
+      "search_end_seconds": 2.44,
+      "prefix_last_word_end_seconds": 2.02,
+      "target_first_word_start_seconds": 2.44,
+      "gap_seconds": 0.309297052154195,
+      "verified_silence_start_seconds": 2.0798639455782313,
+      "verified_silence_end_seconds": 2.3891609977324264,
+      "gap_rms_dbfs": -53.321,
+      "gap_peak_dbfs": -32.796,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.2345124716553286,
+      "cut_sample": 49271,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "assets/audio/characters/shared/v0.2/leo/it/leo__it__celebrate.success__01.wav",
-    "bytes": 49478,
-    "sha256": "e13c9234a6626cda4f01f22aaaaa26c7b5109e11129287099d410b9e010a2ac7"
+    "sha256": "7cbcd14dbfce140a657e8b294d655c2351d17f0cb2b20e2dad1cfbef4bf98db5",
+    "bytes": 56776
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "cb761f3c15b7aaca2f9315a7fc433fde8c52d411c2bf2402d59eef58811d56e0",
+    "original_sha256": "a8d14ce7014f0a25cc3d555e2e47a986828bd24909fd5add50cfee588649e0c0",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

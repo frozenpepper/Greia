@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T11:50:39.575067+00:00",
+  "created_utc": "2026-10-23T01:42:58.973251+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
@@ -8,17 +8,22 @@
     "text": "Four fireflies!",
     "cue_id": "activities/luci_di_momo/assets/audio/en/count_4.wav",
     "output": "activities/luci_di_momo/assets/audio/en/count_4.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Counts aloud with a child: one crisp, clear number, bright and steady, no extra words."
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Warm, calm, clear speech. Careful, natural pronunciation.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic"
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.momo.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261021-135033-dc93ca7a",
-    "idempotency_key": "greia-dd224b0aac1e4b68bbf24638b83a1dec",
+    "job_id": "20261023-034241-6ed8cd27",
+    "idempotency_key": "greia-c242830205724a07b40e625ccd1aade6",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +46,327 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1917549047,
+    "script_seed": 2075783331,
     "language_direction": "English",
-    "delivery_prompt": "Counts aloud with a child: one crisp, clear number, bright and steady, no extra words.",
-    "effective_delivery": "Speak in English. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words.",
+    "delivery_prompt": "Warm, calm, clear speech. Careful, natural pronunciation.",
+    "effective_delivery": "Speak in English. Warm, calm, clear speech. Careful, natural pronunciation.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 589753400,
-        "sha256": "52847ec8ae9d2f1164d58a428bf63830097fee7e7a3059f07f40d0e9f72e5e3e",
+        "seed": 1929268842,
+        "sha256": "6c6826d6690187ebdd1d81eb6325d78a77bbfd95a797a429edcf81ae2c29ac92",
         "generation": {
-          "elapsed_seconds": 5.148389041998598,
+          "elapsed_seconds": 15.580964000022504,
           "model_load_seconds": 0.0,
-          "rtf": 3.5748564115254706,
-          "peak_memory_gb": 7.648166916
+          "rtf": 3.6065654874478237,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-audio-parakeet-tdt-v3",
+    "transcript": "four Fireflies.",
+    "score": 1.0,
+    "detail": "Delivered target transcribed and screened; human listening remains pending",
+    "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+    "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+    "flags": [],
+    "metrics": {
+      "duration_seconds": 1.590204081632653,
+      "rms_dbfs": -31.73,
+      "peak": 0.17307,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.1,
+      "trailing_silence_seconds": 0.2,
+      "longest_internal_pause_seconds": 0.12
+    }
   },
   "attempts": 1,
   "output": {
     "path": "activities/luci_di_momo/assets/audio/en/count_4.wav",
-    "bytes": 63590,
-    "sha256": "e64ab80c8ca13f05780dd496f1b50d294481b8b2f03eb8ac7211fef671da21ef"
+    "bytes": 70206,
+    "sha256": "ded9e0c5adfd7d63de2febd041d42808798540b5a8278b3959c47db06ed7b153"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "short_phrase": {
+    "mode": "automatic-carrier",
+    "composition_policy": "natural-context-period-v1",
+    "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/b0f0a6e792194ca3b94768cb271fd215",
+    "prefix": "Let's practise counting together.",
+    "composite_text": "Let's practise counting together.\n\nFour fireflies!",
+    "effective_delivery": "Warm, calm, clear speech. Careful, natural pronunciation.",
+    "extraction": {
+      "schema_version": 1,
+      "algorithm_version": "greia-spoken-carrier-extractor-v7",
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "status": "EXTRACTED_PENDING_LISTENING",
+      "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/b0f0a6e792194ca3b94768cb271fd215/attempt-01/raw.wav",
+      "source_sha256": "6c6826d6690187ebdd1d81eb6325d78a77bbfd95a797a429edcf81ae2c29ac92",
+      "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/b0f0a6e792194ca3b94768cb271fd215/attempt-01/target.wav",
+      "output_sha256": "a548005e502445365e96792c64107a9bcec4e4d91922e4a1faa1d5c8974e52e5",
+      "output_bytes": 152700,
+      "locale": "en",
+      "prefix": "Let's practise counting together.",
+      "target": "Four fireflies!",
+      "remove_first_words": 4,
+      "ignore_accents": true,
+      "target_verification_requested": "warn",
+      "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+      "target_comparison_score": 1.0,
+      "target_word_count_matches": true,
+      "target_numbers_match": true,
+      "target_comparison_flags": [],
+      "target_transcript_warning": false,
+      "recognizer": "mlx-audio-parakeet-tdt-v3",
+      "recognizer_version": "0.5.0",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "extracted_transcript": "four Fireflies.",
+      "expected_target_tokens": [
+        "<num:4>",
+        "fireflies"
+      ],
+      "extracted_target_tokens": [
+        "<num:4>",
+        "fireflies"
+      ],
+      "extracted_target_exact_match": true,
+      "transcription_settings": {
+        "language_detection": "automatic",
+        "expected_text_prompt": null,
+        "timestamps": "model-provided-token-timestamps"
+      },
+      "sample_rate": 48000,
+      "duration_seconds": 4.320166666666666,
+      "boundary": {
+        "search_strategy": "target-only-global-quiet-run-v7",
+        "verified_silence_start_seconds": 1.78,
+        "verified_silence_end_seconds": 2.83,
+        "verified_silence_duration_seconds": 1.05,
+        "cut_sample": 131040,
+        "cut_time_seconds": 2.73,
+        "padding_seconds": 0.1,
+        "quiet_run_start_sample": 85440,
+        "quiet_run_end_sample": 135840,
+        "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+      },
+      "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/b0f0a6e792194ca3b94768cb271fd215/attempt-01/target.wav.search/6b7e5e0a03bd45f6820d1d957b98c5f9",
+      "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/b0f0a6e792194ca3b94768cb271fd215/attempt-01/target.wav.search/6b7e5e0a03bd45f6820d1d957b98c5f9/search.json",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/b0f0a6e792194ca3b94768cb271fd215/attempt-01/raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "2344079c69efb880c5144dee304ea7f201415257b42878b33d514f715d36c00c",
+      "candidate_sha256": "a548005e502445365e96792c64107a9bcec4e4d91922e4a1faa1d5c8974e52e5",
+      "candidate_id": "candidate-01",
+      "candidate_count": 1,
+      "qualifying_quiet_run_count": 1,
+      "candidate_results": [
+        {
+          "candidate_id": "candidate-01",
+          "quiet_run": {
+            "start_sample": 85440,
+            "end_sample": 135840,
+            "start_seconds": 1.78,
+            "end_seconds": 2.83,
+            "duration_seconds": 1.05
+          },
+          "cut_sample": 131040,
+          "cut_time_seconds": 2.73,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/b0f0a6e792194ca3b94768cb271fd215/attempt-01/target.wav.search/6b7e5e0a03bd45f6820d1d957b98c5f9/candidate-01.wav",
+          "preceding_voiced_seconds": 1.04,
+          "retained_voiced_seconds": 0.84,
+          "retained_duration_seconds": 1.5901666666666667,
+          "candidate_sha256": "a548005e502445365e96792c64107a9bcec4e4d91922e4a1faa1d5c8974e52e5",
+          "extracted_transcript": "four Fireflies.",
+          "canonical_transcript_tokens": [
+            "<num:4>",
+            "fireflies"
+          ],
+          "exact_target_match": true,
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": true,
+          "asr_segment_count": 1
+        }
+      ],
+      "human_review": "PENDING",
+      "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+      "delivery": {
+        "policy": "verified-carrier-gap-delivery-v1",
+        "removed_frames": 0,
+        "removed_seconds": 0.0,
+        "retained_verified_quiet_seconds": 0.1,
+        "raw_delivery_start_sample": 131040,
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/b0f0a6e792194ca3b94768cb271fd215/attempt-01/delivery-target.wav",
+        "sha256": "a548005e502445365e96792c64107a9bcec4e4d91922e4a1faa1d5c8974e52e5"
+      }
+    },
+    "quality": {
+      "disposition": "PASS",
+      "score": 1.0,
+      "transcript": "four Fireflies.",
+      "metrics": {
+        "duration_seconds": 1.590204081632653,
+        "rms_dbfs": -31.73,
+        "peak": 0.17307,
+        "clipped_fraction": 0.0,
+        "leading_silence_seconds": 0.1,
+        "trailing_silence_seconds": 0.2,
+        "longest_internal_pause_seconds": 0.12
+      },
+      "flags": [],
+      "ignore_accents": true,
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "detail": "Delivered target transcribed and screened; human listening remains pending"
+    },
+    "history": [
+      {
+        "attempt": 1,
+        "status": "PASS",
+        "quality": {
+          "disposition": "PASS",
+          "score": 1.0,
+          "transcript": "four Fireflies.",
+          "metrics": {
+            "duration_seconds": 1.590204081632653,
+            "rms_dbfs": -31.73,
+            "peak": 0.17307,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.1,
+            "trailing_silence_seconds": 0.2,
+            "longest_internal_pause_seconds": 0.12
+          },
+          "flags": [],
+          "ignore_accents": true,
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "detail": "Delivered target transcribed and screened; human listening remains pending"
+        },
+        "extraction": {
+          "schema_version": 1,
+          "algorithm_version": "greia-spoken-carrier-extractor-v7",
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "status": "EXTRACTED_PENDING_LISTENING",
+          "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/b0f0a6e792194ca3b94768cb271fd215/attempt-01/raw.wav",
+          "source_sha256": "6c6826d6690187ebdd1d81eb6325d78a77bbfd95a797a429edcf81ae2c29ac92",
+          "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/b0f0a6e792194ca3b94768cb271fd215/attempt-01/target.wav",
+          "output_sha256": "a548005e502445365e96792c64107a9bcec4e4d91922e4a1faa1d5c8974e52e5",
+          "output_bytes": 152700,
+          "locale": "en",
+          "prefix": "Let's practise counting together.",
+          "target": "Four fireflies!",
+          "remove_first_words": 4,
+          "ignore_accents": true,
+          "target_verification_requested": "warn",
+          "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_transcript_warning": false,
+          "recognizer": "mlx-audio-parakeet-tdt-v3",
+          "recognizer_version": "0.5.0",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "extracted_transcript": "four Fireflies.",
+          "expected_target_tokens": [
+            "<num:4>",
+            "fireflies"
+          ],
+          "extracted_target_tokens": [
+            "<num:4>",
+            "fireflies"
+          ],
+          "extracted_target_exact_match": true,
+          "transcription_settings": {
+            "language_detection": "automatic",
+            "expected_text_prompt": null,
+            "timestamps": "model-provided-token-timestamps"
+          },
+          "sample_rate": 48000,
+          "duration_seconds": 4.320166666666666,
+          "boundary": {
+            "search_strategy": "target-only-global-quiet-run-v7",
+            "verified_silence_start_seconds": 1.78,
+            "verified_silence_end_seconds": 2.83,
+            "verified_silence_duration_seconds": 1.05,
+            "cut_sample": 131040,
+            "cut_time_seconds": 2.73,
+            "padding_seconds": 0.1,
+            "quiet_run_start_sample": 85440,
+            "quiet_run_end_sample": 135840,
+            "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+          },
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/b0f0a6e792194ca3b94768cb271fd215/attempt-01/target.wav.search/6b7e5e0a03bd45f6820d1d957b98c5f9",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/b0f0a6e792194ca3b94768cb271fd215/attempt-01/target.wav.search/6b7e5e0a03bd45f6820d1d957b98c5f9/search.json",
+          "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/b0f0a6e792194ca3b94768cb271fd215/attempt-01/raw.wav.receipt.json",
+          "source_provider_receipt_sha256": "2344079c69efb880c5144dee304ea7f201415257b42878b33d514f715d36c00c",
+          "candidate_sha256": "a548005e502445365e96792c64107a9bcec4e4d91922e4a1faa1d5c8974e52e5",
+          "candidate_id": "candidate-01",
+          "candidate_count": 1,
+          "qualifying_quiet_run_count": 1,
+          "candidate_results": [
+            {
+              "candidate_id": "candidate-01",
+              "quiet_run": {
+                "start_sample": 85440,
+                "end_sample": 135840,
+                "start_seconds": 1.78,
+                "end_seconds": 2.83,
+                "duration_seconds": 1.05
+              },
+              "cut_sample": 131040,
+              "cut_time_seconds": 2.73,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/b0f0a6e792194ca3b94768cb271fd215/attempt-01/target.wav.search/6b7e5e0a03bd45f6820d1d957b98c5f9/candidate-01.wav",
+              "preceding_voiced_seconds": 1.04,
+              "retained_voiced_seconds": 0.84,
+              "retained_duration_seconds": 1.5901666666666667,
+              "candidate_sha256": "a548005e502445365e96792c64107a9bcec4e4d91922e4a1faa1d5c8974e52e5",
+              "extracted_transcript": "four Fireflies.",
+              "canonical_transcript_tokens": [
+                "<num:4>",
+                "fireflies"
+              ],
+              "exact_target_match": true,
+              "target_comparison_score": 1.0,
+              "target_word_count_matches": true,
+              "target_numbers_match": true,
+              "target_comparison_flags": [],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": true,
+              "asr_segment_count": 1
+            }
+          ],
+          "human_review": "PENDING",
+          "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+          "delivery": {
+            "policy": "verified-carrier-gap-delivery-v1",
+            "removed_frames": 0,
+            "removed_seconds": 0.0,
+            "retained_verified_quiet_seconds": 0.1,
+            "raw_delivery_start_sample": 131040,
+            "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/b0f0a6e792194ca3b94768cb271fd215/attempt-01/delivery-target.wav",
+            "sha256": "a548005e502445365e96792c64107a9bcec4e4d91922e4a1faa1d5c8974e52e5"
+          }
+        },
+        "candidate": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/b0f0a6e792194ca3b94768cb271fd215/attempt-01/candidate.wav"
+      }
+    ]
+  },
   "corpus_replacement": {
-    "original_sha256": "1d9c6ae532564bcef6539aee188a5b627df9088699ffa9feb44ed789ccce0f1d",
+    "original_sha256": "0fbd8c3e2affe3d63be911ef1799fd24053183bb5c85eb84e7374d8535c74db1",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

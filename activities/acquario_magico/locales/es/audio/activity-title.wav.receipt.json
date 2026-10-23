@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T20:39:14.432990+00:00",
+  "created_utc": "2026-10-21T15:06:50.749772+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "El acuario mágico",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. El acuario mágico",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "El acuario mágico",
+    "cue_id": "acquario_magico.title.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "El acuario mágico",
     "cue_id": "acquario_magico.title.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/acquario_magico/locales/es/audio/activity-title.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261019-223908-14593d4b",
-    "idempotency_key": "greia-1ec0ba27ea4a45f69e0e02a2d50f9fd2",
+    "job_id": "20261021-170628-54a1689b",
+    "idempotency_key": "greia-5a4cf43c97fe4fba9985b3cbf1cc91cf",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,234 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3557153521,
+    "script_seed": 2191744288,
     "language_direction": "Spanish",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "effective_delivery": "Speak naturally in Spanish. Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3835110965,
-        "sha256": "24013010e8b1a4bbec45a3ea9c4c33a63e650b34a25123605895da2ecba302b0",
+        "seed": 4211686146,
+        "sha256": "d1429b1223d22c132b219be4cbd2599fc73648b08c671ac3b8077431a9b92426",
         "generation": {
-          "elapsed_seconds": 5.998641624988522,
+          "elapsed_seconds": 20.87524116699933,
           "model_load_seconds": 0.0,
-          "rtf": 3.7487605197303546,
-          "peak_memory_gb": 8.21220922
+          "rtf": 5.218592850381066,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " el acuario mágico",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/acquario_magico/locales/es/audio/activity-title.wav.raw.wav",
+    "sha256": "301cdbd184c83bf2a3c015aaca76ad51713c8eef3a06bafbe5c5b793d3eee111",
+    "receipt_sha256": "c2485adfd2e2be3438279c3f1b7b6b903f3a462e9d5a3466a918f868762d0249"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/acquario_magico/locales/es/audio/activity-title.wav.extracted.wav",
+    "sha256": "aa99eba25e2708a209c15c0fbb6f2cca11639c97c357b08b66504c2c32b6a400"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/run/carrier-raw/activities/acquario_magico/locales/es/audio/activity-title.wav.raw.wav",
+    "source_sha256": "301cdbd184c83bf2a3c015aaca76ad51713c8eef3a06bafbe5c5b793d3eee111",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/run/carrier-extracted/activities/acquario_magico/locales/es/audio/activity-title.wav.extracted.wav",
+    "output_sha256": "aa99eba25e2708a209c15c0fbb6f2cca11639c97c357b08b66504c2c32b6a400",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "El acuario mágico",
+      "locale": "es",
+      "cue_id": "acquario_magico.title.es",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/run/carrier-raw/activities/acquario_magico/locales/es/audio/activity-title.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "c2485adfd2e2be3438279c3f1b7b6b903f3a462e9d5a3466a918f868762d0249"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "El acuario mágico",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " escucha esta frase en español. En la cuario mágico",
+    "extracted_transcript": " el acuario mágico",
+    "raw_word_alignment": [
+      {
+        "word": "escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.76
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.76,
+        "end_seconds": 1.02
+      },
+      {
+        "word": "frase",
+        "start_seconds": 1.02,
+        "end_seconds": 1.32
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.32,
+        "end_seconds": 1.52
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.52,
+        "end_seconds": 2.02
+      },
+      {
+        "word": "en",
+        "start_seconds": 2.84,
+        "end_seconds": 2.92
+      },
+      {
+        "word": "la",
+        "start_seconds": 2.92,
+        "end_seconds": 3.0
+      },
+      {
+        "word": "cuario",
+        "start_seconds": 3.0,
+        "end_seconds": 3.28
+      },
+      {
+        "word": "mágico",
+        "start_seconds": 3.28,
+        "end_seconds": 3.8
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "el",
+        "start_seconds": 0.0,
+        "end_seconds": 0.5
+      },
+      {
+        "word": "acuario",
+        "start_seconds": 0.5,
+        "end_seconds": 0.86
+      },
+      {
+        "word": "mágico",
+        "start_seconds": 0.86,
+        "end_seconds": 1.42
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.6051702499389648,
+        "no_speech_prob": 0.0071624875999987125,
+        "compression_ratio": 0.8813559322033898,
+        "word_probabilities": [
+          0.7197265625,
+          0.94140625,
+          0.99658203125,
+          0.978515625,
+          0.9794921875
+        ]
+      },
+      {
+        "avg_logprob": -0.6051702499389648,
+        "no_speech_prob": 0.0071624875999987125,
+        "compression_ratio": 0.8813559322033898,
+        "word_probabilities": [
+          0.50830078125,
+          0.9296875,
+          0.564453125,
+          0.8623046875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.5364818572998047,
+        "no_speech_prob": 0.15111123025417328,
+        "compression_ratio": 0.6923076923076923,
+        "word_probabilities": [
+          0.37109375,
+          0.67333984375,
+          0.86279296875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 93,
+    "extracted_voiced_seconds": 0.93,
+    "unremoved_raw_target_tokens": [
+      "en",
+      "la",
+      "cuario",
+      "mágico"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "en",
+      "la",
+      "cuario",
+      "mágico"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 4.000181405895692,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 2.02,
+      "target_first_word_start_seconds": 2.84,
+      "gap_seconds": 0.7083900226757369,
+      "verified_silence_start_seconds": 2.0798639455782313,
+      "verified_silence_end_seconds": 2.788253968253968,
+      "gap_rms_dbfs": -67.334,
+      "gap_peak_dbfs": -36.056,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.4340589569160995,
+      "cut_sample": 53671,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/acquario_magico/locales/es/audio/activity-title.wav",
-    "bytes": 70646,
-    "sha256": "5da8984c068149a72d403f0d4009df6de1d67d0413117883482c8390430ce4c9"
+    "sha256": "05f0f2e25e901672d53e8929a49a407064ac4c02a3fb066d1ad783e930032967",
+    "bytes": 69144
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "195f4ae044b22d343e92cfd59d6ee3a0603ae3b5f14cf5da55a11f982c0f0b21",
+    "original_sha256": "5da8984c068149a72d403f0d4009df6de1d67d0413117883482c8390430ce4c9",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

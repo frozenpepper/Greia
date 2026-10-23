@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T13:40:22.604093+00:00",
+  "created_utc": "2026-10-21T16:52:32.901278+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Listen to this phrase in English.",
+    "prefix_word_count": 6,
+    "target": "Woodland Hide & Seek",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Listen to this phrase in English. Woodland Hide & Seek",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Woodland Hide & Seek",
+    "cue_id": "activity.title",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "Woodland Hide & Seek",
     "cue_id": "activity.title",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/nascondino_bosco/locales/en/audio/activity-title.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-154009-29279d46",
-    "idempotency_key": "greia-95f57d7539004ef28829dd24a6b29fa1",
+    "job_id": "20261021-185217-498e95bc",
+    "idempotency_key": "greia-c2129c952bfb454ab71dd006024818d6",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,246 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2556051432,
+    "script_seed": 2952548759,
     "language_direction": "English",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "effective_delivery": "Speak in English. Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in English. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3338900882,
-        "sha256": "e5eeff1f663c4f774046f4bab14b70439389467717e2f30da77520c33c4bc2c3",
+        "seed": 2365922987,
+        "sha256": "af2a2b5da9dbbbafa6e388b2c76bd8a191fd9c632bb6fd6b3fe1c8f7717d38ed",
         "generation": {
-          "elapsed_seconds": 12.778018083015922,
+          "elapsed_seconds": 14.450844124992727,
           "model_load_seconds": 0.0,
-          "rtf": 3.9929226862192353,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.4736214394437868,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Woodland, hide and seek.",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/nascondino_bosco/locales/en/audio/activity-title.wav.raw.wav",
+    "sha256": "9b8d082ea01bd287e59ea3bc2e5f7da7a3e62c947a405192354ce8813c5feaad",
+    "receipt_sha256": "2351d084cfb3c4cb354cbb46d205626bc4d740db2c169c21bdedcc96a1b7dfc7"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/nascondino_bosco/locales/en/audio/activity-title.wav.extracted.wav",
+    "sha256": "fc1b844235985a5f09fdfe18dd828225670c7e7d976094c41af0605fb19cd760"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/nascondino_bosco/locales/en/audio/activity-title.wav.raw.wav",
+    "source_sha256": "9b8d082ea01bd287e59ea3bc2e5f7da7a3e62c947a405192354ce8813c5feaad",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/nascondino_bosco/locales/en/audio/activity-title.wav.extracted.wav",
+    "output_sha256": "fc1b844235985a5f09fdfe18dd828225670c7e7d976094c41af0605fb19cd760",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Woodland Hide & Seek",
+      "locale": "en",
+      "cue_id": "activity.title",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/nascondino_bosco/locales/en/audio/activity-title.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "2351d084cfb3c4cb354cbb46d205626bc4d740db2c169c21bdedcc96a1b7dfc7"
+    },
+    "locale": "en",
+    "prefix": "Listen to this phrase in English.",
+    "target": "Woodland Hide & Seek",
+    "remove_first_words": 6,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Listen to this phrase in English. Woodland, hide and seek.",
+    "extracted_transcript": " Woodland, hide and seek.",
+    "raw_word_alignment": [
+      {
+        "word": "listen",
+        "start_seconds": 0.0,
+        "end_seconds": 0.56
+      },
+      {
+        "word": "to",
+        "start_seconds": 0.56,
+        "end_seconds": 0.8
+      },
+      {
+        "word": "this",
+        "start_seconds": 0.8,
+        "end_seconds": 1.0
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 1.0,
+        "end_seconds": 1.34
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.34,
+        "end_seconds": 1.56
+      },
+      {
+        "word": "english",
+        "start_seconds": 1.56,
+        "end_seconds": 2.02
+      },
+      {
+        "word": "woodland",
+        "start_seconds": 2.6600000000000006,
+        "end_seconds": 3.18
+      },
+      {
+        "word": "hide",
+        "start_seconds": 3.2,
+        "end_seconds": 3.46
+      },
+      {
+        "word": "and",
+        "start_seconds": 3.46,
+        "end_seconds": 3.62
+      },
+      {
+        "word": "seek",
+        "start_seconds": 3.62,
+        "end_seconds": 3.9
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "woodland",
+        "start_seconds": 0.54,
+        "end_seconds": 0.88
+      },
+      {
+        "word": "hide",
+        "start_seconds": 1.02,
+        "end_seconds": 1.12
+      },
+      {
+        "word": "and",
+        "start_seconds": 1.12,
+        "end_seconds": 1.26
+      },
+      {
+        "word": "seek",
+        "start_seconds": 1.26,
+        "end_seconds": 1.58
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5086372777035362,
+        "no_speech_prob": 0.007271693088114262,
+        "compression_ratio": 0.90625,
+        "word_probabilities": [
+          0.84619140625,
+          0.98681640625,
+          0.98095703125,
+          0.99609375,
+          0.978515625,
+          0.9873046875
+        ]
+      },
+      {
+        "avg_logprob": -0.5086372777035362,
+        "no_speech_prob": 0.007271693088114262,
+        "compression_ratio": 0.90625,
+        "word_probabilities": [
+          0.75390625,
+          0.416259765625,
+          0.81005859375,
+          0.99755859375
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6160066604614258,
+        "no_speech_prob": 0.04644107446074486,
+        "compression_ratio": 0.8,
+        "word_probabilities": [
+          0.765625,
+          0.399169921875,
+          0.91943359375,
+          0.99755859375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 115,
+    "extracted_voiced_seconds": 1.15,
+    "unremoved_raw_target_tokens": [
+      "woodland",
+      "hide",
+      "and",
+      "seek"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "woodland",
+      "hide",
+      "and",
+      "seek"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 4.160181405895692,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 2.02,
+      "target_first_word_start_seconds": 2.6600000000000006,
+      "gap_seconds": 0.5287981859410431,
+      "verified_silence_start_seconds": 2.0798639455782313,
+      "verified_silence_end_seconds": 2.6086621315192744,
+      "gap_rms_dbfs": -68.794,
+      "gap_peak_dbfs": -47.082,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.344263038548753,
+      "cut_sample": 51691,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/nascondino_bosco/locales/en/audio/activity-title.wav",
-    "bytes": 141206,
-    "sha256": "da3893a80c0f1ee91abda58396a5d83d2841faf16172099d0497f3046ae8ed9e"
+    "sha256": "17a03a770f8507fbcaebe868a58e24f18ca96e74b724476a236a6383131995e1",
+    "bytes": 80160
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "0d8b7c48c7f47c050393fbc1abe75c968fbbac0ea4a9221a9f8cfb9c61b6c359",
+    "original_sha256": "da3893a80c0f1ee91abda58396a5d83d2841faf16172099d0497f3046ae8ed9e",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

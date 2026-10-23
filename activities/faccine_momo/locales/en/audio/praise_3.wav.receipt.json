@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T11:35:51.863365+00:00",
+  "created_utc": "2026-10-21T16:07:15.364493+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Listen to this phrase in English.",
+    "prefix_word_count": 6,
+    "target": "Fantastic!",
+    "target_word_count": 1,
+    "target_verification": "warn",
+    "composite_text": "Listen to this phrase in English. Fantastic!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "momo",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Fantastic!",
+    "cue_id": "faccine_momo.praise_3",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "Fantastic!",
     "cue_id": "faccine_momo.praise_3",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/faccine_momo/locales/en/audio/praise_3.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Warm, measured encouragement. Emphasize the successful action gently, at a relaxed conversational pace."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.momo.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261021-133546-deb47549",
-    "idempotency_key": "greia-f91af330e34044e2bf0a37a14357d1c2",
+    "job_id": "20261021-180658-3772eb07",
+    "idempotency_key": "greia-6b46f67fca9448909de2cb0f4231767a",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,204 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 814045419,
+    "script_seed": 1446737332,
     "language_direction": "English",
-    "delivery_prompt": "Warm, measured encouragement. Emphasize the successful action gently, at a relaxed conversational pace.",
-    "effective_delivery": "Speak in English. Warm, measured encouragement. Emphasize the successful action gently, at a relaxed conversational pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in English. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 591473601,
-        "sha256": "f5e44aa1b31bd44b9c7f1fcb577a9aa117e861c1846561c6126c8fc70e1a5fc9",
+        "seed": 2122150199,
+        "sha256": "4535693b6e3b380caf79af625c562673f37c038aa97d944994c752dc160fdff0",
         "generation": {
-          "elapsed_seconds": 4.666927292004402,
+          "elapsed_seconds": 16.359615958004724,
           "model_load_seconds": 0.0,
-          "rtf": 3.645562264291943,
-          "peak_memory_gb": 7.648166916
+          "rtf": 5.680093498526031,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Fantastic.",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/faccine_momo/locales/en/audio/praise_3.wav.raw.wav",
+    "sha256": "064dc576869b8e361366f1fd3d432d1451a60adf2d8ae3e7e17b23a88b12a96f",
+    "receipt_sha256": "20e289fbdff4483d899922526e675515827a3b07ce2d335eeacb4445b2816cf8"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/faccine_momo/locales/en/audio/praise_3.wav.extracted.wav",
+    "sha256": "ff9bcb7f2eb06337f84a3a314eac2e262d0672b6a9d4e185cf4c61408955f83e"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/faccine_momo/locales/en/audio/praise_3.wav.raw.wav",
+    "source_sha256": "064dc576869b8e361366f1fd3d432d1451a60adf2d8ae3e7e17b23a88b12a96f",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/faccine_momo/locales/en/audio/praise_3.wav.extracted.wav",
+    "output_sha256": "ff9bcb7f2eb06337f84a3a314eac2e262d0672b6a9d4e185cf4c61408955f83e",
+    "target_request": {
+      "speaker": "momo",
+      "kind": "character_dialogue",
+      "text": "Fantastic!",
+      "locale": "en",
+      "cue_id": "faccine_momo.praise_3",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/faccine_momo/locales/en/audio/praise_3.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "20e289fbdff4483d899922526e675515827a3b07ce2d335eeacb4445b2816cf8"
+    },
+    "locale": "en",
+    "prefix": "Listen to this phrase in English.",
+    "target": "Fantastic!",
+    "remove_first_words": 6,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Listen to this phrase in English. Fantastic.",
+    "extracted_transcript": " Fantastic.",
+    "raw_word_alignment": [
+      {
+        "word": "listen",
+        "start_seconds": 0.0,
+        "end_seconds": 0.28
+      },
+      {
+        "word": "to",
+        "start_seconds": 0.28,
+        "end_seconds": 0.52
+      },
+      {
+        "word": "this",
+        "start_seconds": 0.52,
+        "end_seconds": 0.66
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.66,
+        "end_seconds": 0.9
+      },
+      {
+        "word": "in",
+        "start_seconds": 0.9,
+        "end_seconds": 1.06
+      },
+      {
+        "word": "english",
+        "start_seconds": 1.06,
+        "end_seconds": 1.4
+      },
+      {
+        "word": "fantastic",
+        "start_seconds": 1.84,
+        "end_seconds": 2.28
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "fantastic",
+        "start_seconds": 0.0,
+        "end_seconds": 0.7
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.44937161036900114,
+        "no_speech_prob": 0.007621077820658684,
+        "compression_ratio": 0.8461538461538461,
+        "word_probabilities": [
+          0.880859375,
+          0.98828125,
+          0.9775390625,
+          0.994140625,
+          0.97265625,
+          0.99072265625
+        ]
+      },
+      {
+        "avg_logprob": -0.44937161036900114,
+        "no_speech_prob": 0.007621077820658684,
+        "compression_ratio": 0.8461538461538461,
+        "word_probabilities": [
+          0.84326171875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.7415008544921875,
+        "no_speech_prob": 0.3450411856174469,
+        "compression_ratio": 0.5555555555555556,
+        "word_probabilities": [
+          0.84326171875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 55,
+    "extracted_voiced_seconds": 0.55,
+    "unremoved_raw_target_tokens": [
+      "fantastic"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "fantastic"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 2.8801814058956916,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.4,
+      "target_first_word_start_seconds": 1.84,
+      "gap_seconds": 0.309297052154195,
+      "verified_silence_start_seconds": 1.4798185941043085,
+      "verified_silence_end_seconds": 1.7891156462585034,
+      "gap_rms_dbfs": -56.8,
+      "gap_peak_dbfs": -34.877,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.634467120181406,
+      "cut_sample": 36040,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/faccine_momo/locales/en/audio/praise_3.wav",
-    "bytes": 56534,
-    "sha256": "9aeb326adb86052bd36e9e9ea64a5c8e8b522955e8fa1c962e5a785b5581fdb5"
+    "sha256": "1c82ff46135cd429e80a7d97aae41ef02e5431f8afff2c8545f0e8ec83301e46",
+    "bytes": 55014
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "8aea563f8693e1923d3e4d4c79af70a8204c9da162700fe32f031019c787024a",
+    "original_sha256": "9aeb326adb86052bd36e9e9ea64a5c8e8b522955e8fa1c962e5a785b5581fdb5",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

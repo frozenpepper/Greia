@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T11:32:45.686471+00:00",
+  "created_utc": "2026-10-21T16:06:53.149229+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "Très bien !",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. Très bien !",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "momo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Très bien !",
+    "cue_id": "faccine_momo.praise_2.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Très bien !",
     "cue_id": "faccine_momo.praise_2.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/faccine_momo/assets/audio/fr/praise_2.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Warm, measured encouragement. Emphasize the successful action gently, at a relaxed conversational pace."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.momo.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261021-133223-932cb9dd",
-    "idempotency_key": "greia-3c5f5789e47b404980c43e88abf65b4e",
+    "job_id": "20261021-180641-48cd65db",
+    "idempotency_key": "greia-ce404b892c7743c4a653accb8e1ea3ed",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,212 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3272256841,
+    "script_seed": 4258184922,
     "language_direction": "French",
-    "delivery_prompt": "Warm, measured encouragement. Emphasize the successful action gently, at a relaxed conversational pace.",
-    "effective_delivery": "Speak in French. Warm, measured encouragement. Emphasize the successful action gently, at a relaxed conversational pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 4285979765,
-        "sha256": "e21d8b71762c84cd91be88de000d89ece13519e09d72eaabd5ae7f7f6069f83c",
+        "seed": 3736985595,
+        "sha256": "560ac5ae0d3d91b98c118f0c948e1ccf99fc4d3ddade69029974101643b04d16",
         "generation": {
-          "elapsed_seconds": 21.98791854099545,
+          "elapsed_seconds": 10.895460542000365,
           "model_load_seconds": 0.0,
-          "rtf": 3.3517316949765683,
-          "peak_memory_gb": 7.648166916
+          "rtf": 4.863683003645725,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " très bien",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/faccine_momo/assets/audio/fr/praise_2.wav.raw.wav",
+    "sha256": "1b6e8c8c89c5eac0eb6b50cb033dca0c533a43beb06f452a897ebef543fd33c0",
+    "receipt_sha256": "b9df21b9503cd369ff7da438b589c8a5fb3039c3a3e9d7a3f67ae4497e761bd0"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/faccine_momo/assets/audio/fr/praise_2.wav.extracted.wav",
+    "sha256": "29c151717944bfb2bb137a9dbc8989d8b6008f08ee6796fa6eabfae797bf6fad"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/faccine_momo/assets/audio/fr/praise_2.wav.raw.wav",
+    "source_sha256": "1b6e8c8c89c5eac0eb6b50cb033dca0c533a43beb06f452a897ebef543fd33c0",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/faccine_momo/assets/audio/fr/praise_2.wav.extracted.wav",
+    "output_sha256": "29c151717944bfb2bb137a9dbc8989d8b6008f08ee6796fa6eabfae797bf6fad",
+    "target_request": {
+      "speaker": "momo",
+      "kind": "character_dialogue",
+      "text": "Très bien !",
+      "locale": "fr",
+      "cue_id": "faccine_momo.praise_2.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/faccine_momo/assets/audio/fr/praise_2.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "b9df21b9503cd369ff7da438b589c8a5fb3039c3a3e9d7a3f67ae4497e761bd0"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "Très bien !",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français. Très bien.",
+    "extracted_transcript": " très bien",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.22
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.22,
+        "end_seconds": 0.46
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.46,
+        "end_seconds": 0.64
+      },
+      {
+        "word": "en",
+        "start_seconds": 0.64,
+        "end_seconds": 0.72
+      },
+      {
+        "word": "français",
+        "start_seconds": 0.72,
+        "end_seconds": 1.1
+      },
+      {
+        "word": "très",
+        "start_seconds": 1.56,
+        "end_seconds": 1.84
+      },
+      {
+        "word": "bien",
+        "start_seconds": 1.84,
+        "end_seconds": 2.02
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "très",
+        "start_seconds": 0.0,
+        "end_seconds": 0.5
+      },
+      {
+        "word": "bien",
+        "start_seconds": 0.5,
+        "end_seconds": 0.7
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5546442667643229,
+        "no_speech_prob": 0.005123939365148544,
+        "compression_ratio": 0.84,
+        "word_probabilities": [
+          0.60107421875,
+          0.96484375,
+          0.95703125,
+          0.705078125,
+          0.9677734375
+        ]
+      },
+      {
+        "avg_logprob": -0.5546442667643229,
+        "no_speech_prob": 0.005123939365148544,
+        "compression_ratio": 0.84,
+        "word_probabilities": [
+          0.755859375,
+          0.99755859375
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.4880250930786133,
+        "no_speech_prob": 0.10102721303701401,
+        "compression_ratio": 0.5555555555555556,
+        "word_probabilities": [
+          0.65185546875,
+          0.99658203125
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 34,
+    "extracted_voiced_seconds": 0.34,
+    "unremoved_raw_target_tokens": [
+      "très",
+      "bien"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "très",
+      "bien"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 2.2401814058956915,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.1,
+      "target_first_word_start_seconds": 1.56,
+      "gap_seconds": 0.3492063492063492,
+      "verified_silence_start_seconds": 1.1598639455782314,
+      "verified_silence_end_seconds": 1.5090702947845804,
+      "gap_rms_dbfs": -68.809,
+      "gap_peak_dbfs": -49.02,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.3344671201814058,
+      "cut_sample": 29425,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/faccine_momo/assets/audio/fr/praise_2.wav",
-    "bytes": 289382,
-    "sha256": "a4920f6cd59d93d4375add297e1d84cf4c17f34856f8f4713aeb096fd3af7da5"
+    "sha256": "cd7ed8733b1678a7b71b68ae8c55e9fc15793541d3ecf769f8a70b592c088a04",
+    "bytes": 40020
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "147601734c01f8c8c5cbedc2a4095395989b759557188d19f7ac9e63016f29fa",
+    "original_sha256": "a4920f6cd59d93d4375add297e1d84cf4c17f34856f8f4713aeb096fd3af7da5",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

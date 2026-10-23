@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T07:59:12.631930+00:00",
+  "created_utc": "2026-10-21T14:56:06.901709+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "Trouve Luna",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. Trouve Luna",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Trouve Luna",
+    "cue_id": "greia.requested.find_luna.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Trouve Luna",
     "cue_id": "greia.requested.find_luna.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/baia_delle_orche/assets/audio/fr/find_luna.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.tito.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261021-095906-56442b33",
-    "idempotency_key": "greia-1b6caddcdad947f7b7b422fcf2000d3a",
+    "job_id": "20261021-165554-840b56ed",
+    "idempotency_key": "greia-5cf5271b51d74dd9ab22d54cb2645e67",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,226 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 530005036,
+    "script_seed": 10127792,
     "language_direction": "French",
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in French. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1381170898,
-        "sha256": "69f124373822fa667c75f1d1b362d886e0510862c2fc980eca32a8da3719377e",
+        "seed": 1976484382,
+        "sha256": "a20728f8da6cad6849ac42271d2dcd16a5229b1fd965c835bef8dbcb4f20ee5f",
         "generation": {
-          "elapsed_seconds": 5.004968375003955,
+          "elapsed_seconds": 11.357749750000949,
           "model_load_seconds": 0.0,
-          "rtf": 3.909622477545076,
-          "peak_memory_gb": 7.648166916
+          "rtf": 4.175387445622554,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Touve-le-nous.",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/baia_delle_orche/assets/audio/fr/find_luna.wav.raw.wav",
+    "sha256": "b9ecbb0f75a18c608724fc2a9e396ef0cc93bd2be0a056386e397fa0091f0391",
+    "receipt_sha256": "01e8bb86511aafb45c211a426bfe2fb322c583dbc017a1233f3775ac856ba282"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/baia_delle_orche/assets/audio/fr/find_luna.wav.extracted.wav",
+    "sha256": "f54e9a983aa813d6030d114ff5afaac451a330780fdce23181374f495109b815"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-corpus-v1/run/carrier-raw/activities/baia_delle_orche/assets/audio/fr/find_luna.wav.raw.wav",
+    "source_sha256": "b9ecbb0f75a18c608724fc2a9e396ef0cc93bd2be0a056386e397fa0091f0391",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-corpus-v1/run/carrier-extracted/activities/baia_delle_orche/assets/audio/fr/find_luna.wav.extracted.wav",
+    "output_sha256": "f54e9a983aa813d6030d114ff5afaac451a330780fdce23181374f495109b815",
+    "target_request": {
+      "speaker": "tito",
+      "kind": "character_dialogue",
+      "text": "Trouve Luna",
+      "locale": "fr",
+      "cue_id": "greia.requested.find_luna.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-corpus-v1/run/carrier-raw/activities/baia_delle_orche/assets/audio/fr/find_luna.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "01e8bb86511aafb45c211a426bfe2fb322c583dbc017a1233f3775ac856ba282"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "Trouve Luna",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " cette phrase est en français. Touve-nous nous.",
+    "extracted_transcript": " Touve-le-nous.",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.24
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.24,
+        "end_seconds": 0.66
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.66,
+        "end_seconds": 0.96
+      },
+      {
+        "word": "en",
+        "start_seconds": 0.96,
+        "end_seconds": 1.1
+      },
+      {
+        "word": "français",
+        "start_seconds": 1.1,
+        "end_seconds": 1.56
+      },
+      {
+        "word": "touve",
+        "start_seconds": 2.06,
+        "end_seconds": 2.32
+      },
+      {
+        "word": "nous",
+        "start_seconds": 2.32,
+        "end_seconds": 2.52
+      },
+      {
+        "word": "nous",
+        "start_seconds": 2.52,
+        "end_seconds": 2.62
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "touve",
+        "start_seconds": 0.30000000000000004,
+        "end_seconds": 0.52
+      },
+      {
+        "word": "le",
+        "start_seconds": 0.52,
+        "end_seconds": 0.62
+      },
+      {
+        "word": "nous",
+        "start_seconds": 0.62,
+        "end_seconds": 0.74
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.9377655141493854,
+        "no_speech_prob": 0.3135196268558502,
+        "compression_ratio": 0.8867924528301887,
+        "word_probabilities": [
+          0.53125,
+          0.9501953125,
+          0.806640625,
+          0.73779296875,
+          0.95556640625
+        ]
+      },
+      {
+        "avg_logprob": -0.9377655141493854,
+        "no_speech_prob": 0.3135196268558502,
+        "compression_ratio": 0.8867924528301887,
+        "word_probabilities": [
+          0.385498046875,
+          0.38720703125,
+          0.1766357421875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -1.1244346618652343,
+        "no_speech_prob": 0.4061161279678345,
+        "compression_ratio": 0.6363636363636364,
+        "word_probabilities": [
+          0.1796875,
+          0.328125,
+          0.343017578125
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 54,
+    "extracted_voiced_seconds": 0.54,
+    "unremoved_raw_target_tokens": [
+      "touve",
+      "nous",
+      "nous"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "touve",
+      "nous",
+      "nous"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 2.7201814058956915,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.56,
+      "target_first_word_start_seconds": 2.06,
+      "gap_seconds": 0.3891156462585034,
+      "verified_silence_start_seconds": 1.6198639455782313,
+      "verified_silence_end_seconds": 2.008979591836735,
+      "gap_rms_dbfs": -76.351,
+      "gap_peak_dbfs": -53.043,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.814421768707483,
+      "cut_sample": 40008,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/baia_delle_orche/assets/audio/fr/find_luna.wav",
-    "bytes": 56534,
-    "sha256": "52a768c4c69d3fbe79af71d0097be8096879f19aabeec704c6ea804c08bfd514"
+    "sha256": "31fd4d1adef9fed8e7b226a73f324004b782d6e6c71b967859cf14974b483f7b",
+    "bytes": 40022
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "ae97ab6bc1d4f5e8d380a41cceb2eff600fd110d1fb3dff98987774b5d1ce9f1",
+    "original_sha256": "52a768c4c69d3fbe79af71d0097be8096879f19aabeec704c6ea804c08bfd514",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

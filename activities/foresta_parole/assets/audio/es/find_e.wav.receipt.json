@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:24:59.792535+00:00",
+  "created_utc": "2026-10-22T06:17:39.467813+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "E de Elefante",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español...\n\nE de Elefante",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "E de Elefante",
+    "cue_id": "foresta_parole.find_e",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "E de Elefante",
     "cue_id": "foresta_parole.find_e",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/foresta_parole/assets/audio/es/find_e.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-142451-7a03a2c3",
-    "idempotency_key": "greia-bfecbbb2e15045fbb74c1e405c74784b",
+    "job_id": "20261022-081555-8df170e6",
+    "idempotency_key": "greia-1230c81043f04ce0a7c3af50ca1fe64d",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,267 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 251769950,
+    "script_seed": 414302628,
     "language_direction": "Spanish",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak in Spanish. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1666358291,
-        "sha256": "686494ae272318da676e4987bc7246dffa5ff3731b12236e0594c905cb2e8b3c",
+        "seed": 2009299005,
+        "sha256": "ba7ee362dae447bd0074fa3b6c98b7096febbc8bf7a83a2da1410f0ee97d09fa",
         "generation": {
-          "elapsed_seconds": 7.432165249949321,
+          "elapsed_seconds": 16.085420165996766,
           "model_load_seconds": 0.0,
-          "rtf": 3.870583412871793,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.4665608633303617,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8333,
+    "transcript": " y de elefante.",
+    "metrics": {
+      "duration_seconds": 1.1110204081632653,
+      "rms_dbfs": -35.07,
+      "peak": 0.15005,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.14,
+      "trailing_silence_seconds": 0.08,
+      "longest_internal_pause_seconds": 0.02
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/foresta_parole/assets/audio/es/find_e.wav.raw.wav",
+    "sha256": "74dcfda3a2a49a70382696119fe6c0aff6b4a19845742196c679f32a67e8c878",
+    "receipt_sha256": "392c4590c194f5cc3aa04f458b53e311fe48da2dcb7819984fb87fe8b15a285b"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/foresta_parole/assets/audio/es/find_e.wav.extracted.wav",
+    "sha256": "de308f5c3ac0cf358e2aab9e10f1c85d86c6535820ff449a43c3eb9e380e1138"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/foresta_parole/assets/audio/es/find_e.wav.delivery.wav",
+    "sha256": "46a47174957b64da3c40f5cfeb73a3cc2f777aca68de92cb9138c4546cbec8b2"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/activities/foresta_parole/assets/audio/es/find_e.wav.raw.wav",
+    "source_sha256": "74dcfda3a2a49a70382696119fe6c0aff6b4a19845742196c679f32a67e8c878",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/activities/foresta_parole/assets/audio/es/find_e.wav.extracted.wav",
+    "output_sha256": "de308f5c3ac0cf358e2aab9e10f1c85d86c6535820ff449a43c3eb9e380e1138",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "E de Elefante",
+      "locale": "es",
+      "cue_id": "foresta_parole.find_e",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/activities/foresta_parole/assets/audio/es/find_e.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "392c4590c194f5cc3aa04f458b53e311fe48da2dcb7819984fb87fe8b15a285b"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "E de Elefante",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Escucha esta frase en español. ¡Clerez! ¡Ede elefante!",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " y de elefante.",
+    "raw_word_alignment": [
+      {
+        "word": "escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.48
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.48,
+        "end_seconds": 0.78
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.78,
+        "end_seconds": 1.12
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.12,
+        "end_seconds": 1.46
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.46,
+        "end_seconds": 1.94
+      },
+      {
+        "word": "clerez",
+        "start_seconds": 2.56,
+        "end_seconds": 3.26
+      },
+      {
+        "word": "ede",
+        "start_seconds": 3.68,
+        "end_seconds": 3.86
+      },
+      {
+        "word": "elefante",
+        "start_seconds": 3.86,
+        "end_seconds": 4.44
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "y",
+        "start_seconds": 0.0,
+        "end_seconds": 0.28
+      },
+      {
+        "word": "de",
+        "start_seconds": 0.28,
+        "end_seconds": 0.38
+      },
+      {
+        "word": "elefante",
+        "start_seconds": 0.38,
+        "end_seconds": 0.98
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.507876469538762,
+        "no_speech_prob": 0.027488475665450096,
+        "compression_ratio": 0.9193548387096774,
+        "word_probabilities": [
+          0.9130859375,
+          0.982421875,
+          0.9951171875,
+          0.96826171875,
+          0.98828125
+        ]
+      },
+      {
+        "avg_logprob": -0.507876469538762,
+        "no_speech_prob": 0.027488475665450096,
+        "compression_ratio": 0.9193548387096774,
+        "word_probabilities": [
+          0.474609375
+        ]
+      },
+      {
+        "avg_logprob": -0.507876469538762,
+        "no_speech_prob": 0.027488475665450096,
+        "compression_ratio": 0.9193548387096774,
+        "word_probabilities": [
+          0.6845703125,
+          0.87744140625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.7079072528415256,
+        "no_speech_prob": 0.14170831441879272,
+        "compression_ratio": 0.6363636363636364,
+        "word_probabilities": [
+          0.1644287109375,
+          0.63427734375,
+          0.8544921875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": false,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 6,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 68,
+    "extracted_voiced_seconds": 0.68,
+    "unremoved_raw_target_tokens": [
+      "clerez",
+      "ede",
+      "elefante"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "ede",
+      "elefante"
+    ],
+    "raw_transcript_alignment_suffix_match": false,
+    "duration_seconds": 4.640181405895691,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 3.26,
+      "search_end_seconds": 3.68,
+      "prefix_last_word_end_seconds": 3.26,
+      "target_first_word_start_seconds": 3.68,
+      "gap_seconds": 0.309297052154195,
+      "verified_silence_start_seconds": 3.3198639455782315,
+      "verified_silence_end_seconds": 3.629160997732426,
+      "gap_rms_dbfs": -68.208,
+      "gap_peak_dbfs": -46.502,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 3.474512471655329,
+      "cut_sample": 76613,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 1205,
+      "removed_seconds": 0.054648526077097505,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 77818,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/activities/foresta_parole/assets/audio/es/find_e.wav.delivery.wav",
+      "sha256": "46a47174957b64da3c40f5cfeb73a3cc2f777aca68de92cb9138c4546cbec8b2"
+    }
+  },
   "output": {
     "path": "activities/foresta_parole/assets/audio/es/find_e.wav",
-    "bytes": 84758,
-    "sha256": "06a3ade80e7728bdc09d995450f9cffc8870298bc032d46790f0542a6d436f1e"
+    "sha256": "39969a71c984c1bf9fb0b87a9038b3d3fedc9651532576309a0f197b43c0865a",
+    "bytes": 49074
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "aa30a5ad67b2c05babb6bd442a750bd022ff61d13da5fa4ab90b2f57157d3825",
+    "original_sha256": "06a3ade80e7728bdc09d995450f9cffc8870298bc032d46790f0542a6d436f1e",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

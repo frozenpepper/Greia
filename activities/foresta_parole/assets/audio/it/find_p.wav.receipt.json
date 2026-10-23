@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:33:13.206623+00:00",
+  "created_utc": "2026-10-21T16:25:18.445884+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "P come Pesce",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. P come Pesce",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "P come Pesce",
+    "cue_id": "foresta_parole.find_p",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "P come Pesce",
     "cue_id": "foresta_parole.find_p",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/foresta_parole/assets/audio/it/find_p.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-143301-4a52d18a",
-    "idempotency_key": "greia-a021f598d4864594afb4aea41c0a4ca1",
+    "job_id": "20261021-182504-c6a3806a",
+    "idempotency_key": "greia-ecc22f2738614705964cf79372d5c579",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,219 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2034641262,
+    "script_seed": 3756766381,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1984816315,
-        "sha256": "264138546915a037e05f69934d0925b823142af78c677f5d687d06a133fd702d",
+        "seed": 2990805889,
+        "sha256": "8ce20388404c829c50703f6907896ddb66a9c22199c34cdc50e70d33836301b3",
         "generation": {
-          "elapsed_seconds": 11.01989187503932,
+          "elapsed_seconds": 13.859332708001602,
           "model_load_seconds": 0.0,
-          "rtf": 4.05118260218344,
-          "peak_memory_gb": 8.44494914
+          "rtf": 4.330815907921963,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " piccola e pesce",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/foresta_parole/assets/audio/it/find_p.wav.raw.wav",
+    "sha256": "d04662bd6d477ebdd13162a9239970c4620a6c0a3fd7e8cad724bda79b676645",
+    "receipt_sha256": "d0b653ca512614f100cbab3cac85acba85e477daf2a6dd1a2fe5374291e219b5"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/foresta_parole/assets/audio/it/find_p.wav.extracted.wav",
+    "sha256": "f2c8c45236fc56f5dc43c5ba30100f1b8aee21cab05d77037a517254d4774e75"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/foresta_parole/assets/audio/it/find_p.wav.raw.wav",
+    "source_sha256": "d04662bd6d477ebdd13162a9239970c4620a6c0a3fd7e8cad724bda79b676645",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/foresta_parole/assets/audio/it/find_p.wav.extracted.wav",
+    "output_sha256": "f2c8c45236fc56f5dc43c5ba30100f1b8aee21cab05d77037a517254d4774e75",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "P come Pesce",
+      "locale": "it",
+      "cue_id": "foresta_parole.find_p",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/foresta_parole/assets/audio/it/find_p.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "d0b653ca512614f100cbab3cac85acba85e477daf2a6dd1a2fe5374291e219b5"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "P come Pesce",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " ascolta questa frase in italiano. Pico me piace.",
+    "extracted_transcript": " piccola e pesce",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.58
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.58,
+        "end_seconds": 0.8
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.8,
+        "end_seconds": 1.16
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.16,
+        "end_seconds": 1.3
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.3,
+        "end_seconds": 1.74
+      },
+      {
+        "word": "pico",
+        "start_seconds": 2.1,
+        "end_seconds": 2.58
+      },
+      {
+        "word": "me",
+        "start_seconds": 2.58,
+        "end_seconds": 2.76
+      },
+      {
+        "word": "piace",
+        "start_seconds": 2.76,
+        "end_seconds": 3.02
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "piccola",
+        "start_seconds": 0.0,
+        "end_seconds": 0.7
+      },
+      {
+        "word": "e",
+        "start_seconds": 0.7,
+        "end_seconds": 0.84
+      },
+      {
+        "word": "pesce",
+        "start_seconds": 0.84,
+        "end_seconds": 1.18
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.644679844379425,
+        "no_speech_prob": 0.0015767427394166589,
+        "compression_ratio": 0.8888888888888888,
+        "word_probabilities": [
+          0.67822265625,
+          0.978515625,
+          0.80810546875,
+          0.8076171875,
+          0.95068359375,
+          0.4580078125,
+          0.6005859375,
+          0.370849609375
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.9361235300699869,
+        "no_speech_prob": 0.17254166305065155,
+        "compression_ratio": 0.6521739130434783,
+        "word_probabilities": [
+          0.359130859375,
+          0.2293701171875,
+          0.4951171875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 54,
+    "extracted_voiced_seconds": 0.54,
+    "unremoved_raw_target_tokens": [
+      "pico",
+      "me",
+      "piace"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "pico",
+      "me",
+      "piace"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.2001814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.74,
+      "target_first_word_start_seconds": 2.1,
+      "gap_seconds": 0.2494331065759637,
+      "verified_silence_start_seconds": 1.7998639455782313,
+      "verified_silence_end_seconds": 2.049297052154195,
+      "gap_rms_dbfs": -60.164,
+      "gap_peak_dbfs": -44.826,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.924580498866213,
+      "cut_sample": 42437,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/foresta_parole/assets/audio/it/find_p.wav",
-    "bytes": 120038,
-    "sha256": "951465eb684d3bb59296ab9550ffaf71b7f2b3a56c09021af596401239d74053"
+    "sha256": "13ea57eebd6f1a89cb627b9999f0a235da6481e0d31c12e111d6008beb5de233",
+    "bytes": 56332
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "18b898eb43a21499b4f2d2cc4393518b9b1a2bb724cd46175c1db3da6ddf2971",
+    "original_sha256": "951465eb684d3bb59296ab9550ffaf71b7f2b3a56c09021af596401239d74053",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T21:03:51.219937+00:00",
+  "created_utc": "2026-10-21T20:50:57.567841+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "X de Xilófono",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. X de Xilófono",
+    "composite_delivery_prompt": "Clear, natural conversational delivery. Say the first sentence, pause for about one second, then say the final phrase exactly as written. Do not add words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v4",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "X de Xilófono",
+    "cue_id": "alfabeto_leo.letter_X.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "X de Xilófono",
     "cue_id": "alfabeto_leo.letter_X.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/alfabeto_leo/assets/audio/es/letter_X.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261019-225708-9b0d6b38",
-    "idempotency_key": "greia-20024b58864a4bb9b5e88245df5f6e14",
+    "job_id": "20261021-225041-0554b465",
+    "idempotency_key": "greia-fc5c6557569b4e6b9c17ca3b9746e843",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,230 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3634127897,
+    "script_seed": 4218225356,
     "language_direction": "Spanish",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak naturally in Spanish. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Clear, natural conversational delivery. Say the first sentence, pause for about one second, then say the final phrase exactly as written. Do not add words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery. Say the first sentence, pause for about one second, then say the final phrase exactly as written. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 891133503,
-        "sha256": "1840676f74ac38eb80b9f662485a4794993646e776e08252b99ccc577fe29483",
+        "seed": 880437733,
+        "sha256": "c412992c5e1a57a26cb94cdf30e5fa2edab23fa9286401ef1aa51dd72bbce35a",
         "generation": {
-          "elapsed_seconds": 9.687928874976933,
+          "elapsed_seconds": 15.609237125012442,
           "model_load_seconds": 0.0,
-          "rtf": 3.5615203265646467,
-          "peak_memory_gb": 8.21220922
+          "rtf": 4.064729080772303,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " ¡X de xilófono!",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/alfabeto_leo/assets/audio/es/letter_X.wav.raw.wav",
+    "sha256": "4b55b1c5da7d2b2bbf4c3d78b675769ccd2251b638cc19b13aedd74c1fe43e79",
+    "receipt_sha256": "4bb6675ef602559955df2dc19fcf480d1bebe2c1f3ceca9bbf463d9f22960cb8"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/assets/audio/es/letter_X.wav.extracted.wav",
+    "sha256": "00b1847be46e6d5c25457d56d389ff4a2b24b52f91c1343ae2702f9f0daefef9"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v4",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/retry-v4/run/carrier-raw/activities/alfabeto_leo/assets/audio/es/letter_X.wav.raw.wav",
+    "source_sha256": "4b55b1c5da7d2b2bbf4c3d78b675769ccd2251b638cc19b13aedd74c1fe43e79",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/retry-v4/run/carrier-extracted/activities/alfabeto_leo/assets/audio/es/letter_X.wav.extracted.wav",
+    "output_sha256": "00b1847be46e6d5c25457d56d389ff4a2b24b52f91c1343ae2702f9f0daefef9",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "X de Xilófono",
+      "locale": "es",
+      "cue_id": "alfabeto_leo.letter_X.es",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/retry-v4/run/carrier-raw/activities/alfabeto_leo/assets/audio/es/letter_X.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "4bb6675ef602559955df2dc19fcf480d1bebe2c1f3ceca9bbf463d9f22960cb8"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "X de Xilófono",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Escucha esta frase en español. X de xilófono.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " ¡X de xilófono!",
+    "raw_word_alignment": [
+      {
+        "word": "escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.54
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.54,
+        "end_seconds": 0.88
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.88,
+        "end_seconds": 1.16
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.16,
+        "end_seconds": 1.32
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.32,
+        "end_seconds": 1.78
+      },
+      {
+        "word": "x",
+        "start_seconds": 2.42,
+        "end_seconds": 2.74
+      },
+      {
+        "word": "de",
+        "start_seconds": 2.74,
+        "end_seconds": 3.02
+      },
+      {
+        "word": "xilófono",
+        "start_seconds": 3.02,
+        "end_seconds": 3.56
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "x",
+        "start_seconds": 0.0,
+        "end_seconds": 0.64
+      },
+      {
+        "word": "de",
+        "start_seconds": 0.64,
+        "end_seconds": 0.88
+      },
+      {
+        "word": "xilófono",
+        "start_seconds": 0.88,
+        "end_seconds": 1.46
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.699383020401001,
+        "no_speech_prob": 0.0054497504606842995,
+        "compression_ratio": 0.8703703703703703,
+        "word_probabilities": [
+          0.64453125,
+          0.8271484375,
+          0.9814453125,
+          0.94140625,
+          0.98046875
+        ]
+      },
+      {
+        "avg_logprob": -0.699383020401001,
+        "no_speech_prob": 0.0054497504606842995,
+        "compression_ratio": 0.8703703703703703,
+        "word_probabilities": [
+          0.287841796875,
+          0.60546875,
+          0.59716796875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.8717519442240397,
+        "no_speech_prob": 0.04809034243226051,
+        "compression_ratio": 0.68,
+        "word_probabilities": [
+          0.20751953125,
+          0.56982421875,
+          0.51123046875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 105,
+    "extracted_voiced_seconds": 1.05,
+    "unremoved_raw_target_tokens": [
+      "x",
+      "de",
+      "xilófono"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "x",
+      "de",
+      "xilófono"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.8401814058956916,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "inter-word-gap",
+      "search_end_seconds": 2.42,
+      "prefix_last_word_end_seconds": 1.78,
+      "target_first_word_start_seconds": 2.42,
+      "gap_seconds": 0.5287981859410431,
+      "verified_silence_start_seconds": 1.8398639455782313,
+      "verified_silence_end_seconds": 2.368662131519274,
+      "gap_rms_dbfs": -66.781,
+      "gap_peak_dbfs": -49.403,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.1042630385487526,
+      "cut_sample": 46399,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/es/letter_X.wav",
-    "bytes": 120038,
-    "sha256": "f6ffa4fde85631fd022ae82c3b8f2e422c445a8eb912c053e619c9fe4e66519e"
+    "sha256": "7e84af5beb86f9ac6565123c843a64da0c538fad547afef2755458840e2d8021",
+    "bytes": 76632
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "dad90d039fa95b85f62b19e5a4c1d22f4f7639071e8c75b83fb1b655ee4e4d18",
+    "original_sha256": "f6ffa4fde85631fd022ae82c3b8f2e422c445a8eb912c053e619c9fe4e66519e",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

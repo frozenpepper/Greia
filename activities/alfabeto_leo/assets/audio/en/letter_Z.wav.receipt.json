@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T20:48:11.761783+00:00",
+  "created_utc": "2026-10-21T15:15:12.255004+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Listen to this phrase in English.",
+    "prefix_word_count": 6,
+    "target": "Z as Zebra",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Listen to this phrase in English. Z as Zebra",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Z as Zebra",
+    "cue_id": "alfabeto_leo.letter_Z.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "Z as Zebra",
     "cue_id": "alfabeto_leo.letter_Z.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/alfabeto_leo/assets/audio/en/letter_Z.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261019-224801-719b50af",
-    "idempotency_key": "greia-f8f0a2235c9e4eb18f001abfa6662764",
+    "job_id": "20261021-171453-64716e0a",
+    "idempotency_key": "greia-0f5a584b61f14cd693145194decdadba",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,267 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3017223415,
+    "script_seed": 1540567772,
     "language_direction": "English",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak naturally in English. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in English. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 146041293,
-        "sha256": "29da474e81b8ab81eef44345095c3a6836fdf7bbdf7ad0a8a2dd2fab9c980aa2",
+        "seed": 315093777,
+        "sha256": "3f40a172d67da13bc5bad98a303725db458f9cb02ac415328bb7a1266182a681",
         "generation": {
-          "elapsed_seconds": 9.74062616698211,
+          "elapsed_seconds": 17.77091541700065,
           "model_load_seconds": 0.0,
-          "rtf": 5.072802447868472,
-          "peak_memory_gb": 8.21220922
+          "rtf": 3.7021454984897715,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " Z as zebra",
+    "metrics": {
+      "duration_seconds": 2.1522902494331064,
+      "rms_dbfs": -35.82,
+      "peak": 0.13925,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.28,
+      "trailing_silence_seconds": 0.28,
+      "longest_internal_pause_seconds": 0.16
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/alfabeto_leo/assets/audio/en/letter_Z.wav.raw.wav",
+    "sha256": "930fc82cf693db46a92cec9e12998e9af5b2aa90211ba03138f6aff1a36a326a",
+    "receipt_sha256": "d59b36fced0dcca690de363e2ff1c17a2c5b195d60f7f422b4f72d2fa6989c75"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_Z.wav.extracted.wav",
+    "sha256": "98d4c6a7ba97bf6b9dab6c51254d3765872bad285489b6d8bccadb94bea797ac"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_Z.wav.delivery.wav",
+    "sha256": "0df5ceae6d116e8e6700143f9020d610bb2b65dedbfc620dfcccc7acc69fb359"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/alfabeto_leo/assets/audio/en/letter_Z.wav.raw.wav",
+    "source_sha256": "930fc82cf693db46a92cec9e12998e9af5b2aa90211ba03138f6aff1a36a326a",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_Z.wav.extracted.wav",
+    "output_sha256": "98d4c6a7ba97bf6b9dab6c51254d3765872bad285489b6d8bccadb94bea797ac",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Z as Zebra",
+      "locale": "en",
+      "cue_id": "alfabeto_leo.letter_Z.en",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/alfabeto_leo/assets/audio/en/letter_Z.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "d59b36fced0dcca690de363e2ff1c17a2c5b195d60f7f422b4f72d2fa6989c75"
+    },
+    "locale": "en",
+    "prefix": "Listen to this phrase in English.",
+    "target": "Z as Zebra",
+    "remove_first_words": 6,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Listen to this phrase in English. Z as zebra.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Z as zebra",
+    "raw_word_alignment": [
+      {
+        "word": "listen",
+        "start_seconds": 0.0,
+        "end_seconds": 0.58
+      },
+      {
+        "word": "to",
+        "start_seconds": 0.58,
+        "end_seconds": 0.78
+      },
+      {
+        "word": "this",
+        "start_seconds": 0.78,
+        "end_seconds": 0.96
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.96,
+        "end_seconds": 1.24
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.24,
+        "end_seconds": 1.46
+      },
+      {
+        "word": "english",
+        "start_seconds": 1.46,
+        "end_seconds": 1.82
+      },
+      {
+        "word": "z",
+        "start_seconds": 2.8,
+        "end_seconds": 3.28
+      },
+      {
+        "word": "as",
+        "start_seconds": 3.28,
+        "end_seconds": 3.92
+      },
+      {
+        "word": "zebra",
+        "start_seconds": 3.92,
+        "end_seconds": 4.4
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "z",
+        "start_seconds": 0.0,
+        "end_seconds": 0.96
+      },
+      {
+        "word": "as",
+        "start_seconds": 0.96,
+        "end_seconds": 1.56
+      },
+      {
+        "word": "zebra",
+        "start_seconds": 1.56,
+        "end_seconds": 2.02
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5955762267112732,
+        "no_speech_prob": 0.07376774400472641,
+        "compression_ratio": 0.8490566037735849,
+        "word_probabilities": [
+          0.91357421875,
+          0.99853515625,
+          0.998046875,
+          0.99755859375,
+          0.99951171875,
+          0.99365234375
+        ]
+      },
+      {
+        "avg_logprob": -0.5955762267112732,
+        "no_speech_prob": 0.07376774400472641,
+        "compression_ratio": 0.8490566037735849,
+        "word_probabilities": [
+          0.59375,
+          0.41015625,
+          0.53515625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.7339773178100586,
+        "no_speech_prob": 0.27560415863990784,
+        "compression_ratio": 0.5555555555555556,
+        "word_probabilities": [
+          0.74365234375,
+          0.5107421875,
+          0.6474609375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 6,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 121,
+    "extracted_voiced_seconds": 1.21,
+    "unremoved_raw_target_tokens": [
+      "z",
+      "as",
+      "zebra"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "z",
+      "as",
+      "zebra"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 4.8001814058956915,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.82,
+      "search_end_seconds": 2.8,
+      "prefix_last_word_end_seconds": 1.82,
+      "target_first_word_start_seconds": 2.8,
+      "gap_seconds": 0.7682539682539683,
+      "verified_silence_start_seconds": 1.9796371882086168,
+      "verified_silence_end_seconds": 2.747891156462585,
+      "gap_rms_dbfs": -58.599,
+      "gap_peak_dbfs": -35.345,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.363764172335601,
+      "cut_sample": 52121,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 6265,
+      "removed_seconds": 0.2841269841269841,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 58386,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_Z.wav.delivery.wav",
+      "sha256": "0df5ceae6d116e8e6700143f9020d610bb2b65dedbfc620dfcccc7acc69fb359"
+    }
+  },
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/en/letter_Z.wav",
-    "bytes": 84758,
-    "sha256": "4b21355cca6ad7491c2204b29246feb6f6a5a4cea9895dc0d6d96017edd20136"
+    "sha256": "f4abfd7c946915997dc9cb3b5041e37f8ee37d7186ab0acb97f1ef2506e60746",
+    "bytes": 94994
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "bc36850cc9081469629a95406fcfeec409238ebe69e5aa8c13e782edb275435c",
+    "original_sha256": "71486467bcd6620ff54fbb2b03576d547ab51d61efbec0df4972781a711007cd",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

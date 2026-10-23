@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T13:12:42.998454+00:00",
+  "created_utc": "2026-10-22T11:02:55.391729+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "¡Qué maravilla!",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español...\n\n¡Qué maravilla!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "tito",
+    "kind": "shared_character_utterance",
+    "locale": "es",
+    "text": "¡Qué maravilla!",
+    "cue_id": "greia.shared.tito__es__celebrate.success__03.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "tito",
     "kind": "shared_character_utterance",
     "locale": "es",
     "text": "¡Qué maravilla!",
     "cue_id": "greia.shared.tito__es__celebrate.success__03.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "assets/audio/characters/shared/v0.2/tito/es/tito__es__celebrate.success__03.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.tito.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261021-151237-6fc09285",
-    "idempotency_key": "greia-1d8fc780e9e14543b87d286b5013a31e",
+    "job_id": "20261022-130239-c43ed1b5",
+    "idempotency_key": "greia-bc79c87803db40f584b35bcf3b110417",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,240 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 848651181,
+    "script_seed": 88446932,
     "language_direction": "Spanish",
-    "delivery_prompt": "Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace.",
-    "effective_delivery": "Speak in Spanish. Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2188900123,
-        "sha256": "45ee70e8276ee1387333597d7ab9f487466d5505e2a1ed915df2e2ebb3a05538",
+        "seed": 272258909,
+        "sha256": "f9670f7b4681c8538be93d0d179a27ff971d746566d4634d6583e3e17f528509",
         "generation": {
-          "elapsed_seconds": 4.2608747920021415,
+          "elapsed_seconds": 12.687814541015541,
           "model_load_seconds": 0.0,
-          "rtf": 3.8037864532082795,
+          "rtf": 4.173394399763898,
           "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " ¿Qué maravilla?",
+    "metrics": {
+      "duration_seconds": 0.9310657596371882,
+      "rms_dbfs": -28.26,
+      "peak": 0.24854,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.16,
+      "trailing_silence_seconds": 0.06,
+      "longest_internal_pause_seconds": 0.0
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/characters/shared/v0.2/tito/es/tito__es__celebrate.success__03.wav.raw.wav",
+    "sha256": "5f6d10c7200f06207dd60b8cf1344897b19e05d337aa5eda18b4d74b843e3aac",
+    "receipt_sha256": "d41f81757896f4d7c8023f51d9c8fb9a7db9b13f46f1a15bb7c612415d853860"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/characters/shared/v0.2/tito/es/tito__es__celebrate.success__03.wav.extracted.wav",
+    "sha256": "b7048b417984bc35d92239edddedf0ab1aa21dae3cfc036912d2fcdf7398e762"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/assets/audio/characters/shared/v0.2/tito/es/tito__es__celebrate.success__03.wav.delivery.wav",
+    "sha256": "c9f1798ebc2511f84a89e7c247ddcd3e2e9b267a656ddd2de379b3189a1ca89e"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/assets/audio/characters/shared/v0.2/tito/es/tito__es__celebrate.success__03.wav.raw.wav",
+    "source_sha256": "5f6d10c7200f06207dd60b8cf1344897b19e05d337aa5eda18b4d74b843e3aac",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/assets/audio/characters/shared/v0.2/tito/es/tito__es__celebrate.success__03.wav.extracted.wav",
+    "output_sha256": "b7048b417984bc35d92239edddedf0ab1aa21dae3cfc036912d2fcdf7398e762",
+    "target_request": {
+      "speaker": "tito",
+      "kind": "shared_character_utterance",
+      "text": "¡Qué maravilla!",
+      "locale": "es",
+      "cue_id": "greia.shared.tito__es__celebrate.success__03.es",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/assets/audio/characters/shared/v0.2/tito/es/tito__es__celebrate.success__03.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "d41f81757896f4d7c8023f51d9c8fb9a7db9b13f46f1a15bb7c612415d853860"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "¡Qué maravilla!",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Escucha esta frase en español, que maravilla.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " que maravilla",
+    "raw_word_alignment": [
+      {
+        "word": "escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.5
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.5,
+        "end_seconds": 0.8
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.8,
+        "end_seconds": 1.1
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.1,
+        "end_seconds": 1.38
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.38,
+        "end_seconds": 1.82
+      },
+      {
+        "word": "que",
+        "start_seconds": 2.26,
+        "end_seconds": 2.36
+      },
+      {
+        "word": "maravilla",
+        "start_seconds": 2.36,
+        "end_seconds": 2.88
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "que",
+        "start_seconds": 0.0,
+        "end_seconds": 0.3
+      },
+      {
+        "word": "maravilla",
+        "start_seconds": 0.3,
+        "end_seconds": 0.86
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.3365309397379557,
+        "no_speech_prob": 0.013273319229483604,
+        "compression_ratio": 0.8679245283018868,
+        "word_probabilities": [
+          0.8818359375,
+          0.98681640625,
+          0.9951171875,
+          0.9912109375,
+          0.98486328125,
+          0.391357421875,
+          0.97607421875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.38539300646100727,
+        "no_speech_prob": 0.12110953032970428,
+        "compression_ratio": 0.6190476190476191,
+        "word_probabilities": [
+          0.2919921875,
+          0.9736328125
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 69,
+    "extracted_voiced_seconds": 0.69,
+    "unremoved_raw_target_tokens": [
+      "que",
+      "maravilla"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "que",
+      "maravilla"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.0401814058956917,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.82,
+      "search_end_seconds": 2.26,
+      "prefix_last_word_end_seconds": 1.82,
+      "target_first_word_start_seconds": 2.26,
+      "gap_seconds": 0.29931972789115646,
+      "verified_silence_start_seconds": 1.909795918367347,
+      "verified_silence_end_seconds": 2.2091156462585033,
+      "gap_rms_dbfs": -56.028,
+      "gap_peak_dbfs": -34.775,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.0594557823129254,
+      "cut_sample": 45411,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 1095,
+      "removed_seconds": 0.04965986394557823,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 46506,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/assets/audio/characters/shared/v0.2/tito/es/tito__es__celebrate.success__03.wav.delivery.wav",
+      "sha256": "c9f1798ebc2511f84a89e7c247ddcd3e2e9b267a656ddd2de379b3189a1ca89e"
+    }
+  },
   "output": {
     "path": "assets/audio/characters/shared/v0.2/tito/es/tito__es__celebrate.success__03.wav",
-    "bytes": 49478,
-    "sha256": "f2232b1c186399b29b524f5f7236f655fe4ee6d96ec1fe3d5f6f174f96c69a29"
+    "sha256": "b26c8803369f6761d509c3412fe7fbddf06d7dcf6cf1d2e1d372f4167aaac468",
+    "bytes": 41138
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "34e0c07108790203e8e4e6666583e7f7294868c5def4c90e570109bf4d0484ae",
+    "original_sha256": "42417100d9efc28b8954c64a78c5df5185e946db61d6718362791505a40552a3",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

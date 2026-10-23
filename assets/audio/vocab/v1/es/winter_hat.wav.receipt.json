@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T20:58:08.292315+00:00",
+  "created_utc": "2026-10-21T18:43:32.498708+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "Gorro de lana",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. Gorro de lana",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "Gorro de lana",
+    "cue_id": "greia.vocab.winter_hat.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "Gorro de lana",
     "cue_id": "greia.vocab.winter_hat.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "assets/audio/vocab/v1/es/winter_hat.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-225758-57a3a928",
-    "idempotency_key": "greia-9796c157a9f740388bbe7394c12b8fad",
+    "job_id": "20261021-204318-d6bd4690",
+    "idempotency_key": "greia-b9a0b6b8062a4ea685bd8eb1387f1052",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,232 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 254268250,
+    "script_seed": 1601683137,
     "language_direction": "Spanish",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
-    "effective_delivery": "Speak in Spanish. Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1808365103,
-        "sha256": "6cb78f26342df39931908c04503c3e783e84ef2b12d58d9b72bf0e695de3996a",
+        "seed": 2116334571,
+        "sha256": "8d528edbcc32ec6ac1093071fc2b947b780f865ea09e07a4ce44065b09119158",
         "generation": {
-          "elapsed_seconds": 8.645839707984123,
+          "elapsed_seconds": 14.02664533299685,
           "model_load_seconds": 0.0,
-          "rtf": 4.911943778799805,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.506515228448027,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " gorro de la nana",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/vocab/v1/es/winter_hat.wav.raw.wav",
+    "sha256": "71102e95f8e524b0293c8ee3c0b63cddacaabdf2a9f03bfef16f4a656aeea857",
+    "receipt_sha256": "8891ea9f047eb1bb8113ff90e3d6a379ed0ff26fecd21d5ab0ec431caafa926b"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/vocab/v1/es/winter_hat.wav.extracted.wav",
+    "sha256": "5b2409b889479ea1f941fbd42ec8b377d3995da804bd3016d1dd204fce59c206"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/assets/audio/vocab/v1/es/winter_hat.wav.raw.wav",
+    "source_sha256": "71102e95f8e524b0293c8ee3c0b63cddacaabdf2a9f03bfef16f4a656aeea857",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/assets/audio/vocab/v1/es/winter_hat.wav.extracted.wav",
+    "output_sha256": "5b2409b889479ea1f941fbd42ec8b377d3995da804bd3016d1dd204fce59c206",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Gorro de lana",
+      "locale": "es",
+      "cue_id": "greia.vocab.winter_hat.es",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/assets/audio/vocab/v1/es/winter_hat.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "8891ea9f047eb1bb8113ff90e3d6a379ed0ff26fecd21d5ab0ec431caafa926b"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "Gorro de lana",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Escucha esta frase en español. ¡Goro de lana!",
+    "extracted_transcript": " gorro de la nana",
+    "raw_word_alignment": [
+      {
+        "word": "escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.6
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.6,
+        "end_seconds": 0.9
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.9,
+        "end_seconds": 1.32
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.32,
+        "end_seconds": 1.62
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.62,
+        "end_seconds": 2.14
+      },
+      {
+        "word": "goro",
+        "start_seconds": 2.98,
+        "end_seconds": 3.22
+      },
+      {
+        "word": "de",
+        "start_seconds": 3.22,
+        "end_seconds": 3.5
+      },
+      {
+        "word": "lana",
+        "start_seconds": 3.5,
+        "end_seconds": 3.84
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "gorro",
+        "start_seconds": 0.0,
+        "end_seconds": 0.82
+      },
+      {
+        "word": "de",
+        "start_seconds": 0.82,
+        "end_seconds": 0.96
+      },
+      {
+        "word": "la",
+        "start_seconds": 0.96,
+        "end_seconds": 1.14
+      },
+      {
+        "word": "nana",
+        "start_seconds": 1.14,
+        "end_seconds": 1.38
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.7183026765522204,
+        "no_speech_prob": 0.0021624406799674034,
+        "compression_ratio": 0.8703703703703703,
+        "word_probabilities": [
+          0.7255859375,
+          0.9140625,
+          0.98291015625,
+          0.884765625,
+          0.98193359375
+        ]
+      },
+      {
+        "avg_logprob": -0.7183026765522204,
+        "no_speech_prob": 0.0021624406799674034,
+        "compression_ratio": 0.8703703703703703,
+        "word_probabilities": [
+          0.53857421875,
+          0.7333984375,
+          0.2744140625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.8423642052544488,
+        "no_speech_prob": 0.13841009140014648,
+        "compression_ratio": 0.6666666666666666,
+        "word_probabilities": [
+          0.69921875,
+          0.68798828125,
+          0.275390625,
+          0.308837890625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 88,
+    "extracted_voiced_seconds": 0.88,
+    "unremoved_raw_target_tokens": [
+      "goro",
+      "de",
+      "lana"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "goro",
+      "de",
+      "lana"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 4.000181405895692,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 2.14,
+      "target_first_word_start_seconds": 2.98,
+      "gap_seconds": 0.6784580498866213,
+      "verified_silence_start_seconds": 2.1998639455782314,
+      "verified_silence_end_seconds": 2.8783219954648525,
+      "gap_rms_dbfs": -64.923,
+      "gap_peak_dbfs": -44.919,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.539092970521542,
+      "cut_sample": 55987,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "assets/audio/vocab/v1/es/winter_hat.wav",
-    "bytes": 77702,
-    "sha256": "b9ef9fd619dba6fac484eb728642a7261bcdfae441c8b7174b694642876475d8"
+    "sha256": "3f8cabbfa63beb6f3d283b7226abadcc906c54f6c0aaec7069cbd66d895d5513",
+    "bytes": 64512
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "e8ed20e2c72ecc19290cf66d9bc25ad2bc9f263e75128ddb53fbff8f9c5fdb27",
+    "original_sha256": "b9ef9fd619dba6fac484eb728642a7261bcdfae441c8b7174b694642876475d8",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

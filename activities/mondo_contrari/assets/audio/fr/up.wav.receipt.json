@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T13:19:26.071709+00:00",
+  "created_utc": "2026-10-23T13:33:39.612178+00:00",
   "request": {
     "speaker": "flash",
     "kind": "character_dialogue",
@@ -10,73 +10,90 @@
     "output": "activities/mondo_contrari/assets/audio/fr/up.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Flash, a springy, eager little rabbit. Acts out the word for a child. Let the pitch climb upward. Playful, clear words."
+    "delivery_prompt": "",
+    "ignore_accents": true,
+    "short_text_mode": "off",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "owner_authorization": "owner-2026-10-23-native-system-tts-missing-52",
+    "spoken_text": "En haut"
   },
-  "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.flash.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
+  "provider_id": "macos-native-say",
+  "voice_id": "Thomas",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": null,
   "generation_parameters": {
-    "job_id": "20261020-151921-ed65fc1c",
-    "idempotency_key": "greia-1336127bbbf245eaa31363fd27b53128",
-    "backend": {
-      "backend": "mlx",
-      "adapter_version": "0.1.0",
-      "model": "mlx-community/VoxCPM2-8bit",
-      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
-      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
-      "mlx": "0.32.1",
-      "tokenizer_loader": "PreTrainedTokenizerFast",
-      "mlx_audio": "0.5.0",
-      "quantization": "8bit",
-      "sample_rate": 48000,
-      "native_audio_streaming": false,
-      "reference_encoding_cache": 16,
-      "compiled_hot_paths": true
-    },
-    "voxstage_voice_id": "greia-audition-20261019-flash-v1-02",
-    "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
-    "settings": {
-      "steps": 10,
-      "cfg": 2.0,
-      "max_tokens": 300
-    },
-    "script_seed": 113096190,
-    "language_direction": "French",
-    "delivery_prompt": "Flash, a springy, eager little rabbit. Acts out the word for a child. Let the pitch climb upward. Playful, clear words.",
-    "effective_delivery": "Speak in French. Flash, a springy, eager little rabbit. Acts out the word for a child. Let the pitch climb upward. Playful, clear words.",
-    "mode": "reference",
-    "recordings": [
-      {
-        "file": "speech-001-take-01.wav",
-        "seed": 1614287479,
-        "sha256": "873669db5d26c93aa8d41d6c48664e3eafea8b45d75887d9d523f55756a49da1",
-        "generation": {
-          "elapsed_seconds": 3.849393583019264,
-          "model_load_seconds": 0.0,
-          "rtf": 4.8107397413279696,
-          "peak_memory_gb": 8.44494914
-        }
-      }
-    ]
+    "voice": "Thomas",
+    "rate_wpm": 175,
+    "synthesis_text": "En haut"
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
+    "disposition": "NOT_RUN",
+    "verifier_id": "owner-listening-review-waiver",
     "transcript": null,
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "owner waived ASR/listening review; audio format/integrity checks only",
+    "model_id": null,
+    "model_revision": null,
+    "ignore_accents": null,
+    "comparison_policy": null,
+    "flags": [],
+    "metrics": null
   },
   "attempts": 1,
   "output": {
     "path": "activities/mondo_contrari/assets/audio/fr/up.wav",
-    "bytes": 35366,
-    "sha256": "8aca57556333e95997465b1743a8df39261f322c375fc036793dae434f7a2838"
+    "bytes": 12774,
+    "sha256": "8eec830b653ceaa35fdf78c77d659c9f5f97aee285500af5da72f31821e85eee"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "human_review": "WAIVED_BY_OWNER",
+  "acceptance_note": "Owner explicitly waived listening review for this deterministic system-voice replacement; verification was not run and this is not a machine PASS.",
+  "owner_authorization": "owner-2026-10-23-native-system-tts-missing-52",
+  "generation_evidence": {
+    "path": "/Users/taio84/Library/Application Support/Greia/voice-production/generation-evidence/b42ae175b4eb4dcea0f5f37c86cd4c7c",
+    "history": "/Users/taio84/Library/Application Support/Greia/voice-production/generation-evidence/b42ae175b4eb4dcea0f5f37c86cd4c7c/history.json"
+  },
+  "semantic_request": {
+    "speaker": "flash",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "En haut",
+    "cue_id": "mondo_contrari.up.fr",
+    "output": null,
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "comparison_policy": "locale-number-tokens-v4-spoken-target-v1"
+  },
+  "system_tts_fallback": {
+    "policy": "deterministic-native-system-tts-owner-waived-v1",
+    "spoken_target_policy": "locale-spoken-letter-and-cardinal-v1",
+    "semantic_text": "En haut",
+    "spoken_text": "En haut",
+    "locale": "fr",
+    "native_voice": "Thomas",
+    "signal_metrics": {
+      "duration_seconds": 0.287891156462585,
+      "rms_dbfs": -13.82,
+      "peak": 0.87711,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.0,
+      "trailing_silence_seconds": 0.04,
+      "longest_internal_pause_seconds": 0.0
+    },
+    "signal_flags": [],
+    "verification": "NOT_RUN",
+    "human_review": "WAIVED_BY_OWNER",
+    "authorization": "owner-2026-10-23-native-system-tts-missing-52"
+  },
   "corpus_replacement": {
-    "original_sha256": "72af070eb4ecd6684ed9bd9cecd35dfb5c0705abb87bf80b26d9466a30aa3fea",
-    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+    "original_sha256": "8aca57556333e95997465b1743a8df39261f322c375fc036793dae434f7a2838",
+    "owner_authorization": "owner-2026-10-23-native-system-tts-missing-52",
+    "human_review": "WAIVED_BY_OWNER",
+    "source_run": "natural-v4-run-02"
   }
 }

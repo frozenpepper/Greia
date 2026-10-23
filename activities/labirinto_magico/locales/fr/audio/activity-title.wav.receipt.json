@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:55:35.576398+00:00",
+  "created_utc": "2026-10-22T07:23:39.931895+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "Labyrinthe magique",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français...\n\nLabyrinthe magique",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Labyrinthe magique",
+    "cue_id": "labirinto_magico.title.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Labyrinthe magique",
     "cue_id": "labirinto_magico.title.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/labirinto_magico/locales/fr/audio/activity-title.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-145521-806faf4f",
-    "idempotency_key": "greia-b7904c21dbe0491fb83b35bd10b6ba5f",
+    "job_id": "20261022-091656-7179fb49",
+    "idempotency_key": "greia-700210c2ffc64fa28f5cb075b1a5aa67",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,240 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2574752478,
+    "script_seed": 1728231601,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 167263324,
-        "sha256": "9669ce5955de9d75c59743f7a08b2dadc140bf9f714b807d073b3d80bc8fbb3a",
+        "seed": 4283149251,
+        "sha256": "0a71a6a4966cfb6aa9d1f8814634742fd023863faacbc80b8df48e815aab05be",
         "generation": {
-          "elapsed_seconds": 12.630820750026032,
+          "elapsed_seconds": 15.416667958008475,
           "model_load_seconds": 0.0,
-          "rtf": 7.893440735356337,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.4410925095067464,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8064,
+    "transcript": " Labyrinth magique.",
+    "metrics": {
+      "duration_seconds": 1.7720181405895692,
+      "rms_dbfs": -35.79,
+      "peak": 0.18661,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.28,
+      "trailing_silence_seconds": 0.26,
+      "longest_internal_pause_seconds": 0.1
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/labirinto_magico/locales/fr/audio/activity-title.wav.raw.wav",
+    "sha256": "805af7468a925a2f05a0fe913a2a21e220b08a26aacbbc499a6f5a2351f37824",
+    "receipt_sha256": "42f1e596b9d89bb01c8afa5238eced461659e0708e03adde84920d24dc2b7d8e"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/labirinto_magico/locales/fr/audio/activity-title.wav.extracted.wav",
+    "sha256": "be6baa5cf80bf0d785a2ab13a354d97fcd8d0018ff03ee47684a2b7ebef312f2"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/labirinto_magico/locales/fr/audio/activity-title.wav.delivery.wav",
+    "sha256": "c6ef28a40a97e7d75269a957ce82a0be5b8a30f3d9651de06d75b50fb0936b87"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/activities/labirinto_magico/locales/fr/audio/activity-title.wav.raw.wav",
+    "source_sha256": "805af7468a925a2f05a0fe913a2a21e220b08a26aacbbc499a6f5a2351f37824",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/activities/labirinto_magico/locales/fr/audio/activity-title.wav.extracted.wav",
+    "output_sha256": "be6baa5cf80bf0d785a2ab13a354d97fcd8d0018ff03ee47684a2b7ebef312f2",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Labyrinthe magique",
+      "locale": "fr",
+      "cue_id": "labirinto_magico.title.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/activities/labirinto_magico/locales/fr/audio/activity-title.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "42f1e596b9d89bb01c8afa5238eced461659e0708e03adde84920d24dc2b7d8e"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "Labyrinthe magique",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français. Labyrinth magique.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Labyrinth magique.",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.62
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.62,
+        "end_seconds": 1.04
+      },
+      {
+        "word": "est",
+        "start_seconds": 1.04,
+        "end_seconds": 1.36
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.36,
+        "end_seconds": 1.5
+      },
+      {
+        "word": "français",
+        "start_seconds": 1.5,
+        "end_seconds": 2.0
+      },
+      {
+        "word": "labyrinth",
+        "start_seconds": 2.86,
+        "end_seconds": 3.62
+      },
+      {
+        "word": "magique",
+        "start_seconds": 3.62,
+        "end_seconds": 4.18
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "labyrinth",
+        "start_seconds": 0.0,
+        "end_seconds": 1.18
+      },
+      {
+        "word": "magique",
+        "start_seconds": 1.18,
+        "end_seconds": 1.74
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5001657168070476,
+        "no_speech_prob": 0.05536514148116112,
+        "compression_ratio": 0.8596491228070176,
+        "word_probabilities": [
+          0.65869140625,
+          0.9794921875,
+          0.9853515625,
+          0.9541015625,
+          0.93994140625,
+          0.6787109375,
+          0.83447265625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6033102671305338,
+        "no_speech_prob": 0.32261404395103455,
+        "compression_ratio": 0.6923076923076923,
+        "word_probabilities": [
+          0.73486328125,
+          0.689453125
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 91,
+    "extracted_voiced_seconds": 0.91,
+    "unremoved_raw_target_tokens": [
+      "labyrinth",
+      "magique"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "labyrinth",
+      "magique"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 4.480181405895691,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 2.0,
+      "search_end_seconds": 2.86,
+      "prefix_last_word_end_seconds": 2.0,
+      "target_first_word_start_seconds": 2.86,
+      "gap_seconds": 0.7383219954648526,
+      "verified_silence_start_seconds": 2.06984126984127,
+      "verified_silence_end_seconds": 2.8081632653061224,
+      "gap_rms_dbfs": -52.632,
+      "gap_peak_dbfs": -31.875,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.439002267573696,
+      "cut_sample": 53780,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 5935,
+      "removed_seconds": 0.2691609977324263,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 59715,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/activities/labirinto_magico/locales/fr/audio/activity-title.wav.delivery.wav",
+      "sha256": "c6ef28a40a97e7d75269a957ce82a0be5b8a30f3d9651de06d75b50fb0936b87"
+    }
+  },
   "output": {
     "path": "activities/labirinto_magico/locales/fr/audio/activity-title.wav",
-    "bytes": 70646,
-    "sha256": "081dab8ecb35e578ba843916b838b1c26bff1f008590affa4a8fade919c60772"
+    "sha256": "96a83e058ee33cb03b9ffa55e7b30f5811c268e155b68455ea1bbaf3e4194f25",
+    "bytes": 78224
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "f037e17bba04478a1828ccbd5e593d0aac6f5f121a224f0f5f1010f86f5d55b5",
+    "original_sha256": "5630bc8efcddecffe11a2a5a13ffd20967d3b6fcb548aa8b2a4ba66f581bf130",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

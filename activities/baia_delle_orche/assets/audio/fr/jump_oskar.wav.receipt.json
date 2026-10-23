@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T07:59:52.799030+00:00",
+  "created_utc": "2026-10-22T04:17:29.928273+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "Fais sauter Oskar",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français...\n\nFais sauter Oskar",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Fais sauter Oskar",
+    "cue_id": "greia.requested.jump_oskar.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Fais sauter Oskar",
     "cue_id": "greia.requested.jump_oskar.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/baia_delle_orche/assets/audio/fr/jump_oskar.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.tito.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261021-095946-5cc7a5f7",
-    "idempotency_key": "greia-e7bfb6576b1740e5bbc1b804e645cee0",
+    "job_id": "20261022-061713-c738805a",
+    "idempotency_key": "greia-d51ff8884c174b529978cde73ebdf936",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,254 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2562481854,
+    "script_seed": 3768307420,
     "language_direction": "French",
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in French. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 4231922495,
-        "sha256": "605ac41f7951f5ae5427ed9c5b25a9d15521064a311b2cf5b7b2fb3b37a0e79d",
+        "seed": 2178804781,
+        "sha256": "52cbf920684d4eef5452953d968bb73518802fe3275d05173e5706584b1a9683",
         "generation": {
-          "elapsed_seconds": 5.978894042003958,
+          "elapsed_seconds": 15.425987708993489,
           "model_load_seconds": 0.0,
-          "rtf": 3.7364195658810275,
-          "peak_memory_gb": 7.648166916
+          "rtf": 4.820370098117855,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8451,
+    "transcript": " Fais sauter Oscar.",
+    "metrics": {
+      "duration_seconds": 1.3517913832199546,
+      "rms_dbfs": -27.85,
+      "peak": 0.23218,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.06,
+      "trailing_silence_seconds": 0.08,
+      "longest_internal_pause_seconds": 0.06
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/baia_delle_orche/assets/audio/fr/jump_oskar.wav.raw.wav",
+    "sha256": "2bb9494e641607fa5e3acc0ff0d8824e5f2dfa0b13c6b69def52867c1c875ee7",
+    "receipt_sha256": "5947efef25e3b0ca14fd1b26a3d3268a03942c653b5152e09a90504914b46b84"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/baia_delle_orche/assets/audio/fr/jump_oskar.wav.extracted.wav",
+    "sha256": "f3397c8edd870ea47e031a3cac3d7316d04e895b7e1c3a5969a3b5ba45a99219"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/baia_delle_orche/assets/audio/fr/jump_oskar.wav.delivery.wav",
+    "sha256": "c502a9b35d469ce67827a0a078c686393bde9ffe15412e3d1d4c051a0a0878e2"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/activities/baia_delle_orche/assets/audio/fr/jump_oskar.wav.raw.wav",
+    "source_sha256": "2bb9494e641607fa5e3acc0ff0d8824e5f2dfa0b13c6b69def52867c1c875ee7",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/activities/baia_delle_orche/assets/audio/fr/jump_oskar.wav.extracted.wav",
+    "output_sha256": "f3397c8edd870ea47e031a3cac3d7316d04e895b7e1c3a5969a3b5ba45a99219",
+    "target_request": {
+      "speaker": "tito",
+      "kind": "character_dialogue",
+      "text": "Fais sauter Oskar",
+      "locale": "fr",
+      "cue_id": "greia.requested.jump_oskar.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/activities/baia_delle_orche/assets/audio/fr/jump_oskar.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "5947efef25e3b0ca14fd1b26a3d3268a03942c653b5152e09a90504914b46b84"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "Fais sauter Oskar",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français, fait sauter Oscar.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Fais sautez Oscar.",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.24
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.24,
+        "end_seconds": 0.5
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.5,
+        "end_seconds": 0.7
+      },
+      {
+        "word": "en",
+        "start_seconds": 0.7,
+        "end_seconds": 0.82
+      },
+      {
+        "word": "français",
+        "start_seconds": 0.82,
+        "end_seconds": 1.24
+      },
+      {
+        "word": "fait",
+        "start_seconds": 2.0,
+        "end_seconds": 2.1
+      },
+      {
+        "word": "sauter",
+        "start_seconds": 2.1,
+        "end_seconds": 2.48
+      },
+      {
+        "word": "oscar",
+        "start_seconds": 2.48,
+        "end_seconds": 2.82
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "fais",
+        "start_seconds": 0.0,
+        "end_seconds": 0.46
+      },
+      {
+        "word": "sautez",
+        "start_seconds": 0.46,
+        "end_seconds": 0.94
+      },
+      {
+        "word": "oscar",
+        "start_seconds": 0.94,
+        "end_seconds": 1.2
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.40786586488996235,
+        "no_speech_prob": 0.008903062902390957,
+        "compression_ratio": 0.8596491228070176,
+        "word_probabilities": [
+          0.69873046875,
+          0.990234375,
+          0.9150390625,
+          0.93798828125,
+          0.978515625,
+          0.258056640625,
+          0.83740234375,
+          0.7060546875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.7159982787238227,
+        "no_speech_prob": 0.09263123571872711,
+        "compression_ratio": 0.6923076923076923,
+        "word_probabilities": [
+          0.69482421875,
+          0.43994140625,
+          0.5673828125
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 92,
+    "extracted_voiced_seconds": 0.92,
+    "unremoved_raw_target_tokens": [
+      "fait",
+      "sauter",
+      "oscar"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "fait",
+      "sauter",
+      "oscar"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.2001814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.24,
+      "search_end_seconds": 2.0,
+      "prefix_last_word_end_seconds": 1.24,
+      "target_first_word_start_seconds": 2.0,
+      "gap_seconds": 0.5986394557823129,
+      "verified_silence_start_seconds": 1.349750566893424,
+      "verified_silence_end_seconds": 1.948390022675737,
+      "gap_rms_dbfs": -57.637,
+      "gap_peak_dbfs": -34.037,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.6490702947845803,
+      "cut_sample": 36362,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 4395,
+      "removed_seconds": 0.19931972789115646,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 40757,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/activities/baia_delle_orche/assets/audio/fr/jump_oskar.wav.delivery.wav",
+      "sha256": "c502a9b35d469ce67827a0a078c686393bde9ffe15412e3d1d4c051a0a0878e2"
+    }
+  },
   "output": {
     "path": "activities/baia_delle_orche/assets/audio/fr/jump_oskar.wav",
-    "bytes": 70646,
-    "sha256": "3b16abaae25ad7988b0699fe4bfa67416cb6d8499567021e9ab26ad9480e1206"
+    "sha256": "565c0dc77696764d578fb70175905fd283961b512c1391c19fab9166e8fba6f6",
+    "bytes": 59692
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "83d3cbd706018048bfd4ee58b883f9fce48a8e79090d793ac18d8e71807d9c84",
+    "original_sha256": "7f49dcca373c5e13f63f5936b98166e3f06f12143b92e8a9a2d56f0c4183234a",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:17:18.966121+00:00",
+  "created_utc": "2026-10-23T01:27:53.687345+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
@@ -8,17 +8,22 @@
     "text": "Fanno rima?",
     "cue_id": "greia.requested.do_they_rhyme.it",
     "output": "activities/festa_delle_rime/assets/audio/it/do_they_rhyme.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think."
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic"
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-141710-f812b03f",
-    "idempotency_key": "greia-34f64ca0b1344e938b557d456a0ea887",
+    "job_id": "20261023-032740-8ac84793",
+    "idempotency_key": "greia-e5eebb41a40742d792e93cdfad5b0929",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +46,327 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 86847279,
+    "script_seed": 1247767378,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
-    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "delivery_prompt": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "effective_delivery": "Speak in Italian. Voce calda e calma. Pronuncia chiara e naturale.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2586018463,
-        "sha256": "37665eef1bff6e8a98b10106208702e3bba69522557fe10fb2528cbdb9537eb9",
+        "seed": 1701901721,
+        "sha256": "83daa631dd31fe835517277c289560c49064e03f58a3eab9d1c7469c6bba762c",
         "generation": {
-          "elapsed_seconds": 7.338944166956935,
+          "elapsed_seconds": 11.985964290972333,
           "model_load_seconds": 0.0,
-          "rtf": 4.586362358269098,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.567074338863846,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-audio-parakeet-tdt-v3",
+    "transcript": "Fanno rima?",
+    "score": 1.0,
+    "detail": "Delivered target transcribed and screened; human listening remains pending",
+    "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+    "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+    "flags": [],
+    "metrics": {
+      "duration_seconds": 0.990204081632653,
+      "rms_dbfs": -31.19,
+      "peak": 0.19031,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.08,
+      "trailing_silence_seconds": 0.16,
+      "longest_internal_pause_seconds": 0.0
+    }
   },
   "attempts": 1,
   "output": {
     "path": "activities/festa_delle_rime/assets/audio/it/do_they_rhyme.wav",
-    "bytes": 70646,
-    "sha256": "c32eca5b7e210d9e854a0d2be9028db15730c9ff6a7054695b1ad29881b26a66"
+    "bytes": 43746,
+    "sha256": "9582ba790ac124798e3e1ce7a246f09e1411a8b61a48a5d789f95760d52db69b"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "short_phrase": {
+    "mode": "automatic-carrier",
+    "composition_policy": "natural-context-period-v1",
+    "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/d1f4d67a034b4c25b2eca3e3e0938f0d",
+    "prefix": "Parliamo con calma insieme.",
+    "composite_text": "Parliamo con calma insieme.\n\nFanno rima?",
+    "effective_delivery": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "extraction": {
+      "schema_version": 1,
+      "algorithm_version": "greia-spoken-carrier-extractor-v7",
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "status": "EXTRACTED_PENDING_LISTENING",
+      "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/d1f4d67a034b4c25b2eca3e3e0938f0d/attempt-01/raw.wav",
+      "source_sha256": "83daa631dd31fe835517277c289560c49064e03f58a3eab9d1c7469c6bba762c",
+      "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/d1f4d67a034b4c25b2eca3e3e0938f0d/attempt-01/target.wav",
+      "output_sha256": "69615b142f42a0958ab740e1b0329d531c151919bb3c457b2eef7c8882a79c24",
+      "output_bytes": 95100,
+      "locale": "it",
+      "prefix": "Parliamo con calma insieme.",
+      "target": "Fanno rima?",
+      "remove_first_words": 4,
+      "ignore_accents": true,
+      "target_verification_requested": "warn",
+      "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+      "target_comparison_score": 1.0,
+      "target_word_count_matches": true,
+      "target_numbers_match": true,
+      "target_comparison_flags": [],
+      "target_transcript_warning": false,
+      "recognizer": "mlx-audio-parakeet-tdt-v3",
+      "recognizer_version": "0.5.0",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "extracted_transcript": "Fanno rima?",
+      "expected_target_tokens": [
+        "fanno",
+        "rima"
+      ],
+      "extracted_target_tokens": [
+        "fanno",
+        "rima"
+      ],
+      "extracted_target_exact_match": true,
+      "transcription_settings": {
+        "language_detection": "automatic",
+        "expected_text_prompt": null,
+        "timestamps": "model-provided-token-timestamps"
+      },
+      "sample_rate": 48000,
+      "duration_seconds": 3.3601666666666667,
+      "boundary": {
+        "search_strategy": "target-only-global-quiet-run-v7",
+        "verified_silence_start_seconds": 1.84,
+        "verified_silence_end_seconds": 2.47,
+        "verified_silence_duration_seconds": 0.63,
+        "cut_sample": 113760,
+        "cut_time_seconds": 2.37,
+        "padding_seconds": 0.1,
+        "quiet_run_start_sample": 88320,
+        "quiet_run_end_sample": 118560,
+        "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+      },
+      "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/d1f4d67a034b4c25b2eca3e3e0938f0d/attempt-01/target.wav.search/4837e5acce3c4975a496b0f04ffad8fa",
+      "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/d1f4d67a034b4c25b2eca3e3e0938f0d/attempt-01/target.wav.search/4837e5acce3c4975a496b0f04ffad8fa/search.json",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/d1f4d67a034b4c25b2eca3e3e0938f0d/attempt-01/raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "9f8fed6a0db4934241f75ab3acb147dfdc95cc793bcaf59d970266aea2861a7a",
+      "candidate_sha256": "69615b142f42a0958ab740e1b0329d531c151919bb3c457b2eef7c8882a79c24",
+      "candidate_id": "candidate-01",
+      "candidate_count": 1,
+      "qualifying_quiet_run_count": 1,
+      "candidate_results": [
+        {
+          "candidate_id": "candidate-01",
+          "quiet_run": {
+            "start_sample": 88320,
+            "end_sample": 118560,
+            "start_seconds": 1.84,
+            "end_seconds": 2.47,
+            "duration_seconds": 0.63
+          },
+          "cut_sample": 113760,
+          "cut_time_seconds": 2.37,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/d1f4d67a034b4c25b2eca3e3e0938f0d/attempt-01/target.wav.search/4837e5acce3c4975a496b0f04ffad8fa/candidate-01.wav",
+          "preceding_voiced_seconds": 1.71,
+          "retained_voiced_seconds": 0.67,
+          "retained_duration_seconds": 0.9901666666666666,
+          "candidate_sha256": "69615b142f42a0958ab740e1b0329d531c151919bb3c457b2eef7c8882a79c24",
+          "extracted_transcript": "Fanno rima?",
+          "canonical_transcript_tokens": [
+            "fanno",
+            "rima"
+          ],
+          "exact_target_match": true,
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": true,
+          "asr_segment_count": 1
+        }
+      ],
+      "human_review": "PENDING",
+      "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+      "delivery": {
+        "policy": "verified-carrier-gap-delivery-v1",
+        "removed_frames": 0,
+        "removed_seconds": 0.0,
+        "retained_verified_quiet_seconds": 0.1,
+        "raw_delivery_start_sample": 113760,
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/d1f4d67a034b4c25b2eca3e3e0938f0d/attempt-01/delivery-target.wav",
+        "sha256": "69615b142f42a0958ab740e1b0329d531c151919bb3c457b2eef7c8882a79c24"
+      }
+    },
+    "quality": {
+      "disposition": "PASS",
+      "score": 1.0,
+      "transcript": "Fanno rima?",
+      "metrics": {
+        "duration_seconds": 0.990204081632653,
+        "rms_dbfs": -31.19,
+        "peak": 0.19031,
+        "clipped_fraction": 0.0,
+        "leading_silence_seconds": 0.08,
+        "trailing_silence_seconds": 0.16,
+        "longest_internal_pause_seconds": 0.0
+      },
+      "flags": [],
+      "ignore_accents": true,
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "detail": "Delivered target transcribed and screened; human listening remains pending"
+    },
+    "history": [
+      {
+        "attempt": 1,
+        "status": "PASS",
+        "quality": {
+          "disposition": "PASS",
+          "score": 1.0,
+          "transcript": "Fanno rima?",
+          "metrics": {
+            "duration_seconds": 0.990204081632653,
+            "rms_dbfs": -31.19,
+            "peak": 0.19031,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.08,
+            "trailing_silence_seconds": 0.16,
+            "longest_internal_pause_seconds": 0.0
+          },
+          "flags": [],
+          "ignore_accents": true,
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "detail": "Delivered target transcribed and screened; human listening remains pending"
+        },
+        "extraction": {
+          "schema_version": 1,
+          "algorithm_version": "greia-spoken-carrier-extractor-v7",
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "status": "EXTRACTED_PENDING_LISTENING",
+          "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/d1f4d67a034b4c25b2eca3e3e0938f0d/attempt-01/raw.wav",
+          "source_sha256": "83daa631dd31fe835517277c289560c49064e03f58a3eab9d1c7469c6bba762c",
+          "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/d1f4d67a034b4c25b2eca3e3e0938f0d/attempt-01/target.wav",
+          "output_sha256": "69615b142f42a0958ab740e1b0329d531c151919bb3c457b2eef7c8882a79c24",
+          "output_bytes": 95100,
+          "locale": "it",
+          "prefix": "Parliamo con calma insieme.",
+          "target": "Fanno rima?",
+          "remove_first_words": 4,
+          "ignore_accents": true,
+          "target_verification_requested": "warn",
+          "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_transcript_warning": false,
+          "recognizer": "mlx-audio-parakeet-tdt-v3",
+          "recognizer_version": "0.5.0",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "extracted_transcript": "Fanno rima?",
+          "expected_target_tokens": [
+            "fanno",
+            "rima"
+          ],
+          "extracted_target_tokens": [
+            "fanno",
+            "rima"
+          ],
+          "extracted_target_exact_match": true,
+          "transcription_settings": {
+            "language_detection": "automatic",
+            "expected_text_prompt": null,
+            "timestamps": "model-provided-token-timestamps"
+          },
+          "sample_rate": 48000,
+          "duration_seconds": 3.3601666666666667,
+          "boundary": {
+            "search_strategy": "target-only-global-quiet-run-v7",
+            "verified_silence_start_seconds": 1.84,
+            "verified_silence_end_seconds": 2.47,
+            "verified_silence_duration_seconds": 0.63,
+            "cut_sample": 113760,
+            "cut_time_seconds": 2.37,
+            "padding_seconds": 0.1,
+            "quiet_run_start_sample": 88320,
+            "quiet_run_end_sample": 118560,
+            "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+          },
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/d1f4d67a034b4c25b2eca3e3e0938f0d/attempt-01/target.wav.search/4837e5acce3c4975a496b0f04ffad8fa",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/d1f4d67a034b4c25b2eca3e3e0938f0d/attempt-01/target.wav.search/4837e5acce3c4975a496b0f04ffad8fa/search.json",
+          "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/d1f4d67a034b4c25b2eca3e3e0938f0d/attempt-01/raw.wav.receipt.json",
+          "source_provider_receipt_sha256": "9f8fed6a0db4934241f75ab3acb147dfdc95cc793bcaf59d970266aea2861a7a",
+          "candidate_sha256": "69615b142f42a0958ab740e1b0329d531c151919bb3c457b2eef7c8882a79c24",
+          "candidate_id": "candidate-01",
+          "candidate_count": 1,
+          "qualifying_quiet_run_count": 1,
+          "candidate_results": [
+            {
+              "candidate_id": "candidate-01",
+              "quiet_run": {
+                "start_sample": 88320,
+                "end_sample": 118560,
+                "start_seconds": 1.84,
+                "end_seconds": 2.47,
+                "duration_seconds": 0.63
+              },
+              "cut_sample": 113760,
+              "cut_time_seconds": 2.37,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/d1f4d67a034b4c25b2eca3e3e0938f0d/attempt-01/target.wav.search/4837e5acce3c4975a496b0f04ffad8fa/candidate-01.wav",
+              "preceding_voiced_seconds": 1.71,
+              "retained_voiced_seconds": 0.67,
+              "retained_duration_seconds": 0.9901666666666666,
+              "candidate_sha256": "69615b142f42a0958ab740e1b0329d531c151919bb3c457b2eef7c8882a79c24",
+              "extracted_transcript": "Fanno rima?",
+              "canonical_transcript_tokens": [
+                "fanno",
+                "rima"
+              ],
+              "exact_target_match": true,
+              "target_comparison_score": 1.0,
+              "target_word_count_matches": true,
+              "target_numbers_match": true,
+              "target_comparison_flags": [],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": true,
+              "asr_segment_count": 1
+            }
+          ],
+          "human_review": "PENDING",
+          "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+          "delivery": {
+            "policy": "verified-carrier-gap-delivery-v1",
+            "removed_frames": 0,
+            "removed_seconds": 0.0,
+            "retained_verified_quiet_seconds": 0.1,
+            "raw_delivery_start_sample": 113760,
+            "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/d1f4d67a034b4c25b2eca3e3e0938f0d/attempt-01/delivery-target.wav",
+            "sha256": "69615b142f42a0958ab740e1b0329d531c151919bb3c457b2eef7c8882a79c24"
+          }
+        },
+        "candidate": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/d1f4d67a034b4c25b2eca3e3e0938f0d/attempt-01/candidate.wav"
+      }
+    ]
+  },
   "corpus_replacement": {
-    "original_sha256": "31c3bd95af87e377cd9b2880f4889ea50bae6edf7e4dbb8d9048e202da6cf366",
+    "original_sha256": "c32eca5b7e210d9e854a0d2be9028db15730c9ff6a7054695b1ad29881b26a66",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

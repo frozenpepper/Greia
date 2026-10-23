@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T08:43:15.263026+00:00",
+  "created_utc": "2026-10-21T15:53:14.651212+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "¿Y ahora?",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. ¿Y ahora?",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "momo",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "¿Y ahora?",
+    "cue_id": "greia.requested.whats_next.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "¿Y ahora?",
     "cue_id": "greia.requested.whats_next.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/clinica_cuccioli/assets/audio/es/whats_next.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.momo.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261021-104308-334a98b3",
-    "idempotency_key": "greia-d738a05665e445d8b694ab0f503458b1",
+    "job_id": "20261021-175302-ecd50765",
+    "idempotency_key": "greia-c426691361ce47b187461163d703cf24",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,212 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3995537293,
+    "script_seed": 146990862,
     "language_direction": "Spanish",
-    "delivery_prompt": "Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
-    "effective_delivery": "Speak in Spanish. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 4011162421,
-        "sha256": "5d113f674669e0aa41f4ba6b6877f05041342e5a10e492982251b5881712c5e8",
+        "seed": 4145281817,
+        "sha256": "2cb44fb77aa486a9f5d62db6a8b663e61101905cf7bcf0937fe393d1538f4bac",
         "generation": {
-          "elapsed_seconds": 6.417645042005461,
+          "elapsed_seconds": 11.333825499998056,
           "model_load_seconds": 0.0,
-          "rtf": 3.6460439590978853,
-          "peak_memory_gb": 7.648166916
+          "rtf": 3.728027684885058,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Y ahora...",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/clinica_cuccioli/assets/audio/es/whats_next.wav.raw.wav",
+    "sha256": "b3d410c911d9696a3f1cb8585b6e49ed4e62d015876edfed5b93d4dabfcb49fa",
+    "receipt_sha256": "45e19a8145b086f70dbca233ec58e96beb8ca740bc69e8338d453b031f8888db"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/clinica_cuccioli/assets/audio/es/whats_next.wav.extracted.wav",
+    "sha256": "4976573bc68c784e8635764a5e561ed88c01f0163fefa9e98349728f571a57af"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/clinica_cuccioli/assets/audio/es/whats_next.wav.raw.wav",
+    "source_sha256": "b3d410c911d9696a3f1cb8585b6e49ed4e62d015876edfed5b93d4dabfcb49fa",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/clinica_cuccioli/assets/audio/es/whats_next.wav.extracted.wav",
+    "output_sha256": "4976573bc68c784e8635764a5e561ed88c01f0163fefa9e98349728f571a57af",
+    "target_request": {
+      "speaker": "momo",
+      "kind": "character_dialogue",
+      "text": "¿Y ahora?",
+      "locale": "es",
+      "cue_id": "greia.requested.whats_next.es",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/clinica_cuccioli/assets/audio/es/whats_next.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "45e19a8145b086f70dbca233ec58e96beb8ca740bc69e8338d453b031f8888db"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "¿Y ahora?",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Escucha esta frase en español. Y ahora...",
+    "extracted_transcript": " Y ahora...",
+    "raw_word_alignment": [
+      {
+        "word": "escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.56
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.56,
+        "end_seconds": 0.9
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.9,
+        "end_seconds": 1.22
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.22,
+        "end_seconds": 1.54
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.54,
+        "end_seconds": 2.02
+      },
+      {
+        "word": "y",
+        "start_seconds": 2.56,
+        "end_seconds": 2.64
+      },
+      {
+        "word": "ahora",
+        "start_seconds": 2.64,
+        "end_seconds": 3.02
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "y",
+        "start_seconds": 0.0,
+        "end_seconds": 0.38
+      },
+      {
+        "word": "ahora",
+        "start_seconds": 0.38,
+        "end_seconds": 0.72
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.6048449834187826,
+        "no_speech_prob": 0.003924128599464893,
+        "compression_ratio": 0.8571428571428571,
+        "word_probabilities": [
+          0.724609375,
+          0.92529296875,
+          0.986328125,
+          0.943359375,
+          0.97802734375
+        ]
+      },
+      {
+        "avg_logprob": -0.6048449834187826,
+        "no_speech_prob": 0.003924128599464893,
+        "compression_ratio": 0.8571428571428571,
+        "word_probabilities": [
+          0.64501953125,
+          0.71630859375
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.692137082417806,
+        "no_speech_prob": 0.11060012131929398,
+        "compression_ratio": 0.5555555555555556,
+        "word_probabilities": [
+          0.50537109375,
+          0.71923828125
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 45,
+    "extracted_voiced_seconds": 0.45,
+    "unremoved_raw_target_tokens": [
+      "y",
+      "ahora"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "y",
+      "ahora"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.0401814058956917,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 2.02,
+      "target_first_word_start_seconds": 2.56,
+      "gap_seconds": 0.4090702947845805,
+      "verified_silence_start_seconds": 2.0798639455782313,
+      "verified_silence_end_seconds": 2.488934240362812,
+      "gap_rms_dbfs": -58.763,
+      "gap_peak_dbfs": -42.999,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.2843990929705216,
+      "cut_sample": 50371,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/clinica_cuccioli/assets/audio/es/whats_next.wav",
-    "bytes": 77702,
-    "sha256": "e1fc91fc8bd41aee0b4579be3f2bc19e76963f81e5360271e204fde134262e53"
+    "sha256": "393f71c8e3bb922c9ed29e2aae895a7d4a9ff0cf0100770a45abd68e16a8bd9d",
+    "bytes": 33408
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "4260c57cf062190d361eb67ffe45b5b9371ca86493ac72fae4d0ec68b28cf006",
+    "original_sha256": "e1fc91fc8bd41aee0b4579be3f2bc19e76963f81e5360271e204fde134262e53",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

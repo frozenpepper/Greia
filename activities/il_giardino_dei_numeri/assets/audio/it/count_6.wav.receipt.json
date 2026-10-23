@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:44:57.053020+00:00",
+  "created_utc": "2026-10-22T17:38:09.012422+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
@@ -8,17 +8,21 @@
     "text": "Sei!",
     "cue_id": "greia.wired.count_6.it",
     "output": "activities/il_giardino_dei_numeri/assets/audio/it/count_6.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words."
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-144445-55e1800a",
-    "idempotency_key": "greia-308414dcf288463b8222973210878f11",
+    "job_id": "20261022-193755-67c9990c",
+    "idempotency_key": "greia-4e19620315b84859ad14e6c6492e6018",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +45,341 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2848242029,
+    "script_seed": 1636821640,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words.",
-    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words.",
+    "delivery_prompt": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "effective_delivery": "Speak in Italian. Voce calda e calma. Pronuncia chiara e naturale.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1056796384,
-        "sha256": "3c3a9c60a6e8ccf9e2824251b1c58b6e809317d30fdbf710a9307d7dc2f694e4",
+        "seed": 1666173722,
+        "sha256": "d1e95580edda5db475d1d1cd5137894361a5da0f712a10e7c68b61a394924f7c",
         "generation": {
-          "elapsed_seconds": 10.956484416965395,
+          "elapsed_seconds": 11.315055250015575,
           "model_load_seconds": 0.0,
-          "rtf": 4.279598105708767,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.9286112782879146,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-base",
+    "transcript": " sei",
+    "score": 1.0,
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "ignore_accents": true
   },
-  "attempts": 1,
+  "attempts": 3,
   "output": {
     "path": "activities/il_giardino_dei_numeri/assets/audio/it/count_6.wav",
-    "bytes": 112982,
-    "sha256": "2e203aeefa4cf91db9a29e7322880a6e80233dc7f55a01c1ae93160672354cfc"
+    "bytes": 35366,
+    "sha256": "1ce5c023dd2f1b58b4031638a64350efd9f1b339914128f5fa6f084e27023019"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "short_phrase": {
+    "mode": "automatic-carrier",
+    "composition_policy": "natural-context-period-v1",
+    "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-speech-v1/automatic-evidence/2d8f8d71704544869a9dbec1b85fae32",
+    "prefix": "Facciamo pratica con i numeri.",
+    "composite_text": "Facciamo pratica con i numeri.\n\nSei!",
+    "effective_delivery": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "extraction": {
+      "schema_version": 1,
+      "algorithm_version": "greia-spoken-carrier-extractor-v7",
+      "comparison_policy": "locale-number-tokens-v2",
+      "status": "EXTRACTED_PENDING_LISTENING",
+      "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-speech-v1/automatic-evidence/2d8f8d71704544869a9dbec1b85fae32/attempt-03/raw.wav",
+      "source_sha256": "d1e95580edda5db475d1d1cd5137894361a5da0f712a10e7c68b61a394924f7c",
+      "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-speech-v1/automatic-evidence/2d8f8d71704544869a9dbec1b85fae32/attempt-03/target.wav",
+      "output_sha256": "343183067a7c284adef477f4033fb06e073147423bbc82e93ee59ee058739e77",
+      "output_bytes": 76860,
+      "locale": "it",
+      "prefix": "Facciamo pratica con i numeri.",
+      "target": "Sei!",
+      "remove_first_words": 5,
+      "ignore_accents": true,
+      "target_verification_requested": "warn",
+      "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+      "target_comparison_score": 1.0,
+      "target_word_count_matches": true,
+      "target_numbers_match": true,
+      "target_comparison_flags": [],
+      "target_transcript_warning": false,
+      "recognizer": "mlx-whisper-base",
+      "recognizer_version": "0.4.3",
+      "model_id": "mlx-community/whisper-base-mlx",
+      "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+      "extracted_transcript": "sei",
+      "expected_target_tokens": [
+        "<num:6>"
+      ],
+      "extracted_target_tokens": [
+        "<num:6>"
+      ],
+      "extracted_target_exact_match": true,
+      "transcription_settings": {
+        "language": "it",
+        "initial_prompt": null,
+        "word_timestamps": true,
+        "temperature": 0.0,
+        "condition_on_previous_text": false
+      },
+      "sample_rate": 48000,
+      "duration_seconds": 2.8801666666666668,
+      "boundary": {
+        "search_strategy": "target-only-global-quiet-run-v7",
+        "verified_silence_start_seconds": 1.55,
+        "verified_silence_end_seconds": 2.18,
+        "verified_silence_duration_seconds": 0.63,
+        "cut_sample": 99840,
+        "cut_time_seconds": 2.08,
+        "padding_seconds": 0.1,
+        "quiet_run_start_sample": 74400,
+        "quiet_run_end_sample": 104640,
+        "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+      },
+      "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-speech-v1/automatic-evidence/2d8f8d71704544869a9dbec1b85fae32/attempt-03/target.wav.search/af9c36dc971444778b00e6e33a832277",
+      "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-speech-v1/automatic-evidence/2d8f8d71704544869a9dbec1b85fae32/attempt-03/target.wav.search/af9c36dc971444778b00e6e33a832277/search.json",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-speech-v1/automatic-evidence/2d8f8d71704544869a9dbec1b85fae32/attempt-03/raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "2841feba96b183a175979364ac3f451742f9dfcc0520dd218cbe8f6efb163068",
+      "candidate_sha256": "343183067a7c284adef477f4033fb06e073147423bbc82e93ee59ee058739e77",
+      "candidate_id": "candidate-01",
+      "candidate_count": 1,
+      "qualifying_quiet_run_count": 1,
+      "candidate_results": [
+        {
+          "candidate_id": "candidate-01",
+          "quiet_run": {
+            "start_sample": 74400,
+            "end_sample": 104640,
+            "start_seconds": 1.55,
+            "end_seconds": 2.18,
+            "duration_seconds": 0.63
+          },
+          "cut_sample": 99840,
+          "cut_time_seconds": 2.08,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-speech-v1/automatic-evidence/2d8f8d71704544869a9dbec1b85fae32/attempt-03/target.wav.search/af9c36dc971444778b00e6e33a832277/candidate-01.wav",
+          "preceding_voiced_seconds": 1.25,
+          "retained_voiced_seconds": 0.45,
+          "retained_duration_seconds": 0.8001666666666667,
+          "candidate_sha256": "343183067a7c284adef477f4033fb06e073147423bbc82e93ee59ee058739e77",
+          "extracted_transcript": "sei",
+          "canonical_transcript_tokens": [
+            "<num:6>"
+          ],
+          "exact_target_match": true,
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": true,
+          "asr_segment_count": 1
+        }
+      ],
+      "human_review": "PENDING",
+      "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+      "delivery": {
+        "policy": "verified-carrier-gap-delivery-v1",
+        "removed_frames": 0,
+        "removed_seconds": 0.0,
+        "retained_verified_quiet_seconds": 0.1,
+        "raw_delivery_start_sample": 99840,
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-speech-v1/automatic-evidence/2d8f8d71704544869a9dbec1b85fae32/attempt-03/delivery-target.wav",
+        "sha256": "343183067a7c284adef477f4033fb06e073147423bbc82e93ee59ee058739e77"
+      }
+    },
+    "quality": {
+      "disposition": "PASS",
+      "score": 1.0,
+      "transcript": " sei",
+      "metrics": {
+        "duration_seconds": 0.8001814058956916,
+        "rms_dbfs": -29.9,
+        "peak": 0.26901,
+        "clipped_fraction": 0.0,
+        "leading_silence_seconds": 0.08,
+        "trailing_silence_seconds": 0.24,
+        "longest_internal_pause_seconds": 0.0
+      },
+      "flags": [],
+      "ignore_accents": true,
+      "comparison_policy": "locale-number-tokens-v2",
+      "model_id": "mlx-community/whisper-base-mlx",
+      "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+      "detail": "Packaged target scored with Base; human listening remains pending"
+    },
+    "history": [
+      {
+        "attempt": 1,
+        "status": "REJECTED_CUT",
+        "error": "no candidate suffix meets target verification policy",
+        "evidence": {
+          "candidate_transcripts": [
+            ""
+          ],
+          "matching_candidate_ids": [],
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-speech-v1/automatic-evidence/2d8f8d71704544869a9dbec1b85fae32/attempt-01/target.wav.search/18c7f3d8860b4ec2ba4128567f937e58",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-speech-v1/automatic-evidence/2d8f8d71704544869a9dbec1b85fae32/attempt-01/target.wav.search/18c7f3d8860b4ec2ba4128567f937e58/search.json"
+        }
+      },
+      {
+        "attempt": 2,
+        "status": "REJECTED_CUT",
+        "error": "no candidate suffix meets target verification policy",
+        "evidence": {
+          "candidate_transcripts": [
+            "e che si",
+            "e"
+          ],
+          "matching_candidate_ids": [],
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-speech-v1/automatic-evidence/2d8f8d71704544869a9dbec1b85fae32/attempt-02/target.wav.search/ca1408c497da4b4b895f8342e6c5d5f0",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-speech-v1/automatic-evidence/2d8f8d71704544869a9dbec1b85fae32/attempt-02/target.wav.search/ca1408c497da4b4b895f8342e6c5d5f0/search.json"
+        }
+      },
+      {
+        "attempt": 3,
+        "status": "PASS",
+        "quality": {
+          "disposition": "PASS",
+          "score": 1.0,
+          "transcript": " sei",
+          "metrics": {
+            "duration_seconds": 0.8001814058956916,
+            "rms_dbfs": -29.9,
+            "peak": 0.26901,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.08,
+            "trailing_silence_seconds": 0.24,
+            "longest_internal_pause_seconds": 0.0
+          },
+          "flags": [],
+          "ignore_accents": true,
+          "comparison_policy": "locale-number-tokens-v2",
+          "model_id": "mlx-community/whisper-base-mlx",
+          "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+          "detail": "Packaged target scored with Base; human listening remains pending"
+        },
+        "extraction": {
+          "schema_version": 1,
+          "algorithm_version": "greia-spoken-carrier-extractor-v7",
+          "comparison_policy": "locale-number-tokens-v2",
+          "status": "EXTRACTED_PENDING_LISTENING",
+          "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-speech-v1/automatic-evidence/2d8f8d71704544869a9dbec1b85fae32/attempt-03/raw.wav",
+          "source_sha256": "d1e95580edda5db475d1d1cd5137894361a5da0f712a10e7c68b61a394924f7c",
+          "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-speech-v1/automatic-evidence/2d8f8d71704544869a9dbec1b85fae32/attempt-03/target.wav",
+          "output_sha256": "343183067a7c284adef477f4033fb06e073147423bbc82e93ee59ee058739e77",
+          "output_bytes": 76860,
+          "locale": "it",
+          "prefix": "Facciamo pratica con i numeri.",
+          "target": "Sei!",
+          "remove_first_words": 5,
+          "ignore_accents": true,
+          "target_verification_requested": "warn",
+          "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_transcript_warning": false,
+          "recognizer": "mlx-whisper-base",
+          "recognizer_version": "0.4.3",
+          "model_id": "mlx-community/whisper-base-mlx",
+          "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+          "extracted_transcript": "sei",
+          "expected_target_tokens": [
+            "<num:6>"
+          ],
+          "extracted_target_tokens": [
+            "<num:6>"
+          ],
+          "extracted_target_exact_match": true,
+          "transcription_settings": {
+            "language": "it",
+            "initial_prompt": null,
+            "word_timestamps": true,
+            "temperature": 0.0,
+            "condition_on_previous_text": false
+          },
+          "sample_rate": 48000,
+          "duration_seconds": 2.8801666666666668,
+          "boundary": {
+            "search_strategy": "target-only-global-quiet-run-v7",
+            "verified_silence_start_seconds": 1.55,
+            "verified_silence_end_seconds": 2.18,
+            "verified_silence_duration_seconds": 0.63,
+            "cut_sample": 99840,
+            "cut_time_seconds": 2.08,
+            "padding_seconds": 0.1,
+            "quiet_run_start_sample": 74400,
+            "quiet_run_end_sample": 104640,
+            "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+          },
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-speech-v1/automatic-evidence/2d8f8d71704544869a9dbec1b85fae32/attempt-03/target.wav.search/af9c36dc971444778b00e6e33a832277",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-speech-v1/automatic-evidence/2d8f8d71704544869a9dbec1b85fae32/attempt-03/target.wav.search/af9c36dc971444778b00e6e33a832277/search.json",
+          "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-speech-v1/automatic-evidence/2d8f8d71704544869a9dbec1b85fae32/attempt-03/raw.wav.receipt.json",
+          "source_provider_receipt_sha256": "2841feba96b183a175979364ac3f451742f9dfcc0520dd218cbe8f6efb163068",
+          "candidate_sha256": "343183067a7c284adef477f4033fb06e073147423bbc82e93ee59ee058739e77",
+          "candidate_id": "candidate-01",
+          "candidate_count": 1,
+          "qualifying_quiet_run_count": 1,
+          "candidate_results": [
+            {
+              "candidate_id": "candidate-01",
+              "quiet_run": {
+                "start_sample": 74400,
+                "end_sample": 104640,
+                "start_seconds": 1.55,
+                "end_seconds": 2.18,
+                "duration_seconds": 0.63
+              },
+              "cut_sample": 99840,
+              "cut_time_seconds": 2.08,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-speech-v1/automatic-evidence/2d8f8d71704544869a9dbec1b85fae32/attempt-03/target.wav.search/af9c36dc971444778b00e6e33a832277/candidate-01.wav",
+              "preceding_voiced_seconds": 1.25,
+              "retained_voiced_seconds": 0.45,
+              "retained_duration_seconds": 0.8001666666666667,
+              "candidate_sha256": "343183067a7c284adef477f4033fb06e073147423bbc82e93ee59ee058739e77",
+              "extracted_transcript": "sei",
+              "canonical_transcript_tokens": [
+                "<num:6>"
+              ],
+              "exact_target_match": true,
+              "target_comparison_score": 1.0,
+              "target_word_count_matches": true,
+              "target_numbers_match": true,
+              "target_comparison_flags": [],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": true,
+              "asr_segment_count": 1
+            }
+          ],
+          "human_review": "PENDING",
+          "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+          "delivery": {
+            "policy": "verified-carrier-gap-delivery-v1",
+            "removed_frames": 0,
+            "removed_seconds": 0.0,
+            "retained_verified_quiet_seconds": 0.1,
+            "raw_delivery_start_sample": 99840,
+            "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-speech-v1/automatic-evidence/2d8f8d71704544869a9dbec1b85fae32/attempt-03/delivery-target.wav",
+            "sha256": "343183067a7c284adef477f4033fb06e073147423bbc82e93ee59ee058739e77"
+          }
+        },
+        "candidate": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-speech-v1/automatic-evidence/2d8f8d71704544869a9dbec1b85fae32/attempt-03/candidate.wav"
+      }
+    ]
+  },
   "corpus_replacement": {
-    "original_sha256": "22ccf337d1400f8e3811869e507f7d27c1679b8bd68682009a717c572cedea57",
+    "original_sha256": "42b48c4254caa8ae585fa59cf013bb60388fbea3a1918fd9598094fe64f24fba",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T07:49:05.430404+00:00",
+  "created_utc": "2026-10-21T14:51:45.474847+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Listen to this phrase in English.",
+    "prefix_word_count": 6,
+    "target": "Feed Kiko",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Listen to this phrase in English. Feed Kiko",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Feed Kiko",
+    "cue_id": "greia.requested.feed_kiko.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "Feed Kiko",
     "cue_id": "greia.requested.feed_kiko.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/baia_delle_orche/assets/audio/en/feed_kiko.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.tito.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261021-094900-99d4406d",
-    "idempotency_key": "greia-86fef1b2eee4401eb1aba59aeb35dcbc",
+    "job_id": "20261021-165131-8f65849d",
+    "idempotency_key": "greia-e6241c14719847fb9fcf114a1781ad77",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,212 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1256898125,
+    "script_seed": 547716535,
     "language_direction": "English",
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in English. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in English. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2905759067,
-        "sha256": "3fa1cff51c204c8e7cf86aa08d5e1c847577f70cbb345f204ea45aef83e0b001",
+        "seed": 1881422998,
+        "sha256": "f629f33c2e78d0a70e1fe750be99091c0b20e0aa1c8f53d190eba5f64d125a67",
         "generation": {
-          "elapsed_seconds": 4.299932709000132,
+          "elapsed_seconds": 13.701118083001347,
           "model_load_seconds": 0.0,
-          "rtf": 3.8386544047017983,
-          "peak_memory_gb": 7.648166916
+          "rtf": 3.7229613014812775,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Feedkiko",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/baia_delle_orche/assets/audio/en/feed_kiko.wav.raw.wav",
+    "sha256": "ca1a22dc118816be4a7e067e5a5a04804ec15ec48ca8eb597034b36c0882fbd5",
+    "receipt_sha256": "3d05f985004bc4b5a11d03d2a15e55075b3783b62f918922b1c4f4f8f1dcb603"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/baia_delle_orche/assets/audio/en/feed_kiko.wav.extracted.wav",
+    "sha256": "6244fbd653073977db714a09e177c74b25096f92cc5896066f38ac20cd96905a"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-corpus-v1/run/carrier-raw/activities/baia_delle_orche/assets/audio/en/feed_kiko.wav.raw.wav",
+    "source_sha256": "ca1a22dc118816be4a7e067e5a5a04804ec15ec48ca8eb597034b36c0882fbd5",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-corpus-v1/run/carrier-extracted/activities/baia_delle_orche/assets/audio/en/feed_kiko.wav.extracted.wav",
+    "output_sha256": "6244fbd653073977db714a09e177c74b25096f92cc5896066f38ac20cd96905a",
+    "target_request": {
+      "speaker": "tito",
+      "kind": "character_dialogue",
+      "text": "Feed Kiko",
+      "locale": "en",
+      "cue_id": "greia.requested.feed_kiko.en",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-corpus-v1/run/carrier-raw/activities/baia_delle_orche/assets/audio/en/feed_kiko.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "3d05f985004bc4b5a11d03d2a15e55075b3783b62f918922b1c4f4f8f1dcb603"
+    },
+    "locale": "en",
+    "prefix": "Listen to this phrase in English.",
+    "target": "Feed Kiko",
+    "remove_first_words": 6,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Listen to this phrase in English. Feed Kiko.",
+    "extracted_transcript": " Feedkiko",
+    "raw_word_alignment": [
+      {
+        "word": "listen",
+        "start_seconds": 0.0,
+        "end_seconds": 0.32
+      },
+      {
+        "word": "to",
+        "start_seconds": 0.32,
+        "end_seconds": 0.56
+      },
+      {
+        "word": "this",
+        "start_seconds": 0.56,
+        "end_seconds": 0.72
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.72,
+        "end_seconds": 1.06
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.06,
+        "end_seconds": 1.3
+      },
+      {
+        "word": "english",
+        "start_seconds": 1.3,
+        "end_seconds": 1.76
+      },
+      {
+        "word": "feed",
+        "start_seconds": 2.36,
+        "end_seconds": 2.88
+      },
+      {
+        "word": "kiko",
+        "start_seconds": 2.88,
+        "end_seconds": 3.34
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "feedkiko",
+        "start_seconds": 0.0,
+        "end_seconds": 1.28
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.48571866750717163,
+        "no_speech_prob": 0.015960771590471268,
+        "compression_ratio": 0.8461538461538461,
+        "word_probabilities": [
+          0.88916015625,
+          0.9892578125,
+          0.9814453125,
+          0.99560546875,
+          0.9443359375,
+          0.98583984375
+        ]
+      },
+      {
+        "avg_logprob": -0.48571866750717163,
+        "no_speech_prob": 0.015960771590471268,
+        "compression_ratio": 0.8461538461538461,
+        "word_probabilities": [
+          0.80859375,
+          0.57421875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.8335235913594564,
+        "no_speech_prob": 0.31999272108078003,
+        "compression_ratio": 0.5,
+        "word_probabilities": [
+          0.479736328125
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 68,
+    "extracted_voiced_seconds": 0.68,
+    "unremoved_raw_target_tokens": [
+      "feed",
+      "kiko"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "feed",
+      "kiko"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.6801814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.76,
+      "target_first_word_start_seconds": 2.36,
+      "gap_seconds": 0.4888888888888889,
+      "verified_silence_start_seconds": 1.8198639455782313,
+      "verified_silence_end_seconds": 2.30875283446712,
+      "gap_rms_dbfs": -61.652,
+      "gap_peak_dbfs": -37.803,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.0643083900226755,
+      "cut_sample": 45518,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/baia_delle_orche/assets/audio/en/feed_kiko.wav",
-    "bytes": 49478,
-    "sha256": "d4d4a7e7ba013234ea7b35dad5f732ce0cbaf0fd1d3fd0581a53030e1e838dc9"
+    "sha256": "581009ee08f96763b90a7ef8ca5afe891b94b8a989f1e2a6cad85c21794fd3a7",
+    "bytes": 71338
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "14b24824e9618134d7c278efa6bf36328e8de89a03f27561b4b95f36a6e6777c",
+    "original_sha256": "d4d4a7e7ba013234ea7b35dad5f732ce0cbaf0fd1d3fd0581a53030e1e838dc9",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

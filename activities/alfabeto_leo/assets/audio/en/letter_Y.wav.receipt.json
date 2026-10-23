@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T20:48:01.043715+00:00",
+  "created_utc": "2026-10-23T13:33:18.230622+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
@@ -10,73 +10,90 @@
     "output": "activities/alfabeto_leo/assets/audio/en/letter_Y.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "delivery_prompt": "",
+    "ignore_accents": true,
+    "short_text_mode": "off",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "owner_authorization": "owner-2026-10-23-native-system-tts-missing-52",
+    "spoken_text": "why as Yacht"
   },
-  "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+  "provider_id": "macos-native-say",
+  "voice_id": "Samantha",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": null,
   "generation_parameters": {
-    "job_id": "20261019-224752-1911494c",
-    "idempotency_key": "greia-94ab081fd47f4d3b86a71f621ef8c868",
-    "backend": {
-      "backend": "mlx",
-      "adapter_version": "0.1.0",
-      "model": "mlx-community/VoxCPM2-8bit",
-      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
-      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
-      "mlx": "0.32.1",
-      "tokenizer_loader": "PreTrainedTokenizerFast",
-      "mlx_audio": "0.5.0",
-      "quantization": "8bit",
-      "sample_rate": 48000,
-      "native_audio_streaming": false,
-      "reference_encoding_cache": 16,
-      "compiled_hot_paths": true
-    },
-    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
-    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
-    "settings": {
-      "steps": 10,
-      "cfg": 2.0,
-      "max_tokens": 300
-    },
-    "script_seed": 2210770298,
-    "language_direction": "English",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak naturally in English. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "mode": "reference",
-    "recordings": [
-      {
-        "file": "speech-001-take-01.wav",
-        "seed": 367895412,
-        "sha256": "60a3782e2ccc6687ba710b61246c92b3bfa98870d1cd351f8efef0721575904d",
-        "generation": {
-          "elapsed_seconds": 7.061313084035646,
-          "model_load_seconds": 0.0,
-          "rtf": 4.903122150701757,
-          "peak_memory_gb": 8.21220922
-        }
-      }
-    ]
+    "voice": "Samantha",
+    "rate_wpm": 180,
+    "synthesis_text": "why as Yacht"
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
+    "disposition": "NOT_RUN",
+    "verifier_id": "owner-listening-review-waiver",
     "transcript": null,
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "owner waived ASR/listening review; audio format/integrity checks only",
+    "model_id": null,
+    "model_revision": null,
+    "ignore_accents": null,
+    "comparison_policy": null,
+    "flags": [],
+    "metrics": null
   },
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/en/letter_Y.wav",
-    "bytes": 63590,
-    "sha256": "22ee5229cc65251fbcaaa8583b7b69dbef8e72203df3df54c070b5e831479274"
+    "bytes": 36526,
+    "sha256": "5a27a1c62cf254c340b9cfd958f31c98f16b57a26bfd73c7628c91d20cb4c953"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "human_review": "WAIVED_BY_OWNER",
+  "acceptance_note": "Owner explicitly waived listening review for this deterministic system-voice replacement; verification was not run and this is not a machine PASS.",
+  "owner_authorization": "owner-2026-10-23-native-system-tts-missing-52",
+  "generation_evidence": {
+    "path": "/Users/taio84/Library/Application Support/Greia/voice-production/generation-evidence/182df54207ad4f1db68c638e08064d50",
+    "history": "/Users/taio84/Library/Application Support/Greia/voice-production/generation-evidence/182df54207ad4f1db68c638e08064d50/history.json"
+  },
+  "semantic_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Y as Yacht",
+    "cue_id": "alfabeto_leo.letter_Y.en",
+    "output": null,
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Warm, calm, clear speech. Careful, natural pronunciation.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "comparison_policy": "locale-number-tokens-v4-spoken-target-v1"
+  },
+  "system_tts_fallback": {
+    "policy": "deterministic-native-system-tts-owner-waived-v1",
+    "spoken_target_policy": "locale-spoken-letter-and-cardinal-v1",
+    "semantic_text": "Y as Yacht",
+    "spoken_text": "why as Yacht",
+    "locale": "en",
+    "native_voice": "Samantha",
+    "signal_metrics": {
+      "duration_seconds": 0.8264852607709751,
+      "rms_dbfs": -15.32,
+      "peak": 0.80545,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.0,
+      "trailing_silence_seconds": 0.04,
+      "longest_internal_pause_seconds": 0.04
+    },
+    "signal_flags": [],
+    "verification": "NOT_RUN",
+    "human_review": "WAIVED_BY_OWNER",
+    "authorization": "owner-2026-10-23-native-system-tts-missing-52"
+  },
   "corpus_replacement": {
-    "original_sha256": "fd0ca033fb6701d5dc6ed1baf46644c975027caf3aef1fe0935449795c51e8b8",
-    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+    "original_sha256": "df474d0deaeb735016a06c4380a750a40de74c5613fa62d4c77628d63af4e563",
+    "owner_authorization": "owner-2026-10-23-native-system-tts-missing-52",
+    "human_review": "WAIVED_BY_OWNER",
+    "source_run": "natural-v4-run-02"
   }
 }

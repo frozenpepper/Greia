@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:31:43.929970+00:00",
+  "created_utc": "2026-10-21T16:23:16.765322+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "B come Barca",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. B come Barca",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "B come Barca",
+    "cue_id": "foresta_parole.find_b",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "B come Barca",
     "cue_id": "foresta_parole.find_b",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/foresta_parole/assets/audio/it/find_b.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-143137-15949ba6",
-    "idempotency_key": "greia-ac92c2dfb87a408d86b727839c1ddff3",
+    "job_id": "20261021-182302-108f45c0",
+    "idempotency_key": "greia-69c568a52da842ab9f900891c89a6a35",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,219 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1757623520,
+    "script_seed": 3757108011,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3587733080,
-        "sha256": "db280cddeb2447f52a8eb12907862eb8273feb1730eabe763ff5e422a57a3249",
+        "seed": 1438612816,
+        "sha256": "ee05a8468a03e91c128e7d27272e0f94605bec6254d47b0d9cd30f68689b32df",
         "generation": {
-          "elapsed_seconds": 6.034348957997281,
+          "elapsed_seconds": 13.257812124997145,
           "model_load_seconds": 0.0,
-          "rtf": 4.190035151948118,
-          "peak_memory_gb": 8.44494914
+          "rtf": 4.142850515597254,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Biccum e barca!",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/foresta_parole/assets/audio/it/find_b.wav.raw.wav",
+    "sha256": "b8ea247ae7e40e967802ff133262e94fe11434810dbec006854435f1bea40e7c",
+    "receipt_sha256": "42faa5ffe2e338b4623a7617426d369e5c6e42f15648a69008da1e591ceb3cba"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/foresta_parole/assets/audio/it/find_b.wav.extracted.wav",
+    "sha256": "1c0952a1d2ce31058b50733a576115d2b719e85a5352929db3d2f251af8d4376"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/foresta_parole/assets/audio/it/find_b.wav.raw.wav",
+    "source_sha256": "b8ea247ae7e40e967802ff133262e94fe11434810dbec006854435f1bea40e7c",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/foresta_parole/assets/audio/it/find_b.wav.extracted.wav",
+    "output_sha256": "1c0952a1d2ce31058b50733a576115d2b719e85a5352929db3d2f251af8d4376",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "B come Barca",
+      "locale": "it",
+      "cue_id": "foresta_parole.find_b",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/foresta_parole/assets/audio/it/find_b.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "42faa5ffe2e338b4623a7617426d369e5c6e42f15648a69008da1e591ceb3cba"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "B come Barca",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " ascolta questa frase in italiano, bico me barca!",
+    "extracted_transcript": " Biccum e barca!",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.56
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.56,
+        "end_seconds": 0.82
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.82,
+        "end_seconds": 1.12
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.12,
+        "end_seconds": 1.28
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.28,
+        "end_seconds": 1.66
+      },
+      {
+        "word": "bico",
+        "start_seconds": 2.26,
+        "end_seconds": 2.46
+      },
+      {
+        "word": "me",
+        "start_seconds": 2.46,
+        "end_seconds": 2.68
+      },
+      {
+        "word": "barca",
+        "start_seconds": 2.68,
+        "end_seconds": 3.08
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "biccum",
+        "start_seconds": 0.0,
+        "end_seconds": 0.66
+      },
+      {
+        "word": "e",
+        "start_seconds": 0.66,
+        "end_seconds": 0.76
+      },
+      {
+        "word": "barca",
+        "start_seconds": 0.76,
+        "end_seconds": 1.18
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5732267604154699,
+        "no_speech_prob": 0.0017081807600334287,
+        "compression_ratio": 0.9056603773584906,
+        "word_probabilities": [
+          0.6484375,
+          0.92431640625,
+          0.86767578125,
+          0.89697265625,
+          0.89306640625,
+          0.4697265625,
+          0.8125,
+          0.8955078125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.917107408696955,
+        "no_speech_prob": 0.043422188609838486,
+        "compression_ratio": 0.6521739130434783,
+        "word_probabilities": [
+          0.263916015625,
+          0.83544921875,
+          0.7890625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 56,
+    "extracted_voiced_seconds": 0.56,
+    "unremoved_raw_target_tokens": [
+      "bico",
+      "me",
+      "barca"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "bico",
+      "me",
+      "barca"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.2001814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.66,
+      "target_first_word_start_seconds": 2.26,
+      "gap_seconds": 0.41904761904761906,
+      "verified_silence_start_seconds": 1.7198639455782312,
+      "verified_silence_end_seconds": 2.1389115646258503,
+      "gap_rms_dbfs": -57.99,
+      "gap_peak_dbfs": -39.207,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.9293877551020406,
+      "cut_sample": 42543,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/foresta_parole/assets/audio/it/find_b.wav",
-    "bytes": 63590,
-    "sha256": "bddf86ac509f759adb6f43366178da42f79eba0f5bce06910d09dbf4cdbfbd21"
+    "sha256": "e81c2a41fae47e4ef2516ebbede8295e355b62fcad9f0828778c6d90e3128ecb",
+    "bytes": 56120
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "00abe763d6552efee640dc02831fd1d1e9b156d8ed6d096d8c07d5d8c0386a9e",
+    "original_sha256": "bddf86ac509f759adb6f43366178da42f79eba0f5bce06910d09dbf4cdbfbd21",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

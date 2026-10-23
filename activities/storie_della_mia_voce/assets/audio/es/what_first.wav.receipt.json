@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T17:09:26.465797+00:00",
+  "created_utc": "2026-10-21T17:26:23.713216+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "¿Qué pasa primero?",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. ¿Qué pasa primero?",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "lilli",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "¿Qué pasa primero?",
+    "cue_id": "greia.requested.what_first.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "¿Qué pasa primero?",
     "cue_id": "greia.requested.what_first.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/storie_della_mia_voce/assets/audio/es/what_first.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.lilli.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "job_id": "20261020-190916-074d4da4",
-    "idempotency_key": "greia-5a0ce41e3c6043cf9c9e593159ed6db4",
+    "job_id": "20261021-192610-458b38ca",
+    "idempotency_key": "greia-4608daf9c6614b96a07900ef941f904d",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,219 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1200722059,
+    "script_seed": 432523439,
     "language_direction": "Spanish",
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
-    "effective_delivery": "Speak in Spanish. Lilli, a sparkly, affectionate storybook unicorn. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1853233255,
-        "sha256": "d90029ff3a20468127ad64a5e7acc99bf1efd8787119e07974b9d16a153aef20",
+        "seed": 914187311,
+        "sha256": "5299c16d4f95cd17abcec3409c8cf9ef948e6fcf48480027fca2bf866808c9be",
         "generation": {
-          "elapsed_seconds": 7.338621874980163,
+          "elapsed_seconds": 12.853709582996089,
           "model_load_seconds": 0.0,
-          "rtf": 6.551366054140898,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.4926976811727974,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " ¡Qué pasa primero!",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/storie_della_mia_voce/assets/audio/es/what_first.wav.raw.wav",
+    "sha256": "8c0ad6f95379b77f45742aa40396b63f92e1af6a8553b10c723120937b5b3c0c",
+    "receipt_sha256": "8f50d50387f49bb20a19780af994e0bccf4ec8a0abbf18d0c60bb22f904f31e8"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/storie_della_mia_voce/assets/audio/es/what_first.wav.extracted.wav",
+    "sha256": "24c0d042eea9d02c0237b75183b897ae9bbb7057121dc7b42b1d707a5e838181"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/storie_della_mia_voce/assets/audio/es/what_first.wav.raw.wav",
+    "source_sha256": "8c0ad6f95379b77f45742aa40396b63f92e1af6a8553b10c723120937b5b3c0c",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/storie_della_mia_voce/assets/audio/es/what_first.wav.extracted.wav",
+    "output_sha256": "24c0d042eea9d02c0237b75183b897ae9bbb7057121dc7b42b1d707a5e838181",
+    "target_request": {
+      "speaker": "lilli",
+      "kind": "character_dialogue",
+      "text": "¿Qué pasa primero?",
+      "locale": "es",
+      "cue_id": "greia.requested.what_first.es",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/storie_della_mia_voce/assets/audio/es/what_first.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "8f50d50387f49bb20a19780af994e0bccf4ec8a0abbf18d0c60bb22f904f31e8"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "¿Qué pasa primero?",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " escucha esta frase en español. ¿Qué pasa primero?",
+    "extracted_transcript": " ¡Qué pasa primero!",
+    "raw_word_alignment": [
+      {
+        "word": "escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.68
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.68,
+        "end_seconds": 0.88
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.88,
+        "end_seconds": 1.24
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.24,
+        "end_seconds": 1.5
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.5,
+        "end_seconds": 2.04
+      },
+      {
+        "word": "qué",
+        "start_seconds": 2.44,
+        "end_seconds": 2.62
+      },
+      {
+        "word": "pasa",
+        "start_seconds": 2.62,
+        "end_seconds": 2.88
+      },
+      {
+        "word": "primero",
+        "start_seconds": 2.88,
+        "end_seconds": 3.28
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "qué",
+        "start_seconds": 0.0,
+        "end_seconds": 0.36
+      },
+      {
+        "word": "pasa",
+        "start_seconds": 0.36,
+        "end_seconds": 0.62
+      },
+      {
+        "word": "primero",
+        "start_seconds": 0.62,
+        "end_seconds": 1.02
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.41263389587402344,
+        "no_speech_prob": 0.014378152787685394,
+        "compression_ratio": 0.8813559322033898,
+        "word_probabilities": [
+          0.689453125,
+          0.96435546875,
+          0.98681640625,
+          0.890625,
+          0.9833984375,
+          0.908203125,
+          0.9951171875,
+          0.97705078125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6377413272857666,
+        "no_speech_prob": 0.3250843286514282,
+        "compression_ratio": 0.7142857142857143,
+        "word_probabilities": [
+          0.43115234375,
+          0.94287109375,
+          0.88232421875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 78,
+    "extracted_voiced_seconds": 0.78,
+    "unremoved_raw_target_tokens": [
+      "qué",
+      "pasa",
+      "primero"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "qué",
+      "pasa",
+      "primero"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.6801814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 2.04,
+      "target_first_word_start_seconds": 2.44,
+      "gap_seconds": 0.2893424036281179,
+      "verified_silence_start_seconds": 2.0998639455782313,
+      "verified_silence_end_seconds": 2.3892063492063493,
+      "gap_rms_dbfs": -120.0,
+      "gap_peak_dbfs": -120.0,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.2445351473922903,
+      "cut_sample": 49492,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/storie_della_mia_voce/assets/audio/es/what_first.wav",
-    "bytes": 49478,
-    "sha256": "52dde7ab7cd24d51a424f994e3cca2cc7115924b329053aeb625f7d833d4f530"
+    "sha256": "d4d2d3470c5aa911c06d53d3ae32e34ac8e1882abecb156c39a14d6e48b023d3",
+    "bytes": 63390
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "9a0516a18d1d16589f1e2830f2a6f87b33f09789b3294ed006003ebffb48907a",
+    "original_sha256": "52dde7ab7cd24d51a424f994e3cca2cc7115924b329053aeb625f7d833d4f530",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

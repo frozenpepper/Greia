@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T03:27:03.816597+00:00",
+  "created_utc": "2026-10-21T15:58:33.767390+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Listen to this phrase in English.",
+    "prefix_word_count": 6,
+    "target": "Bridge Builders",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Listen to this phrase in English. Bridge Builders",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Bridge Builders",
+    "cue_id": "activity.title",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "Bridge Builders",
     "cue_id": "activity.title",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/costruiamo_ponti/locales/en/audio/activity-title.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-052655-1f85f23c",
-    "idempotency_key": "greia-564b7b8962584f4d9c8f8820c9f180e0",
+    "job_id": "20261021-175821-7ba3e963",
+    "idempotency_key": "greia-958bfeec428549d28c5aaaf12df5453f",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,211 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2499568157,
+    "script_seed": 572622796,
     "language_direction": "English",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "effective_delivery": "Speak naturally in English. Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in English. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 350180226,
-        "sha256": "2d28a6f4a93bfd07d512b1117f35fa92def2f2e204d7acc6c0cf29535e833774",
+        "seed": 3337839656,
+        "sha256": "0870210fa6bbd68a41c3a75f9a95891decc501db45edae50b834c85928b6d19e",
         "generation": {
-          "elapsed_seconds": 7.799651041976176,
+          "elapsed_seconds": 11.63059429101122,
           "model_load_seconds": 0.0,
-          "rtf": 6.962937993134512,
-          "peak_memory_gb": 6.61593154
+          "rtf": 3.8256436459660836,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Bridge builders",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/costruiamo_ponti/locales/en/audio/activity-title.wav.raw.wav",
+    "sha256": "bfb81addcbab70cb01029482741b4b90857d96fdacb72b9b82ce2e595597e5c6",
+    "receipt_sha256": "372537c6c2d4a2052d9b87d2a893bc5e24d1146836851176efaf9e6344384b17"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/costruiamo_ponti/locales/en/audio/activity-title.wav.extracted.wav",
+    "sha256": "8c2152a9f74d93a7c998400a49960099019bddecdbe941cc19bcabc8b61fe7e3"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/costruiamo_ponti/locales/en/audio/activity-title.wav.raw.wav",
+    "source_sha256": "bfb81addcbab70cb01029482741b4b90857d96fdacb72b9b82ce2e595597e5c6",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/costruiamo_ponti/locales/en/audio/activity-title.wav.extracted.wav",
+    "output_sha256": "8c2152a9f74d93a7c998400a49960099019bddecdbe941cc19bcabc8b61fe7e3",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Bridge Builders",
+      "locale": "en",
+      "cue_id": "activity.title",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/costruiamo_ponti/locales/en/audio/activity-title.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "372537c6c2d4a2052d9b87d2a893bc5e24d1146836851176efaf9e6344384b17"
+    },
+    "locale": "en",
+    "prefix": "Listen to this phrase in English.",
+    "target": "Bridge Builders",
+    "remove_first_words": 6,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Listen to this phrase in English. Bridge builders.",
+    "extracted_transcript": " Bridge builders",
+    "raw_word_alignment": [
+      {
+        "word": "listen",
+        "start_seconds": 0.0,
+        "end_seconds": 0.28
+      },
+      {
+        "word": "to",
+        "start_seconds": 0.28,
+        "end_seconds": 0.54
+      },
+      {
+        "word": "this",
+        "start_seconds": 0.54,
+        "end_seconds": 0.68
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.68,
+        "end_seconds": 0.92
+      },
+      {
+        "word": "in",
+        "start_seconds": 0.92,
+        "end_seconds": 1.1
+      },
+      {
+        "word": "english",
+        "start_seconds": 1.1,
+        "end_seconds": 1.42
+      },
+      {
+        "word": "bridge",
+        "start_seconds": 1.98,
+        "end_seconds": 2.34
+      },
+      {
+        "word": "builders",
+        "start_seconds": 2.34,
+        "end_seconds": 2.72
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "bridge",
+        "start_seconds": 0.0,
+        "end_seconds": 0.64
+      },
+      {
+        "word": "builders",
+        "start_seconds": 0.64,
+        "end_seconds": 1.0
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.42200447962834287,
+        "no_speech_prob": 0.0026586109306663275,
+        "compression_ratio": 0.8620689655172413,
+        "word_probabilities": [
+          0.89404296875,
+          0.98681640625,
+          0.97314453125,
+          0.99658203125,
+          0.97900390625,
+          0.98779296875,
+          0.90380859375,
+          0.5615234375
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.41107978820800783,
+        "no_speech_prob": 0.1089852973818779,
+        "compression_ratio": 0.6521739130434783,
+        "word_probabilities": [
+          0.84716796875,
+          0.568359375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 67,
+    "extracted_voiced_seconds": 0.67,
+    "unremoved_raw_target_tokens": [
+      "bridge",
+      "builders"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "bridge",
+      "builders"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.0401814058956917,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.42,
+      "target_first_word_start_seconds": 1.98,
+      "gap_seconds": 0.4290249433106576,
+      "verified_silence_start_seconds": 1.4998185941043083,
+      "verified_silence_end_seconds": 1.928843537414966,
+      "gap_rms_dbfs": -57.565,
+      "gap_peak_dbfs": -34.574,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.7143310657596371,
+      "cut_sample": 37801,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/costruiamo_ponti/locales/en/audio/activity-title.wav",
-    "bytes": 49478,
-    "sha256": "eebd3adf6ca2df7f4f52b30e9ba7a6e78d7d724ab17005813989c8d24bc9b34c"
+    "sha256": "e572d69af6e1b79e1ea93997e38ce0e1983fab32dd345eb4249fe26a1f44d5f9",
+    "bytes": 58548
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "5aa4697514382ac32dc08017c6302884b1ce278f604a6fc3504a677397ac84c2",
+    "original_sha256": "eebd3adf6ca2df7f4f52b30e9ba7a6e78d7d724ab17005813989c8d24bc9b34c",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

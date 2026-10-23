@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T12:37:52.601742+00:00",
+  "created_utc": "2026-10-21T17:31:53.129095+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "¡Elige un viaje!",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. ¡Elige un viaje!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "¡Elige un viaje!",
+    "cue_id": "greia.requested.choose_journey.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "¡Elige un viaje!",
     "cue_id": "greia.requested.choose_journey.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/viaggio_delfino/assets/audio/es/choose_journey.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.tito.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261021-143747-a5aea7da",
-    "idempotency_key": "greia-feedb9e2c86448b598742300a7e6c9bd",
+    "job_id": "20261021-193136-113eca2d",
+    "idempotency_key": "greia-d23e6d7ff5ed42f58090040c782686d4",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,261 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2656399286,
+    "script_seed": 4202717234,
     "language_direction": "Spanish",
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in Spanish. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2868724745,
-        "sha256": "e9f5226e511f210039de6f2c3b3ad4659bc2849946ab7df57e378a49684da139",
+        "seed": 2824576770,
+        "sha256": "5a010471123f3fccd8d11250ef314b601f447e4e5842bacc9423bc0bd0001a88",
         "generation": {
-          "elapsed_seconds": 4.174609999994573,
+          "elapsed_seconds": 15.893416042003082,
           "model_load_seconds": 0.0,
-          "rtf": 3.72677577740923,
+          "rtf": 4.51496123535905,
           "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " Elige un viaje.",
+    "metrics": {
+      "duration_seconds": 1.4112925170068027,
+      "rms_dbfs": -26.88,
+      "peak": 0.27863,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.3,
+      "trailing_silence_seconds": 0.2,
+      "longest_internal_pause_seconds": 0.0
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/viaggio_delfino/assets/audio/es/choose_journey.wav.raw.wav",
+    "sha256": "7ddbb352eb9d6a220fe7be17aebe66466d92632d37417320af690cd1113d810a",
+    "receipt_sha256": "a1cac314c545855030330819539e490dde9d402d449b4d9d63865d1bd35a28ef"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/viaggio_delfino/assets/audio/es/choose_journey.wav.extracted.wav",
+    "sha256": "3df8a418b76c017d36d66301b4b6e4aa64850898c77159705d937e88dfa5413b"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/viaggio_delfino/assets/audio/es/choose_journey.wav.delivery.wav",
+    "sha256": "c2cee0728e6524853a714dadf3cfc65fa3c84ce0e084dcf384d515224d6ca867"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/viaggio_delfino/assets/audio/es/choose_journey.wav.raw.wav",
+    "source_sha256": "7ddbb352eb9d6a220fe7be17aebe66466d92632d37417320af690cd1113d810a",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/viaggio_delfino/assets/audio/es/choose_journey.wav.extracted.wav",
+    "output_sha256": "3df8a418b76c017d36d66301b4b6e4aa64850898c77159705d937e88dfa5413b",
+    "target_request": {
+      "speaker": "tito",
+      "kind": "character_dialogue",
+      "text": "¡Elige un viaje!",
+      "locale": "es",
+      "cue_id": "greia.requested.choose_journey.es",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/viaggio_delfino/assets/audio/es/choose_journey.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "a1cac314c545855030330819539e490dde9d402d449b4d9d63865d1bd35a28ef"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "¡Elige un viaje!",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Escucha esta frase en español. Elige un viaje.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Elige un viaje.",
+    "raw_word_alignment": [
+      {
+        "word": "escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.42
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.42,
+        "end_seconds": 0.72
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.72,
+        "end_seconds": 1.04
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.04,
+        "end_seconds": 1.32
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.32,
+        "end_seconds": 1.72
+      },
+      {
+        "word": "elige",
+        "start_seconds": 2.26,
+        "end_seconds": 2.74
+      },
+      {
+        "word": "un",
+        "start_seconds": 2.74,
+        "end_seconds": 2.9
+      },
+      {
+        "word": "viaje",
+        "start_seconds": 2.9,
+        "end_seconds": 3.1
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "elige",
+        "start_seconds": 0.0,
+        "end_seconds": 0.74
+      },
+      {
+        "word": "un",
+        "start_seconds": 0.74,
+        "end_seconds": 0.88
+      },
+      {
+        "word": "viaje",
+        "start_seconds": 0.88,
+        "end_seconds": 1.16
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5219848296221565,
+        "no_speech_prob": 0.015264523215591908,
+        "compression_ratio": 0.8703703703703703,
+        "word_probabilities": [
+          0.8935546875,
+          0.9794921875,
+          0.99560546875,
+          0.9873046875,
+          0.97998046875
+        ]
+      },
+      {
+        "avg_logprob": -0.5219848296221565,
+        "no_speech_prob": 0.015264523215591908,
+        "compression_ratio": 0.8703703703703703,
+        "word_probabilities": [
+          0.6318359375,
+          0.98583984375,
+          0.9970703125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.5627422332763672,
+        "no_speech_prob": 0.06295188516378403,
+        "compression_ratio": 0.6521739130434783,
+        "word_probabilities": [
+          0.481201171875,
+          0.96240234375,
+          0.99755859375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 84,
+    "extracted_voiced_seconds": 0.84,
+    "unremoved_raw_target_tokens": [
+      "elige",
+      "un",
+      "viaje"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "elige",
+      "un",
+      "viaje"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.5201814058956917,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.72,
+      "search_end_seconds": 2.26,
+      "prefix_last_word_end_seconds": 1.72,
+      "target_first_word_start_seconds": 2.26,
+      "gap_seconds": 0.39909297052154197,
+      "verified_silence_start_seconds": 1.8097959183673469,
+      "verified_silence_end_seconds": 2.2088888888888887,
+      "gap_rms_dbfs": -57.157,
+      "gap_peak_dbfs": -37.99,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.009342403628118,
+      "cut_sample": 44306,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 2195,
+      "removed_seconds": 0.09954648526077098,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 46501,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/viaggio_delfino/assets/audio/es/choose_journey.wav.delivery.wav",
+      "sha256": "c2cee0728e6524853a714dadf3cfc65fa3c84ce0e084dcf384d515224d6ca867"
+    }
+  },
   "output": {
     "path": "activities/viaggio_delfino/assets/audio/es/choose_journey.wav",
-    "bytes": 49478,
-    "sha256": "8f81f4707c5e72e12fad22836f3b2bbd80b6ae13715ec53dc2ba5ebf1b25d6b5"
+    "sha256": "05727642619a996f17b05cf980fff263df40ba5c0e730a52b9805d5726adec34",
+    "bytes": 62316
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "a35d41c50b296ff13bd4179d6eaa739327164a2601618193ff51989da6f83434",
+    "original_sha256": "d01e10377a46e81c5b312beff21072b7a65b791ce2fd9bd36c0714fee79133c3",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

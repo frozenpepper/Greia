@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T07:54:28.037203+00:00",
+  "created_utc": "2026-10-21T15:43:44.368289+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "Encuentra a Luna",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. Encuentra a Luna",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "Encuentra a Luna",
+    "cue_id": "greia.requested.find_luna.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "Encuentra a Luna",
     "cue_id": "greia.requested.find_luna.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/baia_delle_orche/assets/audio/es/find_luna.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.tito.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261021-095358-de7db6c1",
-    "idempotency_key": "greia-84c5087902e242b69b25d55a734c3154",
+    "job_id": "20261021-174329-8c39f948",
+    "idempotency_key": "greia-85fe6e0bdfe64ea898e289384a27ae47",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,226 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2316990321,
+    "script_seed": 3620640974,
     "language_direction": "Spanish",
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in Spanish. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2159419348,
-        "sha256": "cefa6c789bf2f14c063544a873cf22a98285006e2bfe0c7ab9ce7b051de3f2da",
+        "seed": 603454054,
+        "sha256": "fea297fdde518704b2ae3637af5b6d56c050f4389f55d7ce6f73217785045933",
         "generation": {
-          "elapsed_seconds": 4.7067867500009015,
+          "elapsed_seconds": 14.392943833008758,
           "model_load_seconds": 0.0,
-          "rtf": 4.201862892427527,
-          "peak_memory_gb": 7.648166916
+          "rtf": 4.283401765688832,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Encuentra a Luna",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/baia_delle_orche/assets/audio/es/find_luna.wav.raw.wav",
+    "sha256": "1d2982bc02f41324659f4a563352fd4cdbb380b844c5888836e3966b8bebcba8",
+    "receipt_sha256": "deff726cfe0a1dacc2479f2e40e246721ac9b8c22419881e519b932a369efa6a"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/baia_delle_orche/assets/audio/es/find_luna.wav.extracted.wav",
+    "sha256": "998d6ddcd7e6de69472bf7ec58627caffbe8700a84ccf1247e7beb90c7bdf31a"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/baia_delle_orche/assets/audio/es/find_luna.wav.raw.wav",
+    "source_sha256": "1d2982bc02f41324659f4a563352fd4cdbb380b844c5888836e3966b8bebcba8",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/baia_delle_orche/assets/audio/es/find_luna.wav.extracted.wav",
+    "output_sha256": "998d6ddcd7e6de69472bf7ec58627caffbe8700a84ccf1247e7beb90c7bdf31a",
+    "target_request": {
+      "speaker": "tito",
+      "kind": "character_dialogue",
+      "text": "Encuentra a Luna",
+      "locale": "es",
+      "cue_id": "greia.requested.find_luna.es",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/baia_delle_orche/assets/audio/es/find_luna.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "deff726cfe0a1dacc2479f2e40e246721ac9b8c22419881e519b932a369efa6a"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "Encuentra a Luna",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Escucha esta frase en español. Encuentra a Luna.",
+    "extracted_transcript": " Encuentra a Luna",
+    "raw_word_alignment": [
+      {
+        "word": "escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.52
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.52,
+        "end_seconds": 0.76
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.76,
+        "end_seconds": 1.16
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.16,
+        "end_seconds": 1.48
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.48,
+        "end_seconds": 1.92
+      },
+      {
+        "word": "encuentra",
+        "start_seconds": 2.48,
+        "end_seconds": 3.06
+      },
+      {
+        "word": "a",
+        "start_seconds": 3.06,
+        "end_seconds": 3.2
+      },
+      {
+        "word": "luna",
+        "start_seconds": 3.2,
+        "end_seconds": 3.34
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "encuentra",
+        "start_seconds": 0.58,
+        "end_seconds": 0.86
+      },
+      {
+        "word": "a",
+        "start_seconds": 0.86,
+        "end_seconds": 1.0
+      },
+      {
+        "word": "luna",
+        "start_seconds": 1.0,
+        "end_seconds": 1.12
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.6357327511436061,
+        "no_speech_prob": 0.003032862674444914,
+        "compression_ratio": 0.875,
+        "word_probabilities": [
+          0.669921875,
+          0.8662109375,
+          0.99169921875,
+          0.95654296875,
+          0.9716796875
+        ]
+      },
+      {
+        "avg_logprob": -0.6357327511436061,
+        "no_speech_prob": 0.003032862674444914,
+        "compression_ratio": 0.875,
+        "word_probabilities": [
+          0.7197265625,
+          0.2362060546875,
+          0.7587890625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6288779576619467,
+        "no_speech_prob": 0.0259612575173378,
+        "compression_ratio": 0.6666666666666666,
+        "word_probabilities": [
+          0.666015625,
+          0.26708984375,
+          0.70556640625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 74,
+    "extracted_voiced_seconds": 0.74,
+    "unremoved_raw_target_tokens": [
+      "encuentra",
+      "a",
+      "luna"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "encuentra",
+      "a",
+      "luna"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.3601814058956916,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.92,
+      "target_first_word_start_seconds": 2.48,
+      "gap_seconds": 0.4489795918367347,
+      "verified_silence_start_seconds": 1.9798639455782312,
+      "verified_silence_end_seconds": 2.428843537414966,
+      "gap_rms_dbfs": -69.586,
+      "gap_peak_dbfs": -44.332,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.2043537414965986,
+      "cut_sample": 48606,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/baia_delle_orche/assets/audio/es/find_luna.wav",
-    "bytes": 49478,
-    "sha256": "c982644afdfa3e933f0059e0c0583cba13d7001c855bd9a5d48f41d94407d7ff"
+    "sha256": "5338f8bc822289ec0341ef10aecaa9c2398425946169c23a8a5ea8a933123d7a",
+    "bytes": 51050
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "64e1b026a350e9eb35c4d1d6d42d50607b86dbff29dbbdc85915508d12076d1f",
+    "original_sha256": "c982644afdfa3e933f0059e0c0583cba13d7001c855bd9a5d48f41d94407d7ff",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

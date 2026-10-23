@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T15:37:43.011573+00:00",
+  "created_utc": "2026-10-22T09:33:12.707777+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "Plein de bulles d'air !",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français...\n\nPlein de bulles d'air !",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Plein de bulles d'air !",
+    "cue_id": "greia.submarine.sub_btn_bubbles.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Plein de bulles d'air !",
     "cue_id": "greia.submarine.sub_btn_bubbles.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/sottomarino_giramondo/audio/fr/sub_btn_bubbles.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-173735-f1966c46",
-    "idempotency_key": "greia-fa265f302645439ca3d9e97d71d536c6",
+    "job_id": "20261022-113231-543942f8",
+    "idempotency_key": "greia-64921b0ce62044f49483c9c8faaaa897",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,270 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1693908756,
+    "script_seed": 2030514391,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3420426362,
-        "sha256": "f738849184e23caf7831e4038bb41ff24ed5e76e7aa681152cd4f26232cff9f3",
+        "seed": 30191340,
+        "sha256": "37cac37d142e384faee546b93969bdd131f9a63a3ecd1b743148d285751a11ed",
         "generation": {
-          "elapsed_seconds": 6.749190415954217,
+          "elapsed_seconds": 12.498457957990468,
           "model_load_seconds": 0.0,
-          "rtf": 5.272118538696173,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.5505301712959993,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8975,
+    "transcript": " plein de bull d'air",
+    "metrics": {
+      "duration_seconds": 1.5519727891156463,
+      "rms_dbfs": -36.63,
+      "peak": 0.12619,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.36,
+      "trailing_silence_seconds": 0.14,
+      "longest_internal_pause_seconds": 0.1
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/sottomarino_giramondo/audio/fr/sub_btn_bubbles.wav.raw.wav",
+    "sha256": "e235d6685a3e27c9a6cba4bd06ed0545d01565c79820424182b9608a044690d1",
+    "receipt_sha256": "a96dec936631b160b330ce2a2212c3f497663dde1a6ac65cefbde9ac7e467f76"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/sottomarino_giramondo/audio/fr/sub_btn_bubbles.wav.extracted.wav",
+    "sha256": "505b86bab33cce4f3ab01c6232575c231d646349b0e63717e9ce7e9364d783ac"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/sottomarino_giramondo/audio/fr/sub_btn_bubbles.wav.delivery.wav",
+    "sha256": "48bc41ec53781ff80f675033b0e04a5ca42a78d51256aff0206ed9bad043873b"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/activities/sottomarino_giramondo/audio/fr/sub_btn_bubbles.wav.raw.wav",
+    "source_sha256": "e235d6685a3e27c9a6cba4bd06ed0545d01565c79820424182b9608a044690d1",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/activities/sottomarino_giramondo/audio/fr/sub_btn_bubbles.wav.extracted.wav",
+    "output_sha256": "505b86bab33cce4f3ab01c6232575c231d646349b0e63717e9ce7e9364d783ac",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Plein de bulles d'air !",
+      "locale": "fr",
+      "cue_id": "greia.submarine.sub_btn_bubbles.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/activities/sottomarino_giramondo/audio/fr/sub_btn_bubbles.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "a96dec936631b160b330ce2a2212c3f497663dde1a6ac65cefbde9ac7e467f76"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "Plein de bulles d'air !",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français, plein de bulles d'air.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " plein de bull d'air",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.26
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.26,
+        "end_seconds": 0.48
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.48,
+        "end_seconds": 0.72
+      },
+      {
+        "word": "en",
+        "start_seconds": 0.72,
+        "end_seconds": 0.84
+      },
+      {
+        "word": "français",
+        "start_seconds": 0.84,
+        "end_seconds": 1.28
+      },
+      {
+        "word": "plein",
+        "start_seconds": 2.12,
+        "end_seconds": 2.48
+      },
+      {
+        "word": "de",
+        "start_seconds": 2.48,
+        "end_seconds": 2.66
+      },
+      {
+        "word": "bulles",
+        "start_seconds": 2.66,
+        "end_seconds": 3.08
+      },
+      {
+        "word": "d'air",
+        "start_seconds": 3.08,
+        "end_seconds": 3.32
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "plein",
+        "start_seconds": 0.0,
+        "end_seconds": 0.74
+      },
+      {
+        "word": "de",
+        "start_seconds": 0.74,
+        "end_seconds": 0.92
+      },
+      {
+        "word": "bull",
+        "start_seconds": 0.92,
+        "end_seconds": 1.18
+      },
+      {
+        "word": "d'air",
+        "start_seconds": 1.18,
+        "end_seconds": 1.68
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.44958630730124083,
+        "no_speech_prob": 0.026777615770697594,
+        "compression_ratio": 0.8688524590163934,
+        "word_probabilities": [
+          0.7607421875,
+          0.97216796875,
+          0.70947265625,
+          0.8984375,
+          0.96875,
+          0.73876953125,
+          0.9931640625,
+          0.40380859375,
+          0.939453125,
+          0.86865234375
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.4476417965359158,
+        "no_speech_prob": 0.1710217297077179,
+        "compression_ratio": 0.7037037037037037,
+        "word_probabilities": [
+          0.3935546875,
+          0.99462890625,
+          0.63525390625,
+          0.6044921875,
+          0.93505859375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 74,
+    "extracted_voiced_seconds": 0.74,
+    "unremoved_raw_target_tokens": [
+      "plein",
+      "de",
+      "bulles",
+      "d'air"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "plein",
+      "de",
+      "bulles",
+      "d'air"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.5201814058956917,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.28,
+      "search_end_seconds": 2.12,
+      "prefix_last_word_end_seconds": 1.28,
+      "target_first_word_start_seconds": 2.12,
+      "gap_seconds": 0.6884353741496598,
+      "verified_silence_start_seconds": 1.3797732426303855,
+      "verified_silence_end_seconds": 2.0682086167800455,
+      "gap_rms_dbfs": -57.885,
+      "gap_peak_dbfs": -37.64,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.7239909297052156,
+      "cut_sample": 38014,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 5385,
+      "removed_seconds": 0.24421768707482994,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 43399,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/activities/sottomarino_giramondo/audio/fr/sub_btn_bubbles.wav.delivery.wav",
+      "sha256": "48bc41ec53781ff80f675033b0e04a5ca42a78d51256aff0206ed9bad043873b"
+    }
+  },
   "output": {
     "path": "activities/sottomarino_giramondo/audio/fr/sub_btn_bubbles.wav",
-    "bytes": 56534,
-    "sha256": "8f7957f3078430c647d0ef8f5f089471652aa5c8baaf6628dff50c11e578227a"
+    "sha256": "ae65432c250f9f1b4872674f899bb3ad966d018cac5a277dad9a1452bed1f6f0",
+    "bytes": 68520
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "2e0ed05db7b169c9b4723a3e4dff81b43de399beeba147312c714a9a0ce5c72c",
+    "original_sha256": "f933f04e76ca7aba8b144b9d08c7af5393c68899376a5cacdd7f6220539c6930",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,24 +1,93 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T20:44:42.793280+00:00",
+  "created_utc": "2026-10-21T15:08:33Z",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Listen to this phrase in English.",
+    "prefix_word_count": 6,
+    "target": "D as Duck",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Listen to this phrase in English. D as Duck",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "D as Duck",
+    "cue_id": "alfabeto_leo.letter_D.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "D as Duck",
     "cue_id": "alfabeto_leo.letter_D.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/alfabeto_leo/assets/audio/en/letter_D.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261019-224434-e3ec864a",
-    "idempotency_key": "greia-1379f52cdbd241a2a5610f62c8999171",
+    "recovered_from_voxstage_job": "20261021-170817-9b4fe786",
+    "voxstage_job_receipt_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/deferred-captured/activities/alfabeto_leo/assets/audio/en/letter_D.wav.provider-job.json",
+    "voxstage_job_receipt_sha256": "89b6e4a0ba75dc7ed296af6bab0ed9929849bb25ff6d027b78f5abc3777a2a7b",
+    "job_result": {
+      "key": "speech-001-take-01",
+      "file": "speech-001-take-01.wav",
+      "sha256": "e75a57cf463e931076087979b5f5e053fd89c9bc80a0cca9412d05cfba7bd50e",
+      "spec": {
+        "id": "speech-001",
+        "source_id": "speech",
+        "chunk": 1,
+        "take": 1,
+        "text": "Listen to this phrase in English. D as Duck",
+        "voice": "greia-audition-20261019-leo-v1-03",
+        "direction": "Speak in English. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+        "mode": "reference",
+        "seed": 1822867068,
+        "pause_after_ms": 0,
+        "settings": {
+          "steps": 10,
+          "cfg": 2.0,
+          "max_tokens": 300
+        },
+        "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1"
+      },
+      "audio": {
+        "duration_seconds": 3.2001666666666666,
+        "sample_rate": 48000,
+        "samples": 153608,
+        "peak": 0.11807704716920853,
+        "rms": 0.013155950235416181,
+        "gain_applied": 1.0
+      },
+      "generation": {
+        "elapsed_seconds": 15.662080417001562,
+        "model_load_seconds": 0.0,
+        "rtf": 4.894145226915753,
+        "peak_memory_gb": 9.453068756
+      }
+    },
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,49 +103,250 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
-    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
-    "settings": {
-      "steps": 10,
-      "cfg": 2.0,
-      "max_tokens": 300
-    },
-    "script_seed": 1832076312,
-    "language_direction": "English",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak naturally in English. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "mode": "reference",
-    "recordings": [
-      {
-        "file": "speech-001-take-01.wav",
-        "seed": 2599594747,
-        "sha256": "0f9a7b6d5dfc76cf56b849b61f598aa608ba7a8049cd4f746c6a750546255d53",
-        "generation": {
-          "elapsed_seconds": 7.600150750018656,
-          "model_load_seconds": 0.0,
-          "rtf": 5.277271669958562,
-          "peak_memory_gb": 8.21220922
+    "raw_request": {
+      "title": "Greia leo en",
+      "voice": "greia-audition-20261019-leo-v1-03",
+      "allow_unanchored": false,
+      "direction": "",
+      "seed": 1398464504,
+      "takes": 1,
+      "max_chars": 240,
+      "settings": {
+        "steps": 10,
+        "cfg": 2.0,
+        "max_tokens": 300
+      },
+      "segments": [
+        {
+          "id": "speech",
+          "text": "Listen to this phrase in English. D as Duck",
+          "voice": null,
+          "emotion": "",
+          "delivery": "Speak in English. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+          "pace": "",
+          "pause_after_ms": 0,
+          "mode": "reference",
+          "settings": null
         }
-      }
-    ]
+      ]
+    }
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " D as duck.",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Recovered provider job passed exact-prefix and safe-gap extraction; human listening remains pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/alfabeto_leo/assets/audio/en/letter_D.wav.raw.wav",
+    "sha256": "e75a57cf463e931076087979b5f5e053fd89c9bc80a0cca9412d05cfba7bd50e",
+    "receipt_sha256": "89b6e4a0ba75dc7ed296af6bab0ed9929849bb25ff6d027b78f5abc3777a2a7b"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_D.wav.extracted.wav",
+    "sha256": "88bcc0966901ecc64a481095ad8d0d091c1395e6f1eb5cbceb86621804d299da"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/alfabeto_leo/assets/audio/en/letter_D.wav.raw.wav",
+    "source_sha256": "e75a57cf463e931076087979b5f5e053fd89c9bc80a0cca9412d05cfba7bd50e",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_D.wav.extracted.wav",
+    "output_sha256": "88bcc0966901ecc64a481095ad8d0d091c1395e6f1eb5cbceb86621804d299da",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "locale": "en",
+      "text": "D as Duck",
+      "cue_id": "alfabeto_leo.letter_D.en",
+      "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/deferred-captured/activities/alfabeto_leo/assets/audio/en/letter_D.wav.provider-job.json",
+      "source_provider_receipt_sha256": "89b6e4a0ba75dc7ed296af6bab0ed9929849bb25ff6d027b78f5abc3777a2a7b"
+    },
+    "locale": "en",
+    "prefix": "Listen to this phrase in English.",
+    "target": "D as Duck",
+    "remove_first_words": 6,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Listen to this phrase in English. D as duck.",
+    "extracted_transcript": " D as duck.",
+    "raw_word_alignment": [
+      {
+        "word": "listen",
+        "start_seconds": 0.0,
+        "end_seconds": 0.34
+      },
+      {
+        "word": "to",
+        "start_seconds": 0.34,
+        "end_seconds": 0.56
+      },
+      {
+        "word": "this",
+        "start_seconds": 0.56,
+        "end_seconds": 0.72
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.72,
+        "end_seconds": 0.94
+      },
+      {
+        "word": "in",
+        "start_seconds": 0.94,
+        "end_seconds": 1.12
+      },
+      {
+        "word": "english",
+        "start_seconds": 1.12,
+        "end_seconds": 1.5
+      },
+      {
+        "word": "d",
+        "start_seconds": 1.94,
+        "end_seconds": 2.38
+      },
+      {
+        "word": "as",
+        "start_seconds": 2.38,
+        "end_seconds": 2.8
+      },
+      {
+        "word": "duck",
+        "start_seconds": 2.8,
+        "end_seconds": 3.08
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "d",
+        "start_seconds": 0.0,
+        "end_seconds": 0.66
+      },
+      {
+        "word": "as",
+        "start_seconds": 0.66,
+        "end_seconds": 1.1
+      },
+      {
+        "word": "duck",
+        "start_seconds": 1.1,
+        "end_seconds": 1.36
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.41323310136795044,
+        "no_speech_prob": 0.00388703984208405,
+        "compression_ratio": 0.8461538461538461,
+        "word_probabilities": [
+          0.8271484375,
+          0.986328125,
+          0.9833984375,
+          0.9970703125,
+          0.974609375,
+          0.9873046875
+        ]
+      },
+      {
+        "avg_logprob": -0.41323310136795044,
+        "no_speech_prob": 0.00388703984208405,
+        "compression_ratio": 0.8461538461538461,
+        "word_probabilities": [
+          0.53857421875,
+          0.7861328125,
+          0.69677734375
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.8524712153843471,
+        "no_speech_prob": 0.29812416434288025,
+        "compression_ratio": 0.5555555555555556,
+        "word_probabilities": [
+          0.453857421875,
+          0.6865234375,
+          0.619140625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 71,
+    "extracted_voiced_seconds": 0.71,
+    "unremoved_raw_target_tokens": [
+      "d",
+      "as",
+      "duck"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "d",
+      "as",
+      "duck"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.2001666666666666,
+    "sample_rate": 48000,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.5,
+      "target_first_word_start_seconds": 1.94,
+      "gap_seconds": 0.34,
+      "verified_silence_start_seconds": 1.55,
+      "verified_silence_end_seconds": 1.89,
+      "gap_rms_dbfs": -65.456,
+      "gap_peak_dbfs": -46.336,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.72,
+      "cut_sample": 82560,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "receipt_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/recovery/letter_D/extraction.json"
+  },
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/en/letter_D.wav",
-    "bytes": 63590,
-    "sha256": "db5461aac69939f8e03ac093571055cd3c0a2ee7b197163656b84fc049917669"
+    "sha256": "8aa4e9059d26624db70c8c899b04cbb50722e1a1b3c0027c0c2c2c177559b9fe",
+    "bytes": 65354
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "recovery_provenance": {
+    "source_raw_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/deferred-captured/activities/alfabeto_leo/assets/audio/en/letter_D.wav.raw.wav",
+    "source_raw_sha256": "e75a57cf463e931076087979b5f5e053fd89c9bc80a0cca9412d05cfba7bd50e",
+    "source_provider_job_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/deferred-captured/activities/alfabeto_leo/assets/audio/en/letter_D.wav.provider-job.json",
+    "source_provider_job_receipt_sha256": "89b6e4a0ba75dc7ed296af6bab0ed9929849bb25ff6d027b78f5abc3777a2a7b",
+    "generation_was_not_repeated": true
+  },
   "corpus_replacement": {
-    "original_sha256": "1e1fab52918c9fd65825ed03c14d435e9d7a76cbc36f5f72227a52af089170ab",
+    "original_sha256": "db5461aac69939f8e03ac093571055cd3c0a2ee7b197163656b84fc049917669",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T12:02:36.798852+00:00",
+  "created_utc": "2026-10-23T01:46:00.796438+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
@@ -8,17 +8,22 @@
     "text": "Luci di Momo",
     "cue_id": "activity.title",
     "output": "activities/luci_di_momo/locales/it/audio/activity-title.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic"
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.momo.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261021-140230-42a07c15",
-    "idempotency_key": "greia-7bea0891d1564ab9a966406bc4318864",
+    "job_id": "20261023-034536-b60c2e36",
+    "idempotency_key": "greia-4eb9d00c5bda45d38667365cf0dffffd",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +46,403 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2427358796,
+    "script_seed": 524258488,
     "language_direction": "Italian",
-    "delivery_prompt": "Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "effective_delivery": "Speak in Italian. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "delivery_prompt": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "effective_delivery": "Speak in Italian. Voce calda e calma. Pronuncia chiara e naturale.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1112705610,
-        "sha256": "f899ffcee2de4410dcf669808e5dc7e58487a5b07b09c04fa085cc3ef29f4c6a",
+        "seed": 4244683266,
+        "sha256": "b8dd6d1dcf47c164db6cf24352af3cb8bb5b411760d5d71eaa27961a15fa2400",
         "generation": {
-          "elapsed_seconds": 5.258469709006022,
+          "elapsed_seconds": 21.061645208013942,
           "model_load_seconds": 0.0,
-          "rtf": 3.651292472403209,
-          "peak_memory_gb": 7.648166916
+          "rtf": 3.9888220462764328,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-audio-parakeet-tdt-v3",
+    "transcript": "Luci di momo",
+    "score": 1.0,
+    "detail": "Delivered target transcribed and screened; human listening remains pending",
+    "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+    "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+    "flags": [],
+    "metrics": {
+      "duration_seconds": 1.4401814058956917,
+      "rms_dbfs": -29.99,
+      "peak": 0.12805,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.08,
+      "trailing_silence_seconds": 0.22,
+      "longest_internal_pause_seconds": 0.06
+    }
   },
   "attempts": 1,
   "output": {
     "path": "activities/luci_di_momo/locales/it/audio/activity-title.wav",
     "bytes": 63590,
-    "sha256": "1c9ecc21e46b7a9a97661d787e0976b69eb856086ff95a4d2e0cd54d100369fd"
+    "sha256": "ccb04b0868c0ba96848e29c64822edb6ff5033aaff6f245ee583ccdc3d1530cd"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "short_phrase": {
+    "mode": "automatic-carrier",
+    "composition_policy": "natural-context-period-v1",
+    "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/541d7d511a854d569b8a0c8e7919e4d5",
+    "prefix": "Parliamo con calma insieme.",
+    "composite_text": "Parliamo con calma insieme.\n\nLuci di Momo",
+    "effective_delivery": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "extraction": {
+      "schema_version": 1,
+      "algorithm_version": "greia-spoken-carrier-extractor-v7",
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "status": "EXTRACTED_PENDING_LISTENING",
+      "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/541d7d511a854d569b8a0c8e7919e4d5/attempt-01/raw.wav",
+      "source_sha256": "b8dd6d1dcf47c164db6cf24352af3cb8bb5b411760d5d71eaa27961a15fa2400",
+      "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/541d7d511a854d569b8a0c8e7919e4d5/attempt-01/target.wav",
+      "output_sha256": "cd93bccc7cab114893e046c1568589b67b42fa82018fdf3920186db361b578da",
+      "output_bytes": 138300,
+      "locale": "it",
+      "prefix": "Parliamo con calma insieme.",
+      "target": "Luci di Momo",
+      "remove_first_words": 4,
+      "ignore_accents": true,
+      "target_verification_requested": "warn",
+      "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+      "target_comparison_score": 1.0,
+      "target_word_count_matches": true,
+      "target_numbers_match": true,
+      "target_comparison_flags": [],
+      "target_transcript_warning": false,
+      "recognizer": "mlx-audio-parakeet-tdt-v3",
+      "recognizer_version": "0.5.0",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "extracted_transcript": "Luci di momo",
+      "expected_target_tokens": [
+        "luki",
+        "di",
+        "momo"
+      ],
+      "extracted_target_tokens": [
+        "luki",
+        "di",
+        "momo"
+      ],
+      "extracted_target_exact_match": true,
+      "transcription_settings": {
+        "language_detection": "automatic",
+        "expected_text_prompt": null,
+        "timestamps": "model-provided-token-timestamps"
+      },
+      "sample_rate": 48000,
+      "duration_seconds": 5.280166666666666,
+      "boundary": {
+        "search_strategy": "target-only-global-quiet-run-v7",
+        "verified_silence_start_seconds": 2.83,
+        "verified_silence_end_seconds": 3.94,
+        "verified_silence_duration_seconds": 1.11,
+        "cut_sample": 184320,
+        "cut_time_seconds": 3.84,
+        "padding_seconds": 0.1,
+        "quiet_run_start_sample": 135840,
+        "quiet_run_end_sample": 189120,
+        "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+      },
+      "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/541d7d511a854d569b8a0c8e7919e4d5/attempt-01/target.wav.search/1f33aafd40ae48e099d95cb7326565d6",
+      "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/541d7d511a854d569b8a0c8e7919e4d5/attempt-01/target.wav.search/1f33aafd40ae48e099d95cb7326565d6/search.json",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/541d7d511a854d569b8a0c8e7919e4d5/attempt-01/raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "09d0f6c29feb4ff39eb98f8c39853020bf4f3cc14aff194368563cabfb59102c",
+      "candidate_sha256": "cd93bccc7cab114893e046c1568589b67b42fa82018fdf3920186db361b578da",
+      "candidate_id": "candidate-02",
+      "candidate_count": 2,
+      "qualifying_quiet_run_count": 2,
+      "candidate_results": [
+        {
+          "candidate_id": "candidate-01",
+          "quiet_run": {
+            "start_sample": 105600,
+            "end_sample": 115200,
+            "start_seconds": 2.2,
+            "end_seconds": 2.4,
+            "duration_seconds": 0.2
+          },
+          "cut_sample": 110400,
+          "cut_time_seconds": 2.3,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/541d7d511a854d569b8a0c8e7919e4d5/attempt-01/target.wav.search/1f33aafd40ae48e099d95cb7326565d6/candidate-01.wav",
+          "preceding_voiced_seconds": 1.6,
+          "retained_voiced_seconds": 1.38,
+          "retained_duration_seconds": 2.980166666666667,
+          "candidate_sha256": "922687e689b034bf2ea4d0102b4325a3c2ff48278160a8eb11617a8b56adccd5",
+          "extracted_transcript": "Insieme? Luci di momo.",
+          "canonical_transcript_tokens": [
+            "insieme",
+            "luki",
+            "di",
+            "momo"
+          ],
+          "exact_target_match": false,
+          "target_comparison_score": 0.7875,
+          "target_word_count_matches": false,
+          "target_numbers_match": true,
+          "target_comparison_flags": [
+            "TARGET_WORD_COUNT_MISMATCH"
+          ],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": false,
+          "asr_segment_count": 2
+        },
+        {
+          "candidate_id": "candidate-02",
+          "quiet_run": {
+            "start_sample": 135840,
+            "end_sample": 189120,
+            "start_seconds": 2.83,
+            "end_seconds": 3.94,
+            "duration_seconds": 1.11
+          },
+          "cut_sample": 184320,
+          "cut_time_seconds": 3.84,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/541d7d511a854d569b8a0c8e7919e4d5/attempt-01/target.wav.search/1f33aafd40ae48e099d95cb7326565d6/candidate-02.wav",
+          "preceding_voiced_seconds": 2.03,
+          "retained_voiced_seconds": 0.95,
+          "retained_duration_seconds": 1.4401666666666666,
+          "candidate_sha256": "cd93bccc7cab114893e046c1568589b67b42fa82018fdf3920186db361b578da",
+          "extracted_transcript": "Luci di momo",
+          "canonical_transcript_tokens": [
+            "luki",
+            "di",
+            "momo"
+          ],
+          "exact_target_match": true,
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": true,
+          "asr_segment_count": 1
+        }
+      ],
+      "human_review": "PENDING",
+      "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+      "delivery": {
+        "policy": "verified-carrier-gap-delivery-v1",
+        "removed_frames": 0,
+        "removed_seconds": 0.0,
+        "retained_verified_quiet_seconds": 0.1,
+        "raw_delivery_start_sample": 184320,
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/541d7d511a854d569b8a0c8e7919e4d5/attempt-01/delivery-target.wav",
+        "sha256": "cd93bccc7cab114893e046c1568589b67b42fa82018fdf3920186db361b578da"
+      }
+    },
+    "quality": {
+      "disposition": "PASS",
+      "score": 1.0,
+      "transcript": "Luci di momo",
+      "metrics": {
+        "duration_seconds": 1.4401814058956917,
+        "rms_dbfs": -29.99,
+        "peak": 0.12805,
+        "clipped_fraction": 0.0,
+        "leading_silence_seconds": 0.08,
+        "trailing_silence_seconds": 0.22,
+        "longest_internal_pause_seconds": 0.06
+      },
+      "flags": [],
+      "ignore_accents": true,
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "detail": "Delivered target transcribed and screened; human listening remains pending"
+    },
+    "history": [
+      {
+        "attempt": 1,
+        "status": "PASS",
+        "quality": {
+          "disposition": "PASS",
+          "score": 1.0,
+          "transcript": "Luci di momo",
+          "metrics": {
+            "duration_seconds": 1.4401814058956917,
+            "rms_dbfs": -29.99,
+            "peak": 0.12805,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.08,
+            "trailing_silence_seconds": 0.22,
+            "longest_internal_pause_seconds": 0.06
+          },
+          "flags": [],
+          "ignore_accents": true,
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "detail": "Delivered target transcribed and screened; human listening remains pending"
+        },
+        "extraction": {
+          "schema_version": 1,
+          "algorithm_version": "greia-spoken-carrier-extractor-v7",
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "status": "EXTRACTED_PENDING_LISTENING",
+          "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/541d7d511a854d569b8a0c8e7919e4d5/attempt-01/raw.wav",
+          "source_sha256": "b8dd6d1dcf47c164db6cf24352af3cb8bb5b411760d5d71eaa27961a15fa2400",
+          "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/541d7d511a854d569b8a0c8e7919e4d5/attempt-01/target.wav",
+          "output_sha256": "cd93bccc7cab114893e046c1568589b67b42fa82018fdf3920186db361b578da",
+          "output_bytes": 138300,
+          "locale": "it",
+          "prefix": "Parliamo con calma insieme.",
+          "target": "Luci di Momo",
+          "remove_first_words": 4,
+          "ignore_accents": true,
+          "target_verification_requested": "warn",
+          "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_transcript_warning": false,
+          "recognizer": "mlx-audio-parakeet-tdt-v3",
+          "recognizer_version": "0.5.0",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "extracted_transcript": "Luci di momo",
+          "expected_target_tokens": [
+            "luki",
+            "di",
+            "momo"
+          ],
+          "extracted_target_tokens": [
+            "luki",
+            "di",
+            "momo"
+          ],
+          "extracted_target_exact_match": true,
+          "transcription_settings": {
+            "language_detection": "automatic",
+            "expected_text_prompt": null,
+            "timestamps": "model-provided-token-timestamps"
+          },
+          "sample_rate": 48000,
+          "duration_seconds": 5.280166666666666,
+          "boundary": {
+            "search_strategy": "target-only-global-quiet-run-v7",
+            "verified_silence_start_seconds": 2.83,
+            "verified_silence_end_seconds": 3.94,
+            "verified_silence_duration_seconds": 1.11,
+            "cut_sample": 184320,
+            "cut_time_seconds": 3.84,
+            "padding_seconds": 0.1,
+            "quiet_run_start_sample": 135840,
+            "quiet_run_end_sample": 189120,
+            "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+          },
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/541d7d511a854d569b8a0c8e7919e4d5/attempt-01/target.wav.search/1f33aafd40ae48e099d95cb7326565d6",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/541d7d511a854d569b8a0c8e7919e4d5/attempt-01/target.wav.search/1f33aafd40ae48e099d95cb7326565d6/search.json",
+          "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/541d7d511a854d569b8a0c8e7919e4d5/attempt-01/raw.wav.receipt.json",
+          "source_provider_receipt_sha256": "09d0f6c29feb4ff39eb98f8c39853020bf4f3cc14aff194368563cabfb59102c",
+          "candidate_sha256": "cd93bccc7cab114893e046c1568589b67b42fa82018fdf3920186db361b578da",
+          "candidate_id": "candidate-02",
+          "candidate_count": 2,
+          "qualifying_quiet_run_count": 2,
+          "candidate_results": [
+            {
+              "candidate_id": "candidate-01",
+              "quiet_run": {
+                "start_sample": 105600,
+                "end_sample": 115200,
+                "start_seconds": 2.2,
+                "end_seconds": 2.4,
+                "duration_seconds": 0.2
+              },
+              "cut_sample": 110400,
+              "cut_time_seconds": 2.3,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/541d7d511a854d569b8a0c8e7919e4d5/attempt-01/target.wav.search/1f33aafd40ae48e099d95cb7326565d6/candidate-01.wav",
+              "preceding_voiced_seconds": 1.6,
+              "retained_voiced_seconds": 1.38,
+              "retained_duration_seconds": 2.980166666666667,
+              "candidate_sha256": "922687e689b034bf2ea4d0102b4325a3c2ff48278160a8eb11617a8b56adccd5",
+              "extracted_transcript": "Insieme? Luci di momo.",
+              "canonical_transcript_tokens": [
+                "insieme",
+                "luki",
+                "di",
+                "momo"
+              ],
+              "exact_target_match": false,
+              "target_comparison_score": 0.7875,
+              "target_word_count_matches": false,
+              "target_numbers_match": true,
+              "target_comparison_flags": [
+                "TARGET_WORD_COUNT_MISMATCH"
+              ],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": false,
+              "asr_segment_count": 2
+            },
+            {
+              "candidate_id": "candidate-02",
+              "quiet_run": {
+                "start_sample": 135840,
+                "end_sample": 189120,
+                "start_seconds": 2.83,
+                "end_seconds": 3.94,
+                "duration_seconds": 1.11
+              },
+              "cut_sample": 184320,
+              "cut_time_seconds": 3.84,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/541d7d511a854d569b8a0c8e7919e4d5/attempt-01/target.wav.search/1f33aafd40ae48e099d95cb7326565d6/candidate-02.wav",
+              "preceding_voiced_seconds": 2.03,
+              "retained_voiced_seconds": 0.95,
+              "retained_duration_seconds": 1.4401666666666666,
+              "candidate_sha256": "cd93bccc7cab114893e046c1568589b67b42fa82018fdf3920186db361b578da",
+              "extracted_transcript": "Luci di momo",
+              "canonical_transcript_tokens": [
+                "luki",
+                "di",
+                "momo"
+              ],
+              "exact_target_match": true,
+              "target_comparison_score": 1.0,
+              "target_word_count_matches": true,
+              "target_numbers_match": true,
+              "target_comparison_flags": [],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": true,
+              "asr_segment_count": 1
+            }
+          ],
+          "human_review": "PENDING",
+          "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+          "delivery": {
+            "policy": "verified-carrier-gap-delivery-v1",
+            "removed_frames": 0,
+            "removed_seconds": 0.0,
+            "retained_verified_quiet_seconds": 0.1,
+            "raw_delivery_start_sample": 184320,
+            "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/541d7d511a854d569b8a0c8e7919e4d5/attempt-01/delivery-target.wav",
+            "sha256": "cd93bccc7cab114893e046c1568589b67b42fa82018fdf3920186db361b578da"
+          }
+        },
+        "candidate": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/541d7d511a854d569b8a0c8e7919e4d5/attempt-01/candidate.wav"
+      }
+    ]
+  },
   "corpus_replacement": {
-    "original_sha256": "1bb10f4348ba189d8b731c0c204bdb72d5cc40ad42d80f371008c0b73eed38b8",
+    "original_sha256": "1c9ecc21e46b7a9a97661d787e0976b69eb856086ff95a4d2e0cd54d100369fd",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

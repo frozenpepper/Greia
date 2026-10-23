@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T16:28:02.734054+00:00",
+  "created_utc": "2026-10-21T17:19:13.836244+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Listen to this phrase in English.",
+    "prefix_word_count": 6,
+    "target": "Try this spot!",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Listen to this phrase in English. Try this spot!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "lilli",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Try this spot!",
+    "cue_id": "greia.requested.try_this_spot.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "Try this spot!",
     "cue_id": "greia.requested.try_this_spot.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/specchi_magici/assets/audio/en/try_this_spot.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.lilli.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "job_id": "20261020-182756-fa1a3b9e",
-    "idempotency_key": "greia-a043af5501574c22966942a168261b21",
+    "job_id": "20261021-191859-f9bd5f84",
+    "idempotency_key": "greia-99cd12e4bba94838a33ac6dfcca9eba1",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,254 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 705947679,
+    "script_seed": 3708171916,
     "language_direction": "English",
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in English. Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in English. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1025791149,
-        "sha256": "91f8cd6fc1e794866405db799bee59b80e6b0f1ed6b8b5e04c4a20a2c3a5f5d7",
+        "seed": 2178109356,
+        "sha256": "d5853edd2cf129bb9bb6aa0337be36bb6354166607e3d52fe4862149f9ef2554",
         "generation": {
-          "elapsed_seconds": 6.063230708008632,
+          "elapsed_seconds": 13.890943332997267,
           "model_load_seconds": 0.0,
-          "rtf": 5.412793371232226,
-          "peak_memory_gb": 8.44494914
+          "rtf": 4.5691387532472785,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " Try this spot!",
+    "metrics": {
+      "duration_seconds": 1.0668027210884354,
+      "rms_dbfs": -23.18,
+      "peak": 0.3537,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.12,
+      "trailing_silence_seconds": 0.14,
+      "longest_internal_pause_seconds": 0.06
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/specchi_magici/assets/audio/en/try_this_spot.wav.raw.wav",
+    "sha256": "86e0cb5745590ed28511d9c78bbadbee3053262b955f49294c9ec214be038c0e",
+    "receipt_sha256": "228049a77cf4a2082aa40845b91935487ce903f8430a6779d2169e8517728bef"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/specchi_magici/assets/audio/en/try_this_spot.wav.extracted.wav",
+    "sha256": "a74e869448f14ba532c5bdced3f74d28bfe0e11273d0a6ea751fcf8c43a5390f"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/specchi_magici/assets/audio/en/try_this_spot.wav.raw.wav",
+    "source_sha256": "86e0cb5745590ed28511d9c78bbadbee3053262b955f49294c9ec214be038c0e",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-extracted/activities/specchi_magici/assets/audio/en/try_this_spot.wav.extracted.wav",
+    "output_sha256": "a74e869448f14ba532c5bdced3f74d28bfe0e11273d0a6ea751fcf8c43a5390f",
+    "target_request": {
+      "speaker": "lilli",
+      "kind": "character_dialogue",
+      "text": "Try this spot!",
+      "locale": "en",
+      "cue_id": "greia.requested.try_this_spot.en",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/specchi_magici/assets/audio/en/try_this_spot.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "228049a77cf4a2082aa40845b91935487ce903f8430a6779d2169e8517728bef"
+    },
+    "locale": "en",
+    "prefix": "Listen to this phrase in English.",
+    "target": "Try this spot!",
+    "remove_first_words": 6,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Listen to this phrase in English. Try the spot.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Try this spot!",
+    "raw_word_alignment": [
+      {
+        "word": "listen",
+        "start_seconds": 0.0,
+        "end_seconds": 0.28
+      },
+      {
+        "word": "to",
+        "start_seconds": 0.28,
+        "end_seconds": 0.52
+      },
+      {
+        "word": "this",
+        "start_seconds": 0.52,
+        "end_seconds": 0.72
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.72,
+        "end_seconds": 1.02
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.02,
+        "end_seconds": 1.26
+      },
+      {
+        "word": "english",
+        "start_seconds": 1.26,
+        "end_seconds": 1.62
+      },
+      {
+        "word": "try",
+        "start_seconds": 2.0,
+        "end_seconds": 2.28
+      },
+      {
+        "word": "the",
+        "start_seconds": 2.28,
+        "end_seconds": 2.48
+      },
+      {
+        "word": "spot",
+        "start_seconds": 2.48,
+        "end_seconds": 2.78
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "try",
+        "start_seconds": 0.0,
+        "end_seconds": 0.34
+      },
+      {
+        "word": "this",
+        "start_seconds": 0.34,
+        "end_seconds": 0.58
+      },
+      {
+        "word": "spot",
+        "start_seconds": 0.58,
+        "end_seconds": 0.86
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.40151476860046387,
+        "no_speech_prob": 0.04628666862845421,
+        "compression_ratio": 0.8703703703703703,
+        "word_probabilities": [
+          0.8759765625,
+          0.99560546875,
+          0.98974609375,
+          0.9921875,
+          0.99462890625,
+          0.97900390625
+        ]
+      },
+      {
+        "avg_logprob": -0.40151476860046387,
+        "no_speech_prob": 0.04628666862845421,
+        "compression_ratio": 0.8703703703703703,
+        "word_probabilities": [
+          0.96826171875,
+          0.487060546875,
+          0.9375
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.5677086966378349,
+        "no_speech_prob": 0.3556523621082306,
+        "compression_ratio": 0.6363636363636364,
+        "word_probabilities": [
+          0.6455078125,
+          0.77099609375,
+          0.9560546875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 6,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 63,
+    "extracted_voiced_seconds": 0.63,
+    "unremoved_raw_target_tokens": [
+      "try",
+      "the",
+      "spot"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "try",
+      "the",
+      "spot"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.0401814058956917,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-expanded-boundary",
+      "search_start_seconds": 1.26,
+      "search_end_seconds": 2.28,
+      "prefix_last_word_end_seconds": 1.62,
+      "target_first_word_start_seconds": 2.0,
+      "gap_seconds": 0.2693877551020408,
+      "verified_silence_start_seconds": 1.8386848072562358,
+      "verified_silence_end_seconds": 2.108072562358277,
+      "gap_rms_dbfs": -59.515,
+      "gap_peak_dbfs": -32.501,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.9733786848072563,
+      "cut_sample": 43513,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/specchi_magici/assets/audio/en/try_this_spot.wav",
-    "bytes": 49478,
-    "sha256": "a72a369593dbf3863efb1345d2416845a6a1da66210513173511565c9ee86939"
+    "sha256": "4b0e63302b9551451350de831d06a08e8ee461c3c9b8d163aeb58c5c4c12a2ab",
+    "bytes": 47124
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "3cb5beb44446929ea51821437704b50bcadcf697b7317f4b20f3040e036ad136",
+    "original_sha256": "a72a369593dbf3863efb1345d2416845a6a1da66210513173511565c9ee86939",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

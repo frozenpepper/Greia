@@ -1,24 +1,66 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T07:59:19.221572+00:00",
+  "created_utc": "2026-10-22T17:48:55.187124+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Notre ami Oskar se cache dans la baie. Il faut le chercher.",
+    "prefix_word_count": 12,
+    "target": "Trouve Oskar",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Notre ami Oskar se cache dans la baie. Il faut le chercher.\n\nTrouve Oskar",
+    "composite_delivery_prompt": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Trouve Oskar",
+    "cue_id": "greia.requested.find_oskar.fr",
+    "delivery_prompt": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null
+  },
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Trouve Oskar",
     "cue_id": "greia.requested.find_oskar.fr",
+    "delivery_prompt": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
     "output": "activities/baia_delle_orche/assets/audio/fr/find_oskar.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.tito.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261021-095914-1c8949c8",
-    "idempotency_key": "greia-4da0c8534e2b4c528fa2c0ecbbe7e0df",
+    "job_id": "20261022-194837-c8fd5222",
+    "idempotency_key": "greia-8e68e06e7104407d9bb6632aaac73297",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +83,485 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2048211688,
+    "script_seed": 42,
     "language_direction": "French",
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in French. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "effective_delivery": "Speak in French. Lecture chaleureuse et calme. Diction claire et naturelle.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 563970697,
-        "sha256": "f72b1d7ee821afea005062f3a7b35046a577eef25104ef901037416a697b01c1",
+        "seed": 3710282495,
+        "sha256": "080f2ce14934b7f2d0a39f27aa7d93623493c15f3270b4613b45e5249b91ed7d",
         "generation": {
-          "elapsed_seconds": 4.810675083004753,
+          "elapsed_seconds": 16.34978637500899,
           "model_load_seconds": 0.0,
-          "rtf": 3.757850605133253,
-          "peak_memory_gb": 7.648166916
+          "rtf": 3.649370122021277,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": "Trouve Oscar.",
+    "metrics": {
+      "duration_seconds": 1.1001814058956916,
+      "rms_dbfs": -27.18,
+      "peak": 0.26862,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.1,
+      "trailing_silence_seconds": 0.14,
+      "longest_internal_pause_seconds": 0.04
+    },
+    "flags": [],
+    "isolated": {
+      "score": 0.7402,
+      "transcript": " Toute oscar",
+      "flags": []
+    },
+    "contextual": {
+      "score": 1.0,
+      "transcript": "Trouve Oscar.",
+      "flags": [],
+      "full_transcript": " Notre ami Oscar se cache dans la B. Il faut le chercher. Trouve Oscar.",
+      "retained_words": [
+        {
+          "word": " Trouve",
+          "start": 3.42,
+          "end": 3.76,
+          "probability": 0.79638671875
+        },
+        {
+          "word": " Oscar.",
+          "start": 3.76,
+          "end": 4.06,
+          "probability": 0.97607421875
+        }
+      ],
+      "straddling": []
+    },
+    "proof": {
+      "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/fr-oskar/run/carrier-raw/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav.raw.wav",
+      "source_sha256": "080f2ce14934b7f2d0a39f27aa7d93623493c15f3270b4613b45e5249b91ed7d",
+      "extracted": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/fr-oskar/run/carrier-extracted/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav.extracted.wav",
+      "extracted_sha256": "49663146697bbcc9055e942a8a2156ca7b8e317b37e0b3ce39570ce3866140d0",
+      "packaged": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/fr-oskar/run/candidates/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav",
+      "packaged_sha256": "01da839995d8dcaf5f2dceb940ccb14d2d2fb53e4f3537ed45830997406471c6",
+      "decoded": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/fr-oskar/run/carrier-extracted/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav.validation.wav",
+      "decoded_sha256": "01da839995d8dcaf5f2dceb940ccb14d2d2fb53e4f3537ed45830997406471c6",
+      "cut_sample": 162240,
+      "source_rate": 48000,
+      "packaged_suffix_matches": true,
+      "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/fr-oskar/run/context-verification/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav/1a41608a795b440fa730aa6e40dc6c01",
+      "isolated_observation": {
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/fr-oskar/run/context-verification/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav/1a41608a795b440fa730aa6e40dc6c01/isolated.json",
+        "sha256": "e77a63f9a79d6019456bfcba5eb8c68909aa83755da82286a0e5e2df7e37b7df"
+      },
+      "contextual_observation": {
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/fr-oskar/run/context-verification/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav/1a41608a795b440fa730aa6e40dc6c01/context.json",
+        "sha256": "bc9da25e31c0f740678aa999efe2df293809d25904cc2af5f5ccc72456739853"
+      },
+      "prefix_frames": 74529,
+      "prefix_seconds": 3.38,
+      "context": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/fr-oskar/run/context-verification/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav/1a41608a795b440fa730aa6e40dc6c01/context.wav",
+      "context_sha256": "e60fc42bc2531e239a81792dc1a9494c8e318c2b4459401d846e8125c711803d",
+      "payload_pcm_sha256": "6d0ce50f490dd4b8f5d4f26baf5ead482df1d3a2c26174cb127acd158212d43f",
+      "context_payload_identical": true,
+      "word_timestamp_coverage_valid": true,
+      "intro_wording_agreement_required": false
+    },
+    "selected_evidence": "contextual",
+    "verification_strategy": "saved-wav-context-hard-invariants-v1",
+    "comparison_policy": "locale-number-tokens-v2-oskar-all-v1",
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Saved WAV screening only; human listening remains pending",
+    "verifier_id": "mlx-whisper-base"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav.raw.wav",
+    "sha256": "080f2ce14934b7f2d0a39f27aa7d93623493c15f3270b4613b45e5249b91ed7d",
+    "receipt_sha256": "47c7e1bd38268a8a5aa5e7166f1dcbd16188d75e4f3d4d788cf838f8a1470e11"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav.extracted.wav",
+    "sha256": "49663146697bbcc9055e942a8a2156ca7b8e317b37e0b3ce39570ce3866140d0"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav.delivery.wav",
+    "sha256": "49663146697bbcc9055e942a8a2156ca7b8e317b37e0b3ce39570ce3866140d0"
+  },
+  "extraction": {
+    "schema_version": 1,
+    "algorithm_version": "greia-spoken-carrier-extractor-v7-saved-wav-context-v1",
+    "comparison_policy": "locale-number-tokens-v2-oskar-all-v1",
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/fr-oskar/run/carrier-raw/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav.raw.wav",
+    "source_sha256": "080f2ce14934b7f2d0a39f27aa7d93623493c15f3270b4613b45e5249b91ed7d",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/fr-oskar/run/carrier-extracted/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav.extracted.wav",
+    "output_sha256": "49663146697bbcc9055e942a8a2156ca7b8e317b37e0b3ce39570ce3866140d0",
+    "output_bytes": 105660,
+    "locale": "fr",
+    "prefix": "Notre ami Oskar se cache dans la baie. Il faut le chercher.",
+    "target": "Trouve Oskar",
+    "remove_first_words": 12,
+    "ignore_accents": true,
+    "target_verification_requested": "warn",
+    "target_verification_policy": "warn",
+    "target_comparison_score": 1.0,
+    "target_word_count_matches": true,
+    "target_numbers_match": true,
+    "target_comparison_flags": [],
+    "target_transcript_warning": false,
+    "recognizer": "mlx-whisper-base",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extracted_transcript": "Trouve Oscar.",
+    "expected_target_tokens": [
+      "trouve",
+      "oskar"
+    ],
+    "extracted_target_tokens": [
+      "trouve",
+      "oskar"
+    ],
+    "extracted_target_exact_match": true,
+    "transcription_settings": {
+      "language": "fr",
+      "initial_prompt": null,
+      "word_timestamps": true,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "sample_rate": 48000,
+    "duration_seconds": 4.480166666666666,
+    "boundary": {
+      "search_strategy": "target-only-global-quiet-run-v7",
+      "verified_silence_start_seconds": 3.0,
+      "verified_silence_end_seconds": 3.48,
+      "verified_silence_duration_seconds": 0.48,
+      "cut_sample": 162240,
+      "cut_time_seconds": 3.38,
+      "padding_seconds": 0.1,
+      "quiet_run_start_sample": 144000,
+      "quiet_run_end_sample": 167040,
+      "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+    },
+    "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/fr-oskar/run/carrier-extracted/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav.extracted.wav.search/8fda7225d16747a68cbf4334fda71a49",
+    "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/fr-oskar/run/carrier-extracted/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav.extracted.wav.search/8fda7225d16747a68cbf4334fda71a49/search.json",
+    "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/fr-oskar/run/carrier-raw/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav.raw.wav.receipt.json",
+    "source_provider_receipt_sha256": "47c7e1bd38268a8a5aa5e7166f1dcbd16188d75e4f3d4d788cf838f8a1470e11",
+    "candidate_sha256": "49663146697bbcc9055e942a8a2156ca7b8e317b37e0b3ce39570ce3866140d0",
+    "candidate_id": "candidate-02",
+    "candidate_count": 2,
+    "qualifying_quiet_run_count": 2,
+    "candidate_results": [
+      {
+        "candidate_id": "candidate-01",
+        "quiet_run": {
+          "start_sample": 87840,
+          "end_sample": 109440,
+          "start_seconds": 1.83,
+          "end_seconds": 2.28,
+          "duration_seconds": 0.45
+        },
+        "cut_sample": 104640,
+        "cut_time_seconds": 2.18,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/fr-oskar/run/carrier-extracted/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav.extracted.wav.search/8fda7225d16747a68cbf4334fda71a49/candidate-01.wav",
+        "preceding_voiced_seconds": 1.66,
+        "retained_voiced_seconds": 1.37,
+        "retained_duration_seconds": 2.3001666666666667,
+        "candidate_sha256": "8c3a2a0df67162567bcf8295c63b385850e997645fd5a7eb5359e5038abd075c",
+        "candidate_quality": {
+          "disposition": "WARN",
+          "score": 0.5295,
+          "transcript": " Il faut le chercher. Trouve Oscar.",
+          "metrics": {
+            "duration_seconds": 2.3001814058956915,
+            "rms_dbfs": -27.82,
+            "peak": 0.26862,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.1,
+            "trailing_silence_seconds": 0.14,
+            "longest_internal_pause_seconds": 0.46
+          },
+          "flags": [
+            "TARGET_WORD_COUNT_MISMATCH"
+          ],
+          "isolated": {
+            "score": 0.5295,
+            "transcript": " Il faut le chercher. Trouve Oscar.",
+            "flags": [
+              "TARGET_WORD_COUNT_MISMATCH"
+            ]
+          },
+          "contextual": null,
+          "proof": {
+            "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/fr-oskar/run/carrier-raw/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav.raw.wav",
+            "source_sha256": "080f2ce14934b7f2d0a39f27aa7d93623493c15f3270b4613b45e5249b91ed7d",
+            "extracted": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/fr-oskar/run/carrier-extracted/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav.extracted.wav.search/8fda7225d16747a68cbf4334fda71a49/candidate-01.wav",
+            "extracted_sha256": "8c3a2a0df67162567bcf8295c63b385850e997645fd5a7eb5359e5038abd075c",
+            "packaged": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/fr-oskar/run/carrier-extracted/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav.extracted.wav.search/8fda7225d16747a68cbf4334fda71a49/candidate-01.wav.delivery-proof/candidate.wav",
+            "packaged_sha256": "39788ba9c99a8383c66bc3a5de305bce1adad0847bda5bd449196a1f7ed8e295",
+            "decoded": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/fr-oskar/run/carrier-extracted/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav.extracted.wav.search/8fda7225d16747a68cbf4334fda71a49/candidate-01.wav.delivery-proof/decoded.wav",
+            "decoded_sha256": "39788ba9c99a8383c66bc3a5de305bce1adad0847bda5bd449196a1f7ed8e295",
+            "cut_sample": 104640,
+            "source_rate": 48000,
+            "packaged_suffix_matches": true,
+            "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/fr-oskar/run/context-verification/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav/bd02eabaa1524aa29e3a8f64ba417d3d",
+            "isolated_observation": {
+              "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/fr-oskar/run/context-verification/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav/bd02eabaa1524aa29e3a8f64ba417d3d/isolated.json",
+              "sha256": "3210a2016d3e2eb6b7b12be2f4fc47bc716e6ecfbcdffef9acc5266bea0ab880"
+            }
+          },
+          "selected_evidence": "none",
+          "verification_strategy": "saved-wav-context-hard-invariants-v1",
+          "comparison_policy": "locale-number-tokens-v2-oskar-all-v1",
+          "ignore_accents": true,
+          "model_id": "mlx-community/whisper-base-mlx",
+          "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+          "detail": "Saved WAV screening only; human listening remains pending"
+        },
+        "extracted_transcript": "Il faut le chercher. Trouve Oscar.",
+        "canonical_transcript_tokens": [
+          "il",
+          "faut",
+          "le",
+          "chercher",
+          "trouve",
+          "oskar"
+        ],
+        "exact_target_match": false,
+        "target_comparison_score": 0.5295,
+        "target_word_count_matches": false,
+        "target_numbers_match": true,
+        "target_comparison_flags": [
+          "TARGET_WORD_COUNT_MISMATCH"
+        ],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": false,
+        "asr_segment_count": 0
+      },
+      {
+        "candidate_id": "candidate-02",
+        "quiet_run": {
+          "start_sample": 144000,
+          "end_sample": 167040,
+          "start_seconds": 3.0,
+          "end_seconds": 3.48,
+          "duration_seconds": 0.48
+        },
+        "cut_sample": 162240,
+        "cut_time_seconds": 3.38,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/fr-oskar/run/carrier-extracted/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav.extracted.wav.search/8fda7225d16747a68cbf4334fda71a49/candidate-02.wav",
+        "preceding_voiced_seconds": 2.32,
+        "retained_voiced_seconds": 0.71,
+        "retained_duration_seconds": 1.1001666666666667,
+        "candidate_sha256": "49663146697bbcc9055e942a8a2156ca7b8e317b37e0b3ce39570ce3866140d0",
+        "candidate_quality": {
+          "disposition": "PASS",
+          "score": 1.0,
+          "transcript": "Trouve Oscar.",
+          "metrics": {
+            "duration_seconds": 1.1001814058956916,
+            "rms_dbfs": -27.18,
+            "peak": 0.26862,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.1,
+            "trailing_silence_seconds": 0.14,
+            "longest_internal_pause_seconds": 0.04
+          },
+          "flags": [],
+          "isolated": {
+            "score": 0.7402,
+            "transcript": " Toute oscar",
+            "flags": []
+          },
+          "contextual": {
+            "score": 1.0,
+            "transcript": "Trouve Oscar.",
+            "flags": [],
+            "full_transcript": " Notre ami Oscar se cache dans la B. Il faut le chercher. Trouve Oscar.",
+            "retained_words": [
+              {
+                "word": " Trouve",
+                "start": 3.42,
+                "end": 3.76,
+                "probability": 0.79638671875
+              },
+              {
+                "word": " Oscar.",
+                "start": 3.76,
+                "end": 4.06,
+                "probability": 0.97607421875
+              }
+            ],
+            "straddling": []
+          },
+          "proof": {
+            "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/fr-oskar/run/carrier-raw/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav.raw.wav",
+            "source_sha256": "080f2ce14934b7f2d0a39f27aa7d93623493c15f3270b4613b45e5249b91ed7d",
+            "extracted": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/fr-oskar/run/carrier-extracted/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav.extracted.wav.search/8fda7225d16747a68cbf4334fda71a49/candidate-02.wav",
+            "extracted_sha256": "49663146697bbcc9055e942a8a2156ca7b8e317b37e0b3ce39570ce3866140d0",
+            "packaged": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/fr-oskar/run/carrier-extracted/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav.extracted.wav.search/8fda7225d16747a68cbf4334fda71a49/candidate-02.wav.delivery-proof/candidate.wav",
+            "packaged_sha256": "01da839995d8dcaf5f2dceb940ccb14d2d2fb53e4f3537ed45830997406471c6",
+            "decoded": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/fr-oskar/run/carrier-extracted/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav.extracted.wav.search/8fda7225d16747a68cbf4334fda71a49/candidate-02.wav.delivery-proof/decoded.wav",
+            "decoded_sha256": "01da839995d8dcaf5f2dceb940ccb14d2d2fb53e4f3537ed45830997406471c6",
+            "cut_sample": 162240,
+            "source_rate": 48000,
+            "packaged_suffix_matches": true,
+            "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/fr-oskar/run/context-verification/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav/6a67889019d444ac8f6c9c0dad3ff501",
+            "isolated_observation": {
+              "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/fr-oskar/run/context-verification/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav/6a67889019d444ac8f6c9c0dad3ff501/isolated.json",
+              "sha256": "e77a63f9a79d6019456bfcba5eb8c68909aa83755da82286a0e5e2df7e37b7df"
+            },
+            "contextual_observation": {
+              "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/fr-oskar/run/context-verification/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav/6a67889019d444ac8f6c9c0dad3ff501/context.json",
+              "sha256": "bc9da25e31c0f740678aa999efe2df293809d25904cc2af5f5ccc72456739853"
+            },
+            "prefix_frames": 74529,
+            "prefix_seconds": 3.38,
+            "context": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/fr-oskar/run/context-verification/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav/6a67889019d444ac8f6c9c0dad3ff501/context.wav",
+            "context_sha256": "e60fc42bc2531e239a81792dc1a9494c8e318c2b4459401d846e8125c711803d",
+            "payload_pcm_sha256": "6d0ce50f490dd4b8f5d4f26baf5ead482df1d3a2c26174cb127acd158212d43f",
+            "context_payload_identical": true,
+            "word_timestamp_coverage_valid": true,
+            "intro_wording_agreement_required": false
+          },
+          "selected_evidence": "contextual",
+          "verification_strategy": "saved-wav-context-hard-invariants-v1",
+          "comparison_policy": "locale-number-tokens-v2-oskar-all-v1",
+          "ignore_accents": true,
+          "model_id": "mlx-community/whisper-base-mlx",
+          "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+          "detail": "Saved WAV screening only; human listening remains pending"
+        },
+        "extracted_transcript": "Trouve Oscar.",
+        "canonical_transcript_tokens": [
+          "trouve",
+          "oskar"
+        ],
+        "exact_target_match": true,
+        "target_comparison_score": 1.0,
+        "target_word_count_matches": true,
+        "target_numbers_match": true,
+        "target_comparison_flags": [],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": true,
+        "asr_segment_count": 0
+      }
+    ],
+    "human_review": "PENDING",
+    "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+    "candidate_verification_policy": "saved-wav-context-hard-invariants-v1",
+    "selected_candidate_quality": {
+      "disposition": "PASS",
+      "score": 1.0,
+      "transcript": "Trouve Oscar.",
+      "metrics": {
+        "duration_seconds": 1.1001814058956916,
+        "rms_dbfs": -27.18,
+        "peak": 0.26862,
+        "clipped_fraction": 0.0,
+        "leading_silence_seconds": 0.1,
+        "trailing_silence_seconds": 0.14,
+        "longest_internal_pause_seconds": 0.04
+      },
+      "flags": [],
+      "isolated": {
+        "score": 0.7402,
+        "transcript": " Toute oscar",
+        "flags": []
+      },
+      "contextual": {
+        "score": 1.0,
+        "transcript": "Trouve Oscar.",
+        "flags": [],
+        "full_transcript": " Notre ami Oscar se cache dans la B. Il faut le chercher. Trouve Oscar.",
+        "retained_words": [
+          {
+            "word": " Trouve",
+            "start": 3.42,
+            "end": 3.76,
+            "probability": 0.79638671875
+          },
+          {
+            "word": " Oscar.",
+            "start": 3.76,
+            "end": 4.06,
+            "probability": 0.97607421875
+          }
+        ],
+        "straddling": []
+      },
+      "proof": {
+        "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/fr-oskar/run/carrier-raw/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav.raw.wav",
+        "source_sha256": "080f2ce14934b7f2d0a39f27aa7d93623493c15f3270b4613b45e5249b91ed7d",
+        "extracted": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/fr-oskar/run/carrier-extracted/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav.extracted.wav.search/8fda7225d16747a68cbf4334fda71a49/candidate-02.wav",
+        "extracted_sha256": "49663146697bbcc9055e942a8a2156ca7b8e317b37e0b3ce39570ce3866140d0",
+        "packaged": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/fr-oskar/run/carrier-extracted/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav.extracted.wav.search/8fda7225d16747a68cbf4334fda71a49/candidate-02.wav.delivery-proof/candidate.wav",
+        "packaged_sha256": "01da839995d8dcaf5f2dceb940ccb14d2d2fb53e4f3537ed45830997406471c6",
+        "decoded": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/fr-oskar/run/carrier-extracted/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav.extracted.wav.search/8fda7225d16747a68cbf4334fda71a49/candidate-02.wav.delivery-proof/decoded.wav",
+        "decoded_sha256": "01da839995d8dcaf5f2dceb940ccb14d2d2fb53e4f3537ed45830997406471c6",
+        "cut_sample": 162240,
+        "source_rate": 48000,
+        "packaged_suffix_matches": true,
+        "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/fr-oskar/run/context-verification/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav/6a67889019d444ac8f6c9c0dad3ff501",
+        "isolated_observation": {
+          "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/fr-oskar/run/context-verification/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav/6a67889019d444ac8f6c9c0dad3ff501/isolated.json",
+          "sha256": "e77a63f9a79d6019456bfcba5eb8c68909aa83755da82286a0e5e2df7e37b7df"
+        },
+        "contextual_observation": {
+          "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/fr-oskar/run/context-verification/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav/6a67889019d444ac8f6c9c0dad3ff501/context.json",
+          "sha256": "bc9da25e31c0f740678aa999efe2df293809d25904cc2af5f5ccc72456739853"
+        },
+        "prefix_frames": 74529,
+        "prefix_seconds": 3.38,
+        "context": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/fr-oskar/run/context-verification/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav/6a67889019d444ac8f6c9c0dad3ff501/context.wav",
+        "context_sha256": "e60fc42bc2531e239a81792dc1a9494c8e318c2b4459401d846e8125c711803d",
+        "payload_pcm_sha256": "6d0ce50f490dd4b8f5d4f26baf5ead482df1d3a2c26174cb127acd158212d43f",
+        "context_payload_identical": true,
+        "word_timestamp_coverage_valid": true,
+        "intro_wording_agreement_required": false
+      },
+      "selected_evidence": "contextual",
+      "verification_strategy": "saved-wav-context-hard-invariants-v1",
+      "comparison_policy": "locale-number-tokens-v2-oskar-all-v1",
+      "ignore_accents": true,
+      "model_id": "mlx-community/whisper-base-mlx",
+      "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+      "detail": "Saved WAV screening only; human listening remains pending"
+    },
+    "raw_intro_asr": "prefix-heard-on-fallback; wording-agreement-not-required",
+    "target_verification_effective_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+    "target_verification_warning": false,
+    "saved_recovery_policy": "target-only-v7-saved-wav-context-oskar-v1",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 0,
+      "removed_seconds": 0.0,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 162240,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/context-diagnostic-recovery-v1/fr-oskar/run/carrier-extracted/activities/baia_delle_orche/assets/audio/fr/find_oskar.wav.delivery.wav",
+      "sha256": "49663146697bbcc9055e942a8a2156ca7b8e317b37e0b3ce39570ce3866140d0"
+    }
+  },
   "output": {
     "path": "activities/baia_delle_orche/assets/audio/fr/find_oskar.wav",
-    "bytes": 56534,
-    "sha256": "e043cc1a6d31590875db2b249e00cb4d45195dfa1a637e5d460dbde7008f8d4d"
+    "sha256": "01da839995d8dcaf5f2dceb940ccb14d2d2fb53e4f3537ed45830997406471c6",
+    "bytes": 48596
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "search_evidence_sha256": "d4e164401571b65fdf3de820ea614cba4740d17801b5846e89de55b34fad5a1d",
   "corpus_replacement": {
-    "original_sha256": "2b74760c95731387be5139b5c00af14dab5b701986b7851edf3e584c27a4c6b8",
+    "original_sha256": "e043cc1a6d31590875db2b249e00cb4d45195dfa1a637e5d460dbde7008f8d4d",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

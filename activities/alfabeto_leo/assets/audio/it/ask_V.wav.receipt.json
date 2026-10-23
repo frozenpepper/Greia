@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T23:24:25.353128+00:00",
+  "created_utc": "2026-10-21T15:36:05.396432+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "Dov'è la lettera V?",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. Dov'è la lettera V?",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Dov'è la lettera V?",
+    "cue_id": "alfabeto_leo.ask_V",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Dov'è la lettera V?",
     "cue_id": "alfabeto_leo.ask_V",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/alfabeto_leo/assets/audio/it/ask_V.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-012411-2f077a8a",
-    "idempotency_key": "greia-ec71f6cdf059463db0c3ba7cc06dddce",
+    "job_id": "20261021-173547-48eb09b0",
+    "idempotency_key": "greia-24bee079254b4df1b93e11a3cab71c70",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,246 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3174773453,
+    "script_seed": 730739460,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
-    "effective_delivery": "Speak naturally in Italian. Leo, a warm, curious cartoon guide. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1024245805,
-        "sha256": "6e57c93da20895e3aab024f71bdf2aed847e27a292742c34e15f7f2ea77ba77d",
+        "seed": 4025795994,
+        "sha256": "d97b487ea6220d85c0d3602f8d562af6f640fb99e43e80dc41db9ddb4599c2d3",
         "generation": {
-          "elapsed_seconds": 13.22669441596372,
+          "elapsed_seconds": 16.502129083994078,
           "model_load_seconds": 0.0,
-          "rtf": 5.90433498220239,
-          "peak_memory_gb": 8.21220922
+          "rtf": 4.484071124675715,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " dove è la lettera vull",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/alfabeto_leo/assets/audio/it/ask_V.wav.raw.wav",
+    "sha256": "51dd07881ecf900e88cd1bd6a4d7a4825bdda2ecc6f50a104bae59f540e42fe6",
+    "receipt_sha256": "dcc33e11e0aa4ebe44c15f5ba6dee31342a8ea3c8135604ac7e96d80e8c1ed24"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/assets/audio/it/ask_V.wav.extracted.wav",
+    "sha256": "594f04e42445b833990f6f38e18291410ed9c280286829e5f47edf78316fa71a"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/alfabeto_leo/assets/audio/it/ask_V.wav.raw.wav",
+    "source_sha256": "51dd07881ecf900e88cd1bd6a4d7a4825bdda2ecc6f50a104bae59f540e42fe6",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/alfabeto_leo/assets/audio/it/ask_V.wav.extracted.wav",
+    "output_sha256": "594f04e42445b833990f6f38e18291410ed9c280286829e5f47edf78316fa71a",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Dov'è la lettera V?",
+      "locale": "it",
+      "cue_id": "alfabeto_leo.ask_V",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/alfabeto_leo/assets/audio/it/ask_V.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "dcc33e11e0aa4ebe44c15f5ba6dee31342a8ea3c8135604ac7e96d80e8c1ed24"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "Dov'è la lettera V?",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Ascolta questa frase in italiano. Dove la lettera VU.",
+    "extracted_transcript": " dove è la lettera vull",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.58
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.58,
+        "end_seconds": 0.86
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.86,
+        "end_seconds": 1.2
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.2,
+        "end_seconds": 1.38
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.38,
+        "end_seconds": 1.84
+      },
+      {
+        "word": "dove",
+        "start_seconds": 2.48,
+        "end_seconds": 2.82
+      },
+      {
+        "word": "la",
+        "start_seconds": 2.82,
+        "end_seconds": 2.96
+      },
+      {
+        "word": "lettera",
+        "start_seconds": 2.96,
+        "end_seconds": 3.44
+      },
+      {
+        "word": "vu",
+        "start_seconds": 3.44,
+        "end_seconds": 3.6
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "dove",
+        "start_seconds": 0.0,
+        "end_seconds": 0.54
+      },
+      {
+        "word": "è",
+        "start_seconds": 0.54,
+        "end_seconds": 0.76
+      },
+      {
+        "word": "la",
+        "start_seconds": 0.76,
+        "end_seconds": 0.8
+      },
+      {
+        "word": "lettera",
+        "start_seconds": 0.8,
+        "end_seconds": 1.28
+      },
+      {
+        "word": "vull",
+        "start_seconds": 1.28,
+        "end_seconds": 1.48
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.654398554847354,
+        "no_speech_prob": 0.0008414656040258706,
+        "compression_ratio": 0.8983050847457628,
+        "word_probabilities": [
+          0.6201171875,
+          0.947265625,
+          0.9619140625,
+          0.87646484375,
+          0.90283203125
+        ]
+      },
+      {
+        "avg_logprob": -0.654398554847354,
+        "no_speech_prob": 0.0008414656040258706,
+        "compression_ratio": 0.8983050847457628,
+        "word_probabilities": [
+          0.88818359375,
+          0.9345703125,
+          0.62255859375,
+          0.4736328125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.9155995368957519,
+        "no_speech_prob": 0.21571291983127594,
+        "compression_ratio": 0.7419354838709677,
+        "word_probabilities": [
+          0.5908203125,
+          0.42919921875,
+          0.94580078125,
+          0.6611328125,
+          0.134033203125
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 102,
+    "extracted_voiced_seconds": 1.02,
+    "unremoved_raw_target_tokens": [
+      "dove",
+      "la",
+      "lettera",
+      "vu"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "dove",
+      "la",
+      "lettera",
+      "vu"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.6801814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.84,
+      "target_first_word_start_seconds": 2.48,
+      "gap_seconds": 0.5287981859410431,
+      "verified_silence_start_seconds": 1.8998639455782314,
+      "verified_silence_end_seconds": 2.4286621315192742,
+      "gap_rms_dbfs": -58.656,
+      "gap_peak_dbfs": -37.99,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.1642630385487527,
+      "cut_sample": 47722,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/it/ask_V.wav",
-    "bytes": 98870,
-    "sha256": "001262f63f8f0fc3985972cc02d32dd4e2ff58315eb3550c718696382b07ef37"
+    "sha256": "ce78e68fb450de9d25ac466b23793ad4667918c23d6275b83465191309ad7aab",
+    "bytes": 66930
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "162688d20bdd4e47b954337fbe728bccfa9c666186b9c844d4d1ee1e7e574f62",
+    "original_sha256": "001262f63f8f0fc3985972cc02d32dd4e2ff58315eb3550c718696382b07ef37",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T19:48:57.569896+00:00",
+  "created_utc": "2026-10-21T18:25:39.665821+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "Vingt et un !",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. Vingt et un !",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Vingt et un !",
+    "cue_id": "greia.numbers.21.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Vingt et un !",
     "cue_id": "greia.numbers.21.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "assets/audio/numbers/v1/fr/21.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-214848-75922e51",
-    "idempotency_key": "greia-ff53b1f34fd847b3a15e27b24b04a48e",
+    "job_id": "20261021-202525-f9ede28f",
+    "idempotency_key": "greia-508f2dffe9ca4ced898b351fb96397ca",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,178 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2987593777,
+    "script_seed": 1958897120,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words.",
-    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2966727964,
-        "sha256": "cabbc77ccf17cc482128898499d985311f2c85dd0602fef59fa9992216b36080",
+        "seed": 3826823845,
+        "sha256": "b3407ac2ceaf54ee224abb4de95198a3a88accbf67fadcc1a7435dd722452322",
         "generation": {
-          "elapsed_seconds": 8.825599832984153,
+          "elapsed_seconds": 13.816214874997968,
           "model_load_seconds": 0.0,
-          "rtf": 5.0140705423638785,
-          "peak_memory_gb": 8.843167284
+          "rtf": 4.797019226317215,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": "21",
+    "metrics": {
+      "duration_seconds": 0.914875283446712,
+      "rms_dbfs": -33.65,
+      "peak": 0.13306,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.06,
+      "trailing_silence_seconds": 0.18,
+      "longest_internal_pause_seconds": 0.02
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v1",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/numbers/v1/fr/21.wav.raw.wav",
+    "sha256": "c7d17d934575e6ab8253213a1bd7dea6111ee467a2167095bc48cf9c73f3223b",
+    "receipt_sha256": "613756de9f0fdadb3fd48484d8fa975abf050300420e435eabd6b2b85fce3638"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/numbers/v1/fr/21.wav.extracted.wav",
+    "sha256": "c3fe19fa7a879be3f392a68a9e375dbcb1489a2663b5399b056bb1ffdb049cdc"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/assets/audio/numbers/v1/fr/21.wav.delivery.wav",
+    "sha256": "c3fe19fa7a879be3f392a68a9e375dbcb1489a2663b5399b056bb1ffdb049cdc"
+  },
+  "extraction": {
+    "schema_version": 1,
+    "algorithm_version": "greia-spoken-carrier-extractor-v7",
+    "comparison_policy": "locale-number-tokens-v1",
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-raw/assets/audio/numbers/v1/fr/21.wav.raw.wav",
+    "source_sha256": "c7d17d934575e6ab8253213a1bd7dea6111ee467a2167095bc48cf9c73f3223b",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/assets/audio/numbers/v1/fr/21.wav.extracted.wav",
+    "output_sha256": "c3fe19fa7a879be3f392a68a9e375dbcb1489a2663b5399b056bb1ffdb049cdc",
+    "output_bytes": 40390,
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "Vingt et un !",
+    "remove_first_words": 5,
+    "ignore_accents": true,
+    "target_verification_requested": "warn",
+    "target_verification_policy": "warn",
+    "target_comparison_score": 1.0,
+    "target_word_count_matches": true,
+    "target_numbers_match": true,
+    "target_comparison_flags": [],
+    "target_transcript_warning": false,
+    "recognizer": "mlx-whisper-base",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extracted_transcript": "21",
+    "expected_target_tokens": [
+      "<num:21>"
+    ],
+    "extracted_target_tokens": [
+      "<num:21>"
+    ],
+    "extracted_target_exact_match": true,
+    "transcription_settings": {
+      "language": "fr",
+      "initial_prompt": null,
+      "word_timestamps": true,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "sample_rate": 22050,
+    "duration_seconds": 2.8801814058956916,
+    "boundary": {
+      "search_strategy": "target-only-global-quiet-run-v7",
+      "verified_silence_start_seconds": 1.456689342403628,
+      "verified_silence_end_seconds": 2.0653061224489795,
+      "verified_silence_duration_seconds": 0.6086167800453515,
+      "cut_sample": 43335,
+      "cut_time_seconds": 1.9653061224489796,
+      "padding_seconds": 0.1,
+      "quiet_run_start_sample": 32120,
+      "quiet_run_end_sample": 45540,
+      "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+    },
+    "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/assets/audio/numbers/v1/fr/21.wav.extracted.wav.search/f532cd1fe9fa4da1a22d9c25490c8ebe",
+    "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/assets/audio/numbers/v1/fr/21.wav.extracted.wav.search/f532cd1fe9fa4da1a22d9c25490c8ebe/search.json",
+    "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-raw/assets/audio/numbers/v1/fr/21.wav.raw.wav.receipt.json",
+    "source_provider_receipt_sha256": "613756de9f0fdadb3fd48484d8fa975abf050300420e435eabd6b2b85fce3638",
+    "candidate_sha256": "c3fe19fa7a879be3f392a68a9e375dbcb1489a2663b5399b056bb1ffdb049cdc",
+    "candidate_id": "candidate-01",
+    "candidate_count": 1,
+    "qualifying_quiet_run_count": 1,
+    "candidate_results": [
+      {
+        "candidate_id": "candidate-01",
+        "quiet_run": {
+          "start_sample": 32120,
+          "end_sample": 45540,
+          "start_seconds": 1.456689342403628,
+          "end_seconds": 2.0653061224489795,
+          "duration_seconds": 0.6086167800453515
+        },
+        "cut_sample": 43335,
+        "cut_time_seconds": 1.9653061224489796,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/assets/audio/numbers/v1/fr/21.wav.extracted.wav.search/f532cd1fe9fa4da1a22d9c25490c8ebe/candidate-01.wav",
+        "preceding_voiced_seconds": 1.16,
+        "retained_voiced_seconds": 0.53,
+        "retained_duration_seconds": 0.914875283446712,
+        "candidate_sha256": "c3fe19fa7a879be3f392a68a9e375dbcb1489a2663b5399b056bb1ffdb049cdc",
+        "extracted_transcript": "21",
+        "canonical_transcript_tokens": [
+          "<num:21>"
+        ],
+        "exact_target_match": true,
+        "target_comparison_score": 1.0,
+        "target_word_count_matches": true,
+        "target_numbers_match": true,
+        "target_comparison_flags": [],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": true,
+        "asr_segment_count": 1
+      }
+    ],
+    "human_review": "PENDING",
+    "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+    "target_verification_effective_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+    "target_verification_warning": false,
+    "saved_recovery_policy": "target-only-v7-saved-v1",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 0,
+      "removed_seconds": 0.0,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 43335,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/assets/audio/numbers/v1/fr/21.wav.delivery.wav",
+      "sha256": "c3fe19fa7a879be3f392a68a9e375dbcb1489a2663b5399b056bb1ffdb049cdc"
+    }
+  },
   "output": {
     "path": "assets/audio/numbers/v1/fr/21.wav",
-    "bytes": 77702,
-    "sha256": "5d087ad2b72514d112843ac3c189fdcee2a8c9692673e5545d2d3de07b65af1e"
+    "sha256": "bb16a1629ed492e44a679ace44556ae15021ece9b24994c2c41d198961525bc6",
+    "bytes": 40424
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "d65d43a4b0ce28ddde3651e52ba143595cc5e3ce68b0bf335319abaa529578bc",
+    "original_sha256": "5d087ad2b72514d112843ac3c189fdcee2a8c9692673e5545d2d3de07b65af1e",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

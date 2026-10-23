@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T15:38:20.194299+00:00",
+  "created_utc": "2026-10-21T17:13:17.845868+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "Allume les lumières !",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. Allume les lumières !",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Allume les lumières !",
+    "cue_id": "greia.submarine.sub_btn_light.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Allume les lumières !",
     "cue_id": "greia.submarine.sub_btn_light.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/sottomarino_giramondo/audio/fr/sub_btn_light.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-173807-e5b45acb",
-    "idempotency_key": "greia-979e21e20c034612892c9e589a497358",
+    "job_id": "20261021-191304-2953e89f",
+    "idempotency_key": "greia-129c33c86bf4400687886d05ec357afe",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,226 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 61189943,
+    "script_seed": 1655897837,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2188881546,
-        "sha256": "7ce84ed6c256dfe4d4ff5057cef2fc07a9fff501167f6a1c899c08cbbc47ff37",
+        "seed": 2307203399,
+        "sha256": "94ebe44445272807cf5ce41925392cec9173603074c1f5097de3b7c60764cde0",
         "generation": {
-          "elapsed_seconds": 11.485293542034924,
+          "elapsed_seconds": 12.454086875004577,
           "model_load_seconds": 0.0,
-          "rtf": 7.1775608011883705,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.5379253468125307,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Allume les lumière",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/sottomarino_giramondo/audio/fr/sub_btn_light.wav.raw.wav",
+    "sha256": "841d0d901b285abfdf87e72b4ff77998452043bc06b2e6f35d82528500332641",
+    "receipt_sha256": "73910905484fd03a2d50c8510f388c5758529673679c8bc81a7d62d9ba352401"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/sottomarino_giramondo/audio/fr/sub_btn_light.wav.extracted.wav",
+    "sha256": "d56898252360ef21939006054c1ab9322e6d6be763b754dce15e8cb5fdcee6b5"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/sottomarino_giramondo/audio/fr/sub_btn_light.wav.raw.wav",
+    "source_sha256": "841d0d901b285abfdf87e72b4ff77998452043bc06b2e6f35d82528500332641",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/sottomarino_giramondo/audio/fr/sub_btn_light.wav.extracted.wav",
+    "output_sha256": "d56898252360ef21939006054c1ab9322e6d6be763b754dce15e8cb5fdcee6b5",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Allume les lumières !",
+      "locale": "fr",
+      "cue_id": "greia.submarine.sub_btn_light.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/sottomarino_giramondo/audio/fr/sub_btn_light.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "73910905484fd03a2d50c8510f388c5758529673679c8bc81a7d62d9ba352401"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "Allume les lumières !",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français. Allume les lumières.",
+    "extracted_transcript": " Allume les lumière",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.32
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.32,
+        "end_seconds": 0.7
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.7,
+        "end_seconds": 0.96
+      },
+      {
+        "word": "en",
+        "start_seconds": 0.96,
+        "end_seconds": 1.08
+      },
+      {
+        "word": "français",
+        "start_seconds": 1.08,
+        "end_seconds": 1.54
+      },
+      {
+        "word": "allume",
+        "start_seconds": 2.24,
+        "end_seconds": 2.66
+      },
+      {
+        "word": "les",
+        "start_seconds": 2.66,
+        "end_seconds": 2.82
+      },
+      {
+        "word": "lumières",
+        "start_seconds": 2.82,
+        "end_seconds": 3.34
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "allume",
+        "start_seconds": 0.0,
+        "end_seconds": 0.76
+      },
+      {
+        "word": "les",
+        "start_seconds": 0.76,
+        "end_seconds": 0.92
+      },
+      {
+        "word": "lumière",
+        "start_seconds": 0.92,
+        "end_seconds": 1.3
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5848102039761014,
+        "no_speech_prob": 0.015716714784502983,
+        "compression_ratio": 0.8813559322033898,
+        "word_probabilities": [
+          0.5537109375,
+          0.93017578125,
+          0.98095703125,
+          0.826171875,
+          0.95556640625
+        ]
+      },
+      {
+        "avg_logprob": -0.5848102039761014,
+        "no_speech_prob": 0.015716714784502983,
+        "compression_ratio": 0.8813559322033898,
+        "word_probabilities": [
+          0.6396484375,
+          0.8984375,
+          0.74658203125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6836066246032715,
+        "no_speech_prob": 0.052501603960990906,
+        "compression_ratio": 0.7307692307692307,
+        "word_probabilities": [
+          0.54443359375,
+          0.9033203125,
+          0.458740234375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 107,
+    "extracted_voiced_seconds": 1.07,
+    "unremoved_raw_target_tokens": [
+      "allume",
+      "les",
+      "lumières"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "allume",
+      "les",
+      "lumières"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.5201814058956917,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.54,
+      "target_first_word_start_seconds": 2.24,
+      "gap_seconds": 0.5886621315192744,
+      "verified_silence_start_seconds": 1.5998639455782313,
+      "verified_silence_end_seconds": 2.1885260770975057,
+      "gap_rms_dbfs": -70.908,
+      "gap_peak_dbfs": -40.343,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.8941950113378685,
+      "cut_sample": 41767,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/sottomarino_giramondo/audio/fr/sub_btn_light.wav",
-    "bytes": 70646,
-    "sha256": "8b8d72eb1173aa40cb71a7d8932b92297c1cdb7c5f6965fa031837b5b3b5ed5e"
+    "sha256": "32541daedada485564a2d11ec8b9dd171e9004b095d7fa80ef4cd17577047967",
+    "bytes": 71784
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "7717204428570c70199faa09ab994beb802b56cda6f716a5da8e4b983b90c6d5",
+    "original_sha256": "8b8d72eb1173aa40cb71a7d8932b92297c1cdb7c5f6965fa031837b5b3b5ed5e",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

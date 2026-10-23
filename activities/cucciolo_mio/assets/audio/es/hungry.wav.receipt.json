@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T03:30:18.360874+00:00",
+  "created_utc": "2026-10-21T16:00:17.380993+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "¡Tengo hambre!",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. ¡Tengo hambre!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "lilli",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "¡Tengo hambre!",
+    "cue_id": "greia.requested.hungry.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "¡Tengo hambre!",
     "cue_id": "greia.requested.hungry.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/cucciolo_mio/assets/audio/es/hungry.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. A short, lively reaction: expressive and clear, one breath, no extra words."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.lilli.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "job_id": "20261020-053004-94e1f5e5",
-    "idempotency_key": "greia-37d1f5f2e7334094a85fe499c3a57f0a",
+    "job_id": "20261021-180003-f3bd57ed",
+    "idempotency_key": "greia-3db13e2daf5248ca8fecd04d57bb486e",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,218 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2282386036,
+    "script_seed": 771833119,
     "language_direction": "Spanish",
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. A short, lively reaction: expressive and clear, one breath, no extra words.",
-    "effective_delivery": "Speak naturally in Spanish. Lilli, a sparkly, affectionate storybook unicorn. A short, lively reaction: expressive and clear, one breath, no extra words.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3817038914,
-        "sha256": "c5929dd1c7a2be6762136b5706a6922dcbcc5c7bd5481561aabbff041c30b46d",
+        "seed": 497213640,
+        "sha256": "2ab85a50404e4e0c181ec46cd6734b85af2380dbd0c1cd1fefd7d35b29ae81cb",
         "generation": {
-          "elapsed_seconds": 12.953632624994498,
+          "elapsed_seconds": 13.89010162500199,
           "model_load_seconds": 0.0,
-          "rtf": 8.994537177406201,
-          "peak_memory_gb": 6.61593154
+          "rtf": 4.1337537696548745,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Tengo a hombre!",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/cucciolo_mio/assets/audio/es/hungry.wav.raw.wav",
+    "sha256": "625bec3b24213d09fe6d199da9f11bdf5ebca32aab337800dc59b73e6823a76d",
+    "receipt_sha256": "aa255ce20d9ff6dd54bff5a491e57fa31b037c2fcea60d3bb658edaedb36bafa"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/cucciolo_mio/assets/audio/es/hungry.wav.extracted.wav",
+    "sha256": "6c4b57294f1189d085815bd3ae4abe179e4d5149fd538d5de9b1d83a077d7cd1"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/cucciolo_mio/assets/audio/es/hungry.wav.raw.wav",
+    "source_sha256": "625bec3b24213d09fe6d199da9f11bdf5ebca32aab337800dc59b73e6823a76d",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/cucciolo_mio/assets/audio/es/hungry.wav.extracted.wav",
+    "output_sha256": "6c4b57294f1189d085815bd3ae4abe179e4d5149fd538d5de9b1d83a077d7cd1",
+    "target_request": {
+      "speaker": "lilli",
+      "kind": "character_dialogue",
+      "text": "¡Tengo hambre!",
+      "locale": "es",
+      "cue_id": "greia.requested.hungry.es",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/cucciolo_mio/assets/audio/es/hungry.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "aa255ce20d9ff6dd54bff5a491e57fa31b037c2fcea60d3bb658edaedb36bafa"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "¡Tengo hambre!",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Escucha esta frase en español. Tengo ambre!",
+    "extracted_transcript": " Tengo a hombre!",
+    "raw_word_alignment": [
+      {
+        "word": "escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.54
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.54,
+        "end_seconds": 0.84
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.84,
+        "end_seconds": 1.18
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.18,
+        "end_seconds": 1.38
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.38,
+        "end_seconds": 1.88
+      },
+      {
+        "word": "tengo",
+        "start_seconds": 2.34,
+        "end_seconds": 2.54
+      },
+      {
+        "word": "ambre",
+        "start_seconds": 2.54,
+        "end_seconds": 3.02
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "tengo",
+        "start_seconds": 0.0,
+        "end_seconds": 0.48
+      },
+      {
+        "word": "a",
+        "start_seconds": 0.48,
+        "end_seconds": 0.7
+      },
+      {
+        "word": "hombre",
+        "start_seconds": 0.7,
+        "end_seconds": 0.88
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.6669469160192153,
+        "no_speech_prob": 0.012034201063215733,
+        "compression_ratio": 0.8627450980392157,
+        "word_probabilities": [
+          0.6279296875,
+          0.73291015625,
+          0.95751953125,
+          0.82958984375,
+          0.9892578125
+        ]
+      },
+      {
+        "avg_logprob": -0.6669469160192153,
+        "no_speech_prob": 0.012034201063215733,
+        "compression_ratio": 0.8627450980392157,
+        "word_probabilities": [
+          0.82763671875,
+          0.3251953125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -1.0622378587722778,
+        "no_speech_prob": 0.20573538541793823,
+        "compression_ratio": 0.6521739130434783,
+        "word_probabilities": [
+          0.71044921875,
+          0.270751953125,
+          0.0771484375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 87,
+    "extracted_voiced_seconds": 0.87,
+    "unremoved_raw_target_tokens": [
+      "tengo",
+      "ambre"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "tengo",
+      "ambre"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.3601814058956916,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.88,
+      "target_first_word_start_seconds": 2.34,
+      "gap_seconds": 0.3492063492063492,
+      "verified_silence_start_seconds": 1.9398639455782314,
+      "verified_silence_end_seconds": 2.2890702947845805,
+      "gap_rms_dbfs": -90.362,
+      "gap_peak_dbfs": -80.767,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.114467120181406,
+      "cut_sample": 46624,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/cucciolo_mio/assets/audio/es/hungry.wav",
-    "bytes": 63590,
-    "sha256": "80d4163a85181b6ff41609c34f897686731fb9512e977c0470c9f176ff421adc"
+    "sha256": "40f7a15465f7e41b19051fdd12e4ffba2a52bfd4e5814257bc125259373e4819",
+    "bytes": 55014
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "5a56375cf644aa62b2a5a314c503e6cd505252a489d57a9ef10f9028fd2afda2",
+    "original_sha256": "80d4163a85181b6ff41609c34f897686731fb9512e977c0470c9f176ff421adc",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

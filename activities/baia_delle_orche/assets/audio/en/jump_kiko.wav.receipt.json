@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T07:49:56.597780+00:00",
+  "created_utc": "2026-10-21T14:53:25.216266+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Listen to this phrase in English.",
+    "prefix_word_count": 6,
+    "target": "Make Kiko jump",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Listen to this phrase in English. Make Kiko jump",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Make Kiko jump",
+    "cue_id": "greia.requested.jump_kiko.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "Make Kiko jump",
     "cue_id": "greia.requested.jump_kiko.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/baia_delle_orche/assets/audio/en/jump_kiko.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.tito.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261021-094948-a1e6a926",
-    "idempotency_key": "greia-52641dd97e24466a824eb1e949b3c46e",
+    "job_id": "20261021-165313-c29a4e4e",
+    "idempotency_key": "greia-27a7a18e19d4413d839eafc3b096d558",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,232 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 670987745,
+    "script_seed": 3511222136,
     "language_direction": "English",
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in English. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in English. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 559583664,
-        "sha256": "e46009bfbedf4519d2a499beb1f0c9129d06de89f095b59398463dbbb515151d",
+        "seed": 1155231549,
+        "sha256": "9f1766894ee42306615bb303cc373e0a2e5ebc234e2b35206c83b12be1d96ca9",
         "generation": {
-          "elapsed_seconds": 6.0959024999974645,
+          "elapsed_seconds": 10.801472833001753,
           "model_load_seconds": 0.0,
-          "rtf": 4.761803801586354,
-          "peak_memory_gb": 7.648166916
+          "rtf": 3.7502943694236746,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Make Kiko jump.",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/baia_delle_orche/assets/audio/en/jump_kiko.wav.raw.wav",
+    "sha256": "195273b94362ef16704fcd3bc77eb4df4d1194766607d64e90e9bad66679fbe4",
+    "receipt_sha256": "cfb82b692a810e1b63d35f38d22fa69cce8f2f27a2d6a4d5ab9a00299cc9c526"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/baia_delle_orche/assets/audio/en/jump_kiko.wav.extracted.wav",
+    "sha256": "fd519982f4ba2db2eded282d03a99cc11c4ebb23380f8ece7c309aae92a6afba"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-corpus-v1/run/carrier-raw/activities/baia_delle_orche/assets/audio/en/jump_kiko.wav.raw.wav",
+    "source_sha256": "195273b94362ef16704fcd3bc77eb4df4d1194766607d64e90e9bad66679fbe4",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-corpus-v1/run/carrier-extracted/activities/baia_delle_orche/assets/audio/en/jump_kiko.wav.extracted.wav",
+    "output_sha256": "fd519982f4ba2db2eded282d03a99cc11c4ebb23380f8ece7c309aae92a6afba",
+    "target_request": {
+      "speaker": "tito",
+      "kind": "character_dialogue",
+      "text": "Make Kiko jump",
+      "locale": "en",
+      "cue_id": "greia.requested.jump_kiko.en",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-corpus-v1/run/carrier-raw/activities/baia_delle_orche/assets/audio/en/jump_kiko.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "cfb82b692a810e1b63d35f38d22fa69cce8f2f27a2d6a4d5ab9a00299cc9c526"
+    },
+    "locale": "en",
+    "prefix": "Listen to this phrase in English.",
+    "target": "Make Kiko jump",
+    "remove_first_words": 6,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Listen to this phrase in English. Make Kiko jump.",
+    "extracted_transcript": " Make Kiko jump.",
+    "raw_word_alignment": [
+      {
+        "word": "listen",
+        "start_seconds": 0.0,
+        "end_seconds": 0.28
+      },
+      {
+        "word": "to",
+        "start_seconds": 0.28,
+        "end_seconds": 0.52
+      },
+      {
+        "word": "this",
+        "start_seconds": 0.52,
+        "end_seconds": 0.66
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.66,
+        "end_seconds": 0.94
+      },
+      {
+        "word": "in",
+        "start_seconds": 0.94,
+        "end_seconds": 1.12
+      },
+      {
+        "word": "english",
+        "start_seconds": 1.12,
+        "end_seconds": 1.52
+      },
+      {
+        "word": "make",
+        "start_seconds": 1.9,
+        "end_seconds": 2.12
+      },
+      {
+        "word": "kiko",
+        "start_seconds": 2.12,
+        "end_seconds": 2.44
+      },
+      {
+        "word": "jump",
+        "start_seconds": 2.44,
+        "end_seconds": 2.7
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "make",
+        "start_seconds": 0.0,
+        "end_seconds": 0.4
+      },
+      {
+        "word": "kiko",
+        "start_seconds": 0.4,
+        "end_seconds": 0.76
+      },
+      {
+        "word": "jump",
+        "start_seconds": 0.76,
+        "end_seconds": 0.98
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.472377945395077,
+        "no_speech_prob": 0.022081950679421425,
+        "compression_ratio": 0.8596491228070176,
+        "word_probabilities": [
+          0.85791015625,
+          0.98974609375,
+          0.98046875,
+          0.9970703125,
+          0.95849609375,
+          0.978515625
+        ]
+      },
+      {
+        "avg_logprob": -0.472377945395077,
+        "no_speech_prob": 0.022081950679421425,
+        "compression_ratio": 0.8596491228070176,
+        "word_probabilities": [
+          0.88818359375,
+          0.67578125,
+          0.85009765625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6951898336410522,
+        "no_speech_prob": 0.10440191626548767,
+        "compression_ratio": 0.6521739130434783,
+        "word_probabilities": [
+          0.6279296875,
+          0.60888671875,
+          0.8623046875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 69,
+    "extracted_voiced_seconds": 0.69,
+    "unremoved_raw_target_tokens": [
+      "make",
+      "kiko",
+      "jump"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "make",
+      "kiko",
+      "jump"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 2.8801814058956916,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.52,
+      "target_first_word_start_seconds": 1.9,
+      "gap_seconds": 0.2594104308390023,
+      "verified_silence_start_seconds": 1.5898412698412698,
+      "verified_silence_end_seconds": 1.849251700680272,
+      "gap_rms_dbfs": -54.909,
+      "gap_peak_dbfs": -34.717,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.719546485260771,
+      "cut_sample": 37916,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/baia_delle_orche/assets/audio/en/jump_kiko.wav",
-    "bytes": 56534,
-    "sha256": "e0340d25da625d5d657d1c5b42d4d973b707e3b5fd3889d8b754f972e947cd45"
+    "sha256": "1d1b5284cf8ff370004e02782ee30969a435394f7f406e04dcd02fc7c06ae158",
+    "bytes": 51262
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "99c61639fd1245a11c137b606ec6f05f1911dd100882444e2a9622547d1c6fa2",
+    "original_sha256": "e0340d25da625d5d657d1c5b42d4d973b707e3b5fd3889d8b754f972e947cd45",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

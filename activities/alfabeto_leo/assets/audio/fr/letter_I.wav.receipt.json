@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T23:16:22.135344+00:00",
+  "created_utc": "2026-10-23T03:54:45.154116+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
@@ -8,17 +8,22 @@
     "text": "I comme Igloo",
     "cue_id": "alfabeto_leo.letter_I.fr",
     "output": "activities/alfabeto_leo/assets/audio/fr/letter_I.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic"
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-011553-bd693e76",
-    "idempotency_key": "greia-b7b02896c8d542918e6047d2aa69ce58",
+    "job_id": "20261023-025953-037b8166",
+    "idempotency_key": "greia-a34a7b9a343240338dc04cf4ddefa300",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +46,87 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3589718484,
+    "script_seed": 977797990,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak naturally in French. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "effective_delivery": "Speak in French. Lecture chaleureuse et calme. Diction claire et naturelle.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 378844587,
-        "sha256": "e8c59e30142a8ff5dca9600c8de181adbbf52821c9cf0e39d2ffda30895f206f",
+        "seed": 129007339,
+        "sha256": "bf9172f1e4a89b352b6747caac602a954951a000dbf4e1ffe2600d3971b47c5b",
         "generation": {
-          "elapsed_seconds": 25.556733042001724,
+          "elapsed_seconds": 14.281735750002554,
           "model_load_seconds": 0.0,
-          "rtf": 7.260091768950823,
-          "peak_memory_gb": 8.21220922
+          "rtf": 4.057119194167668,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "FAIL",
+    "verifier_id": "mlx-audio-parakeet-tdt-v3",
+    "transcript": "I comme iglu.",
+    "score": 0.8053,
+    "detail": "Delivered-audio screening failed; not installed. Human listening pending.",
+    "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+    "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+    "flags": [
+      "LOW_LEVEL"
+    ],
+    "metrics": {
+      "automated_status": "FAIL",
+      "takeboard_kind": "rejected_packaged_candidate"
+    }
   },
-  "attempts": 1,
+  "attempts": 2,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/fr/letter_I.wav",
-    "bytes": 155318,
-    "sha256": "301ae272374ab8bb3e0f33ca2da738e934d9976c9aa6d938f66802e3b7100bf9"
+    "bytes": 48156,
+    "sha256": "ef38502e5f91ef0f524245b10bb6b17384489536aeb81b4504c0c2ce1a47c735"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
-  "corpus_replacement": {
-    "original_sha256": "a74017147c75fe2c4acf1462e8cc598fc699b86edc61f917b622043800134224",
-    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by owner in Takeboard batch 8818; saved state and exact selected target retained.",
+  "human_review_provenance": {
+    "batch_id": "greia-natural-parakeet-full237-2026-10-23-v1",
+    "review_file": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/takeboard-listening.reviewed.json",
+    "review_file_sha256": "1b5499b5d84eca9091a3d876f5bda4e01da18438878be6ba9b7b1759bf401d85",
+    "record_id": "36d67a44fe43-a02-package-candidate",
+    "decision": "approved",
+    "reviewer": "",
+    "score": null,
+    "notes": "",
+    "updated_at": "2026-10-23T03:54:45.154116+00:00",
+    "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/91d8e815254443219462b65ef0dd42ac/attempt-02/candidate.wav",
+    "candidate_sha256": "ef38502e5f91ef0f524245b10bb6b17384489536aeb81b4504c0c2ce1a47c735",
+    "candidate_kind": "rejected_packaged_candidate",
+    "source_raw_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/91d8e815254443219462b65ef0dd42ac/attempt-02/raw.wav",
+    "source_raw_sha256": "bf9172f1e4a89b352b6747caac602a954951a000dbf4e1ffe2600d3971b47c5b",
+    "source_raw_receipt_sha256": "6005c59c3263c9b62efda7e6e16124e47bd6bb7bbfaf81fbab49a0a9f0e18f26",
+    "job_id": "20261023-025953-037b8166",
+    "parakeet_model": "mlx-community/parakeet-tdt-0.6b-v3",
+    "parakeet_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+    "automated_status": "FAIL",
+    "automated_transcript": "I comme iglu.",
+    "automated_score": 0.8053,
+    "automated_flags": [
+      "LOW_LEVEL"
+    ]
+  },
+  "source_generation": {
+    "request_text": "Regardons les lettres ensemble.\n\nI comme Igloo",
+    "semantic_target": "I comme Igloo",
+    "carrier_prefix": "Regardons les lettres ensemble.",
+    "candidate_id": null,
+    "candidate_kind": "rejected_packaged_candidate",
+    "search_witness_path": null,
+    "search_witness_sha256": null,
+    "raw_audio_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/91d8e815254443219462b65ef0dd42ac/attempt-02/raw.wav",
+    "raw_audio_sha256": "bf9172f1e4a89b352b6747caac602a954951a000dbf4e1ffe2600d3971b47c5b",
+    "raw_receipt_sha256": "6005c59c3263c9b62efda7e6e16124e47bd6bb7bbfaf81fbab49a0a9f0e18f26"
   }
 }

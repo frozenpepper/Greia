@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T13:28:35.197124+00:00",
+  "created_utc": "2026-10-23T01:49:25.997596+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
@@ -8,17 +8,22 @@
     "text": "Morbidi Mostriciattoli",
     "cue_id": "activity.title",
     "output": "activities/morbidi_mostriciattoli/locales/it/audio/activity-title.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic"
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-152825-70e35226",
-    "idempotency_key": "greia-81f4d1430beb432a93ea6ac7cd7ddda0",
+    "job_id": "20261023-034906-c54d76bd",
+    "idempotency_key": "greia-e5959374d58449ed89c350b4b3761574",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +46,341 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2388480358,
+    "script_seed": 3117880320,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "delivery_prompt": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "effective_delivery": "Speak in Italian. Voce calda e calma. Pronuncia chiara e naturale.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3204806293,
-        "sha256": "73643a7806655f04d572c80d55b406ad33d18512952a1b20ab15eac762024adf",
+        "seed": 769390607,
+        "sha256": "bc4843217fd5705550b90d4f5a777946a4ca327c73275ae3cdbfcdf384a3d548",
         "generation": {
-          "elapsed_seconds": 8.396552124992013,
+          "elapsed_seconds": 18.134244500019122,
           "model_load_seconds": 0.0,
-          "rtf": 4.036480470311039,
-          "peak_memory_gb": 8.44494914
+          "rtf": 4.0476718500098485,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-audio-parakeet-tdt-v3",
+    "transcript": "Morbidi mostriciattoli",
+    "score": 1.0,
+    "detail": "Delivered target transcribed and screened; human listening remains pending",
+    "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+    "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+    "flags": [],
+    "metrics": {
+      "duration_seconds": 1.650204081632653,
+      "rms_dbfs": -33.12,
+      "peak": 0.16428,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.1,
+      "trailing_silence_seconds": 0.06,
+      "longest_internal_pause_seconds": 0.08
+    }
   },
-  "attempts": 1,
+  "attempts": 2,
   "output": {
     "path": "activities/morbidi_mostriciattoli/locales/it/audio/activity-title.wav",
-    "bytes": 91814,
-    "sha256": "8b96dd2220dc65ea833ea4818e1c8e9013c06a4534c02665c55c9fa1b1d25363"
+    "bytes": 72852,
+    "sha256": "0fa2d4644ecf09e13587ecf540757656bd7df65b34e44edab21c2f762a388ce5"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "short_phrase": {
+    "mode": "automatic-carrier",
+    "composition_policy": "natural-context-period-v1",
+    "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/7ccefa8e68fa48b697be438022cfa1b8",
+    "prefix": "Parliamo con calma insieme.",
+    "composite_text": "Parliamo con calma insieme.\n\nMorbidi Mostriciattoli",
+    "effective_delivery": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "extraction": {
+      "schema_version": 1,
+      "algorithm_version": "greia-spoken-carrier-extractor-v7",
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "status": "EXTRACTED_PENDING_LISTENING",
+      "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/7ccefa8e68fa48b697be438022cfa1b8/attempt-02/raw.wav",
+      "source_sha256": "bc4843217fd5705550b90d4f5a777946a4ca327c73275ae3cdbfcdf384a3d548",
+      "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/7ccefa8e68fa48b697be438022cfa1b8/attempt-02/target.wav",
+      "output_sha256": "fd27bc70d481829cf37877a257b624d095009f073761198dab5f4ecd7407d773",
+      "output_bytes": 158460,
+      "locale": "it",
+      "prefix": "Parliamo con calma insieme.",
+      "target": "Morbidi Mostriciattoli",
+      "remove_first_words": 4,
+      "ignore_accents": true,
+      "target_verification_requested": "warn",
+      "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+      "target_comparison_score": 1.0,
+      "target_word_count_matches": true,
+      "target_numbers_match": true,
+      "target_comparison_flags": [],
+      "target_transcript_warning": false,
+      "recognizer": "mlx-audio-parakeet-tdt-v3",
+      "recognizer_version": "0.5.0",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "extracted_transcript": "Morbidi mostriciattoli",
+      "expected_target_tokens": [
+        "morbidi",
+        "mostrikiattoli"
+      ],
+      "extracted_target_tokens": [
+        "morbidi",
+        "mostrikiattoli"
+      ],
+      "extracted_target_exact_match": true,
+      "transcription_settings": {
+        "language_detection": "automatic",
+        "expected_text_prompt": null,
+        "timestamps": "model-provided-token-timestamps"
+      },
+      "sample_rate": 48000,
+      "duration_seconds": 4.480166666666666,
+      "boundary": {
+        "search_strategy": "target-only-global-quiet-run-v7",
+        "verified_silence_start_seconds": 1.83,
+        "verified_silence_end_seconds": 2.93,
+        "verified_silence_duration_seconds": 1.1,
+        "cut_sample": 135840,
+        "cut_time_seconds": 2.83,
+        "padding_seconds": 0.1,
+        "quiet_run_start_sample": 87840,
+        "quiet_run_end_sample": 140640,
+        "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+      },
+      "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/7ccefa8e68fa48b697be438022cfa1b8/attempt-02/target.wav.search/c67d32ff89de472aaa57ccdec5361437",
+      "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/7ccefa8e68fa48b697be438022cfa1b8/attempt-02/target.wav.search/c67d32ff89de472aaa57ccdec5361437/search.json",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/7ccefa8e68fa48b697be438022cfa1b8/attempt-02/raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "63d926a831de4c311e11ffad26b34c93c4f79b1e184841c9e57e37fa2cd4f8d6",
+      "candidate_sha256": "fd27bc70d481829cf37877a257b624d095009f073761198dab5f4ecd7407d773",
+      "candidate_id": "candidate-01",
+      "candidate_count": 1,
+      "qualifying_quiet_run_count": 1,
+      "candidate_results": [
+        {
+          "candidate_id": "candidate-01",
+          "quiet_run": {
+            "start_sample": 87840,
+            "end_sample": 140640,
+            "start_seconds": 1.83,
+            "end_seconds": 2.93,
+            "duration_seconds": 1.1
+          },
+          "cut_sample": 135840,
+          "cut_time_seconds": 2.83,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/7ccefa8e68fa48b697be438022cfa1b8/attempt-02/target.wav.search/c67d32ff89de472aaa57ccdec5361437/candidate-01.wav",
+          "preceding_voiced_seconds": 1.59,
+          "retained_voiced_seconds": 1.16,
+          "retained_duration_seconds": 1.6501666666666666,
+          "candidate_sha256": "fd27bc70d481829cf37877a257b624d095009f073761198dab5f4ecd7407d773",
+          "extracted_transcript": "Morbidi mostriciattoli",
+          "canonical_transcript_tokens": [
+            "morbidi",
+            "mostrikiattoli"
+          ],
+          "exact_target_match": true,
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": true,
+          "asr_segment_count": 1
+        }
+      ],
+      "human_review": "PENDING",
+      "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+      "delivery": {
+        "policy": "verified-carrier-gap-delivery-v1",
+        "removed_frames": 0,
+        "removed_seconds": 0.0,
+        "retained_verified_quiet_seconds": 0.1,
+        "raw_delivery_start_sample": 135840,
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/7ccefa8e68fa48b697be438022cfa1b8/attempt-02/delivery-target.wav",
+        "sha256": "fd27bc70d481829cf37877a257b624d095009f073761198dab5f4ecd7407d773"
+      }
+    },
+    "quality": {
+      "disposition": "PASS",
+      "score": 1.0,
+      "transcript": "Morbidi mostriciattoli",
+      "metrics": {
+        "duration_seconds": 1.650204081632653,
+        "rms_dbfs": -33.12,
+        "peak": 0.16428,
+        "clipped_fraction": 0.0,
+        "leading_silence_seconds": 0.1,
+        "trailing_silence_seconds": 0.06,
+        "longest_internal_pause_seconds": 0.08
+      },
+      "flags": [],
+      "ignore_accents": true,
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "detail": "Delivered target transcribed and screened; human listening remains pending"
+    },
+    "history": [
+      {
+        "attempt": 1,
+        "status": "REJECTED_CUT",
+        "error": "no candidate suffix meets target verification policy",
+        "evidence": {
+          "candidate_transcripts": [
+            "Um I'll do most recathery.",
+            "I'll do most readily."
+          ],
+          "matching_candidate_ids": [],
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/7ccefa8e68fa48b697be438022cfa1b8/attempt-01/target.wav.search/fe47356b2a14434daf88d2575419a379",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/7ccefa8e68fa48b697be438022cfa1b8/attempt-01/target.wav.search/fe47356b2a14434daf88d2575419a379/search.json"
+        }
+      },
+      {
+        "attempt": 2,
+        "status": "PASS",
+        "quality": {
+          "disposition": "PASS",
+          "score": 1.0,
+          "transcript": "Morbidi mostriciattoli",
+          "metrics": {
+            "duration_seconds": 1.650204081632653,
+            "rms_dbfs": -33.12,
+            "peak": 0.16428,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.1,
+            "trailing_silence_seconds": 0.06,
+            "longest_internal_pause_seconds": 0.08
+          },
+          "flags": [],
+          "ignore_accents": true,
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "detail": "Delivered target transcribed and screened; human listening remains pending"
+        },
+        "extraction": {
+          "schema_version": 1,
+          "algorithm_version": "greia-spoken-carrier-extractor-v7",
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "status": "EXTRACTED_PENDING_LISTENING",
+          "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/7ccefa8e68fa48b697be438022cfa1b8/attempt-02/raw.wav",
+          "source_sha256": "bc4843217fd5705550b90d4f5a777946a4ca327c73275ae3cdbfcdf384a3d548",
+          "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/7ccefa8e68fa48b697be438022cfa1b8/attempt-02/target.wav",
+          "output_sha256": "fd27bc70d481829cf37877a257b624d095009f073761198dab5f4ecd7407d773",
+          "output_bytes": 158460,
+          "locale": "it",
+          "prefix": "Parliamo con calma insieme.",
+          "target": "Morbidi Mostriciattoli",
+          "remove_first_words": 4,
+          "ignore_accents": true,
+          "target_verification_requested": "warn",
+          "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_transcript_warning": false,
+          "recognizer": "mlx-audio-parakeet-tdt-v3",
+          "recognizer_version": "0.5.0",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "extracted_transcript": "Morbidi mostriciattoli",
+          "expected_target_tokens": [
+            "morbidi",
+            "mostrikiattoli"
+          ],
+          "extracted_target_tokens": [
+            "morbidi",
+            "mostrikiattoli"
+          ],
+          "extracted_target_exact_match": true,
+          "transcription_settings": {
+            "language_detection": "automatic",
+            "expected_text_prompt": null,
+            "timestamps": "model-provided-token-timestamps"
+          },
+          "sample_rate": 48000,
+          "duration_seconds": 4.480166666666666,
+          "boundary": {
+            "search_strategy": "target-only-global-quiet-run-v7",
+            "verified_silence_start_seconds": 1.83,
+            "verified_silence_end_seconds": 2.93,
+            "verified_silence_duration_seconds": 1.1,
+            "cut_sample": 135840,
+            "cut_time_seconds": 2.83,
+            "padding_seconds": 0.1,
+            "quiet_run_start_sample": 87840,
+            "quiet_run_end_sample": 140640,
+            "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+          },
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/7ccefa8e68fa48b697be438022cfa1b8/attempt-02/target.wav.search/c67d32ff89de472aaa57ccdec5361437",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/7ccefa8e68fa48b697be438022cfa1b8/attempt-02/target.wav.search/c67d32ff89de472aaa57ccdec5361437/search.json",
+          "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/7ccefa8e68fa48b697be438022cfa1b8/attempt-02/raw.wav.receipt.json",
+          "source_provider_receipt_sha256": "63d926a831de4c311e11ffad26b34c93c4f79b1e184841c9e57e37fa2cd4f8d6",
+          "candidate_sha256": "fd27bc70d481829cf37877a257b624d095009f073761198dab5f4ecd7407d773",
+          "candidate_id": "candidate-01",
+          "candidate_count": 1,
+          "qualifying_quiet_run_count": 1,
+          "candidate_results": [
+            {
+              "candidate_id": "candidate-01",
+              "quiet_run": {
+                "start_sample": 87840,
+                "end_sample": 140640,
+                "start_seconds": 1.83,
+                "end_seconds": 2.93,
+                "duration_seconds": 1.1
+              },
+              "cut_sample": 135840,
+              "cut_time_seconds": 2.83,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/7ccefa8e68fa48b697be438022cfa1b8/attempt-02/target.wav.search/c67d32ff89de472aaa57ccdec5361437/candidate-01.wav",
+              "preceding_voiced_seconds": 1.59,
+              "retained_voiced_seconds": 1.16,
+              "retained_duration_seconds": 1.6501666666666666,
+              "candidate_sha256": "fd27bc70d481829cf37877a257b624d095009f073761198dab5f4ecd7407d773",
+              "extracted_transcript": "Morbidi mostriciattoli",
+              "canonical_transcript_tokens": [
+                "morbidi",
+                "mostrikiattoli"
+              ],
+              "exact_target_match": true,
+              "target_comparison_score": 1.0,
+              "target_word_count_matches": true,
+              "target_numbers_match": true,
+              "target_comparison_flags": [],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": true,
+              "asr_segment_count": 1
+            }
+          ],
+          "human_review": "PENDING",
+          "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+          "delivery": {
+            "policy": "verified-carrier-gap-delivery-v1",
+            "removed_frames": 0,
+            "removed_seconds": 0.0,
+            "retained_verified_quiet_seconds": 0.1,
+            "raw_delivery_start_sample": 135840,
+            "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/7ccefa8e68fa48b697be438022cfa1b8/attempt-02/delivery-target.wav",
+            "sha256": "fd27bc70d481829cf37877a257b624d095009f073761198dab5f4ecd7407d773"
+          }
+        },
+        "candidate": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/7ccefa8e68fa48b697be438022cfa1b8/attempt-02/candidate.wav"
+      }
+    ]
+  },
   "corpus_replacement": {
-    "original_sha256": "c853d55765927a0c0824b8cecc7c598b1babb4eb050112f747af2480762d5a9a",
+    "original_sha256": "90a08ed7e5a13ee1648203025fcbbc026378829ee21e02e9a202684e2ac95639",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T07:54:53.823940+00:00",
+  "created_utc": "2026-10-21T14:55:15.948916+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "Haz saltar a Luna",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. Haz saltar a Luna",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "Haz saltar a Luna",
+    "cue_id": "greia.requested.jump_luna.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "Haz saltar a Luna",
     "cue_id": "greia.requested.jump_luna.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/baia_delle_orche/assets/audio/es/jump_luna.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.tito.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261021-095446-2e4b888c",
-    "idempotency_key": "greia-10ca4e53718e4fe9b71f112127070436",
+    "job_id": "20261021-165501-7878d6fd",
+    "idempotency_key": "greia-61b7b7cde3a14fdeb797325509db7fa1",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,219 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3052776721,
+    "script_seed": 1408576734,
     "language_direction": "Spanish",
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in Spanish. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1357411386,
-        "sha256": "c1d04c0362fc4602b1bda51eaba3ef34726fa5507434ac74f3ecfd220bbd45e2",
+        "seed": 218295525,
+        "sha256": "875e8900e7c5deead4e5e08ad1e3cf6adab8c05253c311c8ac47d3786cfd1359",
         "generation": {
-          "elapsed_seconds": 6.364772416993219,
+          "elapsed_seconds": 13.604645583996898,
           "model_load_seconds": 0.0,
-          "rtf": 3.6160055394337007,
-          "peak_memory_gb": 7.648166916
+          "rtf": 3.54272269016021,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Asaltar a Luna",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/baia_delle_orche/assets/audio/es/jump_luna.wav.raw.wav",
+    "sha256": "902e91d1956860d8dbd12368622e372e816e96dab824c71bc61a19a9e9ce4317",
+    "receipt_sha256": "076f24dde3b0e90fb09087d184a0be167e2862c3415a915a2442c0138328c97a"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/baia_delle_orche/assets/audio/es/jump_luna.wav.extracted.wav",
+    "sha256": "8c7d870a9d2b49d2d562dc3613b4fa74e63dfcf4475df48b037d0a7ca657f253"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-corpus-v1/run/carrier-raw/activities/baia_delle_orche/assets/audio/es/jump_luna.wav.raw.wav",
+    "source_sha256": "902e91d1956860d8dbd12368622e372e816e96dab824c71bc61a19a9e9ce4317",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-corpus-v1/run/carrier-extracted/activities/baia_delle_orche/assets/audio/es/jump_luna.wav.extracted.wav",
+    "output_sha256": "8c7d870a9d2b49d2d562dc3613b4fa74e63dfcf4475df48b037d0a7ca657f253",
+    "target_request": {
+      "speaker": "tito",
+      "kind": "character_dialogue",
+      "text": "Haz saltar a Luna",
+      "locale": "es",
+      "cue_id": "greia.requested.jump_luna.es",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-corpus-v1/run/carrier-raw/activities/baia_delle_orche/assets/audio/es/jump_luna.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "076f24dde3b0e90fb09087d184a0be167e2862c3415a915a2442c0138328c97a"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "Haz saltar a Luna",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " escucha esta frase en español, asaltar a Luna.",
+    "extracted_transcript": " Asaltar a Luna",
+    "raw_word_alignment": [
+      {
+        "word": "escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.6
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.6,
+        "end_seconds": 0.88
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.88,
+        "end_seconds": 1.24
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.24,
+        "end_seconds": 1.42
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.42,
+        "end_seconds": 2.0
+      },
+      {
+        "word": "asaltar",
+        "start_seconds": 3.06,
+        "end_seconds": 3.46
+      },
+      {
+        "word": "a",
+        "start_seconds": 3.46,
+        "end_seconds": 3.6
+      },
+      {
+        "word": "luna",
+        "start_seconds": 3.6,
+        "end_seconds": 3.76
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "asaltar",
+        "start_seconds": 0.7399999999999998,
+        "end_seconds": 1.06
+      },
+      {
+        "word": "a",
+        "start_seconds": 1.06,
+        "end_seconds": 1.2
+      },
+      {
+        "word": "luna",
+        "start_seconds": 1.2,
+        "end_seconds": 1.36
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.6802965402603149,
+        "no_speech_prob": 0.007073110900819302,
+        "compression_ratio": 0.8703703703703703,
+        "word_probabilities": [
+          0.578125,
+          0.9384765625,
+          0.96728515625,
+          0.88720703125,
+          0.9765625,
+          0.59375,
+          0.55712890625,
+          0.366455078125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6992912292480469,
+        "no_speech_prob": 0.44788023829460144,
+        "compression_ratio": 0.6363636363636364,
+        "word_probabilities": [
+          0.49462890625,
+          0.5498046875,
+          0.4833984375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 86,
+    "extracted_voiced_seconds": 0.86,
+    "unremoved_raw_target_tokens": [
+      "asaltar",
+      "a",
+      "luna"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "asaltar",
+      "a",
+      "luna"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.8401814058956916,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 2.0,
+      "target_first_word_start_seconds": 3.06,
+      "gap_seconds": 0.7083900226757369,
+      "verified_silence_start_seconds": 2.0598639455782313,
+      "verified_silence_end_seconds": 2.768253968253968,
+      "gap_rms_dbfs": -89.711,
+      "gap_peak_dbfs": -78.268,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.4140589569161,
+      "cut_sample": 53230,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/baia_delle_orche/assets/audio/es/jump_luna.wav",
-    "bytes": 77702,
-    "sha256": "e7acf9d2ce2a0f21149b4ee1724907e6dbfcc0cc6e0f49d521cad3878deb87d4"
+    "sha256": "480604b8bca8d239674eaf37f2ad38534aa1d0a25e212cfc826bd211ab8c227f",
+    "bytes": 62970
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "ed693c1639404adb1f0464dace37d8e4da03497666021bb5fd6c6c6c356c379f",
+    "original_sha256": "e7acf9d2ce2a0f21149b4ee1724907e6dbfcc0cc6e0f49d521cad3878deb87d4",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

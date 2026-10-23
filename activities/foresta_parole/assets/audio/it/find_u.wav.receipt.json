@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:33:41.292083+00:00",
+  "created_utc": "2026-10-23T01:40:05.008380+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
@@ -8,17 +8,22 @@
     "text": "U come Uva",
     "cue_id": "foresta_parole.find_u",
     "output": "activities/foresta_parole/assets/audio/it/find_u.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic"
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-143334-65c6ce20",
-    "idempotency_key": "greia-aa8ee21179b54c469370dc7867e297c3",
+    "job_id": "20261023-033947-7a3a01bc",
+    "idempotency_key": "greia-2a5d0091247f49f3812c4c9207ffc25a",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +46,346 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3047759361,
+    "script_seed": 3378798021,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "effective_delivery": "Speak in Italian. Voce calda e calma. Pronuncia chiara e naturale.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1333485703,
-        "sha256": "8e8af15aaaa46bb8650b4d01b85b0f8cb0ef8d981ecdc55798a35ac098a30d9d",
+        "seed": 1699419021,
+        "sha256": "93a333d36e7d68213bda7285837ba940482f6d23492cdacf276834df1242cf52",
         "generation": {
-          "elapsed_seconds": 6.836932624981273,
+          "elapsed_seconds": 15.916571374982595,
           "model_load_seconds": 0.0,
-          "rtf": 5.340658215061533,
-          "peak_memory_gb": 8.44494914
+          "rtf": 4.1447605681131705,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-audio-parakeet-tdt-v3",
+    "transcript": "You come uva.",
+    "score": 0.8242,
+    "detail": "Delivered target transcribed and screened; human listening remains pending",
+    "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+    "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+    "flags": [],
+    "metrics": {
+      "duration_seconds": 1.1201814058956916,
+      "rms_dbfs": -32.95,
+      "peak": 0.1752,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.06,
+      "trailing_silence_seconds": 0.18,
+      "longest_internal_pause_seconds": 0.04
+    }
   },
-  "attempts": 1,
+  "attempts": 2,
   "output": {
     "path": "activities/foresta_parole/assets/audio/it/find_u.wav",
-    "bytes": 56534,
-    "sha256": "7167c346a021f55ce574dcfb0d36bc0cc0d617d9a2245f806fa157a5d97d74b3"
+    "bytes": 49478,
+    "sha256": "7d4eb90a60637865d5bf10aabecf04ada4059ad4ed2fe15402940b9bf9064ec2"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "short_phrase": {
+    "mode": "automatic-carrier",
+    "composition_policy": "natural-context-period-v1",
+    "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/d2777e195e8741f8bd4b2f8c0a479be7",
+    "prefix": "Guardiamo insieme le lettere.",
+    "composite_text": "Guardiamo insieme le lettere.\n\nU come Uva",
+    "effective_delivery": "Voce calda e calma. Pronuncia chiara e naturale.",
+    "extraction": {
+      "schema_version": 1,
+      "algorithm_version": "greia-spoken-carrier-extractor-v7",
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "status": "EXTRACTED_PENDING_LISTENING",
+      "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/d2777e195e8741f8bd4b2f8c0a479be7/attempt-02/raw.wav",
+      "source_sha256": "93a333d36e7d68213bda7285837ba940482f6d23492cdacf276834df1242cf52",
+      "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/d2777e195e8741f8bd4b2f8c0a479be7/attempt-02/target.wav",
+      "output_sha256": "3c4d9a29fa0d56538e3778d6b563d5c8f3b071ffaa0c65e9933990ca259d3eeb",
+      "output_bytes": 107580,
+      "locale": "it",
+      "prefix": "Guardiamo insieme le lettere.",
+      "target": "U come Uva",
+      "remove_first_words": 4,
+      "ignore_accents": true,
+      "target_verification_requested": "warn",
+      "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+      "target_comparison_score": 0.8242,
+      "target_word_count_matches": true,
+      "target_numbers_match": true,
+      "target_comparison_flags": [],
+      "target_transcript_warning": true,
+      "recognizer": "mlx-audio-parakeet-tdt-v3",
+      "recognizer_version": "0.5.0",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "extracted_transcript": "You come uva.",
+      "expected_target_tokens": [
+        "u",
+        "kome",
+        "uva"
+      ],
+      "extracted_target_tokens": [
+        "you",
+        "kome",
+        "uva"
+      ],
+      "extracted_target_exact_match": false,
+      "transcription_settings": {
+        "language_detection": "automatic",
+        "expected_text_prompt": null,
+        "timestamps": "model-provided-token-timestamps"
+      },
+      "sample_rate": 48000,
+      "duration_seconds": 3.8401666666666667,
+      "boundary": {
+        "search_strategy": "target-only-global-quiet-run-v7",
+        "verified_silence_start_seconds": 1.2,
+        "verified_silence_end_seconds": 2.82,
+        "verified_silence_duration_seconds": 1.62,
+        "cut_sample": 130560,
+        "cut_time_seconds": 2.72,
+        "padding_seconds": 0.1,
+        "quiet_run_start_sample": 57600,
+        "quiet_run_end_sample": 135360,
+        "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+      },
+      "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/d2777e195e8741f8bd4b2f8c0a479be7/attempt-02/target.wav.search/381620291670450ba1eed3a13502b5f5",
+      "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/d2777e195e8741f8bd4b2f8c0a479be7/attempt-02/target.wav.search/381620291670450ba1eed3a13502b5f5/search.json",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/d2777e195e8741f8bd4b2f8c0a479be7/attempt-02/raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "6a5382c9a5d9c59ef38efbf19d2fc2a2e44715c666c50ae6b13aa430f87b3ef0",
+      "candidate_sha256": "3c4d9a29fa0d56538e3778d6b563d5c8f3b071ffaa0c65e9933990ca259d3eeb",
+      "candidate_id": "candidate-01",
+      "candidate_count": 1,
+      "qualifying_quiet_run_count": 1,
+      "candidate_results": [
+        {
+          "candidate_id": "candidate-01",
+          "quiet_run": {
+            "start_sample": 57600,
+            "end_sample": 135360,
+            "start_seconds": 1.2,
+            "end_seconds": 2.82,
+            "duration_seconds": 1.62
+          },
+          "cut_sample": 130560,
+          "cut_time_seconds": 2.72,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/d2777e195e8741f8bd4b2f8c0a479be7/attempt-02/target.wav.search/381620291670450ba1eed3a13502b5f5/candidate-01.wav",
+          "preceding_voiced_seconds": 0.94,
+          "retained_voiced_seconds": 0.77,
+          "retained_duration_seconds": 1.1201666666666668,
+          "candidate_sha256": "3c4d9a29fa0d56538e3778d6b563d5c8f3b071ffaa0c65e9933990ca259d3eeb",
+          "extracted_transcript": "You come uva.",
+          "canonical_transcript_tokens": [
+            "you",
+            "kome",
+            "uva"
+          ],
+          "exact_target_match": false,
+          "target_comparison_score": 0.8242,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": true,
+          "asr_segment_count": 1
+        }
+      ],
+      "human_review": "PENDING",
+      "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+      "delivery": {
+        "policy": "verified-carrier-gap-delivery-v1",
+        "removed_frames": 0,
+        "removed_seconds": 0.0,
+        "retained_verified_quiet_seconds": 0.1,
+        "raw_delivery_start_sample": 130560,
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/d2777e195e8741f8bd4b2f8c0a479be7/attempt-02/delivery-target.wav",
+        "sha256": "3c4d9a29fa0d56538e3778d6b563d5c8f3b071ffaa0c65e9933990ca259d3eeb"
+      }
+    },
+    "quality": {
+      "disposition": "PASS",
+      "score": 0.8242,
+      "transcript": "You come uva.",
+      "metrics": {
+        "duration_seconds": 1.1201814058956916,
+        "rms_dbfs": -32.95,
+        "peak": 0.1752,
+        "clipped_fraction": 0.0,
+        "leading_silence_seconds": 0.06,
+        "trailing_silence_seconds": 0.18,
+        "longest_internal_pause_seconds": 0.04
+      },
+      "flags": [],
+      "ignore_accents": true,
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "detail": "Delivered target transcribed and screened; human listening remains pending"
+    },
+    "history": [
+      {
+        "attempt": 1,
+        "status": "REJECTED_CUT",
+        "error": "no candidate suffix meets target verification policy",
+        "evidence": {
+          "candidate_transcripts": [
+            "We come et uva"
+          ],
+          "matching_candidate_ids": [],
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/d2777e195e8741f8bd4b2f8c0a479be7/attempt-01/target.wav.search/2aff7aa426ad41639796a608ca87f744",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/d2777e195e8741f8bd4b2f8c0a479be7/attempt-01/target.wav.search/2aff7aa426ad41639796a608ca87f744/search.json"
+        }
+      },
+      {
+        "attempt": 2,
+        "status": "PASS",
+        "quality": {
+          "disposition": "PASS",
+          "score": 0.8242,
+          "transcript": "You come uva.",
+          "metrics": {
+            "duration_seconds": 1.1201814058956916,
+            "rms_dbfs": -32.95,
+            "peak": 0.1752,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.06,
+            "trailing_silence_seconds": 0.18,
+            "longest_internal_pause_seconds": 0.04
+          },
+          "flags": [],
+          "ignore_accents": true,
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "detail": "Delivered target transcribed and screened; human listening remains pending"
+        },
+        "extraction": {
+          "schema_version": 1,
+          "algorithm_version": "greia-spoken-carrier-extractor-v7",
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "status": "EXTRACTED_PENDING_LISTENING",
+          "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/d2777e195e8741f8bd4b2f8c0a479be7/attempt-02/raw.wav",
+          "source_sha256": "93a333d36e7d68213bda7285837ba940482f6d23492cdacf276834df1242cf52",
+          "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/d2777e195e8741f8bd4b2f8c0a479be7/attempt-02/target.wav",
+          "output_sha256": "3c4d9a29fa0d56538e3778d6b563d5c8f3b071ffaa0c65e9933990ca259d3eeb",
+          "output_bytes": 107580,
+          "locale": "it",
+          "prefix": "Guardiamo insieme le lettere.",
+          "target": "U come Uva",
+          "remove_first_words": 4,
+          "ignore_accents": true,
+          "target_verification_requested": "warn",
+          "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+          "target_comparison_score": 0.8242,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_transcript_warning": true,
+          "recognizer": "mlx-audio-parakeet-tdt-v3",
+          "recognizer_version": "0.5.0",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "extracted_transcript": "You come uva.",
+          "expected_target_tokens": [
+            "u",
+            "kome",
+            "uva"
+          ],
+          "extracted_target_tokens": [
+            "you",
+            "kome",
+            "uva"
+          ],
+          "extracted_target_exact_match": false,
+          "transcription_settings": {
+            "language_detection": "automatic",
+            "expected_text_prompt": null,
+            "timestamps": "model-provided-token-timestamps"
+          },
+          "sample_rate": 48000,
+          "duration_seconds": 3.8401666666666667,
+          "boundary": {
+            "search_strategy": "target-only-global-quiet-run-v7",
+            "verified_silence_start_seconds": 1.2,
+            "verified_silence_end_seconds": 2.82,
+            "verified_silence_duration_seconds": 1.62,
+            "cut_sample": 130560,
+            "cut_time_seconds": 2.72,
+            "padding_seconds": 0.1,
+            "quiet_run_start_sample": 57600,
+            "quiet_run_end_sample": 135360,
+            "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+          },
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/d2777e195e8741f8bd4b2f8c0a479be7/attempt-02/target.wav.search/381620291670450ba1eed3a13502b5f5",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/d2777e195e8741f8bd4b2f8c0a479be7/attempt-02/target.wav.search/381620291670450ba1eed3a13502b5f5/search.json",
+          "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/d2777e195e8741f8bd4b2f8c0a479be7/attempt-02/raw.wav.receipt.json",
+          "source_provider_receipt_sha256": "6a5382c9a5d9c59ef38efbf19d2fc2a2e44715c666c50ae6b13aa430f87b3ef0",
+          "candidate_sha256": "3c4d9a29fa0d56538e3778d6b563d5c8f3b071ffaa0c65e9933990ca259d3eeb",
+          "candidate_id": "candidate-01",
+          "candidate_count": 1,
+          "qualifying_quiet_run_count": 1,
+          "candidate_results": [
+            {
+              "candidate_id": "candidate-01",
+              "quiet_run": {
+                "start_sample": 57600,
+                "end_sample": 135360,
+                "start_seconds": 1.2,
+                "end_seconds": 2.82,
+                "duration_seconds": 1.62
+              },
+              "cut_sample": 130560,
+              "cut_time_seconds": 2.72,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/d2777e195e8741f8bd4b2f8c0a479be7/attempt-02/target.wav.search/381620291670450ba1eed3a13502b5f5/candidate-01.wav",
+              "preceding_voiced_seconds": 0.94,
+              "retained_voiced_seconds": 0.77,
+              "retained_duration_seconds": 1.1201666666666668,
+              "candidate_sha256": "3c4d9a29fa0d56538e3778d6b563d5c8f3b071ffaa0c65e9933990ca259d3eeb",
+              "extracted_transcript": "You come uva.",
+              "canonical_transcript_tokens": [
+                "you",
+                "kome",
+                "uva"
+              ],
+              "exact_target_match": false,
+              "target_comparison_score": 0.8242,
+              "target_word_count_matches": true,
+              "target_numbers_match": true,
+              "target_comparison_flags": [],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": true,
+              "asr_segment_count": 1
+            }
+          ],
+          "human_review": "PENDING",
+          "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+          "delivery": {
+            "policy": "verified-carrier-gap-delivery-v1",
+            "removed_frames": 0,
+            "removed_seconds": 0.0,
+            "retained_verified_quiet_seconds": 0.1,
+            "raw_delivery_start_sample": 130560,
+            "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/d2777e195e8741f8bd4b2f8c0a479be7/attempt-02/delivery-target.wav",
+            "sha256": "3c4d9a29fa0d56538e3778d6b563d5c8f3b071ffaa0c65e9933990ca259d3eeb"
+          }
+        },
+        "candidate": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/d2777e195e8741f8bd4b2f8c0a479be7/attempt-02/candidate.wav"
+      }
+    ]
+  },
   "corpus_replacement": {
-    "original_sha256": "c3fd245248ed567d1c2ac4ca8776fa5e009dc7e9ff5ff271d9b74f549a19c7a8",
+    "original_sha256": "ccfff380aef409d5227536826b3d875f987f1d7445e5dd37c1961edd44d76fd1",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

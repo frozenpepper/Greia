@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T11:53:20.207697+00:00",
+  "created_utc": "2026-10-21T16:32:51.122484+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "¡Una luciérnaga!",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. ¡Una luciérnaga!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "momo",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "¡Una luciérnaga!",
+    "cue_id": "luci_di_momo.count_1.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "¡Una luciérnaga!",
     "cue_id": "luci_di_momo.count_1.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/luci_di_momo/assets/audio/es/count_1.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Counts aloud with a child: one crisp, clear number, bright and steady, no extra words."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.momo.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261021-135313-b9180403",
-    "idempotency_key": "greia-05f24e2778554b82816de03ed998052e",
+    "job_id": "20261021-183235-209897e2",
+    "idempotency_key": "greia-1f7394ad164841ab913f50c98e03b574",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,219 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3433315147,
+    "script_seed": 14821071,
     "language_direction": "Spanish",
-    "delivery_prompt": "Counts aloud with a child: one crisp, clear number, bright and steady, no extra words.",
-    "effective_delivery": "Speak in Spanish. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 597754439,
-        "sha256": "89404d02a8c4740caea163c4fea8bc308bae9eb7995f19263749e4af73c9d422",
+        "seed": 1092220621,
+        "sha256": "e230797e551c14312f837e05e84435cf20b55a2ce4be7e350629e65316065e45",
         "generation": {
-          "elapsed_seconds": 6.238803916996403,
+          "elapsed_seconds": 15.210490291996393,
           "model_load_seconds": 0.0,
-          "rtf": 3.54443930517739,
-          "peak_memory_gb": 7.648166916
+          "rtf": 4.753030662568531,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " una luz siernaga.",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/luci_di_momo/assets/audio/es/count_1.wav.raw.wav",
+    "sha256": "fb9eb21783e36877bcdc26e0103d455d8176560ad02e44ce6dd9c906b07c236c",
+    "receipt_sha256": "b57d70d9df01f3a241567cc23b12997029fbec09bf4a10bd61b0780e8719c9a3"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/luci_di_momo/assets/audio/es/count_1.wav.extracted.wav",
+    "sha256": "98e67a2a4ac036dd00dc654edc1848c84cddd87b0a3fa088d9f9735b880ae7db"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/luci_di_momo/assets/audio/es/count_1.wav.raw.wav",
+    "source_sha256": "fb9eb21783e36877bcdc26e0103d455d8176560ad02e44ce6dd9c906b07c236c",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/luci_di_momo/assets/audio/es/count_1.wav.extracted.wav",
+    "output_sha256": "98e67a2a4ac036dd00dc654edc1848c84cddd87b0a3fa088d9f9735b880ae7db",
+    "target_request": {
+      "speaker": "momo",
+      "kind": "character_dialogue",
+      "text": "¡Una luciérnaga!",
+      "locale": "es",
+      "cue_id": "luci_di_momo.count_1.es",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/luci_di_momo/assets/audio/es/count_1.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "b57d70d9df01f3a241567cc23b12997029fbec09bf4a10bd61b0780e8719c9a3"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "¡Una luciérnaga!",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Escucha esta frase en español, una luz siernaga.",
+    "extracted_transcript": " una luz siernaga.",
+    "raw_word_alignment": [
+      {
+        "word": "escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.4
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.4,
+        "end_seconds": 0.6
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.6,
+        "end_seconds": 0.9
+      },
+      {
+        "word": "en",
+        "start_seconds": 0.9,
+        "end_seconds": 1.1
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.1,
+        "end_seconds": 1.54
+      },
+      {
+        "word": "una",
+        "start_seconds": 2.14,
+        "end_seconds": 2.28
+      },
+      {
+        "word": "luz",
+        "start_seconds": 2.28,
+        "end_seconds": 2.52
+      },
+      {
+        "word": "siernaga",
+        "start_seconds": 2.52,
+        "end_seconds": 2.98
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "una",
+        "start_seconds": 0.0,
+        "end_seconds": 0.44
+      },
+      {
+        "word": "luz",
+        "start_seconds": 0.44,
+        "end_seconds": 0.68
+      },
+      {
+        "word": "siernaga",
+        "start_seconds": 0.68,
+        "end_seconds": 1.22
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5202030294081744,
+        "no_speech_prob": 0.0023867529816925526,
+        "compression_ratio": 0.875,
+        "word_probabilities": [
+          0.5087890625,
+          0.90576171875,
+          0.98388671875,
+          0.923828125,
+          0.97705078125,
+          0.5634765625,
+          0.388427734375,
+          0.61572265625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.7584333419799805,
+        "no_speech_prob": 0.02850492298603058,
+        "compression_ratio": 0.68,
+        "word_probabilities": [
+          0.410400390625,
+          0.64306640625,
+          0.6201171875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 86,
+    "extracted_voiced_seconds": 0.86,
+    "unremoved_raw_target_tokens": [
+      "una",
+      "luz",
+      "siernaga"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "una",
+      "luz",
+      "siernaga"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.2001814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.54,
+      "target_first_word_start_seconds": 2.14,
+      "gap_seconds": 0.47891156462585033,
+      "verified_silence_start_seconds": 1.5998639455782313,
+      "verified_silence_end_seconds": 2.0787755102040815,
+      "gap_rms_dbfs": -62.862,
+      "gap_peak_dbfs": -38.333,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.8393197278911564,
+      "cut_sample": 40557,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/luci_di_momo/assets/audio/es/count_1.wav",
-    "bytes": 77702,
-    "sha256": "6e5f428bd679b081b072d90fa440c3930edffa1f70f3607253ec07355a6f694e"
+    "sha256": "d94f76add46094ba15a872e75305f93cedfafb39459614ad7a49c6e4236f5b9b",
+    "bytes": 60092
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "a5d8859e18309110aec6c09d9d4384e958c11c44f35c7a4258843d74c0a0378f",
+    "original_sha256": "6e5f428bd679b081b072d90fa440c3930edffa1f70f3607253ec07355a6f694e",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

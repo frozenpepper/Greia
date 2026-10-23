@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T23:28:28.979095+00:00",
+  "created_utc": "2026-10-21T15:40:52.151623+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "O come Orso",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. O come Orso",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "O come Orso",
+    "cue_id": "alfabeto_leo.letter_O.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "O come Orso",
     "cue_id": "alfabeto_leo.letter_O.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/alfabeto_leo/assets/audio/it/letter_O.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-012817-6d7d2123",
-    "idempotency_key": "greia-659deaec7d35487182735b7991ac92e4",
+    "job_id": "20261021-174036-628447b6",
+    "idempotency_key": "greia-c68e247ee63e43898b80d2522ce5dd61",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,248 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3718324927,
+    "script_seed": 1185195704,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak naturally in Italian. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2911580690,
-        "sha256": "43f542098c7dc6b544d5fe8ea14e783afd0e658e3c9c7c5cbdd9d9ef2200b894",
+        "seed": 2061907199,
+        "sha256": "cfedb17f392bacacf8536906cf86f93e654e5afb989aa5fe5db0bbaa74cb481b",
         "generation": {
-          "elapsed_seconds": 11.006551583996043,
+          "elapsed_seconds": 14.317660290995263,
           "model_load_seconds": 0.0,
-          "rtf": 6.253130338412674,
-          "peak_memory_gb": 8.21220922
+          "rtf": 3.8904923575006376,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " o come orso?",
+    "metrics": {
+      "duration_seconds": 1.3858956916099774,
+      "rms_dbfs": -32.07,
+      "peak": 0.14151,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.32,
+      "trailing_silence_seconds": 0.06,
+      "longest_internal_pause_seconds": 0.02
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/alfabeto_leo/assets/audio/it/letter_O.wav.raw.wav",
+    "sha256": "0c77c343656d622b5a9bd8f72e338dac7ac9894c21dc98f363803d2152c45a48",
+    "receipt_sha256": "a64eb304d465c45a604057fdfa467a8852820eb6adc7057a5b1df1f23816991e"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/assets/audio/it/letter_O.wav.extracted.wav",
+    "sha256": "b11ebcb469fc598f3dc3ca8fba5639d977e0d1ab36927a4bc82b3c92ac2e55be"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/alfabeto_leo/assets/audio/it/letter_O.wav.raw.wav",
+    "source_sha256": "0c77c343656d622b5a9bd8f72e338dac7ac9894c21dc98f363803d2152c45a48",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-extracted/activities/alfabeto_leo/assets/audio/it/letter_O.wav.extracted.wav",
+    "output_sha256": "b11ebcb469fc598f3dc3ca8fba5639d977e0d1ab36927a4bc82b3c92ac2e55be",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "O come Orso",
+      "locale": "it",
+      "cue_id": "alfabeto_leo.letter_O.it",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/alfabeto_leo/assets/audio/it/letter_O.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "a64eb304d465c45a604057fdfa467a8852820eb6adc7057a5b1df1f23816991e"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "O come Orso",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " ascolta questa frase in italiano. O come orso?",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " o come orso?",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.62
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.62,
+        "end_seconds": 0.94
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.94,
+        "end_seconds": 1.22
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.22,
+        "end_seconds": 1.44
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.44,
+        "end_seconds": 1.98
+      },
+      {
+        "word": "o",
+        "start_seconds": 2.6,
+        "end_seconds": 2.7
+      },
+      {
+        "word": "come",
+        "start_seconds": 2.7,
+        "end_seconds": 3.02
+      },
+      {
+        "word": "orso",
+        "start_seconds": 3.02,
+        "end_seconds": 3.5
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "o",
+        "start_seconds": 0.0,
+        "end_seconds": 0.44
+      },
+      {
+        "word": "come",
+        "start_seconds": 0.44,
+        "end_seconds": 0.74
+      },
+      {
+        "word": "orso",
+        "start_seconds": 0.74,
+        "end_seconds": 1.22
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5984855228000217,
+        "no_speech_prob": 0.026408428326249123,
+        "compression_ratio": 0.8846153846153846,
+        "word_probabilities": [
+          0.5341796875,
+          0.9892578125,
+          0.9228515625,
+          0.9365234375,
+          0.99365234375
+        ]
+      },
+      {
+        "avg_logprob": -0.5984855228000217,
+        "no_speech_prob": 0.026408428326249123,
+        "compression_ratio": 0.8846153846153846,
+        "word_probabilities": [
+          0.55615234375,
+          0.92236328125,
+          0.68212890625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.5368639826774597,
+        "no_speech_prob": 0.12079886347055435,
+        "compression_ratio": 0.6,
+        "word_probabilities": [
+          0.52783203125,
+          0.98291015625,
+          0.67626953125
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 92,
+    "extracted_voiced_seconds": 0.92,
+    "unremoved_raw_target_tokens": [
+      "o",
+      "come",
+      "orso"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "o",
+      "come",
+      "orso"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.6801814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.98,
+      "search_end_seconds": 2.6,
+      "prefix_last_word_end_seconds": 1.98,
+      "target_first_word_start_seconds": 2.6,
+      "gap_seconds": 0.508843537414966,
+      "verified_silence_start_seconds": 2.0398639455782313,
+      "verified_silence_end_seconds": 2.5487074829931973,
+      "gap_rms_dbfs": -62.221,
+      "gap_peak_dbfs": -44.78,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.2942857142857145,
+      "cut_sample": 50589,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/it/letter_O.wav",
-    "bytes": 77702,
-    "sha256": "474d8fdc150cd2226705f00fe23266d00d70b1a6c648b84219866bfcb422b830"
+    "sha256": "0e1a15dc5258859d13f77a9e2f53c9f2db894bd31c96339082eb76f7b12db8c2",
+    "bytes": 61196
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "6c1436b29e2d46588b7a370e013658ffdf39de8c51aa5a7e012a3aa430d42238",
+    "original_sha256": "474d8fdc150cd2226705f00fe23266d00d70b1a6c648b84219866bfcb422b830",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T20:59:28.947415+00:00",
+  "created_utc": "2026-10-21T18:44:05.406330+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "Vélo",
+    "target_word_count": 1,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. Vélo",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Vélo",
+    "cue_id": "greia.vocab.bicycle.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Vélo",
     "cue_id": "greia.vocab.bicycle.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "assets/audio/vocab/v1/fr/bicycle.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-225923-bb284bd9",
-    "idempotency_key": "greia-a0bfa16bd0fd4f33a6b491126065dddc",
+    "job_id": "20261021-204355-718e6f5e",
+    "idempotency_key": "greia-38830abc7e084fb483f3a9391c20bc77",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,197 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 252117713,
+    "script_seed": 975172057,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
-    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2554618375,
-        "sha256": "be6f6da07f61bed0b03905c15225cc1703e5fe466c401cfec161ab4a1b9591c0",
+        "seed": 2609012796,
+        "sha256": "159735e51d915f932f6bc25a54183abb57200bddbe503ff408dcf868b2a9e1f4",
         "generation": {
-          "elapsed_seconds": 4.224690625036601,
+          "elapsed_seconds": 9.826320041989675,
           "model_load_seconds": 0.0,
-          "rtf": 6.59936051815142,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.838156386429142,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Veillez-lo.",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/vocab/v1/fr/bicycle.wav.raw.wav",
+    "sha256": "9764eeb8058f211860ea70b8a4003d6fab24c7ba5326dc51919900d62938066a",
+    "receipt_sha256": "f46ae93721c2123d235c88622783e45cef1e0e3068fd6b926cc6bda8e0447202"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/vocab/v1/fr/bicycle.wav.extracted.wav",
+    "sha256": "5dda60ffa9d43cf1574887c294adfcce3768aaa4bf1b6ceb4d732725eccdf18d"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/assets/audio/vocab/v1/fr/bicycle.wav.raw.wav",
+    "source_sha256": "9764eeb8058f211860ea70b8a4003d6fab24c7ba5326dc51919900d62938066a",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/assets/audio/vocab/v1/fr/bicycle.wav.extracted.wav",
+    "output_sha256": "5dda60ffa9d43cf1574887c294adfcce3768aaa4bf1b6ceb4d732725eccdf18d",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Vélo",
+      "locale": "fr",
+      "cue_id": "greia.vocab.bicycle.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/assets/audio/vocab/v1/fr/bicycle.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "f46ae93721c2123d235c88622783e45cef1e0e3068fd6b926cc6bda8e0447202"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "Vélo",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français, vélo.",
+    "extracted_transcript": " Veillez-lo.",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.32
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.32,
+        "end_seconds": 0.68
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.68,
+        "end_seconds": 0.88
+      },
+      {
+        "word": "en",
+        "start_seconds": 0.88,
+        "end_seconds": 1.0
+      },
+      {
+        "word": "français",
+        "start_seconds": 1.0,
+        "end_seconds": 1.48
+      },
+      {
+        "word": "vélo",
+        "start_seconds": 2.02,
+        "end_seconds": 2.3
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "veillez",
+        "start_seconds": 0.0,
+        "end_seconds": 0.48
+      },
+      {
+        "word": "lo",
+        "start_seconds": 0.48,
+        "end_seconds": 0.58
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.46816269556681317,
+        "no_speech_prob": 0.004209412727504969,
+        "compression_ratio": 0.8222222222222222,
+        "word_probabilities": [
+          0.71142578125,
+          0.9365234375,
+          0.82958984375,
+          0.80517578125,
+          0.95361328125,
+          0.7421875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.8410075505574545,
+        "no_speech_prob": 0.32403677701950073,
+        "compression_ratio": 0.5789473684210527,
+        "word_probabilities": [
+          0.37548828125,
+          0.79443359375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 31,
+    "extracted_voiced_seconds": 0.31,
+    "unremoved_raw_target_tokens": [
+      "vélo"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "vélo"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 2.5601814058956918,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.48,
+      "target_first_word_start_seconds": 2.02,
+      "gap_seconds": 0.4290249433106576,
+      "verified_silence_start_seconds": 1.5398639455782313,
+      "verified_silence_end_seconds": 1.968888888888889,
+      "gap_rms_dbfs": -67.221,
+      "gap_peak_dbfs": -46.336,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.75437641723356,
+      "cut_sample": 38684,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "assets/audio/vocab/v1/fr/bicycle.wav",
-    "bytes": 28310,
-    "sha256": "f3aef0b35004128744787769240f7ffea52f1631c7c1a722ec26e6b25c30e488"
+    "sha256": "d08bbbfe402d5aad33ddf476037351dd2c6b4430cdc52ad5925fcc6444297a9c",
+    "bytes": 35614
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "d83dd94356ab9b4922bca4dd73774a16761744320ec10acb94fea014df14a83a",
+    "original_sha256": "f3aef0b35004128744787769240f7ffea52f1631c7c1a722ec26e6b25c30e488",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

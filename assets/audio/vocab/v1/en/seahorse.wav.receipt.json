@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T20:35:58.289306+00:00",
+  "created_utc": "2026-10-21T18:37:55.011356+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Listen to this phrase in English.",
+    "prefix_word_count": 6,
+    "target": "Seahorse",
+    "target_word_count": 1,
+    "target_verification": "warn",
+    "composite_text": "Listen to this phrase in English. Seahorse",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Seahorse",
+    "cue_id": "greia.vocab.seahorse.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "Seahorse",
     "cue_id": "greia.vocab.seahorse.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "assets/audio/vocab/v1/en/seahorse.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-223550-1a1957e1",
-    "idempotency_key": "greia-12c0f034665b404fa27babc8d6acf75b",
+    "job_id": "20261021-203742-377e4255",
+    "idempotency_key": "greia-942d0416f1d242e2a45cf045071e5d61",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,233 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1420946317,
+    "script_seed": 2074739883,
     "language_direction": "English",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
-    "effective_delivery": "Speak in English. Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in English. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 15206073,
-        "sha256": "8eb6d8546ff1158d8c40050bdf6f95fbba7df4bd38c98610c570c119dc015898",
+        "seed": 2834613731,
+        "sha256": "f05a2e5eaf274ddf0bcbc13db2410b1efedb13ce77e17e22eac8358ec0faf347",
         "generation": {
-          "elapsed_seconds": 7.315628250013106,
+          "elapsed_seconds": 12.039517083001556,
           "model_load_seconds": 0.0,
-          "rtf": 5.079709466506033,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.7621531429617905,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " Seahorse",
+    "metrics": {
+      "duration_seconds": 1.256235827664399,
+      "rms_dbfs": -36.83,
+      "peak": 0.1152,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.28,
+      "trailing_silence_seconds": 0.22,
+      "longest_internal_pause_seconds": 0.0
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/vocab/v1/en/seahorse.wav.raw.wav",
+    "sha256": "713ab06b51a3e5be6fcd65f3726d23748ef2d454ec0f3ecf40f808bd73262162",
+    "receipt_sha256": "5ad2e6d9f561ef66123ddffc82381e757642f712c39931d2031c2fbe1c5c08fb"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/vocab/v1/en/seahorse.wav.extracted.wav",
+    "sha256": "310b1e7b248ac160ae1f3ed8406319bbbc193229c974c33d3d48fec20599982e"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/assets/audio/vocab/v1/en/seahorse.wav.raw.wav",
+    "source_sha256": "713ab06b51a3e5be6fcd65f3726d23748ef2d454ec0f3ecf40f808bd73262162",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-extracted/assets/audio/vocab/v1/en/seahorse.wav.extracted.wav",
+    "output_sha256": "310b1e7b248ac160ae1f3ed8406319bbbc193229c974c33d3d48fec20599982e",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Seahorse",
+      "locale": "en",
+      "cue_id": "greia.vocab.seahorse.en",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/assets/audio/vocab/v1/en/seahorse.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "5ad2e6d9f561ef66123ddffc82381e757642f712c39931d2031c2fbe1c5c08fb"
+    },
+    "locale": "en",
+    "prefix": "Listen to this phrase in English.",
+    "target": "Seahorse",
+    "remove_first_words": 6,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Listen to this phrase in English. See horse.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Seahorse",
+    "raw_word_alignment": [
+      {
+        "word": "listen",
+        "start_seconds": 0.0,
+        "end_seconds": 0.24
+      },
+      {
+        "word": "to",
+        "start_seconds": 0.24,
+        "end_seconds": 0.46
+      },
+      {
+        "word": "this",
+        "start_seconds": 0.46,
+        "end_seconds": 0.66
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.66,
+        "end_seconds": 0.96
+      },
+      {
+        "word": "in",
+        "start_seconds": 0.96,
+        "end_seconds": 1.2
+      },
+      {
+        "word": "english",
+        "start_seconds": 1.2,
+        "end_seconds": 1.48
+      },
+      {
+        "word": "see",
+        "start_seconds": 2.34,
+        "end_seconds": 2.48
+      },
+      {
+        "word": "horse",
+        "start_seconds": 2.48,
+        "end_seconds": 2.74
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "seahorse",
+        "start_seconds": 0.0,
+        "end_seconds": 0.96
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.36712112426757815,
+        "no_speech_prob": 0.020488278940320015,
+        "compression_ratio": 0.8461538461538461,
+        "word_probabilities": [
+          0.90673828125,
+          0.99658203125,
+          0.99365234375,
+          0.99853515625,
+          0.99755859375,
+          0.9921875
+        ]
+      },
+      {
+        "avg_logprob": -0.36712112426757815,
+        "no_speech_prob": 0.020488278940320015,
+        "compression_ratio": 0.8461538461538461,
+        "word_probabilities": [
+          0.41259765625,
+          0.7216796875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.31839386622111004,
+        "no_speech_prob": 0.18445627391338348,
+        "compression_ratio": 0.5,
+        "word_probabilities": [
+          0.7626953125
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 6,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 69,
+    "extracted_voiced_seconds": 0.69,
+    "unremoved_raw_target_tokens": [
+      "horse"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "see",
+      "horse"
+    ],
+    "raw_transcript_alignment_suffix_match": false,
+    "duration_seconds": 3.2001814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.48,
+      "search_end_seconds": 2.34,
+      "prefix_last_word_end_seconds": 1.48,
+      "target_first_word_start_seconds": 2.34,
+      "gap_seconds": 0.6086167800453515,
+      "verified_silence_start_seconds": 1.6396371882086167,
+      "verified_silence_end_seconds": 2.248253968253968,
+      "gap_rms_dbfs": -56.234,
+      "gap_peak_dbfs": -35.956,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.9439455782312924,
+      "cut_sample": 42864,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "assets/audio/vocab/v1/en/seahorse.wav",
-    "bytes": 63590,
-    "sha256": "4a652d6ecd0fc3f096f952048482ec8a7c2a18b964e73daad4ab9a92bbb29faf"
+    "sha256": "a378e7e82ec9849703a8dfc491354ba740a2767fadb3715ce88dda5264135b92",
+    "bytes": 55478
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "63a96dc251e076a61e6c27dcef3feb8f5ff6b73696795c0afe06def9c7ab5f77",
+    "original_sha256": "a3f16190bfff289f0c6d242f00e74ece24df1b16974d2dff9497401e3d44843d",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

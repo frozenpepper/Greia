@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T11:46:01.459765+00:00",
+  "created_utc": "2026-10-21T16:29:22.040321+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "¡Uy, se ha parado!",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. ¡Uy, se ha parado!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "¡Uy, se ha parado!",
+    "cue_id": "greia.requested.oops_stopped.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "¡Uy, se ha parado!",
     "cue_id": "greia.requested.oops_stopped.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/la_discesa_della_biglia/assets/audio/es/oops_stopped.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.tito.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261021-134555-6a2dec14",
-    "idempotency_key": "greia-450ae43b4b194001bcc1df0a707d1ed9",
+    "job_id": "20261021-182906-64914906",
+    "idempotency_key": "greia-d91e671e9c024444920ba3bd8d4bef0f",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,240 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 4032231360,
+    "script_seed": 1126843121,
     "language_direction": "Spanish",
-    "delivery_prompt": "Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
-    "effective_delivery": "Speak in Spanish. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 93187977,
-        "sha256": "bd46bbf9c08be201db4aa592c578d6c7131859c405616474383e74624e3b62a0",
+        "seed": 1881690550,
+        "sha256": "de28b3c883f9da397c475e8fea6a62b5e5e6f9534d2534965d639a146d0524db",
         "generation": {
-          "elapsed_seconds": 5.168053790999693,
+          "elapsed_seconds": 14.13364037500287,
           "model_load_seconds": 0.0,
-          "rtf": 3.588510906839273,
-          "peak_memory_gb": 7.648166916
+          "rtf": 4.416532589449363,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " ¡Uy, se ha parado!",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/la_discesa_della_biglia/assets/audio/es/oops_stopped.wav.raw.wav",
+    "sha256": "c0f3834fd27183a315b7a3b39f6c0cc7c8dd3c42f1fa21ae9bffb4072e4478a5",
+    "receipt_sha256": "14645eaff6b5bca3ac97d0b7048dd812f2433efd95ca5da7095d606caca36955"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/la_discesa_della_biglia/assets/audio/es/oops_stopped.wav.extracted.wav",
+    "sha256": "da3cbb3e9cfc9a3e7c78e9d86507754bf5ba78f65ab94f74f7e14c3a863d1714"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/la_discesa_della_biglia/assets/audio/es/oops_stopped.wav.raw.wav",
+    "source_sha256": "c0f3834fd27183a315b7a3b39f6c0cc7c8dd3c42f1fa21ae9bffb4072e4478a5",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/la_discesa_della_biglia/assets/audio/es/oops_stopped.wav.extracted.wav",
+    "output_sha256": "da3cbb3e9cfc9a3e7c78e9d86507754bf5ba78f65ab94f74f7e14c3a863d1714",
+    "target_request": {
+      "speaker": "tito",
+      "kind": "character_dialogue",
+      "text": "¡Uy, se ha parado!",
+      "locale": "es",
+      "cue_id": "greia.requested.oops_stopped.es",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/la_discesa_della_biglia/assets/audio/es/oops_stopped.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "14645eaff6b5bca3ac97d0b7048dd812f2433efd95ca5da7095d606caca36955"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "¡Uy, se ha parado!",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Escucha esta frase en español. ¡Uy se ha parado!",
+    "extracted_transcript": " ¡Uy, se ha parado!",
+    "raw_word_alignment": [
+      {
+        "word": "escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.56
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.56,
+        "end_seconds": 0.82
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.82,
+        "end_seconds": 1.2
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.2,
+        "end_seconds": 1.42
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.42,
+        "end_seconds": 1.88
+      },
+      {
+        "word": "uy",
+        "start_seconds": 2.2,
+        "end_seconds": 2.48
+      },
+      {
+        "word": "se",
+        "start_seconds": 2.48,
+        "end_seconds": 2.56
+      },
+      {
+        "word": "ha",
+        "start_seconds": 2.56,
+        "end_seconds": 2.68
+      },
+      {
+        "word": "parado",
+        "start_seconds": 2.68,
+        "end_seconds": 3.02
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "uy",
+        "start_seconds": 0.0,
+        "end_seconds": 0.44
+      },
+      {
+        "word": "se",
+        "start_seconds": 0.46,
+        "end_seconds": 0.52
+      },
+      {
+        "word": "ha",
+        "start_seconds": 0.52,
+        "end_seconds": 0.64
+      },
+      {
+        "word": "parado",
+        "start_seconds": 0.64,
+        "end_seconds": 0.94
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.47788310050964355,
+        "no_speech_prob": 0.003043833654373884,
+        "compression_ratio": 0.9090909090909091,
+        "word_probabilities": [
+          0.7724609375,
+          0.919921875,
+          0.9921875,
+          0.97119140625,
+          0.9775390625
+        ]
+      },
+      {
+        "avg_logprob": -0.47788310050964355,
+        "no_speech_prob": 0.003043833654373884,
+        "compression_ratio": 0.9090909090909091,
+        "word_probabilities": [
+          0.537109375,
+          0.3544921875,
+          0.85791015625,
+          0.947265625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.5324588616689047,
+        "no_speech_prob": 0.03670813515782356,
+        "compression_ratio": 0.7037037037037037,
+        "word_probabilities": [
+          0.5517578125,
+          0.62451171875,
+          0.87939453125,
+          0.96826171875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 81,
+    "extracted_voiced_seconds": 0.81,
+    "unremoved_raw_target_tokens": [
+      "uy",
+      "se",
+      "ha",
+      "parado"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "uy",
+      "se",
+      "ha",
+      "parado"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.2001814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.88,
+      "target_first_word_start_seconds": 2.2,
+      "gap_seconds": 0.20952380952380953,
+      "verified_silence_start_seconds": 1.9398639455782314,
+      "verified_silence_end_seconds": 2.149387755102041,
+      "gap_rms_dbfs": -74.196,
+      "gap_peak_dbfs": -51.224,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.044625850340136,
+      "cut_sample": 45084,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/la_discesa_della_biglia/assets/audio/es/oops_stopped.wav",
-    "bytes": 63590,
-    "sha256": "c7c1a9a8f5e8b35569d65fab5b13879cc88ab27ae6491b5aa0a11aaa4763602f"
+    "sha256": "1646aa0ffc6005e9db5849372220ba13835adb579eecd95a4c2719b993462003",
+    "bytes": 51038
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "863fca89e750309937a3a04b5f18c8f89a8e74fb6c1c54fac49eaefc4f702b71",
+    "original_sha256": "c7c1a9a8f5e8b35569d65fab5b13879cc88ab27ae6491b5aa0a11aaa4763602f",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

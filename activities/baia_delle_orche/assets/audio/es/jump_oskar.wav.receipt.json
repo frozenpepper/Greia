@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T07:55:27.031756+00:00",
+  "created_utc": "2026-10-21T14:55:31.896792+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "Haz saltar a Oskar",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. Haz saltar a Oskar",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "Haz saltar a Oskar",
+    "cue_id": "greia.requested.jump_oskar.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "Haz saltar a Oskar",
     "cue_id": "greia.requested.jump_oskar.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/baia_delle_orche/assets/audio/es/jump_oskar.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.tito.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261021-095500-f78ab93b",
-    "idempotency_key": "greia-807c5e0d2a1a49638106df75522ef87d",
+    "job_id": "20261021-165518-33d361f3",
+    "idempotency_key": "greia-0a0ce2c4816f48e7b614f043ea0f555d",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,226 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2251656412,
+    "script_seed": 896436213,
     "language_direction": "Spanish",
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in Spanish. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2565928633,
-        "sha256": "29f784d3534abdda60172c1f19e5c6ed377aee300c733803fbb9000e4b8edf1c",
+        "seed": 1980896011,
+        "sha256": "307b88b24e4d06ac5a48eabc41fc0e570e820892af54e8c0ede1906d20a2d967",
         "generation": {
-          "elapsed_seconds": 8.52382262500032,
+          "elapsed_seconds": 12.175756166994688,
           "model_load_seconds": 0.0,
-          "rtf": 4.097663308228662,
-          "peak_memory_gb": 7.648166916
+          "rtf": 3.623557214521508,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " ¡Astalter a Oscar!",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/baia_delle_orche/assets/audio/es/jump_oskar.wav.raw.wav",
+    "sha256": "89454fd8d59bd304f3e5d11c87938c93422fec3c98071736271b06f0eb2865f3",
+    "receipt_sha256": "44a56b3e37d5aa03f1ef4fb401026fb4916cdbaaa9aba4475cc9ee47ac6e6470"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/baia_delle_orche/assets/audio/es/jump_oskar.wav.extracted.wav",
+    "sha256": "10fb1b077e6b5957fe4a45a5a32cbfc76c3e7c77f20baea9f5bf566684a8fdc6"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-corpus-v1/run/carrier-raw/activities/baia_delle_orche/assets/audio/es/jump_oskar.wav.raw.wav",
+    "source_sha256": "89454fd8d59bd304f3e5d11c87938c93422fec3c98071736271b06f0eb2865f3",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-corpus-v1/run/carrier-extracted/activities/baia_delle_orche/assets/audio/es/jump_oskar.wav.extracted.wav",
+    "output_sha256": "10fb1b077e6b5957fe4a45a5a32cbfc76c3e7c77f20baea9f5bf566684a8fdc6",
+    "target_request": {
+      "speaker": "tito",
+      "kind": "character_dialogue",
+      "text": "Haz saltar a Oskar",
+      "locale": "es",
+      "cue_id": "greia.requested.jump_oskar.es",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-corpus-v1/run/carrier-raw/activities/baia_delle_orche/assets/audio/es/jump_oskar.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "44a56b3e37d5aa03f1ef4fb401026fb4916cdbaaa9aba4475cc9ee47ac6e6470"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "Haz saltar a Oskar",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Escucha esta frase en español. ¡Ansaltar a Oscar!",
+    "extracted_transcript": " ¡Astalter a Oscar!",
+    "raw_word_alignment": [
+      {
+        "word": "escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.58
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.58,
+        "end_seconds": 0.88
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.88,
+        "end_seconds": 1.2
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.2,
+        "end_seconds": 1.44
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.44,
+        "end_seconds": 1.88
+      },
+      {
+        "word": "ansaltar",
+        "start_seconds": 2.32,
+        "end_seconds": 2.86
+      },
+      {
+        "word": "a",
+        "start_seconds": 2.86,
+        "end_seconds": 3.02
+      },
+      {
+        "word": "oscar",
+        "start_seconds": 3.02,
+        "end_seconds": 3.24
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "astalter",
+        "start_seconds": 0.44000000000000017,
+        "end_seconds": 0.8
+      },
+      {
+        "word": "a",
+        "start_seconds": 0.8,
+        "end_seconds": 0.94
+      },
+      {
+        "word": "oscar",
+        "start_seconds": 0.94,
+        "end_seconds": 1.16
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.6709316730499267,
+        "no_speech_prob": 0.007078228518366814,
+        "compression_ratio": 0.8793103448275862,
+        "word_probabilities": [
+          0.77294921875,
+          0.7236328125,
+          0.9833984375,
+          0.587890625,
+          0.99267578125
+        ]
+      },
+      {
+        "avg_logprob": -0.6709316730499267,
+        "no_speech_prob": 0.007078228518366814,
+        "compression_ratio": 0.8793103448275862,
+        "word_probabilities": [
+          0.47705078125,
+          0.978515625,
+          0.89111328125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.7282641410827637,
+        "no_speech_prob": 0.07206891477108002,
+        "compression_ratio": 0.7037037037037037,
+        "word_probabilities": [
+          0.40283203125,
+          0.97314453125,
+          0.9130859375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 89,
+    "extracted_voiced_seconds": 0.89,
+    "unremoved_raw_target_tokens": [
+      "ansaltar",
+      "a",
+      "oscar"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "ansaltar",
+      "a",
+      "oscar"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.3601814058956916,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.88,
+      "target_first_word_start_seconds": 2.32,
+      "gap_seconds": 0.2594104308390023,
+      "verified_silence_start_seconds": 1.9398639455782314,
+      "verified_silence_end_seconds": 2.199274376417234,
+      "gap_rms_dbfs": -79.643,
+      "gap_peak_dbfs": -53.162,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.0695691609977325,
+      "cut_sample": 45634,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/baia_delle_orche/assets/audio/es/jump_oskar.wav",
-    "bytes": 91814,
-    "sha256": "a470a3a1ca86b745b484cb18fd6a660468e5a8fe66770ec8b25b15831713ee00"
+    "sha256": "60cd934bc104445a661f38d30acfca5c82873b9313ef23ea6620997b0fbafd3e",
+    "bytes": 56994
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "11c821fe79e5f4365e0fcec38f98d6a28f6f01b0764c03c9fb4bcc53c0774c80",
+    "original_sha256": "a470a3a1ca86b745b484cb18fd6a660468e5a8fe66770ec8b25b15831713ee00",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

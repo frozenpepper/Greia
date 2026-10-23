@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:28:41.340479+00:00",
+  "created_utc": "2026-10-23T01:36:46.400205+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
@@ -8,17 +8,22 @@
     "text": "E comme Escargot",
     "cue_id": "foresta_parole.find_e",
     "output": "activities/foresta_parole/assets/audio/fr/find_e.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic"
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-142835-8bda26ae",
-    "idempotency_key": "greia-4104eb32e22a4066a4f1c8c231d0b5be",
+    "job_id": "20261023-033628-29e54082",
+    "idempotency_key": "greia-b5b9a2ce156840c08deb7f72c21ddc82",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +46,407 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 328033420,
+    "script_seed": 677376461,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "effective_delivery": "Speak in French. Lecture chaleureuse et calme. Diction claire et naturelle.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 895338257,
-        "sha256": "4f5695dd21d8610217db65c660ef2c34dabce6ed59f9c1ffcae45b0b94dd8fef",
+        "seed": 3760768503,
+        "sha256": "7607eb35c884f7d019a2aec923b4f2e45fdebf70dd1290f7b916db5251b90936",
         "generation": {
-          "elapsed_seconds": 5.0743394999881275,
+          "elapsed_seconds": 15.718597208993742,
           "model_load_seconds": 0.0,
-          "rtf": 3.9638116130619405,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.6384237974600695,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-audio-parakeet-tdt-v3",
+    "transcript": "et comme escargot.",
+    "score": 0.8636,
+    "detail": "Delivered target transcribed and screened; human listening remains pending",
+    "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+    "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+    "flags": [],
+    "metrics": {
+      "duration_seconds": 1.4201814058956916,
+      "rms_dbfs": -36.97,
+      "peak": 0.13773,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.08,
+      "trailing_silence_seconds": 0.12,
+      "longest_internal_pause_seconds": 0.06
+    }
   },
   "attempts": 1,
   "output": {
     "path": "activities/foresta_parole/assets/audio/fr/find_e.wav",
-    "bytes": 56534,
-    "sha256": "6df912c381f89913a4e7777427bc250e9ea3026379603e162c91c09fdb75738a"
+    "bytes": 62708,
+    "sha256": "c196afd0ed3319887f4a916fedc524c4c668e021b8e8ef5b034c3993be9b5d24"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "short_phrase": {
+    "mode": "automatic-carrier",
+    "composition_policy": "natural-context-period-v1",
+    "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/c92c27b6ed3344739471243aea464e05",
+    "prefix": "Regardons les lettres ensemble.",
+    "composite_text": "Regardons les lettres ensemble.\n\nE comme Escargot",
+    "effective_delivery": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "extraction": {
+      "schema_version": 1,
+      "algorithm_version": "greia-spoken-carrier-extractor-v7",
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "status": "EXTRACTED_PENDING_LISTENING",
+      "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/c92c27b6ed3344739471243aea464e05/attempt-01/raw.wav",
+      "source_sha256": "7607eb35c884f7d019a2aec923b4f2e45fdebf70dd1290f7b916db5251b90936",
+      "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/c92c27b6ed3344739471243aea464e05/attempt-01/target.wav",
+      "output_sha256": "d83b434cfde21830ed0a6897660cf21f3837cd06f83979ef67ddaacd57c05780",
+      "output_bytes": 136380,
+      "locale": "fr",
+      "prefix": "Regardons les lettres ensemble.",
+      "target": "E comme Escargot",
+      "remove_first_words": 4,
+      "ignore_accents": true,
+      "target_verification_requested": "warn",
+      "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+      "target_comparison_score": 0.8636,
+      "target_word_count_matches": true,
+      "target_numbers_match": true,
+      "target_comparison_flags": [],
+      "target_transcript_warning": true,
+      "recognizer": "mlx-audio-parakeet-tdt-v3",
+      "recognizer_version": "0.5.0",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "extracted_transcript": "et comme escargot.",
+      "expected_target_tokens": [
+        "e",
+        "komme",
+        "eskargot"
+      ],
+      "extracted_target_tokens": [
+        "et",
+        "komme",
+        "eskargot"
+      ],
+      "extracted_target_exact_match": false,
+      "transcription_settings": {
+        "language_detection": "automatic",
+        "expected_text_prompt": null,
+        "timestamps": "model-provided-token-timestamps"
+      },
+      "sample_rate": 48000,
+      "duration_seconds": 4.320166666666666,
+      "boundary": {
+        "search_strategy": "target-only-global-quiet-run-v7",
+        "verified_silence_start_seconds": 2.06,
+        "verified_silence_end_seconds": 3.0,
+        "verified_silence_duration_seconds": 0.94,
+        "cut_sample": 139200,
+        "cut_time_seconds": 2.9,
+        "padding_seconds": 0.1,
+        "quiet_run_start_sample": 98880,
+        "quiet_run_end_sample": 144000,
+        "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+      },
+      "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/c92c27b6ed3344739471243aea464e05/attempt-01/target.wav.search/bb419a244f75457d82afa2ba5c41f5d7",
+      "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/c92c27b6ed3344739471243aea464e05/attempt-01/target.wav.search/bb419a244f75457d82afa2ba5c41f5d7/search.json",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/c92c27b6ed3344739471243aea464e05/attempt-01/raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "c8a8ad90c0b6d9a91230fac17ca13daafeac3d9c8ce5a5b912a2547902b0ebf0",
+      "candidate_sha256": "d83b434cfde21830ed0a6897660cf21f3837cd06f83979ef67ddaacd57c05780",
+      "candidate_id": "candidate-02",
+      "candidate_count": 2,
+      "qualifying_quiet_run_count": 2,
+      "candidate_results": [
+        {
+          "candidate_id": "candidate-01",
+          "quiet_run": {
+            "start_sample": 37440,
+            "end_sample": 49440,
+            "start_seconds": 0.78,
+            "end_seconds": 1.03,
+            "duration_seconds": 0.25
+          },
+          "cut_sample": 44640,
+          "cut_time_seconds": 0.93,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/c92c27b6ed3344739471243aea464e05/attempt-01/target.wav.search/bb419a244f75457d82afa2ba5c41f5d7/candidate-01.wav",
+          "preceding_voiced_seconds": 0.63,
+          "retained_voiced_seconds": 1.69,
+          "retained_duration_seconds": 3.3901666666666666,
+          "candidate_sha256": "5c85c964fc219eba839036aa0cdeae7255a6c369bc92a0f31770ec80e36806a3",
+          "extracted_transcript": "Les lettres ensemble et comme escargots.",
+          "canonical_transcript_tokens": [
+            "les",
+            "lettres",
+            "ensemble",
+            "et",
+            "komme",
+            "eskargots"
+          ],
+          "exact_target_match": false,
+          "target_comparison_score": 0.456,
+          "target_word_count_matches": false,
+          "target_numbers_match": true,
+          "target_comparison_flags": [
+            "TARGET_WORD_COUNT_MISMATCH"
+          ],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": false,
+          "asr_segment_count": 1
+        },
+        {
+          "candidate_id": "candidate-02",
+          "quiet_run": {
+            "start_sample": 98880,
+            "end_sample": 144000,
+            "start_seconds": 2.06,
+            "end_seconds": 3.0,
+            "duration_seconds": 0.94
+          },
+          "cut_sample": 139200,
+          "cut_time_seconds": 2.9,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/c92c27b6ed3344739471243aea464e05/attempt-01/target.wav.search/bb419a244f75457d82afa2ba5c41f5d7/candidate-02.wav",
+          "preceding_voiced_seconds": 1.57,
+          "retained_voiced_seconds": 0.75,
+          "retained_duration_seconds": 1.4201666666666666,
+          "candidate_sha256": "d83b434cfde21830ed0a6897660cf21f3837cd06f83979ef67ddaacd57c05780",
+          "extracted_transcript": "et comme escargot.",
+          "canonical_transcript_tokens": [
+            "et",
+            "komme",
+            "eskargot"
+          ],
+          "exact_target_match": false,
+          "target_comparison_score": 0.8636,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": true,
+          "asr_segment_count": 1
+        }
+      ],
+      "human_review": "PENDING",
+      "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+      "delivery": {
+        "policy": "verified-carrier-gap-delivery-v1",
+        "removed_frames": 0,
+        "removed_seconds": 0.0,
+        "retained_verified_quiet_seconds": 0.1,
+        "raw_delivery_start_sample": 139200,
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/c92c27b6ed3344739471243aea464e05/attempt-01/delivery-target.wav",
+        "sha256": "d83b434cfde21830ed0a6897660cf21f3837cd06f83979ef67ddaacd57c05780"
+      }
+    },
+    "quality": {
+      "disposition": "PASS",
+      "score": 0.8636,
+      "transcript": "et comme escargot.",
+      "metrics": {
+        "duration_seconds": 1.4201814058956916,
+        "rms_dbfs": -36.97,
+        "peak": 0.13773,
+        "clipped_fraction": 0.0,
+        "leading_silence_seconds": 0.08,
+        "trailing_silence_seconds": 0.12,
+        "longest_internal_pause_seconds": 0.06
+      },
+      "flags": [],
+      "ignore_accents": true,
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "detail": "Delivered target transcribed and screened; human listening remains pending"
+    },
+    "history": [
+      {
+        "attempt": 1,
+        "status": "PASS",
+        "quality": {
+          "disposition": "PASS",
+          "score": 0.8636,
+          "transcript": "et comme escargot.",
+          "metrics": {
+            "duration_seconds": 1.4201814058956916,
+            "rms_dbfs": -36.97,
+            "peak": 0.13773,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.08,
+            "trailing_silence_seconds": 0.12,
+            "longest_internal_pause_seconds": 0.06
+          },
+          "flags": [],
+          "ignore_accents": true,
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "detail": "Delivered target transcribed and screened; human listening remains pending"
+        },
+        "extraction": {
+          "schema_version": 1,
+          "algorithm_version": "greia-spoken-carrier-extractor-v7",
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "status": "EXTRACTED_PENDING_LISTENING",
+          "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/c92c27b6ed3344739471243aea464e05/attempt-01/raw.wav",
+          "source_sha256": "7607eb35c884f7d019a2aec923b4f2e45fdebf70dd1290f7b916db5251b90936",
+          "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/c92c27b6ed3344739471243aea464e05/attempt-01/target.wav",
+          "output_sha256": "d83b434cfde21830ed0a6897660cf21f3837cd06f83979ef67ddaacd57c05780",
+          "output_bytes": 136380,
+          "locale": "fr",
+          "prefix": "Regardons les lettres ensemble.",
+          "target": "E comme Escargot",
+          "remove_first_words": 4,
+          "ignore_accents": true,
+          "target_verification_requested": "warn",
+          "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+          "target_comparison_score": 0.8636,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_transcript_warning": true,
+          "recognizer": "mlx-audio-parakeet-tdt-v3",
+          "recognizer_version": "0.5.0",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "extracted_transcript": "et comme escargot.",
+          "expected_target_tokens": [
+            "e",
+            "komme",
+            "eskargot"
+          ],
+          "extracted_target_tokens": [
+            "et",
+            "komme",
+            "eskargot"
+          ],
+          "extracted_target_exact_match": false,
+          "transcription_settings": {
+            "language_detection": "automatic",
+            "expected_text_prompt": null,
+            "timestamps": "model-provided-token-timestamps"
+          },
+          "sample_rate": 48000,
+          "duration_seconds": 4.320166666666666,
+          "boundary": {
+            "search_strategy": "target-only-global-quiet-run-v7",
+            "verified_silence_start_seconds": 2.06,
+            "verified_silence_end_seconds": 3.0,
+            "verified_silence_duration_seconds": 0.94,
+            "cut_sample": 139200,
+            "cut_time_seconds": 2.9,
+            "padding_seconds": 0.1,
+            "quiet_run_start_sample": 98880,
+            "quiet_run_end_sample": 144000,
+            "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+          },
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/c92c27b6ed3344739471243aea464e05/attempt-01/target.wav.search/bb419a244f75457d82afa2ba5c41f5d7",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/c92c27b6ed3344739471243aea464e05/attempt-01/target.wav.search/bb419a244f75457d82afa2ba5c41f5d7/search.json",
+          "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/c92c27b6ed3344739471243aea464e05/attempt-01/raw.wav.receipt.json",
+          "source_provider_receipt_sha256": "c8a8ad90c0b6d9a91230fac17ca13daafeac3d9c8ce5a5b912a2547902b0ebf0",
+          "candidate_sha256": "d83b434cfde21830ed0a6897660cf21f3837cd06f83979ef67ddaacd57c05780",
+          "candidate_id": "candidate-02",
+          "candidate_count": 2,
+          "qualifying_quiet_run_count": 2,
+          "candidate_results": [
+            {
+              "candidate_id": "candidate-01",
+              "quiet_run": {
+                "start_sample": 37440,
+                "end_sample": 49440,
+                "start_seconds": 0.78,
+                "end_seconds": 1.03,
+                "duration_seconds": 0.25
+              },
+              "cut_sample": 44640,
+              "cut_time_seconds": 0.93,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/c92c27b6ed3344739471243aea464e05/attempt-01/target.wav.search/bb419a244f75457d82afa2ba5c41f5d7/candidate-01.wav",
+              "preceding_voiced_seconds": 0.63,
+              "retained_voiced_seconds": 1.69,
+              "retained_duration_seconds": 3.3901666666666666,
+              "candidate_sha256": "5c85c964fc219eba839036aa0cdeae7255a6c369bc92a0f31770ec80e36806a3",
+              "extracted_transcript": "Les lettres ensemble et comme escargots.",
+              "canonical_transcript_tokens": [
+                "les",
+                "lettres",
+                "ensemble",
+                "et",
+                "komme",
+                "eskargots"
+              ],
+              "exact_target_match": false,
+              "target_comparison_score": 0.456,
+              "target_word_count_matches": false,
+              "target_numbers_match": true,
+              "target_comparison_flags": [
+                "TARGET_WORD_COUNT_MISMATCH"
+              ],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": false,
+              "asr_segment_count": 1
+            },
+            {
+              "candidate_id": "candidate-02",
+              "quiet_run": {
+                "start_sample": 98880,
+                "end_sample": 144000,
+                "start_seconds": 2.06,
+                "end_seconds": 3.0,
+                "duration_seconds": 0.94
+              },
+              "cut_sample": 139200,
+              "cut_time_seconds": 2.9,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/c92c27b6ed3344739471243aea464e05/attempt-01/target.wav.search/bb419a244f75457d82afa2ba5c41f5d7/candidate-02.wav",
+              "preceding_voiced_seconds": 1.57,
+              "retained_voiced_seconds": 0.75,
+              "retained_duration_seconds": 1.4201666666666666,
+              "candidate_sha256": "d83b434cfde21830ed0a6897660cf21f3837cd06f83979ef67ddaacd57c05780",
+              "extracted_transcript": "et comme escargot.",
+              "canonical_transcript_tokens": [
+                "et",
+                "komme",
+                "eskargot"
+              ],
+              "exact_target_match": false,
+              "target_comparison_score": 0.8636,
+              "target_word_count_matches": true,
+              "target_numbers_match": true,
+              "target_comparison_flags": [],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": true,
+              "asr_segment_count": 1
+            }
+          ],
+          "human_review": "PENDING",
+          "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+          "delivery": {
+            "policy": "verified-carrier-gap-delivery-v1",
+            "removed_frames": 0,
+            "removed_seconds": 0.0,
+            "retained_verified_quiet_seconds": 0.1,
+            "raw_delivery_start_sample": 139200,
+            "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/c92c27b6ed3344739471243aea464e05/attempt-01/delivery-target.wav",
+            "sha256": "d83b434cfde21830ed0a6897660cf21f3837cd06f83979ef67ddaacd57c05780"
+          }
+        },
+        "candidate": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/c92c27b6ed3344739471243aea464e05/attempt-01/candidate.wav"
+      }
+    ]
+  },
   "corpus_replacement": {
-    "original_sha256": "8bc22027d003ed6a955a9b3356ea905d2e5ab235bcf9629df9b65ed3ea12ef24",
+    "original_sha256": "6df912c381f89913a4e7777427bc250e9ea3026379603e162c91c09fdb75738a",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

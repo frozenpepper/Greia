@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:28:02.657868+00:00",
+  "created_utc": "2026-10-23T01:34:42.507671+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
@@ -8,17 +8,22 @@
     "text": "A comme Abeille",
     "cue_id": "foresta_parole.find_a",
     "output": "activities/foresta_parole/assets/audio/fr/find_a.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic"
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-142752-a7176f64",
-    "idempotency_key": "greia-ff4d299db585459ea5bf970494fd780f",
+    "job_id": "20261023-033424-23f35682",
+    "idempotency_key": "greia-bf03b569053e426c9c28a85fe07b464e",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +46,494 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1213091125,
+    "script_seed": 2751852430,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "effective_delivery": "Speak in French. Lecture chaleureuse et calme. Diction claire et naturelle.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2235634901,
-        "sha256": "8dea6a2062db051a924f9817bbb2c38693dffee6848c907cec74c66fccc498c7",
+        "seed": 458115275,
+        "sha256": "856cf4a4c49c9f40bf697ed04452e8068fac45d8d31553b4906223f49625d970",
         "generation": {
-          "elapsed_seconds": 9.78524004202336,
+          "elapsed_seconds": 15.318562542001018,
           "model_load_seconds": 0.0,
-          "rtf": 4.076900232771346,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.8294810737888465,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-audio-parakeet-tdt-v3",
+    "transcript": "Ah, comme abeille.",
+    "score": 0.8624,
+    "detail": "Delivered target transcribed and screened; human listening remains pending",
+    "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+    "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+    "flags": [],
+    "metrics": {
+      "duration_seconds": 1.790204081632653,
+      "rms_dbfs": -35.93,
+      "peak": 0.17975,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.1,
+      "trailing_silence_seconds": 0.36,
+      "longest_internal_pause_seconds": 0.48
+    }
   },
-  "attempts": 1,
+  "attempts": 3,
   "output": {
     "path": "activities/foresta_parole/assets/audio/fr/find_a.wav",
-    "bytes": 105926,
-    "sha256": "2bce6d60f7ac3ece4a3f86611421cb0ac311a83ec4ebc52371ef078bc3e2a61b"
+    "bytes": 79026,
+    "sha256": "3a94c4eed5ed1acf25483322c0c51859747dc9659a73d39e6525f2a3603610f5"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "short_phrase": {
+    "mode": "automatic-carrier",
+    "composition_policy": "natural-context-period-v1",
+    "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/362ba0402f66462fabcc13deee42490c",
+    "prefix": "Regardons les lettres ensemble.",
+    "composite_text": "Regardons les lettres ensemble.\n\nA comme Abeille",
+    "effective_delivery": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "extraction": {
+      "schema_version": 1,
+      "algorithm_version": "greia-spoken-carrier-extractor-v7",
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "status": "EXTRACTED_PENDING_LISTENING",
+      "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/362ba0402f66462fabcc13deee42490c/attempt-03/raw.wav",
+      "source_sha256": "856cf4a4c49c9f40bf697ed04452e8068fac45d8d31553b4906223f49625d970",
+      "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/362ba0402f66462fabcc13deee42490c/attempt-03/target.wav",
+      "output_sha256": "2030ae0b380c7cf48ac2ce94316df9bb4582d6a6b54b08a85443ea5e524040a5",
+      "output_bytes": 171900,
+      "locale": "fr",
+      "prefix": "Regardons les lettres ensemble.",
+      "target": "A comme Abeille",
+      "remove_first_words": 4,
+      "ignore_accents": true,
+      "target_verification_requested": "warn",
+      "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+      "target_comparison_score": 0.8624,
+      "target_word_count_matches": true,
+      "target_numbers_match": true,
+      "target_comparison_flags": [],
+      "target_transcript_warning": true,
+      "recognizer": "mlx-audio-parakeet-tdt-v3",
+      "recognizer_version": "0.5.0",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "extracted_transcript": "Ah, comme abeille.",
+      "expected_target_tokens": [
+        "a",
+        "komme",
+        "abeille"
+      ],
+      "extracted_target_tokens": [
+        "ah",
+        "komme",
+        "abeille"
+      ],
+      "extracted_target_exact_match": false,
+      "transcription_settings": {
+        "language_detection": "automatic",
+        "expected_text_prompt": null,
+        "timestamps": "model-provided-token-timestamps"
+      },
+      "sample_rate": 48000,
+      "duration_seconds": 4.000166666666667,
+      "boundary": {
+        "search_strategy": "target-only-global-quiet-run-v7",
+        "verified_silence_start_seconds": 2.02,
+        "verified_silence_end_seconds": 2.31,
+        "verified_silence_duration_seconds": 0.29,
+        "cut_sample": 106080,
+        "cut_time_seconds": 2.21,
+        "padding_seconds": 0.1,
+        "quiet_run_start_sample": 96960,
+        "quiet_run_end_sample": 110880,
+        "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+      },
+      "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/362ba0402f66462fabcc13deee42490c/attempt-03/target.wav.search/1ef3eb6dc9824091abe3351fd4029096",
+      "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/362ba0402f66462fabcc13deee42490c/attempt-03/target.wav.search/1ef3eb6dc9824091abe3351fd4029096/search.json",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/362ba0402f66462fabcc13deee42490c/attempt-03/raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "4d432ffd06168a1c445f49a37af0b893e043bcc0260a2aae724d0a5160f4768a",
+      "candidate_sha256": "2030ae0b380c7cf48ac2ce94316df9bb4582d6a6b54b08a85443ea5e524040a5",
+      "candidate_id": "candidate-02",
+      "candidate_count": 3,
+      "qualifying_quiet_run_count": 3,
+      "candidate_results": [
+        {
+          "candidate_id": "candidate-01",
+          "quiet_run": {
+            "start_sample": 39840,
+            "end_sample": 62880,
+            "start_seconds": 0.83,
+            "end_seconds": 1.31,
+            "duration_seconds": 0.48
+          },
+          "cut_sample": 58080,
+          "cut_time_seconds": 1.21,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/362ba0402f66462fabcc13deee42490c/attempt-03/target.wav.search/1ef3eb6dc9824091abe3351fd4029096/candidate-01.wav",
+          "preceding_voiced_seconds": 0.49,
+          "retained_voiced_seconds": 1.13,
+          "retained_duration_seconds": 2.7901666666666665,
+          "candidate_sha256": "79e49fb1876f8b75a0012e0be3c3223a9d15904937b45a3df93966dd77b4827e",
+          "extracted_transcript": "Relaissez T à Comabeille.",
+          "canonical_transcript_tokens": [
+            "relaissez",
+            "t",
+            "a",
+            "komabeille"
+          ],
+          "exact_target_match": false,
+          "target_comparison_score": 0.5,
+          "target_word_count_matches": false,
+          "target_numbers_match": true,
+          "target_comparison_flags": [
+            "TARGET_WORD_COUNT_MISMATCH"
+          ],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": false,
+          "asr_segment_count": 1
+        },
+        {
+          "candidate_id": "candidate-02",
+          "quiet_run": {
+            "start_sample": 96960,
+            "end_sample": 110880,
+            "start_seconds": 2.02,
+            "end_seconds": 2.31,
+            "duration_seconds": 0.29
+          },
+          "cut_sample": 106080,
+          "cut_time_seconds": 2.21,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/362ba0402f66462fabcc13deee42490c/attempt-03/target.wav.search/1ef3eb6dc9824091abe3351fd4029096/candidate-02.wav",
+          "preceding_voiced_seconds": 1.04,
+          "retained_voiced_seconds": 0.58,
+          "retained_duration_seconds": 1.7901666666666667,
+          "candidate_sha256": "2030ae0b380c7cf48ac2ce94316df9bb4582d6a6b54b08a85443ea5e524040a5",
+          "extracted_transcript": "Ah, comme abeille.",
+          "canonical_transcript_tokens": [
+            "ah",
+            "komme",
+            "abeille"
+          ],
+          "exact_target_match": false,
+          "target_comparison_score": 0.8624,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": true,
+          "asr_segment_count": 1
+        },
+        {
+          "candidate_id": "candidate-03",
+          "quiet_run": {
+            "start_sample": 117600,
+            "end_sample": 144480,
+            "start_seconds": 2.45,
+            "end_seconds": 3.01,
+            "duration_seconds": 0.56
+          },
+          "cut_sample": 139680,
+          "cut_time_seconds": 2.91,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/362ba0402f66462fabcc13deee42490c/attempt-03/target.wav.search/1ef3eb6dc9824091abe3351fd4029096/candidate-03.wav",
+          "preceding_voiced_seconds": 1.18,
+          "retained_voiced_seconds": 0.44,
+          "retained_duration_seconds": 1.0901666666666667,
+          "candidate_sha256": "adbec1831b3bf14bdcf6b9a1687b78e3b4b53c2806c0b3b3c96b739fa95ebb87",
+          "extracted_transcript": "Comme abeille.",
+          "canonical_transcript_tokens": [
+            "komme",
+            "abeille"
+          ],
+          "exact_target_match": false,
+          "target_comparison_score": 0.8836,
+          "target_word_count_matches": false,
+          "target_numbers_match": true,
+          "target_comparison_flags": [
+            "TARGET_WORD_COUNT_MISMATCH"
+          ],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": false,
+          "asr_segment_count": 1
+        }
+      ],
+      "human_review": "PENDING",
+      "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+      "delivery": {
+        "policy": "verified-carrier-gap-delivery-v1",
+        "removed_frames": 0,
+        "removed_seconds": 0.0,
+        "retained_verified_quiet_seconds": 0.1,
+        "raw_delivery_start_sample": 106080,
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/362ba0402f66462fabcc13deee42490c/attempt-03/delivery-target.wav",
+        "sha256": "2030ae0b380c7cf48ac2ce94316df9bb4582d6a6b54b08a85443ea5e524040a5"
+      }
+    },
+    "quality": {
+      "disposition": "PASS",
+      "score": 0.8624,
+      "transcript": "Ah, comme abeille.",
+      "metrics": {
+        "duration_seconds": 1.790204081632653,
+        "rms_dbfs": -35.93,
+        "peak": 0.17975,
+        "clipped_fraction": 0.0,
+        "leading_silence_seconds": 0.1,
+        "trailing_silence_seconds": 0.36,
+        "longest_internal_pause_seconds": 0.48
+      },
+      "flags": [],
+      "ignore_accents": true,
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "detail": "Delivered target transcribed and screened; human listening remains pending"
+    },
+    "history": [
+      {
+        "attempt": 1,
+        "status": "REJECTED_CUT",
+        "error": "one or more quiet-run candidates failed the energetic-signal floor",
+        "evidence": {
+          "candidate_errors": [
+            "insufficient voiced duration in retained suffix"
+          ],
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/362ba0402f66462fabcc13deee42490c/attempt-01/target.wav.search/ed675d6729de465fa5ffe4cac1a7a24f",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/362ba0402f66462fabcc13deee42490c/attempt-01/target.wav.search/ed675d6729de465fa5ffe4cac1a7a24f/search.json"
+        }
+      },
+      {
+        "attempt": 2,
+        "status": "REJECTED_CUT",
+        "error": "no candidate suffix meets target verification policy",
+        "evidence": {
+          "candidate_transcripts": [
+            "comme abeille."
+          ],
+          "matching_candidate_ids": [],
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/362ba0402f66462fabcc13deee42490c/attempt-02/target.wav.search/f9b25240595041d5b84877f387373686",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/362ba0402f66462fabcc13deee42490c/attempt-02/target.wav.search/f9b25240595041d5b84877f387373686/search.json"
+        }
+      },
+      {
+        "attempt": 3,
+        "status": "PASS",
+        "quality": {
+          "disposition": "PASS",
+          "score": 0.8624,
+          "transcript": "Ah, comme abeille.",
+          "metrics": {
+            "duration_seconds": 1.790204081632653,
+            "rms_dbfs": -35.93,
+            "peak": 0.17975,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.1,
+            "trailing_silence_seconds": 0.36,
+            "longest_internal_pause_seconds": 0.48
+          },
+          "flags": [],
+          "ignore_accents": true,
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "detail": "Delivered target transcribed and screened; human listening remains pending"
+        },
+        "extraction": {
+          "schema_version": 1,
+          "algorithm_version": "greia-spoken-carrier-extractor-v7",
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "status": "EXTRACTED_PENDING_LISTENING",
+          "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/362ba0402f66462fabcc13deee42490c/attempt-03/raw.wav",
+          "source_sha256": "856cf4a4c49c9f40bf697ed04452e8068fac45d8d31553b4906223f49625d970",
+          "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/362ba0402f66462fabcc13deee42490c/attempt-03/target.wav",
+          "output_sha256": "2030ae0b380c7cf48ac2ce94316df9bb4582d6a6b54b08a85443ea5e524040a5",
+          "output_bytes": 171900,
+          "locale": "fr",
+          "prefix": "Regardons les lettres ensemble.",
+          "target": "A comme Abeille",
+          "remove_first_words": 4,
+          "ignore_accents": true,
+          "target_verification_requested": "warn",
+          "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+          "target_comparison_score": 0.8624,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_transcript_warning": true,
+          "recognizer": "mlx-audio-parakeet-tdt-v3",
+          "recognizer_version": "0.5.0",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "extracted_transcript": "Ah, comme abeille.",
+          "expected_target_tokens": [
+            "a",
+            "komme",
+            "abeille"
+          ],
+          "extracted_target_tokens": [
+            "ah",
+            "komme",
+            "abeille"
+          ],
+          "extracted_target_exact_match": false,
+          "transcription_settings": {
+            "language_detection": "automatic",
+            "expected_text_prompt": null,
+            "timestamps": "model-provided-token-timestamps"
+          },
+          "sample_rate": 48000,
+          "duration_seconds": 4.000166666666667,
+          "boundary": {
+            "search_strategy": "target-only-global-quiet-run-v7",
+            "verified_silence_start_seconds": 2.02,
+            "verified_silence_end_seconds": 2.31,
+            "verified_silence_duration_seconds": 0.29,
+            "cut_sample": 106080,
+            "cut_time_seconds": 2.21,
+            "padding_seconds": 0.1,
+            "quiet_run_start_sample": 96960,
+            "quiet_run_end_sample": 110880,
+            "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+          },
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/362ba0402f66462fabcc13deee42490c/attempt-03/target.wav.search/1ef3eb6dc9824091abe3351fd4029096",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/362ba0402f66462fabcc13deee42490c/attempt-03/target.wav.search/1ef3eb6dc9824091abe3351fd4029096/search.json",
+          "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/362ba0402f66462fabcc13deee42490c/attempt-03/raw.wav.receipt.json",
+          "source_provider_receipt_sha256": "4d432ffd06168a1c445f49a37af0b893e043bcc0260a2aae724d0a5160f4768a",
+          "candidate_sha256": "2030ae0b380c7cf48ac2ce94316df9bb4582d6a6b54b08a85443ea5e524040a5",
+          "candidate_id": "candidate-02",
+          "candidate_count": 3,
+          "qualifying_quiet_run_count": 3,
+          "candidate_results": [
+            {
+              "candidate_id": "candidate-01",
+              "quiet_run": {
+                "start_sample": 39840,
+                "end_sample": 62880,
+                "start_seconds": 0.83,
+                "end_seconds": 1.31,
+                "duration_seconds": 0.48
+              },
+              "cut_sample": 58080,
+              "cut_time_seconds": 1.21,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/362ba0402f66462fabcc13deee42490c/attempt-03/target.wav.search/1ef3eb6dc9824091abe3351fd4029096/candidate-01.wav",
+              "preceding_voiced_seconds": 0.49,
+              "retained_voiced_seconds": 1.13,
+              "retained_duration_seconds": 2.7901666666666665,
+              "candidate_sha256": "79e49fb1876f8b75a0012e0be3c3223a9d15904937b45a3df93966dd77b4827e",
+              "extracted_transcript": "Relaissez T à Comabeille.",
+              "canonical_transcript_tokens": [
+                "relaissez",
+                "t",
+                "a",
+                "komabeille"
+              ],
+              "exact_target_match": false,
+              "target_comparison_score": 0.5,
+              "target_word_count_matches": false,
+              "target_numbers_match": true,
+              "target_comparison_flags": [
+                "TARGET_WORD_COUNT_MISMATCH"
+              ],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": false,
+              "asr_segment_count": 1
+            },
+            {
+              "candidate_id": "candidate-02",
+              "quiet_run": {
+                "start_sample": 96960,
+                "end_sample": 110880,
+                "start_seconds": 2.02,
+                "end_seconds": 2.31,
+                "duration_seconds": 0.29
+              },
+              "cut_sample": 106080,
+              "cut_time_seconds": 2.21,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/362ba0402f66462fabcc13deee42490c/attempt-03/target.wav.search/1ef3eb6dc9824091abe3351fd4029096/candidate-02.wav",
+              "preceding_voiced_seconds": 1.04,
+              "retained_voiced_seconds": 0.58,
+              "retained_duration_seconds": 1.7901666666666667,
+              "candidate_sha256": "2030ae0b380c7cf48ac2ce94316df9bb4582d6a6b54b08a85443ea5e524040a5",
+              "extracted_transcript": "Ah, comme abeille.",
+              "canonical_transcript_tokens": [
+                "ah",
+                "komme",
+                "abeille"
+              ],
+              "exact_target_match": false,
+              "target_comparison_score": 0.8624,
+              "target_word_count_matches": true,
+              "target_numbers_match": true,
+              "target_comparison_flags": [],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": true,
+              "asr_segment_count": 1
+            },
+            {
+              "candidate_id": "candidate-03",
+              "quiet_run": {
+                "start_sample": 117600,
+                "end_sample": 144480,
+                "start_seconds": 2.45,
+                "end_seconds": 3.01,
+                "duration_seconds": 0.56
+              },
+              "cut_sample": 139680,
+              "cut_time_seconds": 2.91,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/362ba0402f66462fabcc13deee42490c/attempt-03/target.wav.search/1ef3eb6dc9824091abe3351fd4029096/candidate-03.wav",
+              "preceding_voiced_seconds": 1.18,
+              "retained_voiced_seconds": 0.44,
+              "retained_duration_seconds": 1.0901666666666667,
+              "candidate_sha256": "adbec1831b3bf14bdcf6b9a1687b78e3b4b53c2806c0b3b3c96b739fa95ebb87",
+              "extracted_transcript": "Comme abeille.",
+              "canonical_transcript_tokens": [
+                "komme",
+                "abeille"
+              ],
+              "exact_target_match": false,
+              "target_comparison_score": 0.8836,
+              "target_word_count_matches": false,
+              "target_numbers_match": true,
+              "target_comparison_flags": [
+                "TARGET_WORD_COUNT_MISMATCH"
+              ],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": false,
+              "asr_segment_count": 1
+            }
+          ],
+          "human_review": "PENDING",
+          "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+          "delivery": {
+            "policy": "verified-carrier-gap-delivery-v1",
+            "removed_frames": 0,
+            "removed_seconds": 0.0,
+            "retained_verified_quiet_seconds": 0.1,
+            "raw_delivery_start_sample": 106080,
+            "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/362ba0402f66462fabcc13deee42490c/attempt-03/delivery-target.wav",
+            "sha256": "2030ae0b380c7cf48ac2ce94316df9bb4582d6a6b54b08a85443ea5e524040a5"
+          }
+        },
+        "candidate": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/362ba0402f66462fabcc13deee42490c/attempt-03/candidate.wav"
+      }
+    ]
+  },
   "corpus_replacement": {
-    "original_sha256": "924ccf4f5b1cc30a01244d02f5c5eabb3e38e0e25a1bdcf71eb941cb6124fee9",
+    "original_sha256": "63050aae70232b6d78f359a70dddb38991cd7ae5ded46f9159ea8c29a3656142",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

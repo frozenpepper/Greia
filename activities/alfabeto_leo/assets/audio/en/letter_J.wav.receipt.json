@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T20:45:39.233489+00:00",
+  "created_utc": "2026-10-21T15:13:06.245441+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Listen to this phrase in English.",
+    "prefix_word_count": 6,
+    "target": "J as Jellyfish",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Listen to this phrase in English. J as Jellyfish",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "J as Jellyfish",
+    "cue_id": "alfabeto_leo.letter_J.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "J as Jellyfish",
     "cue_id": "alfabeto_leo.letter_J.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/alfabeto_leo/assets/audio/en/letter_J.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261019-224530-e7adc5cb",
-    "idempotency_key": "greia-0161bf9e0e7e43c987d98fc284277d35",
+    "job_id": "20261021-171245-dabdde5e",
+    "idempotency_key": "greia-643b63340c774d5787055f8af37d1c75",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,232 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 4253692385,
+    "script_seed": 2414946714,
     "language_direction": "English",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak naturally in English. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in English. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1473702438,
-        "sha256": "4dc69c3dd0e223d964e9e125d384cf15d084669c0b6a71f4b16b5320739fe165",
+        "seed": 2211353726,
+        "sha256": "1bbb17c341fab9a468a1809306abe43b9ec0f70d5796ae20e91ad7be3d7f0e44",
         "generation": {
-          "elapsed_seconds": 8.73838454199722,
+          "elapsed_seconds": 19.687525000001187,
           "model_load_seconds": 0.0,
-          "rtf": 4.550846910162601,
-          "peak_memory_gb": 8.21220922
+          "rtf": 4.242848676412741,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " J is jellyfish.",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/alfabeto_leo/assets/audio/en/letter_J.wav.raw.wav",
+    "sha256": "274ab6445845f9f2c4c98bc00d125c1c4e34cffaf4b89f68fd7c643d60892dfb",
+    "receipt_sha256": "2e7ce5164e655952d20758af644f1dfc563b944333a36f84b78936997adffd64"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_J.wav.extracted.wav",
+    "sha256": "3e269e3f29d8e283a7c455d0b98eabc05f9db58f170e57ff5209e888fbc26b2c"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/alfabeto_leo/assets/audio/en/letter_J.wav.raw.wav",
+    "source_sha256": "274ab6445845f9f2c4c98bc00d125c1c4e34cffaf4b89f68fd7c643d60892dfb",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/alfabeto_leo/assets/audio/en/letter_J.wav.extracted.wav",
+    "output_sha256": "3e269e3f29d8e283a7c455d0b98eabc05f9db58f170e57ff5209e888fbc26b2c",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "J as Jellyfish",
+      "locale": "en",
+      "cue_id": "alfabeto_leo.letter_J.en",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/alfabeto_leo/assets/audio/en/letter_J.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "2e7ce5164e655952d20758af644f1dfc563b944333a36f84b78936997adffd64"
+    },
+    "locale": "en",
+    "prefix": "Listen to this phrase in English.",
+    "target": "J as Jellyfish",
+    "remove_first_words": 6,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Listen to this phrase in English. J is jellyfish.",
+    "extracted_transcript": " J is jellyfish.",
+    "raw_word_alignment": [
+      {
+        "word": "listen",
+        "start_seconds": 0.0,
+        "end_seconds": 0.6
+      },
+      {
+        "word": "to",
+        "start_seconds": 0.6,
+        "end_seconds": 0.82
+      },
+      {
+        "word": "this",
+        "start_seconds": 0.82,
+        "end_seconds": 0.96
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.96,
+        "end_seconds": 1.26
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.26,
+        "end_seconds": 1.44
+      },
+      {
+        "word": "english",
+        "start_seconds": 1.44,
+        "end_seconds": 1.92
+      },
+      {
+        "word": "j",
+        "start_seconds": 2.44,
+        "end_seconds": 3.06
+      },
+      {
+        "word": "is",
+        "start_seconds": 3.06,
+        "end_seconds": 3.46
+      },
+      {
+        "word": "jellyfish",
+        "start_seconds": 3.46,
+        "end_seconds": 4.26
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "j",
+        "start_seconds": 0.0,
+        "end_seconds": 0.86
+      },
+      {
+        "word": "is",
+        "start_seconds": 0.86,
+        "end_seconds": 1.28
+      },
+      {
+        "word": "jellyfish",
+        "start_seconds": 1.28,
+        "end_seconds": 2.0
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.4931048785938936,
+        "no_speech_prob": 0.014774786308407784,
+        "compression_ratio": 0.9245283018867925,
+        "word_probabilities": [
+          0.873046875,
+          0.98828125,
+          0.98193359375,
+          0.99755859375,
+          0.95556640625,
+          0.98193359375
+        ]
+      },
+      {
+        "avg_logprob": -0.4931048785938936,
+        "no_speech_prob": 0.014774786308407784,
+        "compression_ratio": 0.9245283018867925,
+        "word_probabilities": [
+          0.364990234375,
+          0.379638671875,
+          0.8818359375
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6026345491409302,
+        "no_speech_prob": 0.12140434980392456,
+        "compression_ratio": 0.6521739130434783,
+        "word_probabilities": [
+          0.51513671875,
+          0.59619140625,
+          0.91015625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 120,
+    "extracted_voiced_seconds": 1.2,
+    "unremoved_raw_target_tokens": [
+      "j",
+      "is",
+      "jellyfish"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "j",
+      "is",
+      "jellyfish"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 4.640181405895691,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.92,
+      "target_first_word_start_seconds": 2.44,
+      "gap_seconds": 0.35918367346938773,
+      "verified_silence_start_seconds": 2.029750566893424,
+      "verified_silence_end_seconds": 2.3889342403628118,
+      "gap_rms_dbfs": -58.317,
+      "gap_peak_dbfs": -37.225,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.209342403628118,
+      "cut_sample": 48716,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/en/letter_J.wav",
-    "bytes": 84758,
-    "sha256": "bdae367e4d1a81e061eb663f92296665f269d7f3f41aff2d5b57409e3c07e885"
+    "sha256": "32029baabd0e3bab39c0b54496faed1e64b7ec1761a1524c11f652dceb6aa613",
+    "bytes": 107278
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "ef99b28eb2db0ad98a6e4bfad93fb84c464ba37816fff78d043ff9c62373a431",
+    "original_sha256": "bdae367e4d1a81e061eb663f92296665f269d7f3f41aff2d5b57409e3c07e885",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T16:39:30.804555+00:00",
+  "created_utc": "2026-10-22T09:50:18.795525+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "Espejos mágicos",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español...\n\nEspejos mágicos",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "lilli",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "Espejos mágicos",
+    "cue_id": "specchi_magici.title.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "Espejos mágicos",
     "cue_id": "specchi_magici.title.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/specchi_magici/locales/es/audio/activity-title.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.lilli.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "job_id": "20261020-183920-902f5ba5",
-    "idempotency_key": "greia-5f6794cb45a047b08d40c89e93278bec",
+    "job_id": "20261022-114959-74e8930a",
+    "idempotency_key": "greia-61705af503804ca896e144e51a173a85",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,246 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1409686231,
+    "script_seed": 4185287634,
     "language_direction": "Spanish",
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "effective_delivery": "Speak in Spanish. Lilli, a sparkly, affectionate storybook unicorn. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1655399208,
-        "sha256": "63b9d7253ddbad629932c601f31a51d0421c37ca29154aca1c0b17c0b8ce948a",
+        "seed": 952485917,
+        "sha256": "1eb19d9c4de1233e93617029fa02b865e74f2d1e4c50c40b212b9332931c7784",
         "generation": {
-          "elapsed_seconds": 9.83666558394907,
+          "elapsed_seconds": 17.05543774997932,
           "model_load_seconds": 0.0,
-          "rtf": 5.122818635855778,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.6756088682114836,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " Espejos mágicos.",
+    "metrics": {
+      "duration_seconds": 1.6221315192743764,
+      "rms_dbfs": -26.6,
+      "peak": 0.27994,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.1,
+      "trailing_silence_seconds": 0.36,
+      "longest_internal_pause_seconds": 0.12
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/specchi_magici/locales/es/audio/activity-title.wav.raw.wav",
+    "sha256": "3a8049364b11fdc07fa761438d18a28703b0e116dcc11c1666f4e2ba6a8fd343",
+    "receipt_sha256": "0d4f0a77361cf5f6fdea8863734949f6b3655396ac7a2faf53a33ff8077c70ee"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/specchi_magici/locales/es/audio/activity-title.wav.extracted.wav",
+    "sha256": "8abf3daeca7157facd9c66494c11a5f04c5130172b913468aabedb425d094042"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/specchi_magici/locales/es/audio/activity-title.wav.delivery.wav",
+    "sha256": "2c229da9e099f895d99d13cd9f93f71f54010abc691c6cb1832c4b109fb5eeee"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/activities/specchi_magici/locales/es/audio/activity-title.wav.raw.wav",
+    "source_sha256": "3a8049364b11fdc07fa761438d18a28703b0e116dcc11c1666f4e2ba6a8fd343",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/activities/specchi_magici/locales/es/audio/activity-title.wav.extracted.wav",
+    "output_sha256": "8abf3daeca7157facd9c66494c11a5f04c5130172b913468aabedb425d094042",
+    "target_request": {
+      "speaker": "lilli",
+      "kind": "character_dialogue",
+      "text": "Espejos mágicos",
+      "locale": "es",
+      "cue_id": "specchi_magici.title.es",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/activities/specchi_magici/locales/es/audio/activity-title.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "0d4f0a77361cf5f6fdea8863734949f6b3655396ac7a2faf53a33ff8077c70ee"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "Espejos mágicos",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Escucha esta frase en español, betan espejos mágicos.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Espejos mágicos.",
+    "raw_word_alignment": [
+      {
+        "word": "escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.46
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.46,
+        "end_seconds": 0.86
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.86,
+        "end_seconds": 1.14
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.14,
+        "end_seconds": 1.4
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.4,
+        "end_seconds": 1.92
+      },
+      {
+        "word": "betan",
+        "start_seconds": 2.26,
+        "end_seconds": 2.88
+      },
+      {
+        "word": "espejos",
+        "start_seconds": 2.88,
+        "end_seconds": 3.62
+      },
+      {
+        "word": "mágicos",
+        "start_seconds": 3.62,
+        "end_seconds": 4.24
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "espejos",
+        "start_seconds": 0.0,
+        "end_seconds": 0.68
+      },
+      {
+        "word": "mágicos",
+        "start_seconds": 0.68,
+        "end_seconds": 1.28
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.4499722586737739,
+        "no_speech_prob": 0.008162584155797958,
+        "compression_ratio": 0.9322033898305084,
+        "word_probabilities": [
+          0.78857421875,
+          0.94580078125,
+          0.9873046875,
+          0.93310546875,
+          0.9794921875,
+          0.38232421875,
+          0.939453125,
+          0.95947265625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.5461074829101562,
+        "no_speech_prob": 0.06952200829982758,
+        "compression_ratio": 0.68,
+        "word_probabilities": [
+          0.72119140625,
+          0.90478515625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": false,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 6,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 72,
+    "extracted_voiced_seconds": 0.72,
+    "unremoved_raw_target_tokens": [
+      "espejos",
+      "mágicos"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "espejos",
+      "mágicos"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 4.640181405895691,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-expanded-boundary",
+      "search_start_seconds": 2.26,
+      "search_end_seconds": 3.62,
+      "prefix_last_word_end_seconds": 2.88,
+      "target_first_word_start_seconds": 2.88,
+      "gap_seconds": 0.27936507936507937,
+      "verified_silence_start_seconds": 2.838684807256236,
+      "verified_silence_end_seconds": 3.118049886621315,
+      "gap_rms_dbfs": -58.435,
+      "gap_peak_dbfs": -39.628,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.9783673469387755,
+      "cut_sample": 65673,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 875,
+      "removed_seconds": 0.03968253968253968,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 66548,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/activities/specchi_magici/locales/es/audio/activity-title.wav.delivery.wav",
+      "sha256": "2c229da9e099f895d99d13cd9f93f71f54010abc691c6cb1832c4b109fb5eeee"
+    }
+  },
   "output": {
     "path": "activities/specchi_magici/locales/es/audio/activity-title.wav",
-    "bytes": 84758,
-    "sha256": "a60f031ee2f586c9fa6162751107e560dd590019dd49192e5d707cf9ca54689f"
+    "sha256": "989dc81a8752d806f899f74458fda719b25f499d2c6c43525323b2dc2aa07e9c",
+    "bytes": 71614
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "b03e762f82bfb23b6d313c4ce177779d9e90f62fd39574cb8b1899a4895a46b9",
+    "original_sha256": "a923c7ab81b1f586f4cef0775d8d7077bd9b6d06d28ce033aebd2081a6ed0b17",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

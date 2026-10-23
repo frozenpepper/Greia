@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T13:15:17.383181+00:00",
+  "created_utc": "2026-10-21T16:43:19.949896+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "Memory delle Meraviglie",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. Memory delle Meraviglie",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Memory delle Meraviglie",
+    "cue_id": "activity.title",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Memory delle Meraviglie",
     "cue_id": "activity.title",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/memory_meraviglie/locales/it/audio/activity-title.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-151507-b7d8b021",
-    "idempotency_key": "greia-97725809186d46d8bd0604527774c27c",
+    "job_id": "20261021-184304-c396e981",
+    "idempotency_key": "greia-e0c7a2c0478b4efa9ac7c0579d631713",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,219 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 4215791523,
+    "script_seed": 2878165575,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3251314449,
-        "sha256": "0e01288f84d5c748bc943b1ff9fcb494fe4467613be8a1fe468bcee99773c14c",
+        "seed": 3128612374,
+        "sha256": "3b3f79a57885212ea8d143263e9044af86a3e8f845e62ee0261e189f6dbd4168",
         "generation": {
-          "elapsed_seconds": 9.936559791967738,
+          "elapsed_seconds": 14.636162334005348,
           "model_load_seconds": 0.0,
-          "rtf": 4.776809450509289,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.658888129829261,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " memori delle meraviglie",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/memory_meraviglie/locales/it/audio/activity-title.wav.raw.wav",
+    "sha256": "824d675dc7c214e34ceb59fd319ec207e8d320bf96a9f50d7ed1a1d0f8cfda8f",
+    "receipt_sha256": "ac4fde2facaf5fedaa00a83fe9c22f010d6e20e018f112a1a937afdc85dff1d5"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/memory_meraviglie/locales/it/audio/activity-title.wav.extracted.wav",
+    "sha256": "503e11f2f9fe84a54ab11b5e2c6de6e5a9e5599b82facfd38bbca1a9b7fec618"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/memory_meraviglie/locales/it/audio/activity-title.wav.raw.wav",
+    "source_sha256": "824d675dc7c214e34ceb59fd319ec207e8d320bf96a9f50d7ed1a1d0f8cfda8f",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/memory_meraviglie/locales/it/audio/activity-title.wav.extracted.wav",
+    "output_sha256": "503e11f2f9fe84a54ab11b5e2c6de6e5a9e5599b82facfd38bbca1a9b7fec618",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Memory delle Meraviglie",
+      "locale": "it",
+      "cue_id": "activity.title",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/memory_meraviglie/locales/it/audio/activity-title.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "ac4fde2facaf5fedaa00a83fe9c22f010d6e20e018f112a1a937afdc85dff1d5"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "Memory delle Meraviglie",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " ascolta questa frase in italiano. Memori delle meraviglie.",
+    "extracted_transcript": " memori delle meraviglie",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.66
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.66,
+        "end_seconds": 0.96
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.96,
+        "end_seconds": 1.34
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.34,
+        "end_seconds": 1.46
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.46,
+        "end_seconds": 1.9
+      },
+      {
+        "word": "memori",
+        "start_seconds": 2.46,
+        "end_seconds": 2.88
+      },
+      {
+        "word": "delle",
+        "start_seconds": 2.88,
+        "end_seconds": 3.14
+      },
+      {
+        "word": "meraviglie",
+        "start_seconds": 3.14,
+        "end_seconds": 3.74
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "memori",
+        "start_seconds": 0.0,
+        "end_seconds": 0.78
+      },
+      {
+        "word": "delle",
+        "start_seconds": 0.78,
+        "end_seconds": 0.96
+      },
+      {
+        "word": "meraviglie",
+        "start_seconds": 0.96,
+        "end_seconds": 1.6
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.47231684233012955,
+        "no_speech_prob": 0.001364920288324356,
+        "compression_ratio": 0.9354838709677419,
+        "word_probabilities": [
+          0.66943359375,
+          0.8212890625,
+          0.91845703125,
+          0.50830078125,
+          0.9384765625,
+          0.7060546875,
+          0.96923828125,
+          0.95703125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.4167960166931152,
+        "no_speech_prob": 0.01916564255952835,
+        "compression_ratio": 0.7419354838709677,
+        "word_probabilities": [
+          0.46044921875,
+          0.96337890625,
+          0.9609375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 122,
+    "extracted_voiced_seconds": 1.22,
+    "unremoved_raw_target_tokens": [
+      "memori",
+      "delle",
+      "meraviglie"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "memori",
+      "delle",
+      "meraviglie"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 4.000181405895692,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.9,
+      "target_first_word_start_seconds": 2.46,
+      "gap_seconds": 0.4489795918367347,
+      "verified_silence_start_seconds": 1.9598639455782314,
+      "verified_silence_end_seconds": 2.408843537414966,
+      "gap_rms_dbfs": -59.469,
+      "gap_peak_dbfs": -40.767,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.1843537414965986,
+      "cut_sample": 48165,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/memory_meraviglie/locales/it/audio/activity-title.wav",
-    "bytes": 91814,
-    "sha256": "2cfde48b94ef3bcb9e319a2dd76c89929bb0b2de49422c7ecba7551a2e0f5704"
+    "sha256": "5be8b7d3003ea35cba0aa88c3bd3be9d7a65edeb19175aef50da6afc89d72d6d",
+    "bytes": 80156
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "23798b3162447adbb9a1d07d5b75d01e32d1ffa07d613f04d741a2f9f8066719",
+    "original_sha256": "2cfde48b94ef3bcb9e319a2dd76c89929bb0b2de49422c7ecba7551a2e0f5704",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

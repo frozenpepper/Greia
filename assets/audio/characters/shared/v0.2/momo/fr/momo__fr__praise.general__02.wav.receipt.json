@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T13:08:56.129646+00:00",
+  "created_utc": "2026-10-21T18:14:13.337766+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "Super travail !",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. Super travail !",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "momo",
+    "kind": "shared_character_utterance",
+    "locale": "fr",
+    "text": "Super travail !",
+    "cue_id": "greia.shared.momo__fr__praise.general__02.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "momo",
     "kind": "shared_character_utterance",
     "locale": "fr",
     "text": "Super travail !",
     "cue_id": "greia.shared.momo__fr__praise.general__02.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "assets/audio/characters/shared/v0.2/momo/fr/momo__fr__praise.general__02.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Warm, measured encouragement. Emphasize the successful action gently, at a relaxed conversational pace."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.momo.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261021-150847-a3eb8321",
-    "idempotency_key": "greia-cc944f3146b448f4a0e63fdf3089d450",
+    "job_id": "20261021-201356-e8b8cb87",
+    "idempotency_key": "greia-4dbc0eb686a0450a8276d99d637e9549",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,212 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2598975933,
+    "script_seed": 1973555005,
     "language_direction": "French",
-    "delivery_prompt": "Warm, measured encouragement. Emphasize the successful action gently, at a relaxed conversational pace.",
-    "effective_delivery": "Speak in French. Warm, measured encouragement. Emphasize the successful action gently, at a relaxed conversational pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 644659422,
-        "sha256": "dd42ef5a2dffcd49cad8a4e1b02c6f3175355561ec663c096fd2354be1e66111",
+        "seed": 2094488648,
+        "sha256": "adf7e7cb2b5756ab00ee35c7adc6730bdbd7167281c822400f01b75d0cbbb4d2",
         "generation": {
-          "elapsed_seconds": 7.723333875001117,
+          "elapsed_seconds": 16.039128333999543,
           "model_load_seconds": 0.0,
-          "rtf": 3.447660386132483,
+          "rtf": 4.556354812934863,
           "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Super travail.",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/characters/shared/v0.2/momo/fr/momo__fr__praise.general__02.wav.raw.wav",
+    "sha256": "4c115acdeb32ee9cd3eaa65b45e0d01022fcb52637a897ed084e8daa82fe23a6",
+    "receipt_sha256": "c9126688c3c9a03b0704c2f8e907dd1c25a9b9f51bdbaaccdaf1a094c7cd7450"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/characters/shared/v0.2/momo/fr/momo__fr__praise.general__02.wav.extracted.wav",
+    "sha256": "a4640dccec73eb4276ea0a5ad3791f26e9bcf9425c43b01309e106b6032457f6"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/assets/audio/characters/shared/v0.2/momo/fr/momo__fr__praise.general__02.wav.raw.wav",
+    "source_sha256": "4c115acdeb32ee9cd3eaa65b45e0d01022fcb52637a897ed084e8daa82fe23a6",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/assets/audio/characters/shared/v0.2/momo/fr/momo__fr__praise.general__02.wav.extracted.wav",
+    "output_sha256": "a4640dccec73eb4276ea0a5ad3791f26e9bcf9425c43b01309e106b6032457f6",
+    "target_request": {
+      "speaker": "momo",
+      "kind": "shared_character_utterance",
+      "text": "Super travail !",
+      "locale": "fr",
+      "cue_id": "greia.shared.momo__fr__praise.general__02.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/assets/audio/characters/shared/v0.2/momo/fr/momo__fr__praise.general__02.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "c9126688c3c9a03b0704c2f8e907dd1c25a9b9f51bdbaaccdaf1a094c7cd7450"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "Super travail !",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français. Super travail.",
+    "extracted_transcript": " Super travail.",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.3
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.3,
+        "end_seconds": 0.74
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.74,
+        "end_seconds": 1.02
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.02,
+        "end_seconds": 1.14
+      },
+      {
+        "word": "français",
+        "start_seconds": 1.14,
+        "end_seconds": 1.64
+      },
+      {
+        "word": "super",
+        "start_seconds": 2.14,
+        "end_seconds": 2.7
+      },
+      {
+        "word": "travail",
+        "start_seconds": 2.7,
+        "end_seconds": 3.24
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "super",
+        "start_seconds": 0.0,
+        "end_seconds": 0.84
+      },
+      {
+        "word": "travail",
+        "start_seconds": 0.84,
+        "end_seconds": 1.36
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5739304678780692,
+        "no_speech_prob": 0.10491712391376495,
+        "compression_ratio": 0.8490566037735849,
+        "word_probabilities": [
+          0.525390625,
+          0.955078125,
+          0.9677734375,
+          0.9345703125,
+          0.9501953125
+        ]
+      },
+      {
+        "avg_logprob": -0.5739304678780692,
+        "no_speech_prob": 0.10491712391376495,
+        "compression_ratio": 0.8490566037735849,
+        "word_probabilities": [
+          0.87109375,
+          0.783203125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.7180126508076986,
+        "no_speech_prob": 0.06770691275596619,
+        "compression_ratio": 0.6363636363636364,
+        "word_probabilities": [
+          0.478271484375,
+          0.73291015625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 80,
+    "extracted_voiced_seconds": 0.8,
+    "unremoved_raw_target_tokens": [
+      "super",
+      "travail"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "super",
+      "travail"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.5201814058956917,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.64,
+      "target_first_word_start_seconds": 2.14,
+      "gap_seconds": 0.3891156462585034,
+      "verified_silence_start_seconds": 1.6998639455782314,
+      "verified_silence_end_seconds": 2.088979591836735,
+      "gap_rms_dbfs": -59.194,
+      "gap_peak_dbfs": -51.419,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.8944217687074831,
+      "cut_sample": 41772,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "assets/audio/characters/shared/v0.2/momo/fr/momo__fr__praise.general__02.wav",
-    "bytes": 98870,
-    "sha256": "746dbfe990114ec2e3c34f5861fe2cb456d2a1e9ba74f6c4acb4a0a556edfa40"
+    "sha256": "e2b07731c9d46068e343b7901ca817438ddae40f368bf6eb959999a31df1b185",
+    "bytes": 71774
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "6fad627ca48f477cff7848a7b103deddd69b270446b89bdf4bd3594cb17b5a3c",
+    "original_sha256": "746dbfe990114ec2e3c34f5861fe2cb456d2a1e9ba74f6c4acb4a0a556edfa40",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

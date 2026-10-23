@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T20:55:14.440078+00:00",
+  "created_utc": "2026-10-23T03:54:45.154116+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
@@ -8,17 +8,22 @@
     "text": "U de Uva",
     "cue_id": "alfabeto_leo.letter_U.es",
     "output": "activities/alfabeto_leo/assets/audio/es/letter_U.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Lectura cálida y tranquila. Pronunciación clara y natural.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic"
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261019-225508-ecd9f703",
-    "idempotency_key": "greia-05f604ffedf449b096ab3cf26103d599",
+    "job_id": "20261023-025325-aa954fa7",
+    "idempotency_key": "greia-834b53da106e43e3a477b05eeed4cea4",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +46,95 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1432930616,
+    "script_seed": 2899604224,
     "language_direction": "Spanish",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak naturally in Spanish. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Lectura cálida y tranquila. Pronunciación clara y natural.",
+    "effective_delivery": "Speak in Spanish. Lectura cálida y tranquila. Pronunciación clara y natural.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 977118247,
-        "sha256": "9b880751f68e76e067bae573e0d061f1d3866700e67ad8bd63098518232e6995",
+        "seed": 2937393398,
+        "sha256": "fe423f5f8188c884a217f54edb502369b88362d0728bf24189563e08e5dac6d2",
         "generation": {
-          "elapsed_seconds": 5.878586750011891,
+          "elapsed_seconds": 12.754316334001487,
           "model_load_seconds": 0.0,
-          "rtf": 4.081879469977011,
-          "peak_memory_gb": 8.21220922
+          "rtf": 3.9855162754027877,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "FAIL",
+    "verifier_id": "mlx-audio-parakeet-tdt-v3",
+    "transcript": "U the Uba",
+    "score": 0.5755,
+    "detail": "Candidate extraction screening only; not packaged acceptance. Human listening pending.",
+    "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+    "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+    "flags": [],
+    "metrics": {
+      "automated_status": "FAIL",
+      "takeboard_kind": "extracted_target_candidate"
+    }
   },
-  "attempts": 1,
+  "attempts": 2,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/es/letter_U.wav",
-    "bytes": 63590,
-    "sha256": "e6c5d0173191ec54166594cd64ef52bdbc0f19c41328111b4f6c3f3368351d5a"
+    "bytes": 46832,
+    "sha256": "bb2a036f21924b4921cc50bb5b87f87938df70a87907ecc8d6d467699e0d5616"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
-  "corpus_replacement": {
-    "original_sha256": "9b029fad56ed238b09bf19feb762f21538e7dfbc3082966b7d07baa116ef4087",
-    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by owner in Takeboard batch 8818; saved state and exact selected target retained.",
+  "human_review_provenance": {
+    "batch_id": "greia-natural-parakeet-full237-2026-10-23-v1",
+    "review_file": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/takeboard-listening.reviewed.json",
+    "review_file_sha256": "1b5499b5d84eca9091a3d876f5bda4e01da18438878be6ba9b7b1759bf401d85",
+    "record_id": "839ebe271ff2-a02-cut-candidate-01",
+    "decision": "approved",
+    "reviewer": "",
+    "score": null,
+    "notes": "",
+    "updated_at": "2026-10-23T03:54:45.154116+00:00",
+    "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/e69c327ad0284745bcc01ba1ad6c36c5/attempt-02/target.wav.search/703b6d73fcd3418f993170b28a0da01b/candidate-01.wav",
+    "candidate_sha256": "9cc1ff9ca66829228e0d24f62d54a9e74f9e2955f512ef378ba9cccb57e016ee",
+    "candidate_kind": "extracted_target_candidate",
+    "source_raw_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/e69c327ad0284745bcc01ba1ad6c36c5/attempt-02/raw.wav",
+    "source_raw_sha256": "fe423f5f8188c884a217f54edb502369b88362d0728bf24189563e08e5dac6d2",
+    "source_raw_receipt_sha256": "60ddfaec044dc217311ff92d671166349b329bf92d2b46b87fa7cb9fe8c0dda1",
+    "job_id": "20261023-025325-aa954fa7",
+    "parakeet_model": "mlx-community/parakeet-tdt-0.6b-v3",
+    "parakeet_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+    "automated_status": "FAIL",
+    "automated_transcript": "U the Uba",
+    "automated_score": 0.5755,
+    "automated_flags": []
+  },
+  "source_generation": {
+    "request_text": "Vamos a practicar las letras.\n\nU de Uva",
+    "semantic_target": "U de Uva",
+    "carrier_prefix": "Vamos a practicar las letras.",
+    "candidate_id": "candidate-01",
+    "candidate_kind": "extracted_target_candidate",
+    "search_witness_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/e69c327ad0284745bcc01ba1ad6c36c5/attempt-02/target.wav.search/703b6d73fcd3418f993170b28a0da01b/search.json",
+    "search_witness_sha256": "7fbeb1612515b513820bce7e12139ccaf4575f56a81a071253bd0fb1b1a3fb7c",
+    "raw_audio_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/e69c327ad0284745bcc01ba1ad6c36c5/attempt-02/raw.wav",
+    "raw_audio_sha256": "fe423f5f8188c884a217f54edb502369b88362d0728bf24189563e08e5dac6d2",
+    "raw_receipt_sha256": "60ddfaec044dc217311ff92d671166349b329bf92d2b46b87fa7cb9fe8c0dda1"
+  },
+  "delivery_format_normalization": {
+    "policy": "approved-source-to-canonical-pcm-v1",
+    "source_audio_sha256": "9cc1ff9ca66829228e0d24f62d54a9e74f9e2955f512ef378ba9cccb57e016ee",
+    "source_sample_rate_hz": 48000,
+    "target_sample_rate_hz": 22050,
+    "channels": 1,
+    "sample_width_bits": 16,
+    "packaged_utc": "2026-10-23T14:48:45.365228+00:00",
+    "original_generation_and_review_unchanged": true,
+    "prior_machine_verification_applies_to_source_audio_sha256": "9cc1ff9ca66829228e0d24f62d54a9e74f9e2955f512ef378ba9cccb57e016ee",
+    "no_synthesis_or_asr": true
   }
 }

@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T05:54:04.928822+00:00",
+  "created_utc": "2026-10-21T16:02:59.245772+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Listen to this phrase in English.",
+    "prefix_word_count": 6,
+    "target": "Earth",
+    "target_word_count": 1,
+    "target_verification": "warn",
+    "composite_text": "Listen to this phrase in English. Earth",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Earth",
+    "cue_id": "encyclopedia.space.earth.name",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "Earth",
     "cue_id": "encyclopedia.space.earth.name",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/enciclopedia_greia/assets/audio/en/space/earth_name.ogg",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Reveals the name of what we are looking at, like a friendly museum guide: clear, warm wonder, unhurried."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-075359-01606359",
-    "idempotency_key": "greia-cc7c7c357c734d548b5f2463a57a3666",
+    "job_id": "20261021-180245-e2d7f0d6",
+    "idempotency_key": "greia-23cffef6d81d475dba8a0eae0261b7fb",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,51 +72,204 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 715605815,
+    "script_seed": 1442859931,
     "language_direction": "English",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Reveals the name of what we are looking at, like a friendly museum guide: clear, warm wonder, unhurried.",
-    "effective_delivery": "Speak naturally in English. Leo, a warm, curious cartoon guide. Reveals the name of what we are looking at, like a friendly museum guide: clear, warm wonder, unhurried.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in English. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2158586325,
-        "sha256": "a282e0f65f84f7542794a352c8edcdc126dab1b99fa9351b92922d698ec220af",
+        "seed": 2654189751,
+        "sha256": "f9cd4ac378952145f45d6733496e08c9ba10c7f03efd771cc74d45f6c77bdc7b",
         "generation": {
-          "elapsed_seconds": 4.046871832979377,
+          "elapsed_seconds": 12.809395292002591,
           "model_load_seconds": 0.0,
-          "rtf": 5.057536137862167,
-          "peak_memory_gb": 7.367403796
+          "rtf": 4.002727553357406,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Earth",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/enciclopedia_greia/assets/audio/en/space/earth_name.ogg.raw.wav",
+    "sha256": "f1851b3f731aae1e8ab2c2b012476e3806b7b818e09825414f1f8ac0a4dbfebc",
+    "receipt_sha256": "49903a9c47e0b0ffdcbfffbec4dc59beb110718cb2f6ff36658bd94c1a4bbda2"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/enciclopedia_greia/assets/audio/en/space/earth_name.ogg.extracted.wav",
+    "sha256": "ea461fbef26571668407654380ef4977bfd275acf4c168a96800416a8cf8bdce"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/enciclopedia_greia/assets/audio/en/space/earth_name.ogg.raw.wav",
+    "source_sha256": "f1851b3f731aae1e8ab2c2b012476e3806b7b818e09825414f1f8ac0a4dbfebc",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/enciclopedia_greia/assets/audio/en/space/earth_name.ogg.extracted.wav",
+    "output_sha256": "ea461fbef26571668407654380ef4977bfd275acf4c168a96800416a8cf8bdce",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Earth",
+      "locale": "en",
+      "cue_id": "encyclopedia.space.earth.name",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/enciclopedia_greia/assets/audio/en/space/earth_name.ogg.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "49903a9c47e0b0ffdcbfffbec4dc59beb110718cb2f6ff36658bd94c1a4bbda2"
+    },
+    "locale": "en",
+    "prefix": "Listen to this phrase in English.",
+    "target": "Earth",
+    "remove_first_words": 6,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Listen to this phrase in English. Earth.",
+    "extracted_transcript": " Earth",
+    "raw_word_alignment": [
+      {
+        "word": "listen",
+        "start_seconds": 0.0,
+        "end_seconds": 0.64
+      },
+      {
+        "word": "to",
+        "start_seconds": 0.64,
+        "end_seconds": 0.88
+      },
+      {
+        "word": "this",
+        "start_seconds": 0.88,
+        "end_seconds": 1.02
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 1.02,
+        "end_seconds": 1.4
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.4,
+        "end_seconds": 1.64
+      },
+      {
+        "word": "english",
+        "start_seconds": 1.64,
+        "end_seconds": 2.06
+      },
+      {
+        "word": "earth",
+        "start_seconds": 2.5,
+        "end_seconds": 2.9
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "earth",
+        "start_seconds": 0.0,
+        "end_seconds": 0.56
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5723252296447754,
+        "no_speech_prob": 0.013784131035208702,
+        "compression_ratio": 0.8333333333333334,
+        "word_probabilities": [
+          0.90283203125,
+          0.9921875,
+          0.984375,
+          0.99853515625,
+          0.91650390625,
+          0.99267578125
+        ]
+      },
+      {
+        "avg_logprob": -0.5723252296447754,
+        "no_speech_prob": 0.013784131035208702,
+        "compression_ratio": 0.8333333333333334,
+        "word_probabilities": [
+          0.47509765625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.45329928398132324,
+        "no_speech_prob": 0.3672974109649658,
+        "compression_ratio": 0.38461538461538464,
+        "word_probabilities": [
+          0.56494140625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 22,
+    "extracted_voiced_seconds": 0.22,
+    "unremoved_raw_target_tokens": [
+      "earth"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "earth"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.2001814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 2.06,
+      "target_first_word_start_seconds": 2.5,
+      "gap_seconds": 0.2893424036281179,
+      "verified_silence_start_seconds": 2.1597732426303855,
+      "verified_silence_end_seconds": 2.4491156462585035,
+      "gap_rms_dbfs": -53.471,
+      "gap_peak_dbfs": -30.609,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.3044444444444445,
+      "cut_sample": 50813,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/enciclopedia_greia/assets/audio/en/space/earth_name.ogg",
-    "bytes": 7088,
-    "sha256": "11990e43af443c2bc7b67766a09da22dc2da0f7af7cf491eb7d5049712889861"
+    "sha256": "f577db001e0cca014e5fe95bbdc6e5a57a48041fa72bdf4823d889f821f63f31",
+    "bytes": 8638
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "9342d4da21f3183632716f885fe1eade0a786fbadec28f38d1ea23397905ddcb",
-    "owner_authorization": "2026-10-19 corpus regeneration; listening pending",
-    "audio_repackaging": {
-      "pipeline": "AudioPipeline",
-      "codec": "libvorbis",
-      "quality": 3,
-      "sample_rate_hz": 22050,
-      "source_mix_sha256": "a282e0f65f84f7542794a352c8edcdc126dab1b99fa9351b92922d698ec220af",
-      "source_job_id": "20261020-075359-01606359",
-      "repackaged_utc": "2026-10-20T22:29:41Z"
-    }
+    "original_sha256": "11990e43af443c2bc7b67766a09da22dc2da0f7af7cf491eb7d5049712889861",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

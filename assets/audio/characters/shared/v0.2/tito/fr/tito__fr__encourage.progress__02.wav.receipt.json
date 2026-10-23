@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T13:14:44.232161+00:00",
+  "created_utc": "2026-10-21T18:19:36.294547+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "Tu y es presque !",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. Tu y es presque !",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "tito",
+    "kind": "shared_character_utterance",
+    "locale": "fr",
+    "text": "Tu y es presque !",
+    "cue_id": "greia.shared.tito__fr__encourage.progress__02.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "tito",
     "kind": "shared_character_utterance",
     "locale": "fr",
     "text": "Tu y es presque !",
     "cue_id": "greia.shared.tito__fr__encourage.progress__02.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "assets/audio/characters/shared/v0.2/tito/fr/tito__fr__encourage.progress__02.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.tito.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261021-151436-f44cfee8",
-    "idempotency_key": "greia-5b35b27a3e634aff91bed5f0ef6ccc8f",
+    "job_id": "20261021-201925-2a957558",
+    "idempotency_key": "greia-667b0405bb5a4136a51c12b90e2de45b",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,244 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3887362838,
+    "script_seed": 3523982901,
     "language_direction": "French",
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in French. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2008875755,
-        "sha256": "32bc7ed6b9952536d9f0f85975873e12a7cd12dbb2ae6479dc4567960560d8e3",
+        "seed": 2624094130,
+        "sha256": "0b3efaa9b63d11314ee33da234b1661292b75019c2e2755fe6e049dcc4df3ad5",
         "generation": {
-          "elapsed_seconds": 7.436015915998723,
+          "elapsed_seconds": 10.308151000004727,
           "model_load_seconds": 0.0,
-          "rtf": 3.5747212159275974,
+          "rtf": 4.02635935160656,
           "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.9036,
+    "transcript": " Tu es presque ?",
+    "metrics": {
+      "duration_seconds": 1.2007709750566893,
+      "rms_dbfs": -30.83,
+      "peak": 0.2034,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.06,
+      "trailing_silence_seconds": 0.16,
+      "longest_internal_pause_seconds": 0.18
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/characters/shared/v0.2/tito/fr/tito__fr__encourage.progress__02.wav.raw.wav",
+    "sha256": "a5808686868402813cd4bcb60e3bb5f0cbd6d3d6ac4e195766f42f198706151d",
+    "receipt_sha256": "9e6c7beb7941bacfd51358e5fc3a00651dc95fe00e6995d215d84090f48e74f0"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/characters/shared/v0.2/tito/fr/tito__fr__encourage.progress__02.wav.extracted.wav",
+    "sha256": "7473c0a5886bf9821709aa609d09466f9b299af96a2b18347250f2d786dfe0fb"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/assets/audio/characters/shared/v0.2/tito/fr/tito__fr__encourage.progress__02.wav.raw.wav",
+    "source_sha256": "a5808686868402813cd4bcb60e3bb5f0cbd6d3d6ac4e195766f42f198706151d",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-extracted/assets/audio/characters/shared/v0.2/tito/fr/tito__fr__encourage.progress__02.wav.extracted.wav",
+    "output_sha256": "7473c0a5886bf9821709aa609d09466f9b299af96a2b18347250f2d786dfe0fb",
+    "target_request": {
+      "speaker": "tito",
+      "kind": "shared_character_utterance",
+      "text": "Tu y es presque !",
+      "locale": "fr",
+      "cue_id": "greia.shared.tito__fr__encourage.progress__02.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/assets/audio/characters/shared/v0.2/tito/fr/tito__fr__encourage.progress__02.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "9e6c7beb7941bacfd51358e5fc3a00651dc95fe00e6995d215d84090f48e74f0"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "Tu y es presque !",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français. Tu es presque ?",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Tu es presque ?",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.18
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.18,
+        "end_seconds": 0.4
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.4,
+        "end_seconds": 0.56
+      },
+      {
+        "word": "en",
+        "start_seconds": 0.56,
+        "end_seconds": 0.68
+      },
+      {
+        "word": "français",
+        "start_seconds": 0.68,
+        "end_seconds": 1.1
+      },
+      {
+        "word": "tu",
+        "start_seconds": 1.54,
+        "end_seconds": 1.76
+      },
+      {
+        "word": "es",
+        "start_seconds": 1.76,
+        "end_seconds": 1.92
+      },
+      {
+        "word": "presque",
+        "start_seconds": 1.92,
+        "end_seconds": 2.3
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "tu",
+        "start_seconds": 0.0,
+        "end_seconds": 0.42
+      },
+      {
+        "word": "es",
+        "start_seconds": 0.42,
+        "end_seconds": 0.56
+      },
+      {
+        "word": "presque",
+        "start_seconds": 0.56,
+        "end_seconds": 0.92
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.48682458584125227,
+        "no_speech_prob": 0.03190602734684944,
+        "compression_ratio": 0.8679245283018868,
+        "word_probabilities": [
+          0.81396484375,
+          0.97607421875,
+          0.9775390625,
+          0.962890625,
+          0.986328125,
+          0.80712890625,
+          0.53759765625,
+          0.9658203125,
+          0.2427978515625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6610255922589984,
+        "no_speech_prob": 0.19291429221630096,
+        "compression_ratio": 0.6521739130434783,
+        "word_probabilities": [
+          0.66650390625,
+          0.44482421875,
+          0.94970703125,
+          0.3193359375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 60,
+    "extracted_voiced_seconds": 0.6,
+    "unremoved_raw_target_tokens": [
+      "français",
+      "tu",
+      "es",
+      "presque"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "tu",
+      "es",
+      "presque"
+    ],
+    "raw_transcript_alignment_suffix_match": false,
+    "duration_seconds": 2.5601814058956918,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.1,
+      "search_end_seconds": 1.54,
+      "prefix_last_word_end_seconds": 1.1,
+      "target_first_word_start_seconds": 1.54,
+      "gap_seconds": 0.2594104308390023,
+      "verified_silence_start_seconds": 1.2297052154195012,
+      "verified_silence_end_seconds": 1.4891156462585033,
+      "gap_rms_dbfs": -52.841,
+      "gap_peak_dbfs": -38.992,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.3594104308390023,
+      "cut_sample": 29975,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "assets/audio/characters/shared/v0.2/tito/fr/tito__fr__encourage.progress__02.wav",
-    "bytes": 91814,
-    "sha256": "dd6fcc195487eaf6099008af757d2dfd1aa5efa63bcba4c520bfb6ec6162f207"
+    "sha256": "7d98f6b77db3d1aa25ba48447e8ba40b52abdc846fef63b59e791f85e563ed00",
+    "bytes": 53032
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "a7fc09fcff956fbc96a5e1f5ac0d9ddebead0508f52753e289aef5f8dbaac8fd",
+    "original_sha256": "dd6fcc195487eaf6099008af757d2dfd1aa5efa63bcba4c520bfb6ec6162f207",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:26:25.253301+00:00",
+  "created_utc": "2026-10-21T16:18:25.572382+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "U de Uva",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. U de Uva",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "U de Uva",
+    "cue_id": "foresta_parole.find_u",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "U de Uva",
     "cue_id": "foresta_parole.find_u",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/foresta_parole/assets/audio/es/find_u.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-142616-fb44fca4",
-    "idempotency_key": "greia-3fc84bf2b87c4a8e9c425babf6b769ff",
+    "job_id": "20261021-181806-86fb4c22",
+    "idempotency_key": "greia-5f4e05c081b94261ae49e1d08fc3d31a",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,184 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3111117403,
+    "script_seed": 2430128503,
     "language_direction": "Spanish",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak in Spanish. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 286717840,
-        "sha256": "45d98eeb0fc9baf1ca60b5df17944fa5d28fd49399f0ab0c1c5994511549d586",
+        "seed": 1916189555,
+        "sha256": "b59ba31d8782dc76ceed9fb461f54c0ffa9cc436eed309ac6daabd25ca58dea4",
         "generation": {
-          "elapsed_seconds": 8.097503125027288,
+          "elapsed_seconds": 16.463974707992747,
           "model_load_seconds": 0.0,
-          "rtf": 3.892718432029784,
-          "peak_memory_gb": 8.44494914
+          "rtf": 4.473703557264457,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8021,
+    "transcript": "O de uva.",
+    "metrics": {
+      "duration_seconds": 0.8268934240362812,
+      "rms_dbfs": -32.79,
+      "peak": 0.15207,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.1,
+      "trailing_silence_seconds": 0.08,
+      "longest_internal_pause_seconds": 0.0
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v1",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/foresta_parole/assets/audio/es/find_u.wav.raw.wav",
+    "sha256": "347f21b0479c6fe20ee2be5f0bd5d64045b8dfebd63f7830af121d2d10dc8477",
+    "receipt_sha256": "121b2b874a4c49578ad801470f1681a47d22a2499c63bbf42e6bd10fb9f4c76a"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/foresta_parole/assets/audio/es/find_u.wav.extracted.wav",
+    "sha256": "bb0940a13f48d53e36e4ac1289039e3a31fab0522574274906912d0fdfae7290"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/foresta_parole/assets/audio/es/find_u.wav.delivery.wav",
+    "sha256": "bb0940a13f48d53e36e4ac1289039e3a31fab0522574274906912d0fdfae7290"
+  },
+  "extraction": {
+    "schema_version": 1,
+    "algorithm_version": "greia-spoken-carrier-extractor-v7",
+    "comparison_policy": "locale-number-tokens-v1",
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-raw/activities/foresta_parole/assets/audio/es/find_u.wav.raw.wav",
+    "source_sha256": "347f21b0479c6fe20ee2be5f0bd5d64045b8dfebd63f7830af121d2d10dc8477",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/foresta_parole/assets/audio/es/find_u.wav.extracted.wav",
+    "output_sha256": "bb0940a13f48d53e36e4ac1289039e3a31fab0522574274906912d0fdfae7290",
+    "output_bytes": 36510,
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "U de Uva",
+    "remove_first_words": 5,
+    "ignore_accents": true,
+    "target_verification_requested": "warn",
+    "target_verification_policy": "warn",
+    "target_comparison_score": 0.8021,
+    "target_word_count_matches": true,
+    "target_numbers_match": true,
+    "target_comparison_flags": [],
+    "target_transcript_warning": true,
+    "recognizer": "mlx-whisper-base",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extracted_transcript": "O de uva.",
+    "expected_target_tokens": [
+      "u",
+      "de",
+      "uva"
+    ],
+    "extracted_target_tokens": [
+      "o",
+      "de",
+      "uva"
+    ],
+    "extracted_target_exact_match": false,
+    "transcription_settings": {
+      "language": "es",
+      "initial_prompt": null,
+      "word_timestamps": true,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "sample_rate": 22050,
+    "duration_seconds": 3.6801814058956914,
+    "boundary": {
+      "search_strategy": "target-only-global-quiet-run-v7",
+      "verified_silence_start_seconds": 2.005442176870748,
+      "verified_silence_end_seconds": 2.95328798185941,
+      "verified_silence_duration_seconds": 0.9478458049886621,
+      "cut_sample": 62915,
+      "cut_time_seconds": 2.8532879818594106,
+      "padding_seconds": 0.1,
+      "quiet_run_start_sample": 44220,
+      "quiet_run_end_sample": 65120,
+      "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+    },
+    "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/foresta_parole/assets/audio/es/find_u.wav.extracted.wav.search/08565c42b30a4a2dbbc946f63b883199",
+    "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/foresta_parole/assets/audio/es/find_u.wav.extracted.wav.search/08565c42b30a4a2dbbc946f63b883199/search.json",
+    "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-raw/activities/foresta_parole/assets/audio/es/find_u.wav.raw.wav.receipt.json",
+    "source_provider_receipt_sha256": "121b2b874a4c49578ad801470f1681a47d22a2499c63bbf42e6bd10fb9f4c76a",
+    "candidate_sha256": "bb0940a13f48d53e36e4ac1289039e3a31fab0522574274906912d0fdfae7290",
+    "candidate_id": "candidate-01",
+    "candidate_count": 1,
+    "qualifying_quiet_run_count": 1,
+    "candidate_results": [
+      {
+        "candidate_id": "candidate-01",
+        "quiet_run": {
+          "start_sample": 44220,
+          "end_sample": 65120,
+          "start_seconds": 2.005442176870748,
+          "end_seconds": 2.95328798185941,
+          "duration_seconds": 0.9478458049886621
+        },
+        "cut_sample": 62915,
+        "cut_time_seconds": 2.8532879818594106,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/foresta_parole/assets/audio/es/find_u.wav.extracted.wav.search/08565c42b30a4a2dbbc946f63b883199/candidate-01.wav",
+        "preceding_voiced_seconds": 1.24,
+        "retained_voiced_seconds": 0.57,
+        "retained_duration_seconds": 0.8268934240362812,
+        "candidate_sha256": "bb0940a13f48d53e36e4ac1289039e3a31fab0522574274906912d0fdfae7290",
+        "extracted_transcript": "O de uva.",
+        "canonical_transcript_tokens": [
+          "o",
+          "de",
+          "uva"
+        ],
+        "exact_target_match": false,
+        "target_comparison_score": 0.8021,
+        "target_word_count_matches": true,
+        "target_numbers_match": true,
+        "target_comparison_flags": [],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": true,
+        "asr_segment_count": 1
+      }
+    ],
+    "human_review": "PENDING",
+    "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+    "target_verification_effective_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+    "target_verification_warning": true,
+    "saved_recovery_policy": "target-only-v7-saved-v1",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 0,
+      "removed_seconds": 0.0,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 62915,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/foresta_parole/assets/audio/es/find_u.wav.delivery.wav",
+      "sha256": "bb0940a13f48d53e36e4ac1289039e3a31fab0522574274906912d0fdfae7290"
+    }
+  },
   "output": {
     "path": "activities/foresta_parole/assets/audio/es/find_u.wav",
-    "bytes": 91814,
-    "sha256": "ca37c80e8ba3fa45ba8c8f1bb25fe780e4b0c44667dd8178971a13c9adcd6087"
+    "sha256": "03643694abf9f95b63797aec92743b29792c0c8e1fb4921f4334127e233c9fe3",
+    "bytes": 36544
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "3622697d3a65552c8a5dece5303054f77e126e05f49991488e26845217d51d46",
+    "original_sha256": "2adc503ab311195c8cca2ea6c83b027243ebbe94af028385c56df3c18b273839",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

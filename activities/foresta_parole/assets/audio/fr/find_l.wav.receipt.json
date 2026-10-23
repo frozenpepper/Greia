@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:29:00.865394+00:00",
+  "created_utc": "2026-10-22T06:38:57.502488+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "L comme Lune",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français...\n\nL comme Lune",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "L comme Lune",
+    "cue_id": "foresta_parole.find_l",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "L comme Lune",
     "cue_id": "foresta_parole.find_l",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/foresta_parole/assets/audio/fr/find_l.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-142851-9cfb3d2f",
-    "idempotency_key": "greia-925e7c17c0a6459ba43edac9bea83acb",
+    "job_id": "20261022-083835-0a777869",
+    "idempotency_key": "greia-5efb6f617af5400cb42a909c5a345273",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,250 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3286905729,
+    "script_seed": 1962410825,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2504799939,
-        "sha256": "3eb1754027884cf3a2a2919d94c02fc15a431c2e31dbb66746121096cd2cd956",
+        "seed": 593566222,
+        "sha256": "16ef94f065df47a2c34708fb708918272de50f37d49dc9592f84bb7cc4b9e521",
         "generation": {
-          "elapsed_seconds": 8.563775665999856,
+          "elapsed_seconds": 21.336913416002062,
           "model_load_seconds": 0.0,
-          "rtf": 4.865320897263435,
-          "peak_memory_gb": 8.44494914
+          "rtf": 4.1672302495365505,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8578,
+    "transcript": "Lune, comme lune.",
+    "metrics": {
+      "duration_seconds": 3.1049886621315195,
+      "rms_dbfs": -39.22,
+      "peak": 0.08469,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.08,
+      "trailing_silence_seconds": 0.12,
+      "longest_internal_pause_seconds": 0.58
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v1",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/foresta_parole/assets/audio/fr/find_l.wav.raw.wav",
+    "sha256": "ab586eb3d26e9135f6f19f21c81f38c6e36c6d3112ab007c7a1547f00da121c6",
+    "receipt_sha256": "87a42b62f63d094445ff4f7774f57f7524b7030e22ef8027f2558135fc4c40c2"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/foresta_parole/assets/audio/fr/find_l.wav.extracted.wav",
+    "sha256": "acf8acbeea5e9ac1ba7a785fac0a20cb85c52a0061ed21e90eb34ed50a1ef536"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/foresta_parole/assets/audio/fr/find_l.wav.delivery.wav",
+    "sha256": "acf8acbeea5e9ac1ba7a785fac0a20cb85c52a0061ed21e90eb34ed50a1ef536"
+  },
+  "extraction": {
+    "schema_version": 1,
+    "algorithm_version": "greia-spoken-carrier-extractor-v7",
+    "comparison_policy": "locale-number-tokens-v1",
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-raw/activities/foresta_parole/assets/audio/fr/find_l.wav.raw.wav",
+    "source_sha256": "ab586eb3d26e9135f6f19f21c81f38c6e36c6d3112ab007c7a1547f00da121c6",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/foresta_parole/assets/audio/fr/find_l.wav.extracted.wav",
+    "output_sha256": "acf8acbeea5e9ac1ba7a785fac0a20cb85c52a0061ed21e90eb34ed50a1ef536",
+    "output_bytes": 136974,
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "L comme Lune",
+    "remove_first_words": 5,
+    "ignore_accents": true,
+    "target_verification_requested": "warn",
+    "target_verification_policy": "warn",
+    "target_comparison_score": 0.8578,
+    "target_word_count_matches": true,
+    "target_numbers_match": true,
+    "target_comparison_flags": [],
+    "target_transcript_warning": true,
+    "recognizer": "mlx-whisper-base",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extracted_transcript": "Lune, comme lune.",
+    "expected_target_tokens": [
+      "l",
+      "comme",
+      "lune"
+    ],
+    "extracted_target_tokens": [
+      "lune",
+      "comme",
+      "lune"
+    ],
+    "extracted_target_exact_match": false,
+    "transcription_settings": {
+      "language": "fr",
+      "initial_prompt": null,
+      "word_timestamps": true,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "sample_rate": 22050,
+    "duration_seconds": 5.120181405895692,
+    "boundary": {
+      "search_strategy": "target-only-global-quiet-run-v7",
+      "verified_silence_start_seconds": 1.456689342403628,
+      "verified_silence_end_seconds": 2.1151927437641724,
+      "verified_silence_duration_seconds": 0.6585034013605442,
+      "cut_sample": 44435,
+      "cut_time_seconds": 2.0151927437641723,
+      "padding_seconds": 0.1,
+      "quiet_run_start_sample": 32120,
+      "quiet_run_end_sample": 46640,
+      "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+    },
+    "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/foresta_parole/assets/audio/fr/find_l.wav.extracted.wav.search/12943aeed9744811bcced394ddcc4bbe",
+    "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/foresta_parole/assets/audio/fr/find_l.wav.extracted.wav.search/12943aeed9744811bcced394ddcc4bbe/search.json",
+    "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-raw/activities/foresta_parole/assets/audio/fr/find_l.wav.raw.wav.receipt.json",
+    "source_provider_receipt_sha256": "87a42b62f63d094445ff4f7774f57f7524b7030e22ef8027f2558135fc4c40c2",
+    "candidate_sha256": "acf8acbeea5e9ac1ba7a785fac0a20cb85c52a0061ed21e90eb34ed50a1ef536",
+    "candidate_id": "candidate-01",
+    "candidate_count": 3,
+    "qualifying_quiet_run_count": 3,
+    "candidate_results": [
+      {
+        "candidate_id": "candidate-01",
+        "quiet_run": {
+          "start_sample": 32120,
+          "end_sample": 46640,
+          "start_seconds": 1.456689342403628,
+          "end_seconds": 2.1151927437641724,
+          "duration_seconds": 0.6585034013605442
+        },
+        "cut_sample": 44435,
+        "cut_time_seconds": 2.0151927437641723,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/foresta_parole/assets/audio/fr/find_l.wav.extracted.wav.search/12943aeed9744811bcced394ddcc4bbe/candidate-01.wav",
+        "preceding_voiced_seconds": 0.93,
+        "retained_voiced_seconds": 1.48,
+        "retained_duration_seconds": 3.1049886621315195,
+        "candidate_sha256": "acf8acbeea5e9ac1ba7a785fac0a20cb85c52a0061ed21e90eb34ed50a1ef536",
+        "extracted_transcript": "Lune, comme lune.",
+        "canonical_transcript_tokens": [
+          "lune",
+          "comme",
+          "lune"
+        ],
+        "exact_target_match": false,
+        "target_comparison_score": 0.8578,
+        "target_word_count_matches": true,
+        "target_numbers_match": true,
+        "target_comparison_flags": [],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": true,
+        "asr_segment_count": 1
+      },
+      {
+        "candidate_id": "candidate-02",
+        "quiet_run": {
+          "start_sample": 62040,
+          "end_sample": 76780,
+          "start_seconds": 2.8136054421768706,
+          "end_seconds": 3.4820861678004533,
+          "duration_seconds": 0.6684807256235827
+        },
+        "cut_sample": 74575,
+        "cut_time_seconds": 3.3820861678004537,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/foresta_parole/assets/audio/fr/find_l.wav.extracted.wav.search/12943aeed9744811bcced394ddcc4bbe/candidate-02.wav",
+        "preceding_voiced_seconds": 1.62,
+        "retained_voiced_seconds": 0.79,
+        "retained_duration_seconds": 1.7380952380952381,
+        "candidate_sha256": "a8d3eda82d31811e66bf96d150a8830f56cde2c6253820c9c5afba2515128d52",
+        "extracted_transcript": "Comme luna.",
+        "canonical_transcript_tokens": [
+          "comme",
+          "luna"
+        ],
+        "exact_target_match": false,
+        "target_comparison_score": 0.6718,
+        "target_word_count_matches": false,
+        "target_numbers_match": true,
+        "target_comparison_flags": [
+          "TARGET_WORD_COUNT_MISMATCH"
+        ],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": false,
+        "asr_segment_count": 1
+      },
+      {
+        "candidate_id": "candidate-03",
+        "quiet_run": {
+          "start_sample": 81400,
+          "end_sample": 95700,
+          "start_seconds": 3.691609977324263,
+          "end_seconds": 4.340136054421769,
+          "duration_seconds": 0.6485260770975056
+        },
+        "cut_sample": 93495,
+        "cut_time_seconds": 4.240136054421769,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/foresta_parole/assets/audio/fr/find_l.wav.extracted.wav.search/12943aeed9744811bcced394ddcc4bbe/candidate-03.wav",
+        "preceding_voiced_seconds": 1.8,
+        "retained_voiced_seconds": 0.6,
+        "retained_duration_seconds": 0.8800453514739229,
+        "candidate_sha256": "f7b057dd4bb0b74356a145b5d58e8fe78bb66129f2bc238ea293ffee7f140849",
+        "extracted_transcript": "Comme l'une.",
+        "canonical_transcript_tokens": [
+          "comme",
+          "l'une"
+        ],
+        "exact_target_match": false,
+        "target_comparison_score": 0.7986,
+        "target_word_count_matches": false,
+        "target_numbers_match": true,
+        "target_comparison_flags": [
+          "TARGET_WORD_COUNT_MISMATCH"
+        ],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": false,
+        "asr_segment_count": 1
+      }
+    ],
+    "human_review": "PENDING",
+    "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+    "target_verification_effective_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+    "target_verification_warning": true,
+    "saved_recovery_policy": "target-only-v7-saved-v1",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 0,
+      "removed_seconds": 0.0,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 44435,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/v7-saved-corpus-recovery-01/carrier-extracted/activities/foresta_parole/assets/audio/fr/find_l.wav.delivery.wav",
+      "sha256": "acf8acbeea5e9ac1ba7a785fac0a20cb85c52a0061ed21e90eb34ed50a1ef536"
+    }
+  },
   "output": {
     "path": "activities/foresta_parole/assets/audio/fr/find_l.wav",
-    "bytes": 77702,
-    "sha256": "d87cbc962a96d3f37c4e1e50dd24ee47b9e927b6977da3b5be0c3f3c83fb459e"
+    "sha256": "87ba6b8112a48b6a0602a772f32d4371e839722e15e5c4c79b05283ec3fd3d9d",
+    "bytes": 137008
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "3a56b012709a275651f8e1b7e928557097d6f1f7a9e2a7f3007b6da455981a9c",
+    "original_sha256": "36fc3217aacb5fc55ba870c3b923377a3c7b96c344380e06c898bd9c0e205391",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

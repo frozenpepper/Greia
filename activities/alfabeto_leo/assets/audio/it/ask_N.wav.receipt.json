@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T23:23:06.440350+00:00",
+  "created_utc": "2026-10-21T15:34:10.608606+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "Dov'è la lettera N?",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. Dov'è la lettera N?",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Dov'è la lettera N?",
+    "cue_id": "alfabeto_leo.ask_N",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Dov'è la lettera N?",
     "cue_id": "alfabeto_leo.ask_N",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/alfabeto_leo/assets/audio/it/ask_N.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-012256-d3c4b06b",
-    "idempotency_key": "greia-e828d8aaf85d488c96c4dabb20b8cc11",
+    "job_id": "20261021-173353-78c92360",
+    "idempotency_key": "greia-d37b5b874230494eb525fed49c9c8f8c",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,247 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1112085010,
+    "script_seed": 456651975,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
-    "effective_delivery": "Speak naturally in Italian. Leo, a warm, curious cartoon guide. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 956759179,
-        "sha256": "03093bfeb34f714b9529a700df56b177e54f4b03d4d83e025c1f727dce3fa6d4",
+        "seed": 2990195882,
+        "sha256": "f9b7cf79d5628cf6c217cd36dffa072547b29523193fd2808bb3cb4aa34fc209",
         "generation": {
-          "elapsed_seconds": 8.872085833048914,
+          "elapsed_seconds": 16.221717374995933,
           "model_load_seconds": 0.0,
-          "rtf": 6.1604577014574105,
-          "peak_memory_gb": 8.21220922
+          "rtf": 3.899295070308705,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " dove è la letra N.",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/alfabeto_leo/assets/audio/it/ask_N.wav.raw.wav",
+    "sha256": "983ddbf2e74adfc7b32ea61c876f28111c4836c19fd3f1535671fd6364b4fc45",
+    "receipt_sha256": "fa16b5b65468bc5f950855a3da6ff372dd1892979af7b7d9fbc61ebb1d1f2a77"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/assets/audio/it/ask_N.wav.extracted.wav",
+    "sha256": "551978577f7b882467dc4bfbb7b0093d840acc0c2b568ce19385f5272d45c745"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/alfabeto_leo/assets/audio/it/ask_N.wav.raw.wav",
+    "source_sha256": "983ddbf2e74adfc7b32ea61c876f28111c4836c19fd3f1535671fd6364b4fc45",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/alfabeto_leo/assets/audio/it/ask_N.wav.extracted.wav",
+    "output_sha256": "551978577f7b882467dc4bfbb7b0093d840acc0c2b568ce19385f5272d45c745",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Dov'è la lettera N?",
+      "locale": "it",
+      "cue_id": "alfabeto_leo.ask_N",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/alfabeto_leo/assets/audio/it/ask_N.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "fa16b5b65468bc5f950855a3da6ff372dd1892979af7b7d9fbc61ebb1d1f2a77"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "Dov'è la lettera N?",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " ascolta questa frase in italiano, dove è la letter N.",
+    "extracted_transcript": " dove è la letra N.",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.58
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.58,
+        "end_seconds": 0.82
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.82,
+        "end_seconds": 1.12
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.12,
+        "end_seconds": 1.34
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.34,
+        "end_seconds": 1.76
+      },
+      {
+        "word": "dove",
+        "start_seconds": 2.5,
+        "end_seconds": 2.7
+      },
+      {
+        "word": "è",
+        "start_seconds": 2.7,
+        "end_seconds": 2.92
+      },
+      {
+        "word": "la",
+        "start_seconds": 2.92,
+        "end_seconds": 2.98
+      },
+      {
+        "word": "letter",
+        "start_seconds": 2.98,
+        "end_seconds": 3.26
+      },
+      {
+        "word": "n",
+        "start_seconds": 3.26,
+        "end_seconds": 3.84
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "dove",
+        "start_seconds": 0.0,
+        "end_seconds": 0.66
+      },
+      {
+        "word": "è",
+        "start_seconds": 0.66,
+        "end_seconds": 0.78
+      },
+      {
+        "word": "la",
+        "start_seconds": 0.78,
+        "end_seconds": 0.86
+      },
+      {
+        "word": "letra",
+        "start_seconds": 0.86,
+        "end_seconds": 1.34
+      },
+      {
+        "word": "n",
+        "start_seconds": 1.34,
+        "end_seconds": 1.7
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5878272898056928,
+        "no_speech_prob": 0.00720364972949028,
+        "compression_ratio": 0.8852459016393442,
+        "word_probabilities": [
+          0.67724609375,
+          0.95703125,
+          0.548828125,
+          0.44189453125,
+          0.89453125,
+          0.9267578125,
+          0.71484375,
+          0.966796875,
+          0.34716796875,
+          0.1328125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.61392183303833,
+        "no_speech_prob": 0.04592381417751312,
+        "compression_ratio": 0.7037037037037037,
+        "word_probabilities": [
+          0.7783203125,
+          0.44580078125,
+          0.96484375,
+          0.5341796875,
+          0.425048828125
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 132,
+    "extracted_voiced_seconds": 1.32,
+    "unremoved_raw_target_tokens": [
+      "dove",
+      "è",
+      "la",
+      "letter",
+      "n"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "dove",
+      "è",
+      "la",
+      "letter",
+      "n"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 4.160181405895692,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.76,
+      "target_first_word_start_seconds": 2.5,
+      "gap_seconds": 0.6285714285714286,
+      "verified_silence_start_seconds": 1.8198639455782313,
+      "verified_silence_end_seconds": 2.44843537414966,
+      "gap_rms_dbfs": -56.533,
+      "gap_peak_dbfs": -37.225,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.1341496598639456,
+      "cut_sample": 47058,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/it/ask_N.wav",
-    "bytes": 63590,
-    "sha256": "f45affb59d607ca1e1a96397b87fcccc9e268d92b721ed0f8d3d642249d24adc"
+    "sha256": "267dac68d4749beb995207b2b0478a8cc0b7ee0c509dba46f654ba7621a999c1",
+    "bytes": 89426
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "8db6b2262033f9a592ff6c003f5ff6a8684e8839eb674a7a7b19a97a5ece4e9c",
+    "original_sha256": "f45affb59d607ca1e1a96397b87fcccc9e268d92b721ed0f8d3d642249d24adc",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T18:02:10.568548+00:00",
+  "created_utc": "2026-10-21T17:34:37.941677+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "Scegli chi ti accompagna!",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. Scegli chi ti accompagna!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Scegli chi ti accompagna!",
+    "cue_id": "greia.requested.pick_your_friend.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Scegli chi ti accompagna!",
     "cue_id": "greia.requested.pick_your_friend.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/workshop_settings/assets/audio/it/pick_your_friend.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-200158-915d5e3e",
-    "idempotency_key": "greia-a8e43a0adab54ebc8ae5c79bd687c208",
+    "job_id": "20261021-193420-bb0d5d6c",
+    "idempotency_key": "greia-4bf8b29cf07d41e7a4159575d2935e62",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,255 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2487045486,
+    "script_seed": 386596913,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1260523007,
-        "sha256": "ff893ec154c8cadf2f17dd49749c80a9f24279198cbcbc0193583db3c37b103d",
+        "seed": 1405529911,
+        "sha256": "577c5cb946d814b75f07bbbb6303a3db8a2f3ca3bb17bbd8d5cbc6d54b437b78",
         "generation": {
-          "elapsed_seconds": 10.891739874961786,
+          "elapsed_seconds": 16.997173416995793,
           "model_load_seconds": 0.0,
-          "rtf": 7.562832918617142,
-          "peak_memory_gb": 8.843167284
+          "rtf": 4.618587949004789,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8583,
+    "transcript": " Scegli qui ti accompagna.",
+    "metrics": {
+      "duration_seconds": 1.7258503401360543,
+      "rms_dbfs": -33.11,
+      "peak": 0.18961,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.22,
+      "trailing_silence_seconds": 0.08,
+      "longest_internal_pause_seconds": 0.02
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/workshop_settings/assets/audio/it/pick_your_friend.wav.raw.wav",
+    "sha256": "26949e748c651f0d3ceee002343e4365537df7865f4da829e9fe1454ce8683aa",
+    "receipt_sha256": "2464ffb6ee11a3765550f03e78aa1e08a068dcfab658c7ccc6d731fc45144d46"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/workshop_settings/assets/audio/it/pick_your_friend.wav.extracted.wav",
+    "sha256": "187064fed5e7b718026612cc2c6db5cf877ec2e76032f99f9f61df8dd12d17ec"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/workshop_settings/assets/audio/it/pick_your_friend.wav.raw.wav",
+    "source_sha256": "26949e748c651f0d3ceee002343e4365537df7865f4da829e9fe1454ce8683aa",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-extracted/activities/workshop_settings/assets/audio/it/pick_your_friend.wav.extracted.wav",
+    "output_sha256": "187064fed5e7b718026612cc2c6db5cf877ec2e76032f99f9f61df8dd12d17ec",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Scegli chi ti accompagna!",
+      "locale": "it",
+      "cue_id": "greia.requested.pick_your_friend.it",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/workshop_settings/assets/audio/it/pick_your_friend.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "2464ffb6ee11a3765550f03e78aa1e08a068dcfab658c7ccc6d731fc45144d46"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "Scegli chi ti accompagna!",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Ascolta questa frase in italiano, scegli chi ti accompagna.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Scegli qui ti accompagna.",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.5
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.5,
+        "end_seconds": 0.78
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.78,
+        "end_seconds": 1.04
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.04,
+        "end_seconds": 1.22
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.22,
+        "end_seconds": 1.66
+      },
+      {
+        "word": "scegli",
+        "start_seconds": 2.28,
+        "end_seconds": 2.5
+      },
+      {
+        "word": "chi",
+        "start_seconds": 2.5,
+        "end_seconds": 2.68
+      },
+      {
+        "word": "ti",
+        "start_seconds": 2.68,
+        "end_seconds": 2.84
+      },
+      {
+        "word": "accompagna",
+        "start_seconds": 2.84,
+        "end_seconds": 3.5
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "scegli",
+        "start_seconds": 0.0,
+        "end_seconds": 0.56
+      },
+      {
+        "word": "qui",
+        "start_seconds": 0.56,
+        "end_seconds": 0.76
+      },
+      {
+        "word": "ti",
+        "start_seconds": 0.76,
+        "end_seconds": 0.9
+      },
+      {
+        "word": "accompagna",
+        "start_seconds": 0.9,
+        "end_seconds": 1.56
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.3850890209800319,
+        "no_speech_prob": 0.04157102480530739,
+        "compression_ratio": 0.9365079365079365,
+        "word_probabilities": [
+          0.80419921875,
+          0.96875,
+          0.94287109375,
+          0.9775390625,
+          0.9853515625,
+          0.6904296875,
+          0.59228515625,
+          0.98583984375,
+          0.947265625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.7990394939075817,
+        "no_speech_prob": 0.19643370807170868,
+        "compression_ratio": 0.7575757575757576,
+        "word_probabilities": [
+          0.304931640625,
+          0.2978515625,
+          0.7861328125,
+          0.9287109375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 107,
+    "extracted_voiced_seconds": 1.07,
+    "unremoved_raw_target_tokens": [
+      "scegli",
+      "chi",
+      "ti",
+      "accompagna"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "scegli",
+      "chi",
+      "ti",
+      "accompagna"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.6801814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.66,
+      "search_end_seconds": 2.28,
+      "prefix_last_word_end_seconds": 1.66,
+      "target_first_word_start_seconds": 2.28,
+      "gap_seconds": 0.4689342403628118,
+      "verified_silence_start_seconds": 1.7198639455782312,
+      "verified_silence_end_seconds": 2.1887981859410433,
+      "gap_rms_dbfs": -54.726,
+      "gap_peak_dbfs": -35.192,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.954331065759637,
+      "cut_sample": 43093,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/workshop_settings/assets/audio/it/pick_your_friend.wav",
-    "bytes": 63590,
-    "sha256": "271acc530e68ad372c0551a46e6ae9bef3c3228376b351a15a2b0831e040f31a"
+    "sha256": "21a68c778396a7dee8bac5c59ffabf8bf5160bfc2e53b91dfd3ae0cbc3c602e5",
+    "bytes": 76188
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "8e6a19a008f16900b4b4344b65c255af98e61cb58005be0b278847a522f96527",
+    "original_sha256": "271acc530e68ad372c0551a46e6ae9bef3c3228376b351a15a2b0831e040f31a",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

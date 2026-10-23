@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T13:40:34.129800+00:00",
+  "created_utc": "2026-10-21T16:52:50.051168+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "Escondite en el bosque",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. Escondite en el bosque",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "Escondite en el bosque",
+    "cue_id": "nascondino_bosco.title.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "Escondite en el bosque",
     "cue_id": "nascondino_bosco.title.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/nascondino_bosco/locales/es/audio/activity-title.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-154023-551e824d",
-    "idempotency_key": "greia-5ee439e46b664a55933c07de526dbf87",
+    "job_id": "20261021-185235-f01d5b16",
+    "idempotency_key": "greia-0aac64507fab426c87fb5559f55eed82",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,262 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 566353321,
+    "script_seed": 587144601,
     "language_direction": "Spanish",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "effective_delivery": "Speak in Spanish. Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 221233168,
-        "sha256": "aebff148b9ccb790c423ef53b3c814d849a1bf6e5a18f7cbdc60b3072aab6c8c",
+        "seed": 2528329621,
+        "sha256": "bd51c935b594fbfd5ca88214c0f0768cb85d956fb00bb026581f54ec7c908074",
         "generation": {
-          "elapsed_seconds": 9.880637708003633,
+          "elapsed_seconds": 13.402464875005535,
           "model_load_seconds": 0.0,
-          "rtf": 4.749925987342505,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.49007374897067,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " escondite en el bosque.",
+    "metrics": {
+      "duration_seconds": 1.7515192743764172,
+      "rms_dbfs": -36.44,
+      "peak": 0.11157,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.16,
+      "trailing_silence_seconds": 0.16,
+      "longest_internal_pause_seconds": 0.04
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/nascondino_bosco/locales/es/audio/activity-title.wav.raw.wav",
+    "sha256": "a4df5cb2d23de068d1d675ec2a1037b6fd187b236ba1abb71c2e3ec1ea77f0fd",
+    "receipt_sha256": "4834d35b39cc1c41972d966d75a54aad8d70d316927948ef3e0bb705eba2ca77"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/nascondino_bosco/locales/es/audio/activity-title.wav.extracted.wav",
+    "sha256": "b494bfdae46ae14c42ca0c37f3d9531564d05fcdc2a9c7a13af9367a2f72609d"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/nascondino_bosco/locales/es/audio/activity-title.wav.raw.wav",
+    "source_sha256": "a4df5cb2d23de068d1d675ec2a1037b6fd187b236ba1abb71c2e3ec1ea77f0fd",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-extracted/activities/nascondino_bosco/locales/es/audio/activity-title.wav.extracted.wav",
+    "output_sha256": "b494bfdae46ae14c42ca0c37f3d9531564d05fcdc2a9c7a13af9367a2f72609d",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Escondite en el bosque",
+      "locale": "es",
+      "cue_id": "nascondino_bosco.title.es",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/nascondino_bosco/locales/es/audio/activity-title.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "4834d35b39cc1c41972d966d75a54aad8d70d316927948ef3e0bb705eba2ca77"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "Escondite en el bosque",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Escucha esta frase en español. Escondite en el bosque.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " escondite en el bosque.",
+    "raw_word_alignment": [
+      {
+        "word": "escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.48
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.48,
+        "end_seconds": 0.76
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.76,
+        "end_seconds": 1.18
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.18,
+        "end_seconds": 1.5
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.5,
+        "end_seconds": 1.96
+      },
+      {
+        "word": "escondite",
+        "start_seconds": 2.26,
+        "end_seconds": 2.9
+      },
+      {
+        "word": "en",
+        "start_seconds": 2.9,
+        "end_seconds": 3.12
+      },
+      {
+        "word": "el",
+        "start_seconds": 3.12,
+        "end_seconds": 3.26
+      },
+      {
+        "word": "bosque",
+        "start_seconds": 3.26,
+        "end_seconds": 3.64
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "escondite",
+        "start_seconds": 0.0,
+        "end_seconds": 0.8
+      },
+      {
+        "word": "en",
+        "start_seconds": 0.8,
+        "end_seconds": 1.04
+      },
+      {
+        "word": "el",
+        "start_seconds": 1.04,
+        "end_seconds": 1.18
+      },
+      {
+        "word": "bosque",
+        "start_seconds": 1.18,
+        "end_seconds": 1.58
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.3338561773300171,
+        "no_speech_prob": 0.01903458870947361,
+        "compression_ratio": 0.9482758620689655,
+        "word_probabilities": [
+          0.95458984375,
+          0.9873046875,
+          0.99658203125,
+          0.98583984375,
+          0.98486328125
+        ]
+      },
+      {
+        "avg_logprob": -0.3338561773300171,
+        "no_speech_prob": 0.01903458870947361,
+        "compression_ratio": 0.9482758620689655,
+        "word_probabilities": [
+          0.65185546875,
+          0.99658203125,
+          0.99609375,
+          0.982421875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.3609308762983842,
+        "no_speech_prob": 0.04238852858543396,
+        "compression_ratio": 0.7419354838709677,
+        "word_probabilities": [
+          0.79833984375,
+          0.9951171875,
+          0.99609375,
+          0.9921875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 100,
+    "extracted_voiced_seconds": 1.0,
+    "unremoved_raw_target_tokens": [
+      "escondite",
+      "en",
+      "el",
+      "bosque"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "escondite",
+      "en",
+      "el",
+      "bosque"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.8401814058956916,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-expanded-boundary",
+      "search_start_seconds": 1.5,
+      "search_end_seconds": 2.9,
+      "prefix_last_word_end_seconds": 1.96,
+      "target_first_word_start_seconds": 2.26,
+      "gap_seconds": 0.35918367346938773,
+      "verified_silence_start_seconds": 1.9090702947845806,
+      "verified_silence_end_seconds": 2.268253968253968,
+      "gap_rms_dbfs": -50.305,
+      "gap_peak_dbfs": -30.266,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.0886621315192744,
+      "cut_sample": 46055,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/nascondino_bosco/locales/es/audio/activity-title.wav",
-    "bytes": 91814,
-    "sha256": "3a09534671a7ed56308285bb8c793c3d07373804b349a5169b0a315ece982d3f"
+    "sha256": "06d1e692ba907c5ab69bd40b624ef625051b0e2d06afc1dee31232be9c23b590",
+    "bytes": 77320
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "f03e4b748a07d88d60e26cd79b764f9bf1a6e1720308f59d2c48d1d35a9f33a2",
+    "original_sha256": "3a09534671a7ed56308285bb8c793c3d07373804b349a5169b0a315ece982d3f",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

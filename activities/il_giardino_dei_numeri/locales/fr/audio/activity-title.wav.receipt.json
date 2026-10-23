@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:47:16.994966+00:00",
+  "created_utc": "2026-10-21T16:28:46.415168+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "LE JARDIN DES NOMBRES",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. LE JARDIN DES NOMBRES",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "LE JARDIN DES NOMBRES",
+    "cue_id": "il_giardino_dei_numeri.title.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "LE JARDIN DES NOMBRES",
     "cue_id": "il_giardino_dei_numeri.title.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/il_giardino_dei_numeri/locales/fr/audio/activity-title.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-144705-0672fe23",
-    "idempotency_key": "greia-72eb6f26492846acbd85cd76e1a468c0",
+    "job_id": "20261021-182826-80303545",
+    "idempotency_key": "greia-ccfeb18c275145acb11f7c37dfd318de",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,275 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1426316675,
+    "script_seed": 1491659828,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3118806756,
-        "sha256": "de324ededa0cce7eab1dd9aabde67eb9117319ae2e3241a4e46f23c1f9ea5da8",
+        "seed": 2530892665,
+        "sha256": "9282fcf8bb936d082dd73834a05f677e8d45fa5c8d1ee7ba94cc48153ed64647",
         "generation": {
-          "elapsed_seconds": 11.225409041973762,
+          "elapsed_seconds": 19.396910583993304,
           "model_load_seconds": 0.0,
-          "rtf": 5.010970482244073,
-          "peak_memory_gb": 8.44494914
+          "rtf": 4.489852378533229,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " le jardin des nombres.",
+    "metrics": {
+      "duration_seconds": 1.7335600907029478,
+      "rms_dbfs": -32.81,
+      "peak": 0.16016,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.24,
+      "trailing_silence_seconds": 0.14,
+      "longest_internal_pause_seconds": 0.0
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/il_giardino_dei_numeri/locales/fr/audio/activity-title.wav.raw.wav",
+    "sha256": "af181d5d54a7d0cd96c3e4f82d136ea7661f1afa56e5a63321cdd1b8f34c6db5",
+    "receipt_sha256": "0de27f2555e4a0c5b2c632c7a305ac4e354dd6548ad468448bc59e20dd19659a"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/il_giardino_dei_numeri/locales/fr/audio/activity-title.wav.extracted.wav",
+    "sha256": "87712078ed5e2112317a7d888d311df28abe24077a6c003665c7f939ea1b46d6"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/il_giardino_dei_numeri/locales/fr/audio/activity-title.wav.delivery.wav",
+    "sha256": "5c1dcf854ad738571729dc8d40b124aa56f7eba87e5cc8ab1fec0b895e02b73d"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/il_giardino_dei_numeri/locales/fr/audio/activity-title.wav.raw.wav",
+    "source_sha256": "af181d5d54a7d0cd96c3e4f82d136ea7661f1afa56e5a63321cdd1b8f34c6db5",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/il_giardino_dei_numeri/locales/fr/audio/activity-title.wav.extracted.wav",
+    "output_sha256": "87712078ed5e2112317a7d888d311df28abe24077a6c003665c7f939ea1b46d6",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "LE JARDIN DES NOMBRES",
+      "locale": "fr",
+      "cue_id": "il_giardino_dei_numeri.title.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/il_giardino_dei_numeri/locales/fr/audio/activity-title.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "0de27f2555e4a0c5b2c632c7a305ac4e354dd6548ad468448bc59e20dd19659a"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "LE JARDIN DES NOMBRES",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français. Le jardin des nombres.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Le jardin des nombres.",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.26
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.26,
+        "end_seconds": 0.48
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.48,
+        "end_seconds": 0.7
+      },
+      {
+        "word": "en",
+        "start_seconds": 0.7,
+        "end_seconds": 0.8
+      },
+      {
+        "word": "français",
+        "start_seconds": 0.8,
+        "end_seconds": 1.2
+      },
+      {
+        "word": "le",
+        "start_seconds": 2.74,
+        "end_seconds": 2.96
+      },
+      {
+        "word": "jardin",
+        "start_seconds": 2.96,
+        "end_seconds": 3.42
+      },
+      {
+        "word": "des",
+        "start_seconds": 3.42,
+        "end_seconds": 3.62
+      },
+      {
+        "word": "nombres",
+        "start_seconds": 3.62,
+        "end_seconds": 4.06
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "le",
+        "start_seconds": 0.0,
+        "end_seconds": 1.0
+      },
+      {
+        "word": "jardin",
+        "start_seconds": 1.0,
+        "end_seconds": 1.44
+      },
+      {
+        "word": "des",
+        "start_seconds": 1.44,
+        "end_seconds": 1.64
+      },
+      {
+        "word": "nombres",
+        "start_seconds": 1.64,
+        "end_seconds": 2.08
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5743023554484049,
+        "no_speech_prob": 0.010864181444048882,
+        "compression_ratio": 0.8688524590163934,
+        "word_probabilities": [
+          0.83251953125,
+          0.98974609375,
+          0.92578125,
+          0.97509765625,
+          0.9697265625
+        ]
+      },
+      {
+        "avg_logprob": -0.5743023554484049,
+        "no_speech_prob": 0.010864181444048882,
+        "compression_ratio": 0.8688524590163934,
+        "word_probabilities": [
+          0.794921875,
+          0.9892578125,
+          0.9599609375,
+          0.5302734375
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.5487763404846191,
+        "no_speech_prob": 0.26097604632377625,
+        "compression_ratio": 0.7333333333333333,
+        "word_probabilities": [
+          0.6513671875,
+          0.994140625,
+          0.95556640625,
+          0.6005859375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 121,
+    "extracted_voiced_seconds": 1.21,
+    "unremoved_raw_target_tokens": [
+      "le",
+      "jardin",
+      "des",
+      "nombres"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "le",
+      "jardin",
+      "des",
+      "nombres"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 4.320181405895692,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.2,
+      "search_end_seconds": 2.74,
+      "prefix_last_word_end_seconds": 1.2,
+      "target_first_word_start_seconds": 2.74,
+      "gap_seconds": 1.4267573696145124,
+      "verified_silence_start_seconds": 1.2598639455782312,
+      "verified_silence_end_seconds": 2.6866213151927436,
+      "gap_rms_dbfs": -64.114,
+      "gap_peak_dbfs": -33.84,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.9732426303854873,
+      "cut_sample": 43510,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 13525,
+      "removed_seconds": 0.6133786848072562,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 57035,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/il_giardino_dei_numeri/locales/fr/audio/activity-title.wav.delivery.wav",
+      "sha256": "5c1dcf854ad738571729dc8d40b124aa56f7eba87e5cc8ab1fec0b895e02b73d"
+    }
+  },
   "output": {
     "path": "activities/il_giardino_dei_numeri/locales/fr/audio/activity-title.wav",
-    "bytes": 98870,
-    "sha256": "8e550e8fc67832b5eaeb7fa3ed2b2d70e1ec070c92c099e0e4ebf899bc5ad6c2"
+    "sha256": "5a0550dd37c1d0978afe932f806b21eac8aa37a1475594b38cc4ed96a5775449",
+    "bytes": 76528
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "ab9aa3bfdd013c243c45599716acda31c94b151369699b8b81b60534fd023433",
+    "original_sha256": "e2dc898a0c1898f9d1ceaa4a023c959c364767637617dedc6346101cf80190b7",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

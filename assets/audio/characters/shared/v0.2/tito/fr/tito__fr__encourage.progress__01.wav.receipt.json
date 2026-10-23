@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T13:14:35.426361+00:00",
+  "created_utc": "2026-10-21T18:19:19.010848+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "Continue comme ça !",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. Continue comme ça !",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "tito",
+    "kind": "shared_character_utterance",
+    "locale": "fr",
+    "text": "Continue comme ça !",
+    "cue_id": "greia.shared.tito__fr__encourage.progress__01.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "tito",
     "kind": "shared_character_utterance",
     "locale": "fr",
     "text": "Continue comme ça !",
     "cue_id": "greia.shared.tito__fr__encourage.progress__01.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "assets/audio/characters/shared/v0.2/tito/fr/tito__fr__encourage.progress__01.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.tito.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261021-151430-05c24639",
-    "idempotency_key": "greia-ad753e15b1324f529300a938df074a1a",
+    "job_id": "20261021-201905-e3fd1489",
+    "idempotency_key": "greia-5484c7df2888405a9c669209f893db86",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,226 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3627915035,
+    "script_seed": 2279869864,
     "language_direction": "French",
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in French. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3822847873,
-        "sha256": "8019c72f19c1389f23b55d422e1f5188f4f3bfa85737d28c89d980cba24dae13",
+        "seed": 826301058,
+        "sha256": "a63d04701b03117bd901b54f13de968136ff28caa8a56ab2a85e75aa04a9a140",
         "generation": {
-          "elapsed_seconds": 4.209432999996352,
+          "elapsed_seconds": 12.315450207999675,
           "model_load_seconds": 0.0,
-          "rtf": 3.7578631156045397,
+          "rtf": 4.275950538047454,
           "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Continue comme ça.",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/characters/shared/v0.2/tito/fr/tito__fr__encourage.progress__01.wav.raw.wav",
+    "sha256": "ef2b7a1d559f7db38a581c2e20f6ba9090c0089bb16d7209c253c56e26d6c972",
+    "receipt_sha256": "422f08efe8faaa009d5e91dadf7a52c1a98e087c08e1493b49678ce7023182ac"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/characters/shared/v0.2/tito/fr/tito__fr__encourage.progress__01.wav.extracted.wav",
+    "sha256": "a560dbc401f5ccf1b2d59ca7041cb21881844b886afa6989f19c82768279e27d"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/assets/audio/characters/shared/v0.2/tito/fr/tito__fr__encourage.progress__01.wav.raw.wav",
+    "source_sha256": "ef2b7a1d559f7db38a581c2e20f6ba9090c0089bb16d7209c253c56e26d6c972",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/assets/audio/characters/shared/v0.2/tito/fr/tito__fr__encourage.progress__01.wav.extracted.wav",
+    "output_sha256": "a560dbc401f5ccf1b2d59ca7041cb21881844b886afa6989f19c82768279e27d",
+    "target_request": {
+      "speaker": "tito",
+      "kind": "shared_character_utterance",
+      "text": "Continue comme ça !",
+      "locale": "fr",
+      "cue_id": "greia.shared.tito__fr__encourage.progress__01.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/assets/audio/characters/shared/v0.2/tito/fr/tito__fr__encourage.progress__01.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "422f08efe8faaa009d5e91dadf7a52c1a98e087c08e1493b49678ce7023182ac"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "Continue comme ça !",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français. Continue comme ça.",
+    "extracted_transcript": " Continue comme ça.",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.28
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.28,
+        "end_seconds": 0.62
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.62,
+        "end_seconds": 0.82
+      },
+      {
+        "word": "en",
+        "start_seconds": 0.82,
+        "end_seconds": 0.94
+      },
+      {
+        "word": "français",
+        "start_seconds": 0.94,
+        "end_seconds": 1.4
+      },
+      {
+        "word": "continue",
+        "start_seconds": 1.88,
+        "end_seconds": 2.16
+      },
+      {
+        "word": "comme",
+        "start_seconds": 2.16,
+        "end_seconds": 2.4
+      },
+      {
+        "word": "ça",
+        "start_seconds": 2.4,
+        "end_seconds": 2.58
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "continue",
+        "start_seconds": 0.0,
+        "end_seconds": 0.54
+      },
+      {
+        "word": "comme",
+        "start_seconds": 0.54,
+        "end_seconds": 0.78
+      },
+      {
+        "word": "ça",
+        "start_seconds": 0.78,
+        "end_seconds": 1.02
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.5412008921305339,
+        "no_speech_prob": 0.013488910160958767,
+        "compression_ratio": 0.8771929824561403,
+        "word_probabilities": [
+          0.75048828125,
+          0.93359375,
+          0.9599609375,
+          0.8310546875,
+          0.97216796875
+        ]
+      },
+      {
+        "avg_logprob": -0.5412008921305339,
+        "no_speech_prob": 0.013488910160958767,
+        "compression_ratio": 0.8771929824561403,
+        "word_probabilities": [
+          0.5615234375,
+          0.9775390625,
+          0.99072265625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.8896113804408482,
+        "no_speech_prob": 0.07865431159734726,
+        "compression_ratio": 0.7037037037037037,
+        "word_probabilities": [
+          0.344970703125,
+          0.212646484375,
+          0.9873046875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 69,
+    "extracted_voiced_seconds": 0.69,
+    "unremoved_raw_target_tokens": [
+      "continue",
+      "comme",
+      "ça"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "continue",
+      "comme",
+      "ça"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 2.8801814058956916,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.4,
+      "target_first_word_start_seconds": 1.88,
+      "gap_seconds": 0.3691609977324263,
+      "verified_silence_start_seconds": 1.4598639455782314,
+      "verified_silence_end_seconds": 1.8290249433106576,
+      "gap_rms_dbfs": -61.739,
+      "gap_peak_dbfs": -40.913,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.6444444444444444,
+      "cut_sample": 36260,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "assets/audio/characters/shared/v0.2/tito/fr/tito__fr__encourage.progress__01.wav",
-    "bytes": 49478,
-    "sha256": "2d9aae0ba4895067cc50c7c09be9db2a072a39d1e0378bbc0b38438dd0614a6e"
+    "sha256": "464e34de04c2ec62a22e050d348e653e671cea4766b9f9496ddb15dccdecf237",
+    "bytes": 54574
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "73a4c5a3362a169c3fdd609abcffd74baf44670751891214f403c332eb419d39",
+    "original_sha256": "2d9aae0ba4895067cc50c7c09be9db2a072a39d1e0378bbc0b38438dd0614a6e",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

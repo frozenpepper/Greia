@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T09:25:21.716663+00:00",
+  "created_utc": "2026-10-21T16:03:53.786615+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "La Terre",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. La Terre",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v4",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "La Terre",
+    "cue_id": "encyclopedia.space.earth.name.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "La Terre",
     "cue_id": "encyclopedia.space.earth.name.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/enciclopedia_greia/assets/audio/fr/space/earth_name.ogg",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Reveals the name of what we are looking at, like a friendly museum guide: clear, warm wonder, unhurried."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-112516-aa6d8ebd",
-    "idempotency_key": "greia-f657ffe88cf146709407953c170e2d58",
+    "job_id": "20261021-180340-7c24e452",
+    "idempotency_key": "greia-e8fb04c6b8b54e7ba3adc2afc938aea3",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,51 +72,240 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2758124979,
+    "script_seed": 1628224174,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Reveals the name of what we are looking at, like a friendly museum guide: clear, warm wonder, unhurried.",
-    "effective_delivery": "Speak naturally in French. Leo, a warm, curious cartoon guide. Reveals the name of what we are looking at, like a friendly museum guide: clear, warm wonder, unhurried.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1766672847,
-        "sha256": "70dc86741f16bbe9ec049bf7ca30755972cae8790f0ee47c3f83bacb826892b1",
+        "seed": 2893516919,
+        "sha256": "2b0e52008a384c87bae6ec4fa3f53f7f4786b66846d34d0330186fcfcd6c598e",
         "generation": {
-          "elapsed_seconds": 4.1773113329545595,
+          "elapsed_seconds": 12.946859165997012,
           "model_load_seconds": 0.0,
-          "rtf": 3.729187322976842,
-          "peak_memory_gb": 7.648602244
+          "rtf": 4.0456827767294445,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " la terre.",
+    "score": 1.0,
+    "detail": "Exact raw/extracted target token checks; saved audio recovery only; human review pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/enciclopedia_greia/assets/audio/fr/space/earth_name.ogg.raw.wav",
+    "sha256": "118023437b31396d40eb67e3e2b551315c0fc16eacee1471f468c6e9a39689c3",
+    "receipt_sha256": "f8865d77ec09ec6fe10a3f58eadf7464ca09f9125152d478582fbe11780b7833"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/enciclopedia_greia/assets/audio/fr/space/earth_name.ogg.extracted.wav",
+    "sha256": "127f99a617c52c59c3d88eccdc6ff5ed4e644e11ac0b0ca83a6f0719b875ada5"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v4",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/enciclopedia_greia/assets/audio/fr/space/earth_name.ogg.raw.wav",
+    "source_sha256": "118023437b31396d40eb67e3e2b551315c0fc16eacee1471f468c6e9a39689c3",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/parent-boundary-audit-v4/outputs/24817b28f42e1db30abefad36fa4dc134b66c5ef529dc37b14fdd104e5e3db10-proposed.wav",
+    "output_sha256": "127f99a617c52c59c3d88eccdc6ff5ed4e644e11ac0b0ca83a6f0719b875ada5",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "La Terre",
+      "locale": "fr",
+      "cue_id": "encyclopedia.space.earth.name.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/enciclopedia_greia/assets/audio/fr/space/earth_name.ogg.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "f8865d77ec09ec6fe10a3f58eadf7464ca09f9125152d478582fbe11780b7833"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "La Terre",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français la terre.",
+    "removed_prefix_transcript": " Cette phrase est en français.",
+    "removed_prefix_word_alignment": [
+      {
+        "word": " Cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.32
+      },
+      {
+        "word": " phrase",
+        "start_seconds": 0.32,
+        "end_seconds": 0.8
+      },
+      {
+        "word": " est",
+        "start_seconds": 0.8,
+        "end_seconds": 1.22
+      },
+      {
+        "word": " en",
+        "start_seconds": 1.22,
+        "end_seconds": 1.38
+      },
+      {
+        "word": " français.",
+        "start_seconds": 1.38,
+        "end_seconds": 1.88
+      }
+    ],
+    "extracted_transcript": " la terre.",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.32
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.32,
+        "end_seconds": 0.8
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.8,
+        "end_seconds": 1.22
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.22,
+        "end_seconds": 1.38
+      },
+      {
+        "word": "français",
+        "start_seconds": 1.38,
+        "end_seconds": 1.98
+      },
+      {
+        "word": "la",
+        "start_seconds": 1.98,
+        "end_seconds": 2.58
+      },
+      {
+        "word": "terre",
+        "start_seconds": 2.58,
+        "end_seconds": 2.88
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "la",
+        "start_seconds": 0.0,
+        "end_seconds": 0.4
+      },
+      {
+        "word": "terre",
+        "start_seconds": 0.4,
+        "end_seconds": 0.66
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.4518939798528498,
+        "no_speech_prob": 0.011183972470462322,
+        "compression_ratio": 0.8297872340425532,
+        "word_probabilities": [
+          0.5576171875,
+          0.9443359375,
+          0.96044921875,
+          0.77099609375,
+          0.927734375,
+          0.5048828125,
+          0.54736328125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6803385416666666,
+        "no_speech_prob": 0.22141310572624207,
+        "compression_ratio": 0.5294117647058824,
+        "word_probabilities": [
+          0.56298828125,
+          0.52880859375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 38,
+    "extracted_voiced_seconds": 0.38,
+    "unremoved_raw_target_tokens": [
+      "la",
+      "terre"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "la",
+      "terre"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.2001814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "coincident-first-target-span-dual-transcript",
+      "search_end_seconds": 2.58,
+      "prefix_last_word_end_seconds": 1.98,
+      "target_first_word_start_seconds": 1.98,
+      "gap_seconds": 0.3691609977324263,
+      "verified_silence_start_seconds": 2.0398639455782313,
+      "verified_silence_end_seconds": 2.4090249433106576,
+      "gap_rms_dbfs": -54.642,
+      "gap_peak_dbfs": -31.834,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.2244444444444444,
+      "cut_sample": 49049,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/enciclopedia_greia/assets/audio/fr/space/earth_name.ogg",
-    "bytes": 8909,
-    "sha256": "274ce2e754072235def40a5ceaa8e27a5877951805656cdb24379c56149bd67e"
+    "sha256": "6b0248878510e8ff040d5bf35f58a93d39cb190586e43d7160ece1f452682284",
+    "bytes": 9540
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "recovery_provenance": {
+    "audit": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/parent-boundary-audit-v4",
+    "no_new_synthesis": true,
+    "original_provider_receipt_sha256": "f8865d77ec09ec6fe10a3f58eadf7464ca09f9125152d478582fbe11780b7833"
+  },
   "corpus_replacement": {
-    "original_sha256": "2f87e9c13ba6a4109f26d1039d78b6bc51a78ff33795962e137f2710893bcba5",
-    "owner_authorization": "2026-10-19 corpus regeneration; listening pending",
-    "audio_repackaging": {
-      "pipeline": "AudioPipeline",
-      "codec": "libvorbis",
-      "quality": 3,
-      "sample_rate_hz": 22050,
-      "source_mix_sha256": "70dc86741f16bbe9ec049bf7ca30755972cae8790f0ee47c3f83bacb826892b1",
-      "source_job_id": "20261020-112516-aa6d8ebd",
-      "repackaged_utc": "2026-10-20T22:30:29Z"
-    }
+    "original_sha256": "274ce2e754072235def40a5ceaa8e27a5877951805656cdb24379c56149bd67e",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

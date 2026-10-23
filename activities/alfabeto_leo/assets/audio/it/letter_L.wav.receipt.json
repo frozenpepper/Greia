@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T23:27:48.133463+00:00",
+  "created_utc": "2026-10-21T15:39:59.168069+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "L come Luna",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. L come Luna",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "L come Luna",
+    "cue_id": "alfabeto_leo.letter_L.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "L come Luna",
     "cue_id": "alfabeto_leo.letter_L.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/alfabeto_leo/assets/audio/it/letter_L.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-012736-df28861f",
-    "idempotency_key": "greia-a4652172f9374ca4ad97e18a1971b333",
+    "job_id": "20261021-173940-89dea899",
+    "idempotency_key": "greia-fb0095aaf4254db081b80f8460a70edc",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,219 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2799049403,
+    "script_seed": 2536280114,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak naturally in Italian. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1607450579,
-        "sha256": "fd027505f74eb433d6f4d848ac3027040cd13ae5ec7e0b0bb146e034b4a14d7a",
+        "seed": 1635553511,
+        "sha256": "f41b73e73d64df1a1213eee4b46d2a90f75ab798a6a557110add2075d055c102",
         "generation": {
-          "elapsed_seconds": 11.068968833016697,
+          "elapsed_seconds": 18.064287667002645,
           "model_load_seconds": 0.0,
-          "rtf": 6.917384959702133,
-          "peak_memory_gb": 8.21220922
+          "rtf": 4.03205706640437,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " L come Luna",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/alfabeto_leo/assets/audio/it/letter_L.wav.raw.wav",
+    "sha256": "cce248c7374515f136797061e5cab4285731f2c536130cc8ba518f85edc1428d",
+    "receipt_sha256": "d1fceac04b4b54065040bd596bf87cb941c3712cd3aa30a3b58a4d76198eb1fc"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/assets/audio/it/letter_L.wav.extracted.wav",
+    "sha256": "a441e65f7120d9bec1271a728fe417883e7f3c86bbed4e1aa3cd39cf4bcae778"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/alfabeto_leo/assets/audio/it/letter_L.wav.raw.wav",
+    "source_sha256": "cce248c7374515f136797061e5cab4285731f2c536130cc8ba518f85edc1428d",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/alfabeto_leo/assets/audio/it/letter_L.wav.extracted.wav",
+    "output_sha256": "a441e65f7120d9bec1271a728fe417883e7f3c86bbed4e1aa3cd39cf4bcae778",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "L come Luna",
+      "locale": "it",
+      "cue_id": "alfabeto_leo.letter_L.it",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/alfabeto_leo/assets/audio/it/letter_L.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "d1fceac04b4b54065040bd596bf87cb941c3712cd3aa30a3b58a4d76198eb1fc"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "L come Luna",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " ascolta questa frase in italiano, L come LUNA",
+    "extracted_transcript": " L come Luna",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.54
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.54,
+        "end_seconds": 0.78
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.78,
+        "end_seconds": 1.22
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.22,
+        "end_seconds": 1.52
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.52,
+        "end_seconds": 1.96
+      },
+      {
+        "word": "l",
+        "start_seconds": 2.52,
+        "end_seconds": 2.98
+      },
+      {
+        "word": "come",
+        "start_seconds": 2.98,
+        "end_seconds": 3.48
+      },
+      {
+        "word": "luna",
+        "start_seconds": 3.48,
+        "end_seconds": 4.34
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "l",
+        "start_seconds": 0.0,
+        "end_seconds": 0.68
+      },
+      {
+        "word": "come",
+        "start_seconds": 0.68,
+        "end_seconds": 1.3
+      },
+      {
+        "word": "luna",
+        "start_seconds": 1.3,
+        "end_seconds": 1.9
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.560326099395752,
+        "no_speech_prob": 0.0015498684952035546,
+        "compression_ratio": 0.8823529411764706,
+        "word_probabilities": [
+          0.7099609375,
+          0.9619140625,
+          0.9814453125,
+          0.93798828125,
+          0.9677734375,
+          0.287109375,
+          0.475341796875,
+          0.55908203125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6813759803771973,
+        "no_speech_prob": 0.2973140776157379,
+        "compression_ratio": 0.5789473684210527,
+        "word_probabilities": [
+          0.46923828125,
+          0.74755859375,
+          0.343505859375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 125,
+    "extracted_voiced_seconds": 1.25,
+    "unremoved_raw_target_tokens": [
+      "l",
+      "come",
+      "luna"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "l",
+      "come",
+      "luna"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 4.480181405895691,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.96,
+      "target_first_word_start_seconds": 2.52,
+      "gap_seconds": 0.3691609977324263,
+      "verified_silence_start_seconds": 2.0198639455782312,
+      "verified_silence_end_seconds": 2.3890249433106576,
+      "gap_rms_dbfs": -49.144,
+      "gap_peak_dbfs": -31.579,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.2044444444444444,
+      "cut_sample": 48608,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/it/letter_L.wav",
-    "bytes": 70646,
-    "sha256": "8913eb0d4f1a6353e566dc8cefa5500e8a3795ebc40b1bfafcd16ed4ee55ab93"
+    "sha256": "a22f1b18b8cbde07121983b8970825360ab574b3e068055fa702ffb6a80f4520",
+    "bytes": 100438
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "e3ac39ce15df9480c24162c72608c6cf884c0fb57b5968510643f3cdf7c9e135",
+    "original_sha256": "8913eb0d4f1a6353e566dc8cefa5500e8a3795ebc40b1bfafcd16ed4ee55ab93",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

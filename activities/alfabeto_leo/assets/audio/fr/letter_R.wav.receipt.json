@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T23:18:15.025094+00:00",
+  "created_utc": "2026-10-21T15:28:40.738286+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "R comme Robot",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. R comme Robot",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "R comme Robot",
+    "cue_id": "alfabeto_leo.letter_R.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "R comme Robot",
     "cue_id": "alfabeto_leo.letter_R.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/alfabeto_leo/assets/audio/fr/letter_R.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-011807-71c39762",
-    "idempotency_key": "greia-fee9d0cdc31046e188a09ebbe1254451",
+    "job_id": "20261021-172827-f81908c7",
+    "idempotency_key": "greia-021d66dcfb0c4cc7b4d93fab09114dab",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,218 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2121178919,
+    "script_seed": 3017415342,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak naturally in French. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 951168086,
-        "sha256": "4444d2c6566be3ec7deaaab77d7160dea821f1c8467d16eb5604731ecd797c0c",
+        "seed": 1856386535,
+        "sha256": "0ed4088bea036fd64c3f3830d602c17b24e1418b0aa5e40ef42410b8a3bb28df",
         "generation": {
-          "elapsed_seconds": 7.030774874961935,
+          "elapsed_seconds": 12.259015042000101,
           "model_load_seconds": 0.0,
-          "rtf": 6.276543557472341,
-          "peak_memory_gb": 8.21220922
+          "rtf": 3.8307426827769704,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " et comme robot.",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/alfabeto_leo/assets/audio/fr/letter_R.wav.raw.wav",
+    "sha256": "3375af5c7c653148f7f1c9fad54e16025c30c8e61f1b9456194f9b0543b9f611",
+    "receipt_sha256": "ac69ef081248f2c73469c9e429a74d88fb83ead6481fad351736c62303fd289a"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/assets/audio/fr/letter_R.wav.extracted.wav",
+    "sha256": "e576ccd66a9767d8fae4b05ae96a974a14a7f725573110beff813c3eb96b3436"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/alfabeto_leo/assets/audio/fr/letter_R.wav.raw.wav",
+    "source_sha256": "3375af5c7c653148f7f1c9fad54e16025c30c8e61f1b9456194f9b0543b9f611",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/alfabeto_leo/assets/audio/fr/letter_R.wav.extracted.wav",
+    "output_sha256": "e576ccd66a9767d8fae4b05ae96a974a14a7f725573110beff813c3eb96b3436",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "R comme Robot",
+      "locale": "fr",
+      "cue_id": "alfabeto_leo.letter_R.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/alfabeto_leo/assets/audio/fr/letter_R.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "ac69ef081248f2c73469c9e429a74d88fb83ead6481fad351736c62303fd289a"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "R comme Robot",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français. Erkemero Beau.",
+    "extracted_transcript": " et comme robot.",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.38
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.38,
+        "end_seconds": 0.78
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.78,
+        "end_seconds": 1.12
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.12,
+        "end_seconds": 1.24
+      },
+      {
+        "word": "français",
+        "start_seconds": 1.24,
+        "end_seconds": 1.7
+      },
+      {
+        "word": "erkemero",
+        "start_seconds": 2.32,
+        "end_seconds": 3.08
+      },
+      {
+        "word": "beau",
+        "start_seconds": 3.08,
+        "end_seconds": 3.12
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "et",
+        "start_seconds": 0.0,
+        "end_seconds": 0.44
+      },
+      {
+        "word": "comme",
+        "start_seconds": 0.44,
+        "end_seconds": 0.72
+      },
+      {
+        "word": "robot",
+        "start_seconds": 0.72,
+        "end_seconds": 0.98
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.9714294009738498,
+        "no_speech_prob": 0.036135319620370865,
+        "compression_ratio": 0.8490566037735849,
+        "word_probabilities": [
+          0.482177734375,
+          0.9052734375,
+          0.94189453125,
+          0.82861328125,
+          0.95068359375
+        ]
+      },
+      {
+        "avg_logprob": -0.9714294009738498,
+        "no_speech_prob": 0.036135319620370865,
+        "compression_ratio": 0.8490566037735849,
+        "word_probabilities": [
+          0.171875,
+          0.278564453125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -1.2982425689697266,
+        "no_speech_prob": 0.12967287003993988,
+        "compression_ratio": 0.6521739130434783,
+        "word_probabilities": [
+          0.06964111328125,
+          0.079833984375,
+          0.468994140625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 51,
+    "extracted_voiced_seconds": 0.51,
+    "unremoved_raw_target_tokens": [
+      "erkemero",
+      "beau"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "erkemero",
+      "beau"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.2001814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.7,
+      "target_first_word_start_seconds": 2.32,
+      "gap_seconds": 0.508843537414966,
+      "verified_silence_start_seconds": 1.7598639455782312,
+      "verified_silence_end_seconds": 2.2687074829931975,
+      "gap_rms_dbfs": -68.171,
+      "gap_peak_dbfs": -43.906,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.0142857142857142,
+      "cut_sample": 44415,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/fr/letter_R.wav",
-    "bytes": 49478,
-    "sha256": "96ab67012bee09d82626b845625e5be49bb2763ccc97564b72c6765a52456a52"
+    "sha256": "690d591a805e7d26ee1fd5ebcded10584972ceb19a53402db483ae8a5ca46b4e",
+    "bytes": 52376
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "befe419f7612196da9dc4640a785afde5be6b8d286b1c8dceb34fabe7d0b7224",
+    "original_sha256": "96ab67012bee09d82626b845625e5be49bb2763ccc97564b72c6765a52456a52",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T23:21:42.781110+00:00",
+  "created_utc": "2026-10-21T23:53:18.090863+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "Dov'è la lettera G?",
+    "target_word_count": 4,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano...\n\nDov'è la lettera G?",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Dov'è la lettera G?",
+    "cue_id": "alfabeto_leo.ask_G",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Dov'è la lettera G?",
     "cue_id": "alfabeto_leo.ask_G",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/alfabeto_leo/assets/audio/it/ask_G.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-012133-ed3bafcb",
-    "idempotency_key": "greia-44ac601cc09a4432b8ac5788fcef9354",
+    "job_id": "20261022-015257-1037de2d",
+    "idempotency_key": "greia-b9ec18ee996e48b1a580fcf8c1491efe",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,187 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 962312078,
+    "script_seed": 1633988373,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
-    "effective_delivery": "Speak naturally in Italian. Leo, a warm, curious cartoon guide. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2300577633,
-        "sha256": "11bb392c040a620986a6ebb2e04d1e6e466d8597c34a25e368095995b3aae440",
+        "seed": 3102192741,
+        "sha256": "6d0c6b4908c2ef7ed20b28e8af1c461403d9412c21c91dadd83611fb97b69460",
         "generation": {
-          "elapsed_seconds": 9.060829791997094,
+          "elapsed_seconds": 19.825569958004053,
           "model_load_seconds": 0.0,
-          "rtf": 6.291514726534263,
-          "peak_memory_gb": 8.21220922
+          "rtf": 4.272598676341522,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8939,
+    "transcript": "Dev'è la lettera G?",
+    "metrics": {
+      "duration_seconds": 1.4476643990929705,
+      "rms_dbfs": -32.89,
+      "peak": 0.1467,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.02,
+      "trailing_silence_seconds": 0.12,
+      "longest_internal_pause_seconds": 0.02
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v1",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/alfabeto_leo/assets/audio/it/ask_G.wav.raw.wav",
+    "sha256": "daecce5d7b0abf476eae603b0ad524553074cd43a2428be9afe76eaf2f488d67",
+    "receipt_sha256": "bf9a4e5f8a788e648c7d93f59fd9cdfe76740cfcb4d60c640e8706be9eaa04eb"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/assets/audio/it/ask_G.wav.extracted.wav",
+    "sha256": "dc4549777960c3b66131629b0d904039cb5d678a73d7deab4624006163dca446"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/assets/audio/it/ask_G.wav.delivery.wav",
+    "sha256": "dc4549777960c3b66131629b0d904039cb5d678a73d7deab4624006163dca446"
+  },
+  "extraction": {
+    "schema_version": 1,
+    "algorithm_version": "greia-spoken-carrier-extractor-v7",
+    "comparison_policy": "locale-number-tokens-v1",
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-03/carrier-raw/activities/alfabeto_leo/assets/audio/it/ask_G.wav.raw.wav",
+    "source_sha256": "daecce5d7b0abf476eae603b0ad524553074cd43a2428be9afe76eaf2f488d67",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-03/carrier-extracted/activities/alfabeto_leo/assets/audio/it/ask_G.wav.extracted.wav",
+    "output_sha256": "dc4549777960c3b66131629b0d904039cb5d678a73d7deab4624006163dca446",
+    "output_bytes": 63886,
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "Dov'è la lettera G?",
+    "remove_first_words": 5,
+    "ignore_accents": true,
+    "target_verification_requested": "warn",
+    "target_verification_policy": "warn",
+    "target_comparison_score": 0.8939,
+    "target_word_count_matches": true,
+    "target_numbers_match": true,
+    "target_comparison_flags": [],
+    "target_transcript_warning": true,
+    "recognizer": "mlx-whisper-base",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extracted_transcript": "Dev'è la lettera G?",
+    "expected_target_tokens": [
+      "dov'e",
+      "la",
+      "lettera",
+      "g"
+    ],
+    "extracted_target_tokens": [
+      "dev'e",
+      "la",
+      "lettera",
+      "g"
+    ],
+    "extracted_target_exact_match": false,
+    "transcription_settings": {
+      "language": "it",
+      "initial_prompt": null,
+      "word_timestamps": true,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "sample_rate": 22050,
+    "duration_seconds": 4.640181405895691,
+    "boundary": {
+      "search_strategy": "target-only-global-quiet-run-v7",
+      "verified_silence_start_seconds": 2.214965986394558,
+      "verified_silence_end_seconds": 3.292517006802721,
+      "verified_silence_duration_seconds": 1.0775510204081633,
+      "cut_sample": 70395,
+      "cut_time_seconds": 3.192517006802721,
+      "padding_seconds": 0.1,
+      "quiet_run_start_sample": 48840,
+      "quiet_run_end_sample": 72600,
+      "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+    },
+    "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-03/carrier-extracted/activities/alfabeto_leo/assets/audio/it/ask_G.wav.extracted.wav.search/883b663a70844308ace85a6cd2602f87",
+    "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-03/carrier-extracted/activities/alfabeto_leo/assets/audio/it/ask_G.wav.extracted.wav.search/883b663a70844308ace85a6cd2602f87/search.json",
+    "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-03/carrier-raw/activities/alfabeto_leo/assets/audio/it/ask_G.wav.raw.wav.receipt.json",
+    "source_provider_receipt_sha256": "bf9a4e5f8a788e648c7d93f59fd9cdfe76740cfcb4d60c640e8706be9eaa04eb",
+    "candidate_sha256": "dc4549777960c3b66131629b0d904039cb5d678a73d7deab4624006163dca446",
+    "candidate_id": "candidate-01",
+    "candidate_count": 1,
+    "qualifying_quiet_run_count": 1,
+    "candidate_results": [
+      {
+        "candidate_id": "candidate-01",
+        "quiet_run": {
+          "start_sample": 48840,
+          "end_sample": 72600,
+          "start_seconds": 2.214965986394558,
+          "end_seconds": 3.292517006802721,
+          "duration_seconds": 1.0775510204081633
+        },
+        "cut_sample": 70395,
+        "cut_time_seconds": 3.192517006802721,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-03/carrier-extracted/activities/alfabeto_leo/assets/audio/it/ask_G.wav.extracted.wav.search/883b663a70844308ace85a6cd2602f87/candidate-01.wav",
+        "preceding_voiced_seconds": 1.78,
+        "retained_voiced_seconds": 1.12,
+        "retained_duration_seconds": 1.4476643990929705,
+        "candidate_sha256": "dc4549777960c3b66131629b0d904039cb5d678a73d7deab4624006163dca446",
+        "extracted_transcript": "Dev'è la lettera G?",
+        "canonical_transcript_tokens": [
+          "dev'e",
+          "la",
+          "lettera",
+          "g"
+        ],
+        "exact_target_match": false,
+        "target_comparison_score": 0.8939,
+        "target_word_count_matches": true,
+        "target_numbers_match": true,
+        "target_comparison_flags": [],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": true,
+        "asr_segment_count": 1
+      }
+    ],
+    "human_review": "PENDING",
+    "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+    "target_verification_effective_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+    "target_verification_warning": true,
+    "saved_recovery_policy": "target-only-v7-saved-v1",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 0,
+      "removed_seconds": 0.0,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 70395,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-03/carrier-extracted/activities/alfabeto_leo/assets/audio/it/ask_G.wav.delivery.wav",
+      "sha256": "dc4549777960c3b66131629b0d904039cb5d678a73d7deab4624006163dca446"
+    }
+  },
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/it/ask_G.wav",
-    "bytes": 63590,
-    "sha256": "5082afe764944b4673a4d22349d1c4b772062e729b42831a6d632041a70b8dc0"
+    "sha256": "56c0e07e4e06816e4efa7c057d969eefc4488d03dbcecae4e03454fdfe6ff17c",
+    "bytes": 63920
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "ed8f240429bd8273642ac37d2edffe612c2e278baa1a18b8a6a5ed2cd993a0b9",
+    "original_sha256": "5082afe764944b4673a4d22349d1c4b772062e729b42831a6d632041a70b8dc0",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

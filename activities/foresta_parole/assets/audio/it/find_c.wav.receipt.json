@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:31:52.308773+00:00",
+  "created_utc": "2026-10-21T16:23:35.963941+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "C come Cane",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. C come Cane",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "C come Cane",
+    "cue_id": "foresta_parole.find_c",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "C come Cane",
     "cue_id": "foresta_parole.find_c",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/foresta_parole/assets/audio/it/find_c.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-143145-fea7f365",
-    "idempotency_key": "greia-3bd95df1801641fcb49e8d0016cbefce",
+    "job_id": "20261021-182319-a4714059",
+    "idempotency_key": "greia-6303eb3018c948829d7b87d31970199b",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,184 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3994698279,
+    "script_seed": 3310647141,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 4099669597,
-        "sha256": "c081c06db69306fa85a4c5500de036e038118b462f838211c6184e1ba3e3358d",
+        "seed": 649234879,
+        "sha256": "a8adc1cc7337756ef8f99eee9cb8fae02daffe9f35e6ca147291030c7c9430f0",
         "generation": {
-          "elapsed_seconds": 6.599419667036273,
+          "elapsed_seconds": 15.684241750001092,
           "model_load_seconds": 0.0,
-          "rtf": 4.5823999539657025,
-          "peak_memory_gb": 8.44494914
+          "rtf": 4.084260687470446,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8292,
+    "transcript": "Cii come cane",
+    "metrics": {
+      "duration_seconds": 1.2662585034013605,
+      "rms_dbfs": -30.12,
+      "peak": 0.24829,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.08,
+      "trailing_silence_seconds": 0.06,
+      "longest_internal_pause_seconds": 0.04
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v1",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/foresta_parole/assets/audio/it/find_c.wav.raw.wav",
+    "sha256": "00cc8c7b4da1b19332e8ee51b3c1213f90fc3ee8e99ad59d72f2e2d41083b3c8",
+    "receipt_sha256": "72f3a3dd776b2c5914e96214b6f27c6f1334fc40bd54f93d3873b8e70a28f18d"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/foresta_parole/assets/audio/it/find_c.wav.extracted.wav",
+    "sha256": "04b6371913f0987f554c6551f18351c474c23e86a4b66076f16e620c3362288e"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/foresta_parole/assets/audio/it/find_c.wav.delivery.wav",
+    "sha256": "04b6371913f0987f554c6551f18351c474c23e86a4b66076f16e620c3362288e"
+  },
+  "extraction": {
+    "schema_version": 1,
+    "algorithm_version": "greia-spoken-carrier-extractor-v7",
+    "comparison_policy": "locale-number-tokens-v1",
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-raw/activities/foresta_parole/assets/audio/it/find_c.wav.raw.wav",
+    "source_sha256": "00cc8c7b4da1b19332e8ee51b3c1213f90fc3ee8e99ad59d72f2e2d41083b3c8",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/foresta_parole/assets/audio/it/find_c.wav.extracted.wav",
+    "output_sha256": "04b6371913f0987f554c6551f18351c474c23e86a4b66076f16e620c3362288e",
+    "output_bytes": 55886,
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "C come Cane",
+    "remove_first_words": 5,
+    "ignore_accents": true,
+    "target_verification_requested": "warn",
+    "target_verification_policy": "warn",
+    "target_comparison_score": 0.8292,
+    "target_word_count_matches": true,
+    "target_numbers_match": true,
+    "target_comparison_flags": [],
+    "target_transcript_warning": true,
+    "recognizer": "mlx-whisper-base",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extracted_transcript": "Cii come cane",
+    "expected_target_tokens": [
+      "c",
+      "come",
+      "cane"
+    ],
+    "extracted_target_tokens": [
+      "cii",
+      "come",
+      "cane"
+    ],
+    "extracted_target_exact_match": false,
+    "transcription_settings": {
+      "language": "it",
+      "initial_prompt": null,
+      "word_timestamps": true,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "sample_rate": 22050,
+    "duration_seconds": 3.8401814058956916,
+    "boundary": {
+      "search_strategy": "target-only-global-quiet-run-v7",
+      "verified_silence_start_seconds": 1.85578231292517,
+      "verified_silence_end_seconds": 2.673922902494331,
+      "verified_silence_duration_seconds": 0.818140589569161,
+      "cut_sample": 56755,
+      "cut_time_seconds": 2.573922902494331,
+      "padding_seconds": 0.1,
+      "quiet_run_start_sample": 40920,
+      "quiet_run_end_sample": 58960,
+      "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+    },
+    "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/foresta_parole/assets/audio/it/find_c.wav.extracted.wav.search/22426299e9be4df9808f70eab2873f26",
+    "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/foresta_parole/assets/audio/it/find_c.wav.extracted.wav.search/22426299e9be4df9808f70eab2873f26/search.json",
+    "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-raw/activities/foresta_parole/assets/audio/it/find_c.wav.raw.wav.receipt.json",
+    "source_provider_receipt_sha256": "72f3a3dd776b2c5914e96214b6f27c6f1334fc40bd54f93d3873b8e70a28f18d",
+    "candidate_sha256": "04b6371913f0987f554c6551f18351c474c23e86a4b66076f16e620c3362288e",
+    "candidate_id": "candidate-01",
+    "candidate_count": 1,
+    "qualifying_quiet_run_count": 1,
+    "candidate_results": [
+      {
+        "candidate_id": "candidate-01",
+        "quiet_run": {
+          "start_sample": 40920,
+          "end_sample": 58960,
+          "start_seconds": 1.85578231292517,
+          "end_seconds": 2.673922902494331,
+          "duration_seconds": 0.818140589569161
+        },
+        "cut_sample": 56755,
+        "cut_time_seconds": 2.573922902494331,
+        "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/foresta_parole/assets/audio/it/find_c.wav.extracted.wav.search/22426299e9be4df9808f70eab2873f26/candidate-01.wav",
+        "preceding_voiced_seconds": 1.72,
+        "retained_voiced_seconds": 0.98,
+        "retained_duration_seconds": 1.2662585034013605,
+        "candidate_sha256": "04b6371913f0987f554c6551f18351c474c23e86a4b66076f16e620c3362288e",
+        "extracted_transcript": "Cii come cane",
+        "canonical_transcript_tokens": [
+          "cii",
+          "come",
+          "cane"
+        ],
+        "exact_target_match": false,
+        "target_comparison_score": 0.8292,
+        "target_word_count_matches": true,
+        "target_numbers_match": true,
+        "target_comparison_flags": [],
+        "target_verification_requested": "warn",
+        "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+        "target_verification_qualifies": true,
+        "asr_segment_count": 1
+      }
+    ],
+    "human_review": "PENDING",
+    "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+    "target_verification_effective_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+    "target_verification_warning": true,
+    "saved_recovery_policy": "target-only-v7-saved-v1",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 0,
+      "removed_seconds": 0.0,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 56755,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/other-saved-recovery/pass-01/carrier-extracted/activities/foresta_parole/assets/audio/it/find_c.wav.delivery.wav",
+      "sha256": "04b6371913f0987f554c6551f18351c474c23e86a4b66076f16e620c3362288e"
+    }
+  },
   "output": {
     "path": "activities/foresta_parole/assets/audio/it/find_c.wav",
-    "bytes": 63590,
-    "sha256": "49925432441b83cd05f4d464845a2d307f150ff00bec2290cd984dbb2fe61559"
+    "sha256": "b76227c6b1a1f252948c1f87bcbad676b61829068e4686c675e0a0257026c0a8",
+    "bytes": 55920
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "0c034bd0a5c126920e39a55b6674e8102ca75b60bceb698fb222346a7dfbc1da",
+    "original_sha256": "b5e51eb912c2a54bf7376e964ca2571b3d4b70a875d6940dce719b08eb8096e6",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T23:16:53.582008+00:00",
+  "created_utc": "2026-10-23T01:01:50.015891+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
@@ -8,17 +8,22 @@
     "text": "L comme Lune",
     "cue_id": "alfabeto_leo.letter_L.fr",
     "output": "activities/alfabeto_leo/assets/audio/fr/letter_L.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic"
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-011642-1df1c040",
-    "idempotency_key": "greia-d9a54cd4c7434782a560fc9ece391be0",
+    "job_id": "20261023-030129-6597550a",
+    "idempotency_key": "greia-3587e59f11aa40e894ce53d1c19c582c",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +46,333 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 538046755,
+    "script_seed": 3740924813,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak naturally in French. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "effective_delivery": "Speak in French. Lecture chaleureuse et calme. Diction claire et naturelle.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 337488649,
-        "sha256": "ce1ecc2eb112a3b8effdd59302b90cdbefe059f6501276b8639150e7f0d32176",
+        "seed": 2891836227,
+        "sha256": "f64c6e1e82176922f195d83fb8220b6ec76dff21d33c6c5f7e4522d32b836e22",
         "generation": {
-          "elapsed_seconds": 9.785100333974697,
+          "elapsed_seconds": 18.78894825000316,
           "model_load_seconds": 0.0,
-          "rtf": 6.115050724283739,
-          "peak_memory_gb": 8.21220922
+          "rtf": 4.697041352444438,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-audio-parakeet-tdt-v3",
+    "transcript": "La comme lune.",
+    "score": 0.8573,
+    "detail": "Delivered target transcribed and screened; human listening remains pending",
+    "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+    "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+    "flags": [],
+    "metrics": {
+      "duration_seconds": 1.1801814058956916,
+      "rms_dbfs": -37.59,
+      "peak": 0.08701,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.08,
+      "trailing_silence_seconds": 0.18,
+      "longest_internal_pause_seconds": 0.1
+    }
   },
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/fr/letter_L.wav",
-    "bytes": 70646,
-    "sha256": "42cdbcb9fbc7e6b20dab8fd399afdb11340847f15157e21739ae77540ac50705"
+    "bytes": 52124,
+    "sha256": "257cd0d1dfe97d76e9912ec57573f3009f3ca9c657c1f51bc5deb305b3254ff7"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "short_phrase": {
+    "mode": "automatic-carrier",
+    "composition_policy": "natural-context-period-v1",
+    "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/68ba3447481646849a947a4be6ae825a",
+    "prefix": "Regardons les lettres ensemble.",
+    "composite_text": "Regardons les lettres ensemble.\n\nL comme Lune",
+    "effective_delivery": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "extraction": {
+      "schema_version": 1,
+      "algorithm_version": "greia-spoken-carrier-extractor-v7",
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "status": "EXTRACTED_PENDING_LISTENING",
+      "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/68ba3447481646849a947a4be6ae825a/attempt-01/raw.wav",
+      "source_sha256": "f64c6e1e82176922f195d83fb8220b6ec76dff21d33c6c5f7e4522d32b836e22",
+      "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/68ba3447481646849a947a4be6ae825a/attempt-01/target.wav",
+      "output_sha256": "f562ec38fc0ed1763f7ea4a60b245f2d97cda475ca8b7ee2404dd6d94b4b2234",
+      "output_bytes": 113340,
+      "locale": "fr",
+      "prefix": "Regardons les lettres ensemble.",
+      "target": "L comme Lune",
+      "remove_first_words": 4,
+      "ignore_accents": true,
+      "target_verification_requested": "warn",
+      "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+      "target_comparison_score": 0.8573,
+      "target_word_count_matches": true,
+      "target_numbers_match": true,
+      "target_comparison_flags": [],
+      "target_transcript_warning": true,
+      "recognizer": "mlx-audio-parakeet-tdt-v3",
+      "recognizer_version": "0.5.0",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "extracted_transcript": "La comme lune.",
+      "expected_target_tokens": [
+        "l",
+        "komme",
+        "lune"
+      ],
+      "extracted_target_tokens": [
+        "la",
+        "komme",
+        "lune"
+      ],
+      "extracted_target_exact_match": false,
+      "transcription_settings": {
+        "language_detection": "automatic",
+        "expected_text_prompt": null,
+        "timestamps": "model-provided-token-timestamps"
+      },
+      "sample_rate": 48000,
+      "duration_seconds": 4.000166666666667,
+      "boundary": {
+        "search_strategy": "target-only-global-quiet-run-v7",
+        "verified_silence_start_seconds": 1.3,
+        "verified_silence_end_seconds": 2.92,
+        "verified_silence_duration_seconds": 1.62,
+        "cut_sample": 135360,
+        "cut_time_seconds": 2.82,
+        "padding_seconds": 0.1,
+        "quiet_run_start_sample": 62400,
+        "quiet_run_end_sample": 140160,
+        "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+      },
+      "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/68ba3447481646849a947a4be6ae825a/attempt-01/target.wav.search/0604252547f84ae7a4a52b9091ce0e31",
+      "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/68ba3447481646849a947a4be6ae825a/attempt-01/target.wav.search/0604252547f84ae7a4a52b9091ce0e31/search.json",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/68ba3447481646849a947a4be6ae825a/attempt-01/raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "8dc74fd2f3c984ea4a22b8fae24ddfac6c62c5fc0ee4853a51f583965ac46878",
+      "candidate_sha256": "f562ec38fc0ed1763f7ea4a60b245f2d97cda475ca8b7ee2404dd6d94b4b2234",
+      "candidate_id": "candidate-01",
+      "candidate_count": 1,
+      "qualifying_quiet_run_count": 1,
+      "candidate_results": [
+        {
+          "candidate_id": "candidate-01",
+          "quiet_run": {
+            "start_sample": 62400,
+            "end_sample": 140160,
+            "start_seconds": 1.3,
+            "end_seconds": 2.92,
+            "duration_seconds": 1.62
+          },
+          "cut_sample": 135360,
+          "cut_time_seconds": 2.82,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/68ba3447481646849a947a4be6ae825a/attempt-01/target.wav.search/0604252547f84ae7a4a52b9091ce0e31/candidate-01.wav",
+          "preceding_voiced_seconds": 1.03,
+          "retained_voiced_seconds": 0.6,
+          "retained_duration_seconds": 1.1801666666666666,
+          "candidate_sha256": "f562ec38fc0ed1763f7ea4a60b245f2d97cda475ca8b7ee2404dd6d94b4b2234",
+          "extracted_transcript": "La comme lune.",
+          "canonical_transcript_tokens": [
+            "la",
+            "komme",
+            "lune"
+          ],
+          "exact_target_match": false,
+          "target_comparison_score": 0.8573,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": true,
+          "asr_segment_count": 1
+        }
+      ],
+      "human_review": "PENDING",
+      "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+      "delivery": {
+        "policy": "verified-carrier-gap-delivery-v1",
+        "removed_frames": 0,
+        "removed_seconds": 0.0,
+        "retained_verified_quiet_seconds": 0.1,
+        "raw_delivery_start_sample": 135360,
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/68ba3447481646849a947a4be6ae825a/attempt-01/delivery-target.wav",
+        "sha256": "f562ec38fc0ed1763f7ea4a60b245f2d97cda475ca8b7ee2404dd6d94b4b2234"
+      }
+    },
+    "quality": {
+      "disposition": "PASS",
+      "score": 0.8573,
+      "transcript": "La comme lune.",
+      "metrics": {
+        "duration_seconds": 1.1801814058956916,
+        "rms_dbfs": -37.59,
+        "peak": 0.08701,
+        "clipped_fraction": 0.0,
+        "leading_silence_seconds": 0.08,
+        "trailing_silence_seconds": 0.18,
+        "longest_internal_pause_seconds": 0.1
+      },
+      "flags": [],
+      "ignore_accents": true,
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "detail": "Delivered target transcribed and screened; human listening remains pending"
+    },
+    "history": [
+      {
+        "attempt": 1,
+        "status": "PASS",
+        "quality": {
+          "disposition": "PASS",
+          "score": 0.8573,
+          "transcript": "La comme lune.",
+          "metrics": {
+            "duration_seconds": 1.1801814058956916,
+            "rms_dbfs": -37.59,
+            "peak": 0.08701,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.08,
+            "trailing_silence_seconds": 0.18,
+            "longest_internal_pause_seconds": 0.1
+          },
+          "flags": [],
+          "ignore_accents": true,
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "detail": "Delivered target transcribed and screened; human listening remains pending"
+        },
+        "extraction": {
+          "schema_version": 1,
+          "algorithm_version": "greia-spoken-carrier-extractor-v7",
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "status": "EXTRACTED_PENDING_LISTENING",
+          "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/68ba3447481646849a947a4be6ae825a/attempt-01/raw.wav",
+          "source_sha256": "f64c6e1e82176922f195d83fb8220b6ec76dff21d33c6c5f7e4522d32b836e22",
+          "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/68ba3447481646849a947a4be6ae825a/attempt-01/target.wav",
+          "output_sha256": "f562ec38fc0ed1763f7ea4a60b245f2d97cda475ca8b7ee2404dd6d94b4b2234",
+          "output_bytes": 113340,
+          "locale": "fr",
+          "prefix": "Regardons les lettres ensemble.",
+          "target": "L comme Lune",
+          "remove_first_words": 4,
+          "ignore_accents": true,
+          "target_verification_requested": "warn",
+          "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+          "target_comparison_score": 0.8573,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_transcript_warning": true,
+          "recognizer": "mlx-audio-parakeet-tdt-v3",
+          "recognizer_version": "0.5.0",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "extracted_transcript": "La comme lune.",
+          "expected_target_tokens": [
+            "l",
+            "komme",
+            "lune"
+          ],
+          "extracted_target_tokens": [
+            "la",
+            "komme",
+            "lune"
+          ],
+          "extracted_target_exact_match": false,
+          "transcription_settings": {
+            "language_detection": "automatic",
+            "expected_text_prompt": null,
+            "timestamps": "model-provided-token-timestamps"
+          },
+          "sample_rate": 48000,
+          "duration_seconds": 4.000166666666667,
+          "boundary": {
+            "search_strategy": "target-only-global-quiet-run-v7",
+            "verified_silence_start_seconds": 1.3,
+            "verified_silence_end_seconds": 2.92,
+            "verified_silence_duration_seconds": 1.62,
+            "cut_sample": 135360,
+            "cut_time_seconds": 2.82,
+            "padding_seconds": 0.1,
+            "quiet_run_start_sample": 62400,
+            "quiet_run_end_sample": 140160,
+            "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+          },
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/68ba3447481646849a947a4be6ae825a/attempt-01/target.wav.search/0604252547f84ae7a4a52b9091ce0e31",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/68ba3447481646849a947a4be6ae825a/attempt-01/target.wav.search/0604252547f84ae7a4a52b9091ce0e31/search.json",
+          "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/68ba3447481646849a947a4be6ae825a/attempt-01/raw.wav.receipt.json",
+          "source_provider_receipt_sha256": "8dc74fd2f3c984ea4a22b8fae24ddfac6c62c5fc0ee4853a51f583965ac46878",
+          "candidate_sha256": "f562ec38fc0ed1763f7ea4a60b245f2d97cda475ca8b7ee2404dd6d94b4b2234",
+          "candidate_id": "candidate-01",
+          "candidate_count": 1,
+          "qualifying_quiet_run_count": 1,
+          "candidate_results": [
+            {
+              "candidate_id": "candidate-01",
+              "quiet_run": {
+                "start_sample": 62400,
+                "end_sample": 140160,
+                "start_seconds": 1.3,
+                "end_seconds": 2.92,
+                "duration_seconds": 1.62
+              },
+              "cut_sample": 135360,
+              "cut_time_seconds": 2.82,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/68ba3447481646849a947a4be6ae825a/attempt-01/target.wav.search/0604252547f84ae7a4a52b9091ce0e31/candidate-01.wav",
+              "preceding_voiced_seconds": 1.03,
+              "retained_voiced_seconds": 0.6,
+              "retained_duration_seconds": 1.1801666666666666,
+              "candidate_sha256": "f562ec38fc0ed1763f7ea4a60b245f2d97cda475ca8b7ee2404dd6d94b4b2234",
+              "extracted_transcript": "La comme lune.",
+              "canonical_transcript_tokens": [
+                "la",
+                "komme",
+                "lune"
+              ],
+              "exact_target_match": false,
+              "target_comparison_score": 0.8573,
+              "target_word_count_matches": true,
+              "target_numbers_match": true,
+              "target_comparison_flags": [],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": true,
+              "asr_segment_count": 1
+            }
+          ],
+          "human_review": "PENDING",
+          "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+          "delivery": {
+            "policy": "verified-carrier-gap-delivery-v1",
+            "removed_frames": 0,
+            "removed_seconds": 0.0,
+            "retained_verified_quiet_seconds": 0.1,
+            "raw_delivery_start_sample": 135360,
+            "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/68ba3447481646849a947a4be6ae825a/attempt-01/delivery-target.wav",
+            "sha256": "f562ec38fc0ed1763f7ea4a60b245f2d97cda475ca8b7ee2404dd6d94b4b2234"
+          }
+        },
+        "candidate": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/68ba3447481646849a947a4be6ae825a/attempt-01/candidate.wav"
+      }
+    ]
+  },
   "corpus_replacement": {
-    "original_sha256": "652c953c4da711fd80266b84f8b214accde68a8070ab8003cb101eb12a978d2d",
+    "original_sha256": "3a31e54c93f26e8540466e6712a8f5b6ea9d99c236cb185641e235928509d618",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T08:45:31.743254+00:00",
+  "created_utc": "2026-10-22T04:29:03.039766+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "Colinas divertidas",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español...\n\nColinas divertidas",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "Colinas divertidas",
+    "cue_id": "colline_allegre.title.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "Colinas divertidas",
     "cue_id": "colline_allegre.title.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/colline_allegre/locales/es/audio/activity-title.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.tito.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261021-104523-38f0a15d",
-    "idempotency_key": "greia-9ae4cf4a58864726b675d67b7d93b070",
+    "job_id": "20261022-062810-b668f9d5",
+    "idempotency_key": "greia-401bac42f164464bb7a86ca8993eaa3a",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,247 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1562635631,
+    "script_seed": 1789503144,
     "language_direction": "Spanish",
-    "delivery_prompt": "Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "effective_delivery": "Speak in Spanish. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 772120946,
-        "sha256": "172ff94c108598f13deb9074c7c30fb3b597140e3704f947a5cbdadcacf61328",
+        "seed": 2480350512,
+        "sha256": "ed2964ebb08a878b9476c280ba7f7b392581ec60bee995daf0ef8a2b104b54a8",
         "generation": {
-          "elapsed_seconds": 7.236220290993515,
+          "elapsed_seconds": 42.69532075000461,
           "model_load_seconds": 0.0,
-          "rtf": 3.4786733231280422,
-          "peak_memory_gb": 7.648166916
+          "rtf": 11.60146390562147,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " Colinas divertidas",
+    "metrics": {
+      "duration_seconds": 1.5421315192743765,
+      "rms_dbfs": -28.67,
+      "peak": 0.20657,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.1,
+      "trailing_silence_seconds": 0.2,
+      "longest_internal_pause_seconds": 0.06
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/colline_allegre/locales/es/audio/activity-title.wav.raw.wav",
+    "sha256": "0bfd387a56fbe6baf4a970e02fdc0598f2c673c21ec4c4c66de892d0ca69f03f",
+    "receipt_sha256": "1ff6b4204ad8329c8fd72a9b58c97164323078b31b1abc47c1f0369e3c06065a"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/colline_allegre/locales/es/audio/activity-title.wav.extracted.wav",
+    "sha256": "1d9816364132da8e2fcf34371bba95ec4459bb28fabb7afaf65913b919115ed5"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/colline_allegre/locales/es/audio/activity-title.wav.delivery.wav",
+    "sha256": "b30e38884c0fdd910a1bf27b4e1328e6cb1f25f12bd282a92e9f0832f4cdd93f"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/activities/colline_allegre/locales/es/audio/activity-title.wav.raw.wav",
+    "source_sha256": "0bfd387a56fbe6baf4a970e02fdc0598f2c673c21ec4c4c66de892d0ca69f03f",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/activities/colline_allegre/locales/es/audio/activity-title.wav.extracted.wav",
+    "output_sha256": "1d9816364132da8e2fcf34371bba95ec4459bb28fabb7afaf65913b919115ed5",
+    "target_request": {
+      "speaker": "tito",
+      "kind": "character_dialogue",
+      "text": "Colinas divertidas",
+      "locale": "es",
+      "cue_id": "colline_allegre.title.es",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/activities/colline_allegre/locales/es/audio/activity-title.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "1ff6b4204ad8329c8fd72a9b58c97164323078b31b1abc47c1f0369e3c06065a"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "Colinas divertidas",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Escucha esta frase en español, colinas divertidas.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Colinas divertidas",
+    "raw_word_alignment": [
+      {
+        "word": "escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.58
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.58,
+        "end_seconds": 0.9
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.9,
+        "end_seconds": 1.18
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.18,
+        "end_seconds": 1.38
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.38,
+        "end_seconds": 1.84
+      },
+      {
+        "word": "colinas",
+        "start_seconds": 2.16,
+        "end_seconds": 2.64
+      },
+      {
+        "word": "divertidas",
+        "start_seconds": 2.64,
+        "end_seconds": 3.36
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "colinas",
+        "start_seconds": 0.0,
+        "end_seconds": 0.54
+      },
+      {
+        "word": "divertidas",
+        "start_seconds": 0.54,
+        "end_seconds": 1.22
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.43657586153815775,
+        "no_speech_prob": 0.01439127791672945,
+        "compression_ratio": 0.8793103448275862,
+        "word_probabilities": [
+          0.86474609375,
+          0.9619140625,
+          0.98681640625,
+          0.98779296875,
+          0.98681640625
+        ]
+      },
+      {
+        "avg_logprob": -0.43657586153815775,
+        "no_speech_prob": 0.01439127791672945,
+        "compression_ratio": 0.8793103448275862,
+        "word_probabilities": [
+          0.56201171875,
+          0.9912109375
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.5442878178187779,
+        "no_speech_prob": 0.0272989384829998,
+        "compression_ratio": 0.6923076923076923,
+        "word_probabilities": [
+          0.6328125,
+          0.9384765625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 102,
+    "extracted_voiced_seconds": 1.02,
+    "unremoved_raw_target_tokens": [
+      "colinas",
+      "divertidas"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "colinas",
+      "divertidas"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.6801814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-expanded-boundary",
+      "search_start_seconds": 1.38,
+      "search_end_seconds": 2.64,
+      "prefix_last_word_end_seconds": 1.84,
+      "target_first_word_start_seconds": 2.16,
+      "gap_seconds": 0.2693877551020408,
+      "verified_silence_start_seconds": 1.9686621315192743,
+      "verified_silence_end_seconds": 2.238049886621315,
+      "gap_rms_dbfs": -69.002,
+      "gap_peak_dbfs": -45.013,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.1033560090702945,
+      "cut_sample": 46379,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 765,
+      "removed_seconds": 0.03469387755102041,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 47144,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/activities/colline_allegre/locales/es/audio/activity-title.wav.delivery.wav",
+      "sha256": "b30e38884c0fdd910a1bf27b4e1328e6cb1f25f12bd282a92e9f0832f4cdd93f"
+    }
+  },
   "output": {
     "path": "activities/colline_allegre/locales/es/audio/activity-title.wav",
-    "bytes": 91814,
-    "sha256": "6fb2557bbd280f1bddc1a523af58de028d87345c19ea7a1aa392eebba35b1a8e"
+    "sha256": "4c6a2b9648a2817979659ac8925d5326d0bf3d8b147c80e7f756ea3dc98970a6",
+    "bytes": 68086
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "cffe7cd192b2c5b9ba7f56e47c61822c3d46578cf954db80927c544c035dce62",
+    "original_sha256": "1ee0a2a00cc3dd55fbc00645b53808631a21b3a6ef7a4d9f1849ed146799135e",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T08:03:56.920559+00:00",
+  "created_utc": "2026-10-22T04:19:21.596549+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "Fai saltare Oskar",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano...\n\nFai saltare Oskar",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Fai saltare Oskar",
+    "cue_id": "greia.requested.jump_oskar.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Fai saltare Oskar",
     "cue_id": "greia.requested.jump_oskar.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/baia_delle_orche/assets/audio/it/jump_oskar.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.tito.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261021-100347-93a2c28a",
-    "idempotency_key": "greia-798c60a24f98436fbe8cca9a55a18ed7",
+    "job_id": "20261022-061851-947eb8bf",
+    "idempotency_key": "greia-423320b0383742e995eae8d09a312235",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,268 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 332196099,
+    "script_seed": 1624503289,
     "language_direction": "Italian",
-    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in Italian. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1451360325,
-        "sha256": "989ee8126647d83ad13ab440c5834ccd64f98c1511b7cefa04c2509ad03c4d30",
+        "seed": 513038332,
+        "sha256": "f2d2b8498dcd865017ddba04c3fea64af08dc71f5472d30719d7352604ced9e9",
         "generation": {
-          "elapsed_seconds": 8.413023499997507,
+          "elapsed_seconds": 25.621900666010333,
           "model_load_seconds": 0.0,
-          "rtf": 4.779674367956163,
-          "peak_memory_gb": 7.648166916
+          "rtf": 5.165532206446759,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8451,
+    "transcript": " Fai saltare oscar?",
+    "metrics": {
+      "duration_seconds": 1.5719274376417234,
+      "rms_dbfs": -29.27,
+      "peak": 0.26117,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.36,
+      "trailing_silence_seconds": 0.04,
+      "longest_internal_pause_seconds": 0.04
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/baia_delle_orche/assets/audio/it/jump_oskar.wav.raw.wav",
+    "sha256": "67a4ae33c5e509b06f9db634e6284abd0450d39154d2bd88432d4d65435ea83e",
+    "receipt_sha256": "d37858d66e327f8aa2031c6e9367f056978227b2687ca78827efb2bfc88a6ec3"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/baia_delle_orche/assets/audio/it/jump_oskar.wav.extracted.wav",
+    "sha256": "5614499788a88936e8bf1ecb6cac1674192b10715cadb0aeb54bff756078f567"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/baia_delle_orche/assets/audio/it/jump_oskar.wav.delivery.wav",
+    "sha256": "443abb802bca0491751ec7d217e6dc30e080f84ca99f31a70c206ae3e521f5ae"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/activities/baia_delle_orche/assets/audio/it/jump_oskar.wav.raw.wav",
+    "source_sha256": "67a4ae33c5e509b06f9db634e6284abd0450d39154d2bd88432d4d65435ea83e",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/activities/baia_delle_orche/assets/audio/it/jump_oskar.wav.extracted.wav",
+    "output_sha256": "5614499788a88936e8bf1ecb6cac1674192b10715cadb0aeb54bff756078f567",
+    "target_request": {
+      "speaker": "tito",
+      "kind": "character_dialogue",
+      "text": "Fai saltare Oskar",
+      "locale": "it",
+      "cue_id": "greia.requested.jump_oskar.it",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/activities/baia_delle_orche/assets/audio/it/jump_oskar.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "d37858d66e327f8aa2031c6e9367f056978227b2687ca78827efb2bfc88a6ec3"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "Fai saltare Oskar",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Ascolta questa frase in italiano, l'ixerotti. Fai saltare Oscar?",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Fai saltare oscar?",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.48
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.48,
+        "end_seconds": 0.76
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.76,
+        "end_seconds": 1.06
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.06,
+        "end_seconds": 1.22
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.22,
+        "end_seconds": 1.64
+      },
+      {
+        "word": "l'ixerotti",
+        "start_seconds": 2.18,
+        "end_seconds": 2.72
+      },
+      {
+        "word": "fai",
+        "start_seconds": 3.54,
+        "end_seconds": 3.88
+      },
+      {
+        "word": "saltare",
+        "start_seconds": 3.88,
+        "end_seconds": 4.4
+      },
+      {
+        "word": "oscar",
+        "start_seconds": 4.4,
+        "end_seconds": 4.76
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "fai",
+        "start_seconds": 0.0,
+        "end_seconds": 0.72
+      },
+      {
+        "word": "saltare",
+        "start_seconds": 0.72,
+        "end_seconds": 1.2
+      },
+      {
+        "word": "oscar",
+        "start_seconds": 1.2,
+        "end_seconds": 1.64
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.6015692901611328,
+        "no_speech_prob": 0.07403085380792618,
+        "compression_ratio": 0.927536231884058,
+        "word_probabilities": [
+          0.791015625,
+          0.98876953125,
+          0.9287109375,
+          0.9716796875,
+          0.9921875,
+          0.33154296875,
+          0.66796875
+        ]
+      },
+      {
+        "avg_logprob": -0.6015692901611328,
+        "no_speech_prob": 0.07403085380792618,
+        "compression_ratio": 0.927536231884058,
+        "word_probabilities": [
+          0.77978515625,
+          0.921875,
+          0.6650390625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.42740859985351565,
+        "no_speech_prob": 0.12625543773174286,
+        "compression_ratio": 0.6923076923076923,
+        "word_probabilities": [
+          0.607421875,
+          0.80322265625,
+          0.8955078125
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": false,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 6,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 105,
+    "extracted_voiced_seconds": 1.05,
+    "unremoved_raw_target_tokens": [
+      "fai",
+      "saltare",
+      "oscar"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "fai",
+      "saltare",
+      "oscar"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 4.960181405895692,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 2.72,
+      "search_end_seconds": 3.54,
+      "prefix_last_word_end_seconds": 2.72,
+      "target_first_word_start_seconds": 3.54,
+      "gap_seconds": 0.6385487528344671,
+      "verified_silence_start_seconds": 2.849705215419501,
+      "verified_silence_end_seconds": 3.4882539682539684,
+      "gap_rms_dbfs": -58.622,
+      "gap_peak_dbfs": -35.873,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 3.1689795918367345,
+      "cut_sample": 69876,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 4835,
+      "removed_seconds": 0.21927437641723355,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 74711,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/activities/baia_delle_orche/assets/audio/it/jump_oskar.wav.delivery.wav",
+      "sha256": "443abb802bca0491751ec7d217e6dc30e080f84ca99f31a70c206ae3e521f5ae"
+    }
+  },
   "output": {
     "path": "activities/baia_delle_orche/assets/audio/it/jump_oskar.wav",
-    "bytes": 77702,
-    "sha256": "38883fa534654c9d59231948776d201fdecdce9f43e0d696abed619ef8d675f0"
+    "sha256": "dca029b804be5fad49039ad58cb2aa6a1e09dd06c10d74d69a1bfc89357468cc",
+    "bytes": 69400
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "df27562166a0b28b1f5a3f90bc2e13be5a69a9f1a7a75cf32184193d3483ddaf",
+    "original_sha256": "38883fa534654c9d59231948776d201fdecdce9f43e0d696abed619ef8d675f0",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

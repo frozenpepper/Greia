@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T13:37:18.450509+00:00",
+  "created_utc": "2026-10-21T16:49:46.063800+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "Derrière le champignon",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. Derrière le champignon",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "lilli",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Derrière le champignon",
+    "cue_id": "greia.requested.place_mushroom.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Derrière le champignon",
     "cue_id": "greia.requested.place_mushroom.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/nascondino_bosco/assets/audio/fr/place_mushroom.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.lilli.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "job_id": "20261020-153711-307154d4",
-    "idempotency_key": "greia-ee6e3f75bf7240869620626a98710830",
+    "job_id": "20261021-184932-f2c13a07",
+    "idempotency_key": "greia-50874aa60db3483aa254e5b447a4b57a",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,262 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1533314805,
+    "script_seed": 405350900,
     "language_direction": "French",
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in French. Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3759330806,
-        "sha256": "dc3426e227ba34c250c6eaccd3fac624506265a3f90be772e832a211a888e7b6",
+        "seed": 3063690100,
+        "sha256": "d0ae7b4d87f4b04081bab688ad36960b1d0e99e5b4d8bef50349dfbd20f844c0",
         "generation": {
-          "elapsed_seconds": 6.664058749971446,
+          "elapsed_seconds": 12.442982582986588,
           "model_load_seconds": 0.0,
-          "rtf": 4.164602905929453,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.534770867758133,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " Derrière le champignon!",
+    "metrics": {
+      "duration_seconds": 1.4517913832199547,
+      "rms_dbfs": -23.91,
+      "peak": 0.30576,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.24,
+      "trailing_silence_seconds": 0.06,
+      "longest_internal_pause_seconds": 0.06
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/nascondino_bosco/assets/audio/fr/place_mushroom.wav.raw.wav",
+    "sha256": "e7a4df5de095dc1308ccf063b463326d2bf703e0ec5f2e45edee095f4471643a",
+    "receipt_sha256": "6e20d083895c4718d049216c548b7a5bb92cbcfbb15e878d954abc3b8175b7d1"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/nascondino_bosco/assets/audio/fr/place_mushroom.wav.extracted.wav",
+    "sha256": "445990cb46d5b30d3896c442e61ec8fe32ed3e7d7c1ea46c73995a542b726dee"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/nascondino_bosco/assets/audio/fr/place_mushroom.wav.delivery.wav",
+    "sha256": "ddfdaba338fec75dd7a4138421a5fabcbf36c78b48c8ddf5bbd28aa0590a2fa1"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/nascondino_bosco/assets/audio/fr/place_mushroom.wav.raw.wav",
+    "source_sha256": "e7a4df5de095dc1308ccf063b463326d2bf703e0ec5f2e45edee095f4471643a",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/nascondino_bosco/assets/audio/fr/place_mushroom.wav.extracted.wav",
+    "output_sha256": "445990cb46d5b30d3896c442e61ec8fe32ed3e7d7c1ea46c73995a542b726dee",
+    "target_request": {
+      "speaker": "lilli",
+      "kind": "character_dialogue",
+      "text": "Derrière le champignon",
+      "locale": "fr",
+      "cue_id": "greia.requested.place_mushroom.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/nascondino_bosco/assets/audio/fr/place_mushroom.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "6e20d083895c4718d049216c548b7a5bb92cbcfbb15e878d954abc3b8175b7d1"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "Derrière le champignon",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français. Derrière le champignon.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Derrière le champignon !",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.38
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.38,
+        "end_seconds": 0.62
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.62,
+        "end_seconds": 0.88
+      },
+      {
+        "word": "en",
+        "start_seconds": 0.88,
+        "end_seconds": 1.0
+      },
+      {
+        "word": "français",
+        "start_seconds": 1.0,
+        "end_seconds": 1.46
+      },
+      {
+        "word": "derrière",
+        "start_seconds": 2.22,
+        "end_seconds": 2.62
+      },
+      {
+        "word": "le",
+        "start_seconds": 2.62,
+        "end_seconds": 2.82
+      },
+      {
+        "word": "champignon",
+        "start_seconds": 2.82,
+        "end_seconds": 3.34
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "derrière",
+        "start_seconds": 0.0,
+        "end_seconds": 0.76
+      },
+      {
+        "word": "le",
+        "start_seconds": 0.76,
+        "end_seconds": 0.92
+      },
+      {
+        "word": "champignon",
+        "start_seconds": 0.92,
+        "end_seconds": 1.42
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.48906494589412913,
+        "no_speech_prob": 0.04118329659104347,
+        "compression_ratio": 0.873015873015873,
+        "word_probabilities": [
+          0.79296875,
+          0.90283203125,
+          0.9931640625,
+          0.884765625,
+          0.966796875
+        ]
+      },
+      {
+        "avg_logprob": -0.48906494589412913,
+        "no_speech_prob": 0.04118329659104347,
+        "compression_ratio": 0.873015873015873,
+        "word_probabilities": [
+          0.7705078125,
+          0.982421875,
+          0.7880859375
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.5708250469631619,
+        "no_speech_prob": 0.2546170651912689,
+        "compression_ratio": 0.7575757575757576,
+        "word_probabilities": [
+          0.6123046875,
+          0.96142578125,
+          0.7607421875,
+          0.3427734375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 103,
+    "extracted_voiced_seconds": 1.03,
+    "unremoved_raw_target_tokens": [
+      "derrière",
+      "le",
+      "champignon"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "derrière",
+      "le",
+      "champignon"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.5201814058956917,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.46,
+      "search_end_seconds": 2.22,
+      "prefix_last_word_end_seconds": 1.46,
+      "target_first_word_start_seconds": 2.22,
+      "gap_seconds": 0.5287981859410431,
+      "verified_silence_start_seconds": 1.6395918367346938,
+      "verified_silence_end_seconds": 2.168390022675737,
+      "gap_rms_dbfs": -61.724,
+      "gap_peak_dbfs": -36.886,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.9039909297052153,
+      "cut_sample": 41983,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 3625,
+      "removed_seconds": 0.16439909297052155,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 45608,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/nascondino_bosco/assets/audio/fr/place_mushroom.wav.delivery.wav",
+      "sha256": "ddfdaba338fec75dd7a4138421a5fabcbf36c78b48c8ddf5bbd28aa0590a2fa1"
+    }
+  },
   "output": {
     "path": "activities/nascondino_bosco/assets/audio/fr/place_mushroom.wav",
-    "bytes": 70646,
-    "sha256": "ee442e707e19fc5213343e1bd2a07e91f7fa378cc9c7a451ea56c220a69e0fe1"
+    "sha256": "ea12ae4ae5c3bf093feebdda4f14d72a2e51c30960a8bac62f8f00ba1d8b9076",
+    "bytes": 64102
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "95849cf6c3e445eb133d955ef656fb1583790236e1644cbe1d772936ebc22ff6",
+    "original_sha256": "ee442e707e19fc5213343e1bd2a07e91f7fa378cc9c7a451ea56c220a69e0fe1",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

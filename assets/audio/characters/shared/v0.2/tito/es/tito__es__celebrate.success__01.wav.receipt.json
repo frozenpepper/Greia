@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-21T13:12:32.534679+00:00",
+  "created_utc": "2026-10-21T18:17:23.904238+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Escucha esta frase en español.",
+    "prefix_word_count": 5,
+    "target": "¡Lo lograste!",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Escucha esta frase en español. ¡Lo lograste!",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "tito",
+    "kind": "shared_character_utterance",
+    "locale": "es",
+    "text": "¡Lo lograste!",
+    "cue_id": "greia.shared.tito__es__celebrate.success__01.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "tito",
     "kind": "shared_character_utterance",
     "locale": "es",
     "text": "¡Lo lograste!",
     "cue_id": "greia.shared.tito__es__celebrate.success__01.es",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "assets/audio/characters/shared/v0.2/tito/es/tito__es__celebrate.success__01.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.tito.v3",
   "voice_registry_version": "v0.3",
   "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261021-151226-a10b016b",
-    "idempotency_key": "greia-d035a0dc2606440c826b41cd4e1d5d19",
+    "job_id": "20261021-201710-e83afd4c",
+    "idempotency_key": "greia-e2e65d0165a648409acec915417faa94",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,227 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 885402386,
+    "script_seed": 3040079360,
     "language_direction": "Spanish",
-    "delivery_prompt": "Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace.",
-    "effective_delivery": "Speak in Spanish. Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Spanish. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3926653886,
-        "sha256": "b07e21f4d2593f39dfc842debd8f04a0c2a9d6f5d390d7522b274624cbfa63d0",
+        "seed": 2609958387,
+        "sha256": "9ad166799b5b1b7ac0dca6ef8ef08305958c6af3a3781f98581a11cfcebefc75",
         "generation": {
-          "elapsed_seconds": 5.752008124996792,
+          "elapsed_seconds": 13.08772974999738,
           "model_load_seconds": 0.0,
-          "rtf": 3.5946306374315955,
+          "rtf": 4.811370534892732,
           "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " lo lograste",
+    "metrics": {
+      "duration_seconds": 1.016689342403628,
+      "rms_dbfs": -25.94,
+      "peak": 0.24942,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.14,
+      "trailing_silence_seconds": 0.1,
+      "longest_internal_pause_seconds": 0.06
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/characters/shared/v0.2/tito/es/tito__es__celebrate.success__01.wav.raw.wav",
+    "sha256": "68d3e452774afc77d3d7ab4774728fff89ced0e0e126740cceb7d01f1231952d",
+    "receipt_sha256": "f324f484b4b3bab3006d4a5eca483d3930a7cd2d3b7878ea8d0d7c104b09e4ba"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/characters/shared/v0.2/tito/es/tito__es__celebrate.success__01.wav.extracted.wav",
+    "sha256": "f7bc63d3906953929b29ff170e7cea0c07d40f8decde348f7d3106450f0d68e1"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/assets/audio/characters/shared/v0.2/tito/es/tito__es__celebrate.success__01.wav.raw.wav",
+    "source_sha256": "68d3e452774afc77d3d7ab4774728fff89ced0e0e126740cceb7d01f1231952d",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-extracted/assets/audio/characters/shared/v0.2/tito/es/tito__es__celebrate.success__01.wav.extracted.wav",
+    "output_sha256": "f7bc63d3906953929b29ff170e7cea0c07d40f8decde348f7d3106450f0d68e1",
+    "target_request": {
+      "speaker": "tito",
+      "kind": "shared_character_utterance",
+      "text": "¡Lo lograste!",
+      "locale": "es",
+      "cue_id": "greia.shared.tito__es__celebrate.success__01.es",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/assets/audio/characters/shared/v0.2/tito/es/tito__es__celebrate.success__01.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "f324f484b4b3bab3006d4a5eca483d3930a7cd2d3b7878ea8d0d7c104b09e4ba"
+    },
+    "locale": "es",
+    "prefix": "Escucha esta frase en español.",
+    "target": "¡Lo lograste!",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Escucha esta frase en español, lo lograste.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " lo lograste",
+    "raw_word_alignment": [
+      {
+        "word": "escucha",
+        "start_seconds": 0.0,
+        "end_seconds": 0.38
+      },
+      {
+        "word": "esta",
+        "start_seconds": 0.38,
+        "end_seconds": 0.58
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.58,
+        "end_seconds": 0.82
+      },
+      {
+        "word": "en",
+        "start_seconds": 0.82,
+        "end_seconds": 1.04
+      },
+      {
+        "word": "español",
+        "start_seconds": 1.04,
+        "end_seconds": 1.46
+      },
+      {
+        "word": "lo",
+        "start_seconds": 1.8,
+        "end_seconds": 1.94
+      },
+      {
+        "word": "lograste",
+        "start_seconds": 1.94,
+        "end_seconds": 2.44
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "lo",
+        "start_seconds": 0.0,
+        "end_seconds": 0.24
+      },
+      {
+        "word": "lograste",
+        "start_seconds": 0.24,
+        "end_seconds": 0.76
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.35494981493268696,
+        "no_speech_prob": 0.014915249310433865,
+        "compression_ratio": 0.9166666666666666,
+        "word_probabilities": [
+          0.837890625,
+          0.97265625,
+          0.99462890625,
+          0.984375,
+          0.98828125,
+          0.744140625,
+          0.9814453125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.5178826649983724,
+        "no_speech_prob": 0.061414845287799835,
+        "compression_ratio": 0.5789473684210527,
+        "word_probabilities": [
+          0.376708984375,
+          0.9677734375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 69,
+    "extracted_voiced_seconds": 0.69,
+    "unremoved_raw_target_tokens": [
+      "lo",
+      "lograste"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "lo",
+      "lograste"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 2.7201814058956915,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-expanded-boundary",
+      "search_start_seconds": 1.04,
+      "search_end_seconds": 1.94,
+      "prefix_last_word_end_seconds": 1.46,
+      "target_first_word_start_seconds": 1.8,
+      "gap_seconds": 0.2893424036281179,
+      "verified_silence_start_seconds": 1.5588208616780046,
+      "verified_silence_end_seconds": 1.8481632653061224,
+      "gap_rms_dbfs": -55.764,
+      "gap_peak_dbfs": -38.075,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.7034920634920634,
+      "cut_sample": 37562,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "assets/audio/characters/shared/v0.2/tito/es/tito__es__celebrate.success__01.wav",
-    "bytes": 70646,
-    "sha256": "699e401eec42702ea09c4bf219669ec5b56b737e82914983bb6eaa50d10f667b"
+    "sha256": "38331439b9a004412ccb8c23eef0e7cec6fbd8f9361319828babe96cf6b26b4d",
+    "bytes": 44914
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "c525eee310c2051e50ce0a4a660fc2a3d3aad8ab227ee7f922fa11d59f23d688",
+    "original_sha256": "699e401eec42702ea09c4bf219669ec5b56b737e82914983bb6eaa50d10f667b",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

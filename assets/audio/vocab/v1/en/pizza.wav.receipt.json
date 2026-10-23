@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T20:33:29.444993+00:00",
+  "created_utc": "2026-10-21T18:37:38.015898+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Listen to this phrase in English.",
+    "prefix_word_count": 6,
+    "target": "pizza",
+    "target_word_count": 1,
+    "target_verification": "warn",
+    "composite_text": "Listen to this phrase in English. pizza",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "pizza",
+    "cue_id": "sillabe_magiche.word_pizza.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "pizza",
     "cue_id": "sillabe_magiche.word_pizza.en",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "assets/audio/vocab/v1/en/pizza.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-223318-dcba4846",
-    "idempotency_key": "greia-a69d68772f4a4bfe8f4c3a2dc6580b65",
+    "job_id": "20261021-203723-4c95fc03",
+    "idempotency_key": "greia-a4fd961a2a9841aebbc480e9b73f615c",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,219 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 819744493,
+    "script_seed": 1462270858,
     "language_direction": "English",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
-    "effective_delivery": "Speak in English. Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in English. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 531534596,
-        "sha256": "dbff94a3d920c6536906537c1b73b04a8cb2724f19cbffd1bb78d9dc1df89df1",
+        "seed": 271708858,
+        "sha256": "9459f8927642ddafcd08201dec6a48ae392e7c168d29a2d6cdfacaba04f25aa7",
         "generation": {
-          "elapsed_seconds": 9.905385584046599,
+          "elapsed_seconds": 13.64544812499662,
           "model_load_seconds": 0.0,
-          "rtf": 5.627527081174093,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.707834280602315,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " Pizza",
+    "metrics": {
+      "duration_seconds": 1.09124716553288,
+      "rms_dbfs": -37.58,
+      "peak": 0.10892,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.36,
+      "trailing_silence_seconds": 0.28,
+      "longest_internal_pause_seconds": 0.02
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/vocab/v1/en/pizza.wav.raw.wav",
+    "sha256": "eb4403239628a70931a2b4a3c07999ccdb6dbd5479b49a769a741fa331ca0a9c",
+    "receipt_sha256": "4ca6bab64fc12d00e1dc6b66ef7a6afbefcbdfe76a1b46214b9bb8429998d155"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/vocab/v1/en/pizza.wav.extracted.wav",
+    "sha256": "f6ef8a9fac3dda6c9471ed69e0c1463ac32e99cd9574a4c0bfb22088bd2c347a"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/assets/audio/vocab/v1/en/pizza.wav.raw.wav",
+    "source_sha256": "eb4403239628a70931a2b4a3c07999ccdb6dbd5479b49a769a741fa331ca0a9c",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-extracted/assets/audio/vocab/v1/en/pizza.wav.extracted.wav",
+    "output_sha256": "f6ef8a9fac3dda6c9471ed69e0c1463ac32e99cd9574a4c0bfb22088bd2c347a",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "pizza",
+      "locale": "en",
+      "cue_id": "sillabe_magiche.word_pizza.en",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/assets/audio/vocab/v1/en/pizza.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "4ca6bab64fc12d00e1dc6b66ef7a6afbefcbdfe76a1b46214b9bb8429998d155"
+    },
+    "locale": "en",
+    "prefix": "Listen to this phrase in English.",
+    "target": "pizza",
+    "remove_first_words": 6,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Listen to this phrase in English, pizza.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Pizza",
+    "raw_word_alignment": [
+      {
+        "word": "listen",
+        "start_seconds": 0.0,
+        "end_seconds": 0.52
+      },
+      {
+        "word": "to",
+        "start_seconds": 0.52,
+        "end_seconds": 0.7
+      },
+      {
+        "word": "this",
+        "start_seconds": 0.7,
+        "end_seconds": 0.88
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.88,
+        "end_seconds": 1.28
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.28,
+        "end_seconds": 1.8
+      },
+      {
+        "word": "english",
+        "start_seconds": 1.8,
+        "end_seconds": 2.12
+      },
+      {
+        "word": "pizza",
+        "start_seconds": 2.92,
+        "end_seconds": 3.28
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "pizza",
+        "start_seconds": 0.0,
+        "end_seconds": 0.68
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.41418548425038654,
+        "no_speech_prob": 0.05376191437244415,
+        "compression_ratio": 0.8333333333333334,
+        "word_probabilities": [
+          0.90869140625,
+          0.99755859375,
+          0.9951171875,
+          0.9990234375,
+          0.99267578125,
+          0.9931640625,
+          0.65673828125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.35277271270751953,
+        "no_speech_prob": 0.16196314990520477,
+        "compression_ratio": 0.38461538461538464,
+        "word_probabilities": [
+          0.7294921875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 6,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 35,
+    "extracted_voiced_seconds": 0.35,
+    "unremoved_raw_target_tokens": [
+      "pizza"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "pizza"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.6801814058956914,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 2.12,
+      "search_end_seconds": 2.92,
+      "prefix_last_word_end_seconds": 2.12,
+      "target_first_word_start_seconds": 2.92,
+      "gap_seconds": 0.5587301587301587,
+      "verified_silence_start_seconds": 2.3095691609977322,
+      "verified_silence_end_seconds": 2.868299319727891,
+      "gap_rms_dbfs": -60.238,
+      "gap_peak_dbfs": -37.599,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.5889342403628115,
+      "cut_sample": 57086,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "assets/audio/vocab/v1/en/pizza.wav",
-    "bytes": 77702,
-    "sha256": "e1f8daada793fd5874ac548d51336a60fbfe3827fffdb8a29f2410eee10ceec1"
+    "sha256": "40d6edac496a68ad116a6b4ed476a5e986afe411c70884d6cab75a2d64625820",
+    "bytes": 48202
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "b59745d1431c625e4f2e7c89a299b4eb058097afac81f6a0d2f4296164c51e5f",
+    "original_sha256": "ad9d5d90edeccf9ff87bff684485d11ebc52e8367866c010dc5d7b026f034bab",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

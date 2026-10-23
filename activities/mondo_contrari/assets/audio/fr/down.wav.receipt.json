@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T13:18:01.688555+00:00",
+  "created_utc": "2026-10-21T16:43:52.301157+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "En bas",
+    "target_word_count": 2,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. En bas",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "flash",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "En bas",
+    "cue_id": "mondo_contrari.down.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "flash",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "En bas",
     "cue_id": "mondo_contrari.down.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/mondo_contrari/assets/audio/fr/down.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Flash, a springy, eager little rabbit. Acts out the word for a child. Let the pitch slide downward. Playful, clear words."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.flash.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
   "generation_parameters": {
-    "job_id": "20261020-151754-a901a0c9",
-    "idempotency_key": "greia-55b21e1b98a349ec8de11f0346ac7ec9",
+    "job_id": "20261021-184340-756cd470",
+    "idempotency_key": "greia-9e9157f3db064a31b949e4a2d49bb18e",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,227 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3630932143,
+    "script_seed": 120665280,
     "language_direction": "French",
-    "delivery_prompt": "Flash, a springy, eager little rabbit. Acts out the word for a child. Let the pitch slide downward. Playful, clear words.",
-    "effective_delivery": "Speak in French. Flash, a springy, eager little rabbit. Acts out the word for a child. Let the pitch slide downward. Playful, clear words.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3446944173,
-        "sha256": "672bc22c2359866a1147c72821fe183cd5c243ab1d3044d9b7e909813a061aa8",
+        "seed": 1505914522,
+        "sha256": "ab946c500bd3c16ef72c76f695c5e2ee816f1dffd0884942701a42fa1fda8cd5",
         "generation": {
-          "elapsed_seconds": 6.772159915999509,
+          "elapsed_seconds": 10.957922957997653,
           "model_load_seconds": 0.0,
-          "rtf": 7.053108747786332,
-          "peak_memory_gb": 8.44494914
+          "rtf": 4.028401308007225,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " En bas.",
+    "metrics": {
+      "duration_seconds": 0.9509297052154195,
+      "rms_dbfs": -33.73,
+      "peak": 0.17477,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.28,
+      "trailing_silence_seconds": 0.2,
+      "longest_internal_pause_seconds": 0.0
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/mondo_contrari/assets/audio/fr/down.wav.raw.wav",
+    "sha256": "3199cf3598189076449b9707cc19d754de476a4163327df37368e7df3c8dae2a",
+    "receipt_sha256": "14c3d3e2df7e792d40b4f0830c554c49c393b7fe2f2a838ab967889c63d4f925"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/mondo_contrari/assets/audio/fr/down.wav.extracted.wav",
+    "sha256": "72c15bd3258033628d39f9173b8783080e3e03d35ab8140a71b3e25b55bd7204"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/mondo_contrari/assets/audio/fr/down.wav.raw.wav",
+    "source_sha256": "3199cf3598189076449b9707cc19d754de476a4163327df37368e7df3c8dae2a",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-extracted/activities/mondo_contrari/assets/audio/fr/down.wav.extracted.wav",
+    "output_sha256": "72c15bd3258033628d39f9173b8783080e3e03d35ab8140a71b3e25b55bd7204",
+    "target_request": {
+      "speaker": "flash",
+      "kind": "character_dialogue",
+      "text": "En bas",
+      "locale": "fr",
+      "cue_id": "mondo_contrari.down.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/recovery-01/carrier-raw/activities/mondo_contrari/assets/audio/fr/down.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "14c3d3e2df7e792d40b4f0830c554c49c393b7fe2f2a838ab967889c63d4f925"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "En bas",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français, en bas.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " En bas.",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.32
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.32,
+        "end_seconds": 0.6
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.6,
+        "end_seconds": 0.86
+      },
+      {
+        "word": "en",
+        "start_seconds": 0.86,
+        "end_seconds": 0.98
+      },
+      {
+        "word": "français",
+        "start_seconds": 0.98,
+        "end_seconds": 1.44
+      },
+      {
+        "word": "en",
+        "start_seconds": 2.04,
+        "end_seconds": 2.18
+      },
+      {
+        "word": "bas",
+        "start_seconds": 2.18,
+        "end_seconds": 2.38
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "en",
+        "start_seconds": 0.0,
+        "end_seconds": 0.4
+      },
+      {
+        "word": "bas",
+        "start_seconds": 0.4,
+        "end_seconds": 0.6
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.49047382672627765,
+        "no_speech_prob": 0.05152275413274765,
+        "compression_ratio": 0.8636363636363636,
+        "word_probabilities": [
+          0.91845703125,
+          0.59765625,
+          0.98193359375,
+          0.76806640625,
+          0.9853515625,
+          0.830078125,
+          0.69140625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6040614446004232,
+        "no_speech_prob": 0.1389320194721222,
+        "compression_ratio": 0.4666666666666667,
+        "word_probabilities": [
+          0.470458984375,
+          0.9609375
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 35,
+    "extracted_voiced_seconds": 0.35,
+    "unremoved_raw_target_tokens": [
+      "en",
+      "bas"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "en",
+      "bas"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 2.7201814058956915,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.44,
+      "search_end_seconds": 2.04,
+      "prefix_last_word_end_seconds": 1.44,
+      "target_first_word_start_seconds": 2.04,
+      "gap_seconds": 0.43900226757369615,
+      "verified_silence_start_seconds": 1.549750566893424,
+      "verified_silence_end_seconds": 1.9887528344671201,
+      "gap_rms_dbfs": -52.021,
+      "gap_peak_dbfs": -32.086,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.7692517006802722,
+      "cut_sample": 39012,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/mondo_contrari/assets/audio/fr/down.wav",
-    "bytes": 42422,
-    "sha256": "fbae9462ba3ec3cfc55cc37bcd0fd1b8453a36b88a661e7521381832350edd4f"
+    "sha256": "593640bced65be3d0d59159c181f836992539f1cfee3e4f2ba843dbb30f625c6",
+    "bytes": 42014
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "40dcbff19f8f6a977f2890e803723406c69603ae29f8a4539704b6ce4ecc6f39",
+    "original_sha256": "fbae9462ba3ec3cfc55cc37bcd0fd1b8453a36b88a661e7521381832350edd4f",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

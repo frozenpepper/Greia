@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T19:04:13.717770+00:00",
+  "created_utc": "2026-10-22T10:45:59.184752+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "Continue comme ça !",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français...\n\nContinue comme ça !",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "lilli",
+    "kind": "shared_character_utterance",
+    "locale": "fr",
+    "text": "Continue comme ça !",
+    "cue_id": "greia.shared.lilli__fr__encourage.progress__01.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "lilli",
     "kind": "shared_character_utterance",
     "locale": "fr",
     "text": "Continue comme ça !",
     "cue_id": "greia.shared.lilli__fr__encourage.progress__01.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "assets/audio/characters/shared/v0.2/lilli/fr/lilli__fr__encourage.progress__01.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.lilli.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "job_id": "20261020-210403-5fe396d5",
-    "idempotency_key": "greia-a4e934d198b2475aa79c6aa9c107c2f7",
+    "job_id": "20261022-124113-a5c3f9e0",
+    "idempotency_key": "greia-5576b21c70d24fb5a14ff53b4ef0282f",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,261 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3971338974,
+    "script_seed": 1933404847,
     "language_direction": "French",
-    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in French. Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3467530647,
-        "sha256": "1bb7161d34b4a89e58355671f84c9529dc9930fe7e5f9c1d33a81102549276a6",
+        "seed": 2471084964,
+        "sha256": "c8b926a690a3194b58c84844b7dad19bb7a23cd42054ab576aa6d74dc96f67e2",
         "generation": {
-          "elapsed_seconds": 9.412811083020642,
+          "elapsed_seconds": 10.549530999996932,
           "model_load_seconds": 0.0,
-          "rtf": 8.403045156691542,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.470050216544137,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 1.0,
+    "transcript": " Continue comme ça",
+    "metrics": {
+      "duration_seconds": 1.3123356009070295,
+      "rms_dbfs": -26.45,
+      "peak": 0.26614,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.1,
+      "trailing_silence_seconds": 0.22,
+      "longest_internal_pause_seconds": 0.04
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/assets/audio/characters/shared/v0.2/lilli/fr/lilli__fr__encourage.progress__01.wav.raw.wav",
+    "sha256": "e86b269b7c03aa4e9281a153596c7a1183bd127942a06a984d79468110af5d9c",
+    "receipt_sha256": "6e48e89126a444b5fd4aadd22f7d76e4f1f8355b5e6c5b55cd63f29f5389ebd7"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/assets/audio/characters/shared/v0.2/lilli/fr/lilli__fr__encourage.progress__01.wav.extracted.wav",
+    "sha256": "84c53e79cd696ad454288b72f5b7db822ecd80682691a3d45267df274ee03dfd"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/assets/audio/characters/shared/v0.2/lilli/fr/lilli__fr__encourage.progress__01.wav.delivery.wav",
+    "sha256": "6ceeddfbf5ddfdb2a5d4cf38006cd732a4353c3f150123103a53366b85acc7cd"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/assets/audio/characters/shared/v0.2/lilli/fr/lilli__fr__encourage.progress__01.wav.raw.wav",
+    "source_sha256": "e86b269b7c03aa4e9281a153596c7a1183bd127942a06a984d79468110af5d9c",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/assets/audio/characters/shared/v0.2/lilli/fr/lilli__fr__encourage.progress__01.wav.extracted.wav",
+    "output_sha256": "84c53e79cd696ad454288b72f5b7db822ecd80682691a3d45267df274ee03dfd",
+    "target_request": {
+      "speaker": "lilli",
+      "kind": "shared_character_utterance",
+      "text": "Continue comme ça !",
+      "locale": "fr",
+      "cue_id": "greia.shared.lilli__fr__encourage.progress__01.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/assets/audio/characters/shared/v0.2/lilli/fr/lilli__fr__encourage.progress__01.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "6e48e89126a444b5fd4aadd22f7d76e4f1f8355b5e6c5b55cd63f29f5389ebd7"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "Continue comme ça !",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français! Continue comme ça!",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " Continue comme ça!",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.26
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.26,
+        "end_seconds": 0.58
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.58,
+        "end_seconds": 0.76
+      },
+      {
+        "word": "en",
+        "start_seconds": 0.76,
+        "end_seconds": 0.88
+      },
+      {
+        "word": "français",
+        "start_seconds": 0.88,
+        "end_seconds": 1.36
+      },
+      {
+        "word": "continue",
+        "start_seconds": 1.76,
+        "end_seconds": 2.16
+      },
+      {
+        "word": "comme",
+        "start_seconds": 2.16,
+        "end_seconds": 2.48
+      },
+      {
+        "word": "ça",
+        "start_seconds": 2.48,
+        "end_seconds": 2.7
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "continue",
+        "start_seconds": 0.0,
+        "end_seconds": 0.52
+      },
+      {
+        "word": "comme",
+        "start_seconds": 0.52,
+        "end_seconds": 0.78
+      },
+      {
+        "word": "ça",
+        "start_seconds": 0.78,
+        "end_seconds": 1.04
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.6495620727539062,
+        "no_speech_prob": 0.18046000599861145,
+        "compression_ratio": 0.8771929824561403,
+        "word_probabilities": [
+          0.64501953125,
+          0.310791015625,
+          0.96484375,
+          0.974609375,
+          0.86328125
+        ]
+      },
+      {
+        "avg_logprob": -0.6495620727539062,
+        "no_speech_prob": 0.18046000599861145,
+        "compression_ratio": 0.8771929824561403,
+        "word_probabilities": [
+          0.80126953125,
+          0.978515625,
+          0.99462890625
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.8397196360996791,
+        "no_speech_prob": 0.3473328948020935,
+        "compression_ratio": 0.7037037037037037,
+        "word_probabilities": [
+          0.347412109375,
+          0.30859375,
+          0.98876953125
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 82,
+    "extracted_voiced_seconds": 0.82,
+    "unremoved_raw_target_tokens": [
+      "continue",
+      "comme",
+      "ça"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "continue",
+      "comme",
+      "ça"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.0401814058956917,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-expanded-boundary",
+      "search_start_seconds": 0.88,
+      "search_end_seconds": 2.16,
+      "prefix_last_word_end_seconds": 1.36,
+      "target_first_word_start_seconds": 1.76,
+      "gap_seconds": 0.29931972789115646,
+      "verified_silence_start_seconds": 1.5285260770975058,
+      "verified_silence_end_seconds": 1.8278458049886621,
+      "gap_rms_dbfs": -58.014,
+      "gap_peak_dbfs": -34.077,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.678185941043084,
+      "cut_sample": 37004,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 1095,
+      "removed_seconds": 0.04965986394557823,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 38099,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/assets/audio/characters/shared/v0.2/lilli/fr/lilli__fr__encourage.progress__01.wav.delivery.wav",
+      "sha256": "6ceeddfbf5ddfdb2a5d4cf38006cd732a4353c3f150123103a53366b85acc7cd"
+    }
+  },
   "output": {
     "path": "assets/audio/characters/shared/v0.2/lilli/fr/lilli__fr__encourage.progress__01.wav",
-    "bytes": 49478,
-    "sha256": "0758e70c073df306e3d912469f84e89a34af0eb051fe4d02010648d1ad4013ce"
+    "sha256": "9262092e21bdd6686a138a684b232f6ff2215d936ac49124cceab28d0284e1ca",
+    "bytes": 57952
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "041e6a519f7c70d983bd2f1a3df0f3325865c366d51147ae8b7fde7779880113",
+    "original_sha256": "0758e70c073df306e3d912469f84e89a34af0eb051fe4d02010648d1ad4013ce",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

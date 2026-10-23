@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T15:39:55.073265+00:00",
+  "created_utc": "2026-10-23T02:17:13.023610+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
@@ -8,17 +8,22 @@
     "text": "Forêt de varech géant !",
     "cue_id": "voice.creature_kelp.fr",
     "output": "activities/sottomarino_giramondo/audio/fr/sub_creature_kelp.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "verification": "required",
+    "max_attempts": 3,
+    "delivery_prompt": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic"
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-173945-1b6bb355",
-    "idempotency_key": "greia-941df9bfa72548e8a6f59611d9632ec4",
+    "job_id": "20261023-041655-bdcb5313",
+    "idempotency_key": "greia-479ab569244845e487f3e7df93bcf0bb",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +46,363 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3383865306,
+    "script_seed": 332633235,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "effective_delivery": "Speak in French. Lecture chaleureuse et calme. Diction claire et naturelle.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 874632501,
-        "sha256": "3727e065b5063c8fdae6925bed2fc1498fe32aef8ce4b1c8af2fe2d070ff69dd",
+        "seed": 1031026684,
+        "sha256": "c1ab792426d3aa22d7730160cfc0da1e284c60bc66c1db77a0b5e7b6d6ec9a83",
         "generation": {
-          "elapsed_seconds": 8.298922332993243,
+          "elapsed_seconds": 15.254910334013402,
           "model_load_seconds": 0.0,
-          "rtf": 5.762473556065208,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.531093013544247,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-audio-parakeet-tdt-v3",
+    "transcript": "Forêt de Varèche géant",
+    "score": 0.8966,
+    "detail": "Delivered target transcribed and screened; human listening remains pending",
+    "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+    "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+    "ignore_accents": true,
+    "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+    "flags": [],
+    "metrics": {
+      "duration_seconds": 2.0201814058956917,
+      "rms_dbfs": -31.26,
+      "peak": 0.21246,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.08,
+      "trailing_silence_seconds": 0.26,
+      "longest_internal_pause_seconds": 0.0
+    }
   },
-  "attempts": 1,
+  "attempts": 3,
   "output": {
     "path": "activities/sottomarino_giramondo/audio/fr/sub_creature_kelp.wav",
-    "bytes": 63590,
-    "sha256": "ab02871ffde8f21a5082237cd78ee11a0b691f7f29941c57736df99ce58a6ca9"
+    "bytes": 89168,
+    "sha256": "343f6570f93d1968ccfd91750b97a42f88d6764913f910a9c9381f838684ea2e"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "short_phrase": {
+    "mode": "automatic-carrier",
+    "composition_policy": "natural-context-period-v1",
+    "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/b39983b6214e45c5850a341145a29376",
+    "prefix": "Nous allons parler ensemble.",
+    "composite_text": "Nous allons parler ensemble.\n\nForêt de varech géant !",
+    "effective_delivery": "Lecture chaleureuse et calme. Diction claire et naturelle.",
+    "extraction": {
+      "schema_version": 1,
+      "algorithm_version": "greia-spoken-carrier-extractor-v7",
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "status": "EXTRACTED_PENDING_LISTENING",
+      "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/b39983b6214e45c5850a341145a29376/attempt-03/raw.wav",
+      "source_sha256": "c1ab792426d3aa22d7730160cfc0da1e284c60bc66c1db77a0b5e7b6d6ec9a83",
+      "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/b39983b6214e45c5850a341145a29376/attempt-03/target.wav",
+      "output_sha256": "db0a01a7009fbb19590dbab87e6384ab53aeb1a3703ec410f557f829469e23f6",
+      "output_bytes": 193980,
+      "locale": "fr",
+      "prefix": "Nous allons parler ensemble.",
+      "target": "Forêt de varech géant !",
+      "remove_first_words": 4,
+      "ignore_accents": true,
+      "target_verification_requested": "warn",
+      "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+      "target_comparison_score": 0.8966,
+      "target_word_count_matches": true,
+      "target_numbers_match": true,
+      "target_comparison_flags": [],
+      "target_transcript_warning": true,
+      "recognizer": "mlx-audio-parakeet-tdt-v3",
+      "recognizer_version": "0.5.0",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "extracted_transcript": "Forêt de Varèche géant",
+      "expected_target_tokens": [
+        "foret",
+        "de",
+        "varek",
+        "geant"
+      ],
+      "extracted_target_tokens": [
+        "foret",
+        "de",
+        "vareke",
+        "geant"
+      ],
+      "extracted_target_exact_match": false,
+      "transcription_settings": {
+        "language_detection": "automatic",
+        "expected_text_prompt": null,
+        "timestamps": "model-provided-token-timestamps"
+      },
+      "sample_rate": 48000,
+      "duration_seconds": 4.320166666666666,
+      "boundary": {
+        "search_strategy": "target-only-global-quiet-run-v7",
+        "verified_silence_start_seconds": 1.59,
+        "verified_silence_end_seconds": 2.4,
+        "verified_silence_duration_seconds": 0.81,
+        "cut_sample": 110400,
+        "cut_time_seconds": 2.3,
+        "padding_seconds": 0.1,
+        "quiet_run_start_sample": 76320,
+        "quiet_run_end_sample": 115200,
+        "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+      },
+      "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/b39983b6214e45c5850a341145a29376/attempt-03/target.wav.search/e05aabb2def946af9f773029d19ee8fb",
+      "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/b39983b6214e45c5850a341145a29376/attempt-03/target.wav.search/e05aabb2def946af9f773029d19ee8fb/search.json",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/b39983b6214e45c5850a341145a29376/attempt-03/raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "915ac6557eabb74ec01815bec5815fff2dbf5e36f8a815c06b00880fb7291734",
+      "candidate_sha256": "db0a01a7009fbb19590dbab87e6384ab53aeb1a3703ec410f557f829469e23f6",
+      "candidate_id": "candidate-01",
+      "candidate_count": 1,
+      "qualifying_quiet_run_count": 1,
+      "candidate_results": [
+        {
+          "candidate_id": "candidate-01",
+          "quiet_run": {
+            "start_sample": 76320,
+            "end_sample": 115200,
+            "start_seconds": 1.59,
+            "end_seconds": 2.4,
+            "duration_seconds": 0.81
+          },
+          "cut_sample": 110400,
+          "cut_time_seconds": 2.3,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/b39983b6214e45c5850a341145a29376/attempt-03/target.wav.search/e05aabb2def946af9f773029d19ee8fb/candidate-01.wav",
+          "preceding_voiced_seconds": 1.19,
+          "retained_voiced_seconds": 1.43,
+          "retained_duration_seconds": 2.020166666666667,
+          "candidate_sha256": "db0a01a7009fbb19590dbab87e6384ab53aeb1a3703ec410f557f829469e23f6",
+          "extracted_transcript": "Forêt de Varèche géant",
+          "canonical_transcript_tokens": [
+            "foret",
+            "de",
+            "vareke",
+            "geant"
+          ],
+          "exact_target_match": false,
+          "target_comparison_score": 0.8966,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": true,
+          "asr_segment_count": 1
+        }
+      ],
+      "human_review": "PENDING",
+      "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+      "delivery": {
+        "policy": "verified-carrier-gap-delivery-v1",
+        "removed_frames": 0,
+        "removed_seconds": 0.0,
+        "retained_verified_quiet_seconds": 0.1,
+        "raw_delivery_start_sample": 110400,
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/b39983b6214e45c5850a341145a29376/attempt-03/delivery-target.wav",
+        "sha256": "db0a01a7009fbb19590dbab87e6384ab53aeb1a3703ec410f557f829469e23f6"
+      }
+    },
+    "quality": {
+      "disposition": "PASS",
+      "score": 0.8966,
+      "transcript": "Forêt de Varèche géant",
+      "metrics": {
+        "duration_seconds": 2.0201814058956917,
+        "rms_dbfs": -31.26,
+        "peak": 0.21246,
+        "clipped_fraction": 0.0,
+        "leading_silence_seconds": 0.08,
+        "trailing_silence_seconds": 0.26,
+        "longest_internal_pause_seconds": 0.0
+      },
+      "flags": [],
+      "ignore_accents": true,
+      "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+      "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+      "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+      "detail": "Delivered target transcribed and screened; human listening remains pending"
+    },
+    "history": [
+      {
+        "attempt": 1,
+        "status": "REJECTED_CUT",
+        "error": "no candidate suffix meets target verification policy",
+        "evidence": {
+          "candidate_transcripts": [
+            "For elle devarais géant."
+          ],
+          "matching_candidate_ids": [],
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/b39983b6214e45c5850a341145a29376/attempt-01/target.wav.search/c632c380dce145d88e3c2198c9369734",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/b39983b6214e45c5850a341145a29376/attempt-01/target.wav.search/c632c380dce145d88e3c2198c9369734/search.json"
+        }
+      },
+      {
+        "attempt": 2,
+        "status": "REJECTED_CUT",
+        "error": "no candidate suffix meets target verification policy",
+        "evidence": {
+          "candidate_transcripts": [],
+          "matching_candidate_ids": [],
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/b39983b6214e45c5850a341145a29376/attempt-02/target.wav.search/01f627500a0645a7a3968adf533c4df7",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/b39983b6214e45c5850a341145a29376/attempt-02/target.wav.search/01f627500a0645a7a3968adf533c4df7/search.json"
+        }
+      },
+      {
+        "attempt": 3,
+        "status": "PASS",
+        "quality": {
+          "disposition": "PASS",
+          "score": 0.8966,
+          "transcript": "Forêt de Varèche géant",
+          "metrics": {
+            "duration_seconds": 2.0201814058956917,
+            "rms_dbfs": -31.26,
+            "peak": 0.21246,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.08,
+            "trailing_silence_seconds": 0.26,
+            "longest_internal_pause_seconds": 0.0
+          },
+          "flags": [],
+          "ignore_accents": true,
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "detail": "Delivered target transcribed and screened; human listening remains pending"
+        },
+        "extraction": {
+          "schema_version": 1,
+          "algorithm_version": "greia-spoken-carrier-extractor-v7",
+          "comparison_policy": "locale-number-tokens-v3-chck-orthographic",
+          "status": "EXTRACTED_PENDING_LISTENING",
+          "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/b39983b6214e45c5850a341145a29376/attempt-03/raw.wav",
+          "source_sha256": "c1ab792426d3aa22d7730160cfc0da1e284c60bc66c1db77a0b5e7b6d6ec9a83",
+          "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/b39983b6214e45c5850a341145a29376/attempt-03/target.wav",
+          "output_sha256": "db0a01a7009fbb19590dbab87e6384ab53aeb1a3703ec410f557f829469e23f6",
+          "output_bytes": 193980,
+          "locale": "fr",
+          "prefix": "Nous allons parler ensemble.",
+          "target": "Forêt de varech géant !",
+          "remove_first_words": 4,
+          "ignore_accents": true,
+          "target_verification_requested": "warn",
+          "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+          "target_comparison_score": 0.8966,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_transcript_warning": true,
+          "recognizer": "mlx-audio-parakeet-tdt-v3",
+          "recognizer_version": "0.5.0",
+          "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+          "model_revision": "ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15",
+          "extracted_transcript": "Forêt de Varèche géant",
+          "expected_target_tokens": [
+            "foret",
+            "de",
+            "varek",
+            "geant"
+          ],
+          "extracted_target_tokens": [
+            "foret",
+            "de",
+            "vareke",
+            "geant"
+          ],
+          "extracted_target_exact_match": false,
+          "transcription_settings": {
+            "language_detection": "automatic",
+            "expected_text_prompt": null,
+            "timestamps": "model-provided-token-timestamps"
+          },
+          "sample_rate": 48000,
+          "duration_seconds": 4.320166666666666,
+          "boundary": {
+            "search_strategy": "target-only-global-quiet-run-v7",
+            "verified_silence_start_seconds": 1.59,
+            "verified_silence_end_seconds": 2.4,
+            "verified_silence_duration_seconds": 0.81,
+            "cut_sample": 110400,
+            "cut_time_seconds": 2.3,
+            "padding_seconds": 0.1,
+            "quiet_run_start_sample": 76320,
+            "quiet_run_end_sample": 115200,
+            "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+          },
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/b39983b6214e45c5850a341145a29376/attempt-03/target.wav.search/e05aabb2def946af9f773029d19ee8fb",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/b39983b6214e45c5850a341145a29376/attempt-03/target.wav.search/e05aabb2def946af9f773029d19ee8fb/search.json",
+          "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/b39983b6214e45c5850a341145a29376/attempt-03/raw.wav.receipt.json",
+          "source_provider_receipt_sha256": "915ac6557eabb74ec01815bec5815fff2dbf5e36f8a815c06b00880fb7291734",
+          "candidate_sha256": "db0a01a7009fbb19590dbab87e6384ab53aeb1a3703ec410f557f829469e23f6",
+          "candidate_id": "candidate-01",
+          "candidate_count": 1,
+          "qualifying_quiet_run_count": 1,
+          "candidate_results": [
+            {
+              "candidate_id": "candidate-01",
+              "quiet_run": {
+                "start_sample": 76320,
+                "end_sample": 115200,
+                "start_seconds": 1.59,
+                "end_seconds": 2.4,
+                "duration_seconds": 0.81
+              },
+              "cut_sample": 110400,
+              "cut_time_seconds": 2.3,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/b39983b6214e45c5850a341145a29376/attempt-03/target.wav.search/e05aabb2def946af9f773029d19ee8fb/candidate-01.wav",
+              "preceding_voiced_seconds": 1.19,
+              "retained_voiced_seconds": 1.43,
+              "retained_duration_seconds": 2.020166666666667,
+              "candidate_sha256": "db0a01a7009fbb19590dbab87e6384ab53aeb1a3703ec410f557f829469e23f6",
+              "extracted_transcript": "Forêt de Varèche géant",
+              "canonical_transcript_tokens": [
+                "foret",
+                "de",
+                "vareke",
+                "geant"
+              ],
+              "exact_target_match": false,
+              "target_comparison_score": 0.8966,
+              "target_word_count_matches": true,
+              "target_numbers_match": true,
+              "target_comparison_flags": [],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": true,
+              "asr_segment_count": 1
+            }
+          ],
+          "human_review": "PENDING",
+          "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+          "delivery": {
+            "policy": "verified-carrier-gap-delivery-v1",
+            "removed_frames": 0,
+            "removed_seconds": 0.0,
+            "retained_verified_quiet_seconds": 0.1,
+            "raw_delivery_start_sample": 110400,
+            "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/b39983b6214e45c5850a341145a29376/attempt-03/delivery-target.wav",
+            "sha256": "db0a01a7009fbb19590dbab87e6384ab53aeb1a3703ec410f557f829469e23f6"
+          }
+        },
+        "candidate": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/automatic-evidence/b39983b6214e45c5850a341145a29376/attempt-03/candidate.wav"
+      }
+    ]
+  },
   "corpus_replacement": {
-    "original_sha256": "55fc60a5d9fccf61c4dc8576697ade6ed2c84651207d877c0e67384d9d757648",
+    "original_sha256": "b1a6321ceafc9154a3b2083d04195646e4fff5e6980cce46f098816d065ac87d",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

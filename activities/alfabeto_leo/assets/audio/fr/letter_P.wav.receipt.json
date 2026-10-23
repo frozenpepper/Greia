@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T23:17:55.332122+00:00",
+  "created_utc": "2026-10-21T15:28:07.703185+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "P comme Pomme",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français. P comme Pomme",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "P comme Pomme",
+    "cue_id": "alfabeto_leo.letter_P.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "P comme Pomme",
     "cue_id": "alfabeto_leo.letter_P.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/alfabeto_leo/assets/audio/fr/letter_P.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-011746-12e73a83",
-    "idempotency_key": "greia-89785add648349b29979936992168d53",
+    "job_id": "20261021-172749-28a65654",
+    "idempotency_key": "greia-6bcfebd5520346de9da704d1deae1b81",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,261 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 552456505,
+    "script_seed": 630242777,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak naturally in French. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2500321368,
-        "sha256": "d5e36d57d3a84d021bc509d122c478b6b63ec89f089921f469cca4684abe5e3b",
+        "seed": 2638701546,
+        "sha256": "f4bd8902edfcd52172e0aafb123271e4a127a9145394e70e4b74d4b4b7145656",
         "generation": {
-          "elapsed_seconds": 8.138716458983254,
+          "elapsed_seconds": 17.246866249995946,
           "model_load_seconds": 0.0,
-          "rtf": 6.357544428316563,
-          "peak_memory_gb": 8.21220922
+          "rtf": 3.9921761313211563,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8292,
+    "transcript": " P-com-pomme.",
+    "metrics": {
+      "duration_seconds": 1.6522448979591837,
+      "rms_dbfs": -35.99,
+      "peak": 0.13773,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.26,
+      "trailing_silence_seconds": 0.22,
+      "longest_internal_pause_seconds": 0.18
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/alfabeto_leo/assets/audio/fr/letter_P.wav.raw.wav",
+    "sha256": "47d6dbfbda5fa18b4c23dd64dd6c1e8bb8c25bb24d4b269eab34cec9ed089b06",
+    "receipt_sha256": "5b86bc66f175b95f93852e057e5810fc5a369f6e8d0891137fa7c517108ff635"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/assets/audio/fr/letter_P.wav.extracted.wav",
+    "sha256": "47c97b19fb33a006115738e56c6b513896dd9636e004dd7d918182827d0f417b"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/alfabeto_leo/assets/audio/fr/letter_P.wav.delivery.wav",
+    "sha256": "884a6c31b0399a8da0786886b8db6b377518871d95c6c599cd86a29740c46d73"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/alfabeto_leo/assets/audio/fr/letter_P.wav.raw.wav",
+    "source_sha256": "47d6dbfbda5fa18b4c23dd64dd6c1e8bb8c25bb24d4b269eab34cec9ed089b06",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/alfabeto_leo/assets/audio/fr/letter_P.wav.extracted.wav",
+    "output_sha256": "47c97b19fb33a006115738e56c6b513896dd9636e004dd7d918182827d0f417b",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "P comme Pomme",
+      "locale": "fr",
+      "cue_id": "alfabeto_leo.letter_P.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-raw/activities/alfabeto_leo/assets/audio/fr/letter_P.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "5b86bc66f175b95f93852e057e5810fc5a369f6e8d0891137fa7c517108ff635"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "P comme Pomme",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase est en français. P comme pomme.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " P-comme-pomme.",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.3
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.3,
+        "end_seconds": 0.82
+      },
+      {
+        "word": "est",
+        "start_seconds": 0.82,
+        "end_seconds": 1.22
+      },
+      {
+        "word": "en",
+        "start_seconds": 1.22,
+        "end_seconds": 1.36
+      },
+      {
+        "word": "français",
+        "start_seconds": 1.36,
+        "end_seconds": 1.86
+      },
+      {
+        "word": "p",
+        "start_seconds": 2.82,
+        "end_seconds": 3.02
+      },
+      {
+        "word": "comme",
+        "start_seconds": 3.02,
+        "end_seconds": 3.5
+      },
+      {
+        "word": "pomme",
+        "start_seconds": 3.5,
+        "end_seconds": 3.96
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "p",
+        "start_seconds": 0.0,
+        "end_seconds": 0.7
+      },
+      {
+        "word": "comme",
+        "start_seconds": 0.7,
+        "end_seconds": 1.48
+      },
+      {
+        "word": "pomme",
+        "start_seconds": 1.48,
+        "end_seconds": 1.66
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.7135577201843262,
+        "no_speech_prob": 0.004442521836608648,
+        "compression_ratio": 0.9,
+        "word_probabilities": [
+          0.7734375,
+          0.99560546875,
+          0.9775390625,
+          0.994140625,
+          0.974609375
+        ]
+      },
+      {
+        "avg_logprob": -0.7135577201843262,
+        "no_speech_prob": 0.004442521836608648,
+        "compression_ratio": 0.9,
+        "word_probabilities": [
+          0.5107421875,
+          0.387939453125,
+          0.767578125
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.9027003374966708,
+        "no_speech_prob": 0.2774164378643036,
+        "compression_ratio": 0.7368421052631579,
+        "word_probabilities": [
+          0.1650390625,
+          0.3212890625,
+          0.56103515625
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 5,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": true,
+    "target_verification_warning": false,
+    "extracted_voiced_frames": 75,
+    "extracted_voiced_seconds": 0.75,
+    "unremoved_raw_target_tokens": [
+      "p",
+      "comme",
+      "pomme"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "p",
+      "comme",
+      "pomme"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 4.320181405895692,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.86,
+      "search_end_seconds": 2.82,
+      "prefix_last_word_end_seconds": 1.86,
+      "target_first_word_start_seconds": 2.82,
+      "gap_seconds": 0.8480725623582767,
+      "verified_silence_start_seconds": 1.9198639455782314,
+      "verified_silence_end_seconds": 2.767936507936508,
+      "gap_rms_dbfs": -61.667,
+      "gap_peak_dbfs": -39.354,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.34390022675737,
+      "cut_sample": 51683,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 7145,
+      "removed_seconds": 0.3240362811791383,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 58828,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/recovery-01/carrier-extracted/activities/alfabeto_leo/assets/audio/fr/letter_P.wav.delivery.wav",
+      "sha256": "884a6c31b0399a8da0786886b8db6b377518871d95c6c599cd86a29740c46d73"
+    }
+  },
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/fr/letter_P.wav",
-    "bytes": 56534,
-    "sha256": "297ae0cfbd0f1c92678c6267d356bcb5217d4d09e4f471fd5046b4a4a3b0e6d6"
+    "sha256": "a05a815e11024c5fc965c3efa71529eee0934856ba096d967da4f8d4d7df7707",
+    "bytes": 72942
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "10c0de54a0fcae7a317520fcfb0f0125a29d98f4e23aba982811108a572f926f",
+    "original_sha256": "2f5ec7ad39e0fcdb51e355c7dce11939e61ec47e2a0e64cba0ca448b42f6d481",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,24 +1,55 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T14:46:35.552279+00:00",
+  "created_utc": "2026-10-21T17:08:18.826914+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Ascolta questa frase in italiano.",
+    "prefix_word_count": 5,
+    "target": "topo",
+    "target_word_count": 1,
+    "target_verification": "warn",
+    "composite_text": "Ascolta questa frase in italiano. topo",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+    "extractor_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "topo",
+    "cue_id": "sillabe_magiche.word_topo.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace."
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "topo",
     "cue_id": "sillabe_magiche.word_topo.it",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
     "output": "activities/sillabe_magiche/assets/audio/it/word_topo.wav",
     "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Say it naturally as one whole word, with a gentle steady rhythm."
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-164628-35184dae",
-    "idempotency_key": "greia-0f4f464b33174d2c87525054d0c4492d",
+    "job_id": "20261021-190807-5af0447c",
+    "idempotency_key": "greia-7246b19019624da49a3853cc0f9daced",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +72,198 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1216108851,
+    "script_seed": 98276243,
     "language_direction": "Italian",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Say it naturally as one whole word, with a gentle steady rhythm.",
-    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Say it naturally as one whole word, with a gentle steady rhythm.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
+    "effective_delivery": "Speak in Italian. Clear, natural conversational delivery at an easy, unhurried pace. Speak the first sentence naturally, pause briefly, then speak the final phrase exactly as written. Do not add any words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3553132767,
-        "sha256": "50bf9cda830815a1fb6b63e953168595422df4125daf2b56fd8dac3779cbcf5d",
+        "seed": 1348002612,
+        "sha256": "ab1af66126e3931f24bb5c781a9fd3a4df214b64b42b3d14c8b49298aa621e28",
         "generation": {
-          "elapsed_seconds": 6.785590958956163,
+          "elapsed_seconds": 10.371024207997834,
           "model_load_seconds": 0.0,
-          "rtf": 6.05766191842538,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.600841690179214,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny-word-timestamps",
+    "transcript": " Dopo!",
     "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "detail": "Deterministic prefix extraction passed; pronunciation and human acceptance remain pending."
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/sillabe_magiche/assets/audio/it/word_topo.wav.raw.wav",
+    "sha256": "e84875acb7ec4960d5ad4738b02e6225bc61aa348c769db3f47387fa1c8d4a9a",
+    "receipt_sha256": "14b225c4afd48498c21c2f7216ae9712dba829591147b8e2551979e1a3013a5f"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/sillabe_magiche/assets/audio/it/word_topo.wav.extracted.wav",
+    "sha256": "e07c59edf6192b21382e7fb91a8b3632380c6ac2ea71cd8f01dae79dffe02d70"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v2",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/sillabe_magiche/assets/audio/it/word_topo.wav.raw.wav",
+    "source_sha256": "e84875acb7ec4960d5ad4738b02e6225bc61aa348c769db3f47387fa1c8d4a9a",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-extracted/activities/sillabe_magiche/assets/audio/it/word_topo.wav.extracted.wav",
+    "output_sha256": "e07c59edf6192b21382e7fb91a8b3632380c6ac2ea71cd8f01dae79dffe02d70",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "topo",
+      "locale": "it",
+      "cue_id": "sillabe_magiche.word_topo.it",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/carrier-raw/activities/sillabe_magiche/assets/audio/it/word_topo.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "14b225c4afd48498c21c2f7216ae9712dba829591147b8e2551979e1a3013a5f"
+    },
+    "locale": "it",
+    "prefix": "Ascolta questa frase in italiano.",
+    "target": "topo",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-tiny-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-tiny",
+    "model_revision": "78c52ab98ca87f570bc57ad852e15ef7060f9f76",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " ascolta questa frase in italiano. Topo!",
+    "extracted_transcript": " Dopo!",
+    "raw_word_alignment": [
+      {
+        "word": "ascolta",
+        "start_seconds": 0.0,
+        "end_seconds": 0.58
+      },
+      {
+        "word": "questa",
+        "start_seconds": 0.58,
+        "end_seconds": 0.84
+      },
+      {
+        "word": "frase",
+        "start_seconds": 0.84,
+        "end_seconds": 1.22
+      },
+      {
+        "word": "in",
+        "start_seconds": 1.22,
+        "end_seconds": 1.4
+      },
+      {
+        "word": "italiano",
+        "start_seconds": 1.4,
+        "end_seconds": 1.84
+      },
+      {
+        "word": "topo",
+        "start_seconds": 2.5,
+        "end_seconds": 2.84
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "dopo",
+        "start_seconds": 0.0,
+        "end_seconds": 0.68
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.7311671376228333,
+        "no_speech_prob": 0.013144761323928833,
+        "compression_ratio": 0.8666666666666667,
+        "word_probabilities": [
+          0.62353515625,
+          0.93505859375,
+          0.90380859375,
+          0.70458984375,
+          0.962890625
+        ]
+      },
+      {
+        "avg_logprob": -0.7311671376228333,
+        "no_speech_prob": 0.013144761323928833,
+        "compression_ratio": 0.8666666666666667,
+        "word_probabilities": [
+          0.430419921875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.6917006174723307,
+        "no_speech_prob": 0.18318071961402893,
+        "compression_ratio": 0.38461538461538464,
+        "word_probabilities": [
+          0.63623046875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": true,
+    "raw_target_exact_match": true,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 30,
+    "extracted_voiced_seconds": 0.3,
+    "unremoved_raw_target_tokens": [
+      "topo"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "topo"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 2.8801814058956916,
+    "sample_rate": 22050,
+    "boundary": {
+      "prefix_last_word_end_seconds": 1.84,
+      "target_first_word_start_seconds": 2.5,
+      "gap_seconds": 0.5487528344671202,
+      "verified_silence_start_seconds": 1.8998639455782314,
+      "verified_silence_end_seconds": 2.4486167800453513,
+      "gap_rms_dbfs": -54.542,
+      "gap_peak_dbfs": -33.788,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 2.1742403628117914,
+      "cut_sample": 47942,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING"
+  },
   "output": {
     "path": "activities/sillabe_magiche/assets/audio/it/word_topo.wav",
-    "bytes": 49478,
-    "sha256": "d8af08d6f1bcc4a866ff1900c868401b422c94615780675ad042212e20198c93"
+    "sha256": "b7e06832066fb625cc82bc437aad0714637de2fa25440d9019110efed63cbb18",
+    "bytes": 31210
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "5bfeecfbfb18ffa9592132a338b5e97051efd82f53f48e0e7fcda66c59215232",
+    "original_sha256": "d8af08d6f1bcc4a866ff1900c868401b422c94615780675ad042212e20198c93",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,24 +1,60 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T16:55:46.178899+00:00",
+  "created_utc": "2026-10-22T09:58:30.626312+00:00",
+  "kind": "greia-spoken-carrier-target",
+  "mode": "spoken-short-v1",
+  "carrier_plan": {
+    "mode": "spoken-short-v1",
+    "prefix": "Cette phrase est en français.",
+    "prefix_word_count": 5,
+    "target": "Comptons à l'envers !",
+    "target_word_count": 3,
+    "target_verification": "warn",
+    "composite_text": "Cette phrase est en français...\n\nComptons à l'envers !",
+    "composite_delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "normalization": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "ignore_accents": true,
+    "asr_model": "mlx-community/whisper-base-mlx",
+    "asr_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "extractor_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    }
+  },
+  "target_request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Comptons à l'envers !",
+    "cue_id": "greia.requested.count_back.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true
+  },
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Comptons à l'envers !",
     "cue_id": "greia.requested.count_back.fr",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace.",
+    "ignore_accents": true,
     "output": "activities/stelle_incantate/assets/audio/fr/count_back.wav",
-    "verification": "off",
-    "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "verification": "required",
+    "max_attempts": 1
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-185538-358baa0f",
-    "idempotency_key": "greia-21786f41099d47d898c8017c175da419",
+    "job_id": "20261022-115815-22f3462e",
+    "idempotency_key": "greia-796e30b4bdf84a66a1a0c979581d825c",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +77,257 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 4045028403,
+    "script_seed": 750891817,
     "language_direction": "French",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "effective_delivery": "Speak in French. Clear, natural conversational delivery at an easy, unhurried pace. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 542656078,
-        "sha256": "f2a9115e0d70e7165511690bc91fece005ef4bab9fcc0455de6837d3f0b181b0",
+        "seed": 2715041342,
+        "sha256": "02e6e9a6c0f680ab7e81ecce43879a71a424d92e992634082026d6b6b9b4fd90",
         "generation": {
-          "elapsed_seconds": 6.312209292023908,
+          "elapsed_seconds": 14.248064666986465,
           "model_load_seconds": 0.0,
-          "rtf": 4.930771481856978,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.710272470896176,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "score": 0.8099,
+    "transcript": " contents à l'envers.",
+    "metrics": {
+      "duration_seconds": 1.692154195011338,
+      "rms_dbfs": -36.02,
+      "peak": 0.1102,
+      "clipped_fraction": 0.0,
+      "leading_silence_seconds": 0.16,
+      "trailing_silence_seconds": 0.2,
+      "longest_internal_pause_seconds": 0.08
+    },
+    "flags": [],
+    "ignore_accents": true,
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "verifier_id": "mlx-whisper-base-word-timestamps"
   },
   "attempts": 1,
+  "human_review": "PENDING",
+  "raw_audio": {
+    "path": "carrier-raw/activities/stelle_incantate/assets/audio/fr/count_back.wav.raw.wav",
+    "sha256": "acfe220522dd53081fa47242a52555c27b1dc2a92bf51492b67fb5538378cffe",
+    "receipt_sha256": "16d228f2b6859fc442fcbc28d9c4beb0b5acca146603623da107ac6391d5b5eb"
+  },
+  "extracted_pcm": {
+    "path": "carrier-extracted/activities/stelle_incantate/assets/audio/fr/count_back.wav.extracted.wav",
+    "sha256": "033398bad162271bc4e00b02d5954ff9e075bd56b5e0a4e239ba35524240f04d"
+  },
+  "delivery_pcm": {
+    "path": "carrier-extracted/activities/stelle_incantate/assets/audio/fr/count_back.wav.delivery.wav",
+    "sha256": "ccc55b0737f8dec018f3f570e03f579ab9eb810b52a046468c1ba2e29687dfe7"
+  },
+  "extraction": {
+    "algorithm_version": "greia-spoken-carrier-extractor-v6",
+    "gap_policy": {
+      "minimum_run_seconds": 0.2,
+      "endpoint_guard_seconds": 0.05,
+      "frame_ms": 10,
+      "max_frame_rms_dbfs": -42.0,
+      "max_frame_peak_dbfs": -30.0,
+      "cut_padding_seconds": 0.1,
+      "minimum_extracted_voiced_seconds": 0.08
+    },
+    "schema_version": 1,
+    "status": "EXTRACTED_TARGET_WARN_PENDING_LISTENING",
+    "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/activities/stelle_incantate/assets/audio/fr/count_back.wav.raw.wav",
+    "source_sha256": "acfe220522dd53081fa47242a52555c27b1dc2a92bf51492b67fb5538378cffe",
+    "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/activities/stelle_incantate/assets/audio/fr/count_back.wav.extracted.wav",
+    "output_sha256": "033398bad162271bc4e00b02d5954ff9e075bd56b5e0a4e239ba35524240f04d",
+    "target_request": {
+      "speaker": "leo",
+      "kind": "character_dialogue",
+      "text": "Comptons à l'envers !",
+      "locale": "fr",
+      "cue_id": "greia.requested.count_back.fr",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-raw/activities/stelle_incantate/assets/audio/fr/count_back.wav.raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "16d228f2b6859fc442fcbc28d9c4beb0b5acca146603623da107ac6391d5b5eb"
+    },
+    "locale": "fr",
+    "prefix": "Cette phrase est en français.",
+    "target": "Comptons à l'envers !",
+    "remove_first_words": 5,
+    "target_verification_policy": "warn",
+    "recognizer": "mlx-whisper-base-word-timestamps",
+    "recognizer_version": "0.4.3",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "transcription_settings": {
+      "word_timestamps": true,
+      "initial_prompt": null,
+      "temperature": 0.0,
+      "condition_on_previous_text": false
+    },
+    "ignore_accents": true,
+    "normalization_policy": "NFC/casefold/apostrophe word tokens; comparison diacritics ignored",
+    "model_source": "installed-code-and-cached-weights-only;offline",
+    "raw_transcript": " Cette phrase étant français, contonce à l'envers.",
+    "removed_prefix_transcript": null,
+    "removed_prefix_word_alignment": null,
+    "extracted_transcript": " contents à l'envers.",
+    "raw_word_alignment": [
+      {
+        "word": "cette",
+        "start_seconds": 0.0,
+        "end_seconds": 0.18
+      },
+      {
+        "word": "phrase",
+        "start_seconds": 0.18,
+        "end_seconds": 0.46
+      },
+      {
+        "word": "étant",
+        "start_seconds": 0.46,
+        "end_seconds": 0.8
+      },
+      {
+        "word": "français",
+        "start_seconds": 0.8,
+        "end_seconds": 1.38
+      },
+      {
+        "word": "contonce",
+        "start_seconds": 2.3,
+        "end_seconds": 2.9
+      },
+      {
+        "word": "à",
+        "start_seconds": 2.9,
+        "end_seconds": 3.14
+      },
+      {
+        "word": "l'envers",
+        "start_seconds": 3.14,
+        "end_seconds": 3.56
+      }
+    ],
+    "extracted_word_alignment": [
+      {
+        "word": "contents",
+        "start_seconds": 0.0,
+        "end_seconds": 0.8
+      },
+      {
+        "word": "à",
+        "start_seconds": 0.8,
+        "end_seconds": 1.3
+      },
+      {
+        "word": "l'envers",
+        "start_seconds": 1.3,
+        "end_seconds": 1.72
+      }
+    ],
+    "raw_asr_scores": [
+      {
+        "avg_logprob": -0.608877076043023,
+        "no_speech_prob": 0.012356420047581196,
+        "compression_ratio": 0.8813559322033898,
+        "word_probabilities": [
+          0.452392578125,
+          0.98779296875,
+          0.69287109375,
+          0.841796875
+        ]
+      },
+      {
+        "avg_logprob": -0.608877076043023,
+        "no_speech_prob": 0.012356420047581196,
+        "compression_ratio": 0.8813559322033898,
+        "word_probabilities": [
+          0.28857421875,
+          0.943359375,
+          0.990234375,
+          0.9091796875
+        ]
+      }
+    ],
+    "extracted_asr_scores": [
+      {
+        "avg_logprob": -0.43581724166870117,
+        "no_speech_prob": 0.20983849465847015,
+        "compression_ratio": 0.7241379310344828,
+        "word_probabilities": [
+          0.2025146484375,
+          0.95068359375,
+          0.97900390625,
+          0.857421875
+        ]
+      }
+    ],
+    "raw_prefix_exact_match": false,
+    "intro_verification_policy": "ignored-disposable-intro",
+    "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+    "recognized_intro_word_count": 4,
+    "raw_target_exact_match": false,
+    "extracted_target_exact_match": false,
+    "target_verification_warning": true,
+    "extracted_voiced_frames": 95,
+    "extracted_voiced_seconds": 0.95,
+    "unremoved_raw_target_tokens": [
+      "contonce",
+      "à",
+      "l'envers"
+    ],
+    "unremoved_raw_aligned_tokens": [
+      "contonce",
+      "à",
+      "l'envers"
+    ],
+    "raw_transcript_alignment_suffix_match": true,
+    "duration_seconds": 3.8401814058956916,
+    "sample_rate": 22050,
+    "boundary": {
+      "search_strategy": "target-suffix-inter-word-gap",
+      "search_start_seconds": 1.38,
+      "search_end_seconds": 2.3,
+      "prefix_last_word_end_seconds": 1.38,
+      "target_first_word_start_seconds": 2.3,
+      "gap_seconds": 0.7882086167800454,
+      "verified_silence_start_seconds": 1.4598185941043085,
+      "verified_silence_end_seconds": 2.2480272108843535,
+      "gap_rms_dbfs": -56.612,
+      "gap_peak_dbfs": -31.282,
+      "gap_quiet_fraction": 1.0,
+      "padding_seconds": 0.1,
+      "cut_time_seconds": 1.8539229024943311,
+      "cut_sample": 40879,
+      "cut_policy": "midpoint of the unique guarded low-energy PCM run between timestamped prefix and target word spans"
+    },
+    "evidence_boundary": "ASR transcript/timestamps are probabilistic. PCM gap metrics and deterministic sample cut are technical evidence only; independent human listening remains required.",
+    "human_review": "PENDING",
+    "delivery": {
+      "policy": "verified-carrier-gap-delivery-v1",
+      "removed_frames": 6485,
+      "removed_seconds": 0.29410430839002266,
+      "retained_verified_quiet_seconds": 0.1,
+      "raw_delivery_start_sample": 47364,
+      "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/fresh-01/carrier-extracted/activities/stelle_incantate/assets/audio/fr/count_back.wav.delivery.wav",
+      "sha256": "ccc55b0737f8dec018f3f570e03f579ab9eb810b52a046468c1ba2e29687dfe7"
+    }
+  },
   "output": {
     "path": "activities/stelle_incantate/assets/audio/fr/count_back.wav",
-    "bytes": 56534,
-    "sha256": "f97e34881595b5e5ea1ae467f8b865aef6e9f2612b9f06b96734cea54f4a7a59"
+    "sha256": "5c40faf19ac73dc88073c1715feeb6ced39df79463f4bf525a3490317a9cee73",
+    "bytes": 74702
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "d2cf3b3146ef9e9d090c501ca66e49f96adf61231c1d05b8fcfdfc66533f9c6d",
+    "original_sha256": "f97e34881595b5e5ea1ae467f8b865aef6e9f2612b9f06b96734cea54f4a7a59",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

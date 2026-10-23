@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:24:31.669627+00:00",
+  "created_utc": "2026-10-22T15:58:14.269007+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
@@ -8,17 +8,21 @@
     "text": "A de Abeja",
     "cue_id": "foresta_parole.find_a",
     "output": "activities/foresta_parole/assets/audio/es/find_a.wav",
-    "verification": "off",
+    "verification": "required",
     "max_attempts": 1,
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "delivery_prompt": "Read clearly in a warm, calm tone. Pronounce every word carefully and naturally.",
+    "ignore_accents": true,
+    "short_text_mode": "on",
+    "short_text_max_words": 4,
+    "short_text_max_alnum": null
   },
   "provider_id": "voxstage-voxcpm2",
   "voice_id": "greia.leo.v2",
-  "voice_registry_version": "v0.2",
+  "voice_registry_version": "v0.3",
   "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "job_id": "20261020-142423-7a109825",
-    "idempotency_key": "greia-14277b57b16c4d76a66d6abae23974b3",
+    "job_id": "20261022-175751-173baecb",
+    "idempotency_key": "greia-8a71c0dc29794b3d8887cde9d19a1b48",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -41,42 +45,326 @@
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2013437590,
+    "script_seed": 246419450,
     "language_direction": "Spanish",
-    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak in Spanish. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Read clearly in a warm, calm tone. Pronounce every word carefully and naturally. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "effective_delivery": "Speak in Spanish. Read clearly in a warm, calm tone. Pronounce every word carefully and naturally. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2436358946,
-        "sha256": "46e6b8d57ba453abf7ec6c7e5b09af1184ae315f80067e04ca253c17662fe0af",
+        "seed": 2369235246,
+        "sha256": "ad60294e5dce3ba8e9a1c819bb36192f799a11b1ebe54c81675d2cff36033c6d",
         "generation": {
-          "elapsed_seconds": 7.2960552090080455,
+          "elapsed_seconds": 20.293296124989865,
           "model_load_seconds": 0.0,
-          "rtf": 4.1450933864263115,
-          "peak_memory_gb": 8.44494914
+          "rtf": 4.227623233566168,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
   },
   "verification": {
-    "disposition": "NOT_APPLICABLE",
-    "verifier_id": "mlx-whisper-tiny",
-    "transcript": null,
-    "score": null,
-    "detail": "ASR intentionally skipped for this semantic/utterance class"
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-base",
+    "transcript": " A de abeja.",
+    "score": 1.0,
+    "detail": "Packaged target scored with Base; human listening remains pending",
+    "model_id": "mlx-community/whisper-base-mlx",
+    "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+    "ignore_accents": true
   },
   "attempts": 1,
   "output": {
     "path": "activities/foresta_parole/assets/audio/es/find_a.wav",
-    "bytes": 77702,
-    "sha256": "301b9e266215822cb4dde3bd6e861fd6bcc40d67447c2526540692536468d9fd"
+    "bytes": 61826,
+    "sha256": "b185bbc12f78dfdab7cd4e0f1414ca5fb59755e02f91835d0446dd1b75c71909"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "short_phrase": {
+    "mode": "automatic-carrier",
+    "composition_policy": "period-separated-intro-v1",
+    "evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/dbeee3cf44d24a19ab7b65328cc5c6f2",
+    "prefix": "Escucha esta frase en español.",
+    "composite_text": "Escucha esta frase en español.\n\nA de Abeja",
+    "effective_delivery": "Read clearly in a warm, calm tone. Pronounce every word carefully and naturally. Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.",
+    "extraction": {
+      "schema_version": 1,
+      "algorithm_version": "greia-spoken-carrier-extractor-v7",
+      "comparison_policy": "locale-number-tokens-v1",
+      "status": "EXTRACTED_PENDING_LISTENING",
+      "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/dbeee3cf44d24a19ab7b65328cc5c6f2/attempt-01/raw.wav",
+      "source_sha256": "ad60294e5dce3ba8e9a1c819bb36192f799a11b1ebe54c81675d2cff36033c6d",
+      "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/dbeee3cf44d24a19ab7b65328cc5c6f2/attempt-01/target.wav",
+      "output_sha256": "f731b9c19aa43c722c9b9803db1839157afcad8e529c459cde3991a5de330f11",
+      "output_bytes": 134460,
+      "locale": "es",
+      "prefix": "Escucha esta frase en español.",
+      "target": "A de Abeja",
+      "remove_first_words": 5,
+      "ignore_accents": true,
+      "target_verification_requested": "warn",
+      "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+      "target_comparison_score": 1.0,
+      "target_word_count_matches": true,
+      "target_numbers_match": true,
+      "target_comparison_flags": [],
+      "target_transcript_warning": false,
+      "recognizer": "mlx-whisper-base",
+      "recognizer_version": "0.4.3",
+      "model_id": "mlx-community/whisper-base-mlx",
+      "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+      "extracted_transcript": "A de abeja.",
+      "expected_target_tokens": [
+        "a",
+        "de",
+        "abeja"
+      ],
+      "extracted_target_tokens": [
+        "a",
+        "de",
+        "abeja"
+      ],
+      "extracted_target_exact_match": true,
+      "transcription_settings": {
+        "language": "es",
+        "initial_prompt": null,
+        "word_timestamps": true,
+        "temperature": 0.0,
+        "condition_on_previous_text": false
+      },
+      "sample_rate": 48000,
+      "duration_seconds": 4.800166666666667,
+      "boundary": {
+        "search_strategy": "target-only-global-quiet-run-v7",
+        "verified_silence_start_seconds": 1.91,
+        "verified_silence_end_seconds": 3.5,
+        "verified_silence_duration_seconds": 1.59,
+        "cut_sample": 163200,
+        "cut_time_seconds": 3.4,
+        "padding_seconds": 0.1,
+        "quiet_run_start_sample": 91680,
+        "quiet_run_end_sample": 168000,
+        "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+      },
+      "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/dbeee3cf44d24a19ab7b65328cc5c6f2/attempt-01/target.wav.search/ae47ddce1f9341c29e52a9f89079260f",
+      "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/dbeee3cf44d24a19ab7b65328cc5c6f2/attempt-01/target.wav.search/ae47ddce1f9341c29e52a9f89079260f/search.json",
+      "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/dbeee3cf44d24a19ab7b65328cc5c6f2/attempt-01/raw.wav.receipt.json",
+      "source_provider_receipt_sha256": "4631282784d2b06261c7d7cc4beb0e162075c597d695af76902476d3f20213c8",
+      "candidate_sha256": "f731b9c19aa43c722c9b9803db1839157afcad8e529c459cde3991a5de330f11",
+      "candidate_id": "candidate-01",
+      "candidate_count": 1,
+      "qualifying_quiet_run_count": 1,
+      "candidate_results": [
+        {
+          "candidate_id": "candidate-01",
+          "quiet_run": {
+            "start_sample": 91680,
+            "end_sample": 168000,
+            "start_seconds": 1.91,
+            "end_seconds": 3.5,
+            "duration_seconds": 1.59
+          },
+          "cut_sample": 163200,
+          "cut_time_seconds": 3.4,
+          "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/dbeee3cf44d24a19ab7b65328cc5c6f2/attempt-01/target.wav.search/ae47ddce1f9341c29e52a9f89079260f/candidate-01.wav",
+          "preceding_voiced_seconds": 1.09,
+          "retained_voiced_seconds": 0.84,
+          "retained_duration_seconds": 1.4001666666666666,
+          "candidate_sha256": "f731b9c19aa43c722c9b9803db1839157afcad8e529c459cde3991a5de330f11",
+          "extracted_transcript": "A de abeja.",
+          "canonical_transcript_tokens": [
+            "a",
+            "de",
+            "abeja"
+          ],
+          "exact_target_match": true,
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_verification_requested": "warn",
+          "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+          "target_verification_qualifies": true,
+          "asr_segment_count": 1
+        }
+      ],
+      "human_review": "PENDING",
+      "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+      "delivery": {
+        "policy": "verified-carrier-gap-delivery-v1",
+        "removed_frames": 0,
+        "removed_seconds": 0.0,
+        "retained_verified_quiet_seconds": 0.1,
+        "raw_delivery_start_sample": 163200,
+        "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/dbeee3cf44d24a19ab7b65328cc5c6f2/attempt-01/delivery-target.wav",
+        "sha256": "f731b9c19aa43c722c9b9803db1839157afcad8e529c459cde3991a5de330f11"
+      }
+    },
+    "quality": {
+      "disposition": "PASS",
+      "score": 1.0,
+      "transcript": " A de abeja.",
+      "metrics": {
+        "duration_seconds": 1.4001814058956916,
+        "rms_dbfs": -35.71,
+        "peak": 0.13287,
+        "clipped_fraction": 0.0,
+        "leading_silence_seconds": 0.1,
+        "trailing_silence_seconds": 0.12,
+        "longest_internal_pause_seconds": 0.1
+      },
+      "flags": [],
+      "ignore_accents": true,
+      "comparison_policy": "locale-number-tokens-v1",
+      "model_id": "mlx-community/whisper-base-mlx",
+      "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+      "detail": "Packaged target scored with Base; human listening remains pending"
+    },
+    "history": [
+      {
+        "attempt": 1,
+        "status": "PASS",
+        "quality": {
+          "disposition": "PASS",
+          "score": 1.0,
+          "transcript": " A de abeja.",
+          "metrics": {
+            "duration_seconds": 1.4001814058956916,
+            "rms_dbfs": -35.71,
+            "peak": 0.13287,
+            "clipped_fraction": 0.0,
+            "leading_silence_seconds": 0.1,
+            "trailing_silence_seconds": 0.12,
+            "longest_internal_pause_seconds": 0.1
+          },
+          "flags": [],
+          "ignore_accents": true,
+          "comparison_policy": "locale-number-tokens-v1",
+          "model_id": "mlx-community/whisper-base-mlx",
+          "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+          "detail": "Packaged target scored with Base; human listening remains pending"
+        },
+        "extraction": {
+          "schema_version": 1,
+          "algorithm_version": "greia-spoken-carrier-extractor-v7",
+          "comparison_policy": "locale-number-tokens-v1",
+          "status": "EXTRACTED_PENDING_LISTENING",
+          "source": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/dbeee3cf44d24a19ab7b65328cc5c6f2/attempt-01/raw.wav",
+          "source_sha256": "ad60294e5dce3ba8e9a1c819bb36192f799a11b1ebe54c81675d2cff36033c6d",
+          "output": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/dbeee3cf44d24a19ab7b65328cc5c6f2/attempt-01/target.wav",
+          "output_sha256": "f731b9c19aa43c722c9b9803db1839157afcad8e529c459cde3991a5de330f11",
+          "output_bytes": 134460,
+          "locale": "es",
+          "prefix": "Escucha esta frase en español.",
+          "target": "A de Abeja",
+          "remove_first_words": 5,
+          "ignore_accents": true,
+          "target_verification_requested": "warn",
+          "target_verification_policy": "similarity-greater-than-0.8-with-same-word-count-and-numeric-sequence",
+          "target_comparison_score": 1.0,
+          "target_word_count_matches": true,
+          "target_numbers_match": true,
+          "target_comparison_flags": [],
+          "target_transcript_warning": false,
+          "recognizer": "mlx-whisper-base",
+          "recognizer_version": "0.4.3",
+          "model_id": "mlx-community/whisper-base-mlx",
+          "model_revision": "1e3e249fb8d01c655324bd6841b1deadffd6d04c",
+          "extracted_transcript": "A de abeja.",
+          "expected_target_tokens": [
+            "a",
+            "de",
+            "abeja"
+          ],
+          "extracted_target_tokens": [
+            "a",
+            "de",
+            "abeja"
+          ],
+          "extracted_target_exact_match": true,
+          "transcription_settings": {
+            "language": "es",
+            "initial_prompt": null,
+            "word_timestamps": true,
+            "temperature": 0.0,
+            "condition_on_previous_text": false
+          },
+          "sample_rate": 48000,
+          "duration_seconds": 4.800166666666667,
+          "boundary": {
+            "search_strategy": "target-only-global-quiet-run-v7",
+            "verified_silence_start_seconds": 1.91,
+            "verified_silence_end_seconds": 3.5,
+            "verified_silence_duration_seconds": 1.59,
+            "cut_sample": 163200,
+            "cut_time_seconds": 3.4,
+            "padding_seconds": 0.1,
+            "quiet_run_start_sample": 91680,
+            "quiet_run_end_sample": 168000,
+            "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run"
+          },
+          "search_evidence_dir": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/dbeee3cf44d24a19ab7b65328cc5c6f2/attempt-01/target.wav.search/ae47ddce1f9341c29e52a9f89079260f",
+          "search_evidence_json": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/dbeee3cf44d24a19ab7b65328cc5c6f2/attempt-01/target.wav.search/ae47ddce1f9341c29e52a9f89079260f/search.json",
+          "source_provider_receipt": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/dbeee3cf44d24a19ab7b65328cc5c6f2/attempt-01/raw.wav.receipt.json",
+          "source_provider_receipt_sha256": "4631282784d2b06261c7d7cc4beb0e162075c597d695af76902476d3f20213c8",
+          "candidate_sha256": "f731b9c19aa43c722c9b9803db1839157afcad8e529c459cde3991a5de330f11",
+          "candidate_id": "candidate-01",
+          "candidate_count": 1,
+          "qualifying_quiet_run_count": 1,
+          "candidate_results": [
+            {
+              "candidate_id": "candidate-01",
+              "quiet_run": {
+                "start_sample": 91680,
+                "end_sample": 168000,
+                "start_seconds": 1.91,
+                "end_seconds": 3.5,
+                "duration_seconds": 1.59
+              },
+              "cut_sample": 163200,
+              "cut_time_seconds": 3.4,
+              "candidate_path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/dbeee3cf44d24a19ab7b65328cc5c6f2/attempt-01/target.wav.search/ae47ddce1f9341c29e52a9f89079260f/candidate-01.wav",
+              "preceding_voiced_seconds": 1.09,
+              "retained_voiced_seconds": 0.84,
+              "retained_duration_seconds": 1.4001666666666666,
+              "candidate_sha256": "f731b9c19aa43c722c9b9803db1839157afcad8e529c459cde3991a5de330f11",
+              "extracted_transcript": "A de abeja.",
+              "canonical_transcript_tokens": [
+                "a",
+                "de",
+                "abeja"
+              ],
+              "exact_target_match": true,
+              "target_comparison_score": 1.0,
+              "target_word_count_matches": true,
+              "target_numbers_match": true,
+              "target_comparison_flags": [],
+              "target_verification_requested": "warn",
+              "target_verification_effective_policy": "similarity>0.8+same-word-count+same-numeric-sequence",
+              "target_verification_qualifies": true,
+              "asr_segment_count": 1
+            }
+          ],
+          "human_review": "PENDING",
+          "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
+          "delivery": {
+            "policy": "verified-carrier-gap-delivery-v1",
+            "removed_frames": 0,
+            "removed_seconds": 0.0,
+            "retained_verified_quiet_seconds": 0.1,
+            "raw_delivery_start_sample": 163200,
+            "path": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/dbeee3cf44d24a19ab7b65328cc5c6f2/attempt-01/delivery-target.wav",
+            "sha256": "f731b9c19aa43c722c9b9803db1839157afcad8e529c459cde3991a5de330f11"
+          }
+        },
+        "candidate": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/automatic-evidence/dbeee3cf44d24a19ab7b65328cc5c6f2/attempt-01/candidate.wav"
+      }
+    ]
+  },
   "corpus_replacement": {
-    "original_sha256": "20f6cfa57e7aad7972ed7d169f245d1f157bd606314e4d0a0c6a9945e6a34e06",
+    "original_sha256": "39583494d13ed0d1486cb9398ceec716a3dcbfa25f923548027b7dedef8d2a84",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }
