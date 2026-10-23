@@ -10,10 +10,10 @@
   <link rel="stylesheet" href="./styles/management.css">
 </head>
 <body>
-  <a class="skip-link" href="#content">Skip to content</a>
+  <a class="skip-link" href="#content" data-i18n="shell.skip">Skip to content</a>
   <div class="app-shell" id="app-shell">
-    <aside class="sidebar" aria-label="Greia Parents">
-      <a class="brand" href="#home" aria-label="Greia Parents home">
+    <aside class="sidebar" aria-label="Greia Parents" data-i18n-aria="shell.brand.sidebar">
+      <a class="brand" href="#home" aria-label="Greia Parents home" data-i18n-aria="shell.brand.home">
         <span class="brand-mark" aria-hidden="true">
           <svg viewBox="0 0 40 40" width="34" height="34" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M8 27 15 11l10 7 7-9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -25,16 +25,16 @@
             <circle cx="21" cy="31" r="2.5" fill="currentColor"/>
           </svg>
         </span>
-        <span class="brand-copy"><strong>Greia</strong><small>Parents</small></span>
+        <span class="brand-copy"><strong>Greia</strong><small data-i18n="shell.brand.parents">Parents</small></span>
       </a>
-      <nav class="primary-nav" id="desktop-nav" aria-label="Parent sections"></nav>
-      <p class="sidebar-note"><strong>Little minds.<br>Big possibilities.</strong>A little space for the grown-ups.</p>
+      <nav class="primary-nav" id="desktop-nav" aria-label="Parent sections" data-i18n-aria="shell.sections"></nav>
+      <p class="sidebar-note"><strong data-i18n="shell.tagline">Little minds. Big possibilities.</strong><span data-i18n="shell.tagline.note">A little space for the grown-ups.</span></p>
       <div class="sidebar-status">
         <div class="connection-chip">
           <span class="connection-dot" id="connection-dot"></span>
-          <span id="connection-label">Connecting…</span>
+          <span id="connection-label" data-i18n="shell.connecting">Connecting…</span>
         </div>
-        <button class="refresh-button" id="refresh-button" type="button" aria-label="Refresh Greia" title="Refresh Greia">Refresh</button>
+        <button class="refresh-button" id="refresh-button" type="button" aria-label="Refresh Greia" title="Refresh Greia" data-i18n-aria="shell.refresh.aria" data-i18n-title="shell.refresh.aria">Refresh</button>
       </div>
     </aside>
 
@@ -42,7 +42,7 @@
       <header class="workspace-header">
         <div class="workspace-heading">
           <p class="eyebrow" id="page-eyebrow">Greia Parents</p>
-          <h1 id="page-title">Home</h1>
+          <h1 id="page-title" data-i18n="nav.home">Home</h1>
           <p class="page-subtitle" id="page-subtitle"></p>
         </div>
         <div class="page-actions" id="page-actions"></div>
@@ -54,17 +54,17 @@
       </main>
     </div>
 
-    <nav class="bottom-nav" id="mobile-nav" aria-label="Parent sections"></nav>
+    <nav class="bottom-nav" id="mobile-nav" aria-label="Parent sections" data-i18n-aria="shell.sections"></nav>
   </div>
 
   <dialog id="confirm-dialog" class="dialog">
     <form method="dialog">
       <div class="dialog-icon danger-soft" id="confirm-icon" aria-hidden="true">!</div>
-      <h2 id="confirm-title">Are you sure?</h2>
+      <h2 id="confirm-title" data-i18n="shell.confirm.title">Are you sure?</h2>
       <p id="confirm-message"></p>
       <div class="dialog-actions">
-        <button class="button secondary" value="cancel">Cancel</button>
-        <button class="button danger" id="confirm-accept" value="confirm">Confirm</button>
+        <button class="button secondary" value="cancel" data-i18n="shell.confirm.cancel">Cancel</button>
+        <button class="button danger" id="confirm-accept" value="confirm" data-i18n="shell.confirm.accept">Confirm</button>
       </div>
     </form>
   </dialog>

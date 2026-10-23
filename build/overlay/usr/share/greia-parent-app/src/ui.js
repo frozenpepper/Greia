@@ -1,8 +1,9 @@
+import { tr } from "./localization.js";
 export const NAV_ITEMS = [
-  { id: "home", label: "Home", icon: "home", subtitle: "A little look at their world of discovery." },
-  { id: "children", label: "Children", icon: "children", subtitle: "Their own little world. Set it up to suit them." },
-  { id: "activities", label: "Activities", icon: "sparkles", subtitle: "Make room for play, creativity and new discoveries." },
-  { id: "device", label: "This Greia", icon: "device", subtitle: "Keep their Greia feeling just right." },
+  { id: "home", labelKey: "nav.home", icon: "home", subtitleKey: "nav.home.subtitle" },
+  { id: "children", labelKey: "nav.children", icon: "children", subtitleKey: "nav.children.subtitle" },
+  { id: "activities", labelKey: "nav.activities", icon: "sparkles", subtitleKey: "nav.activities.subtitle" },
+  { id: "device", labelKey: "nav.device", icon: "device", subtitleKey: "nav.device.subtitle" },
 ];
 export const ROUTE_ALIASES = { overview: "home", settings: "device", devices: "device" };
 export const MAX_ACTIVITY_PACKAGE_BYTES = 32 * 1024 * 1024;
@@ -34,17 +35,17 @@ export const icon=(name,label=null)=>{const svg=document.createElementNS(SVG_NS,
 export const button=(label,{iconName=null,className="button",type="button",onClick=null}={})=>{const n=el("button",className);n.type=type;if(iconName)n.append(icon(iconName));n.append(el("span","",label));if(onClick)n.addEventListener("click",onClick);return n;};
 export const humanBytes=(v)=>{const n=Math.max(0,Number(v||0));return n>=1073741824?`${(n/1073741824).toFixed(1)} GB`:`${Math.round(n/1048576)} MB`;};
 export const humanUptime=(s)=>{const t=Math.max(0,Number(s||0)),h=Math.floor(t/3600);return h>=24?`${Math.floor(h/24)}d ${h%24}h`:`${h}h ${Math.floor((t%3600)/60)}m`;};
-export const humanActivityTime=(seconds,{unlimited="Unlimited",zero="Finished for today"}={})=>{if(seconds===null||seconds===undefined)return unlimited;const total=Math.max(0,Math.floor(Number(seconds)||0));if(total===0)return zero;const minutes=Math.max(1,Math.floor(total/60)),hours=Math.floor(minutes/60),rest=minutes%60;if(hours&&rest)return`${hours} h ${rest} min`;if(hours)return`${hours} h`;return`${minutes} min`;};
-export const dailyLimitLabel=(minutes)=>{if(minutes===null||minutes===undefined)return"Unlimited";const value=Math.max(1,Math.floor(Number(minutes)||1));if(value%60===0)return`${value/60} h / day`;if(value>60)return`${Math.floor(value/60)} h ${value%60} min / day`;return`${value} min / day`;};
+export const humanActivityTime=(seconds,{unlimited=tr("common.unlimited"),zero=tr("common.finished_today")}={})=>{if(seconds===null||seconds===undefined)return unlimited;const total=Math.max(0,Math.floor(Number(seconds)||0));if(total===0)return zero;const minutes=Math.max(1,Math.floor(total/60)),hours=Math.floor(minutes/60),rest=minutes%60;if(hours&&rest)return`${hours} h ${rest} min`;if(hours)return`${hours} h`;return`${minutes} min`;};
+export const dailyLimitLabel=(minutes)=>{if(minutes===null||minutes===undefined)return tr("common.unlimited");const value=Math.max(1,Math.floor(Number(minutes)||1));const time=value%60===0?`${value/60} h`:value>60?`${Math.floor(value/60)} h ${value%60} min`:`${value} min`;return tr("common.per_day",{time});};
 export const percent=(a,b)=>Number(b)>0?Math.max(0,Math.min(100,Math.round((Number(a||0)/Number(b))*100))):0;
-export const activityName=(a)=>{const c=a?.title_key;if(c&&!String(c).includes("."))return String(c);const t=String(a?.activity_id||"Activity").split(".").pop();return t.replaceAll("-"," ").replace(/\b\w/g,x=>x.toUpperCase());};
-export const challengeName=(v)=>({automatic:"Automatic",easier:"Easier",standard:"Standard",harder:"More challenging"}[v]||"Automatic");
-export const visibilityName=(v,age=null)=>{if(v==="recommended_only")return age==null?"Age fit":`Age ${age} only`;if(v==="age_and_easier"||v==="hide_too_simple")return age==null?"Age + easier":`Age ${age} + easier`;return({show_all:"Show everything",custom:"Custom"}[v]||"Show everything");};
-export const audienceLabel=(a)=>{const lo=a?.recommended_age_min,hi=a?.recommended_age_max;if(lo==null&&hi==null)return"Age not specified";if(lo!=null&&hi==null)return`Age ${lo}+`;if(lo==null)return`Up to ${hi}`;return`${lo}–${hi} years`;};
+export const activityName=(a)=>{const c=a?.title_key;if(c&&!String(c).includes("."))return String(c);const t=String(a?.activity_id||tr("category.unknown")).split(".").pop();return t.replaceAll("-"," ").replace(/\b\w/g,x=>x.toUpperCase());};
+export const challengeName=(v)=>tr(`common.challenge.${["automatic","easier","standard","harder"].includes(v)?v:"automatic"}`);
+export const visibilityName=(v,age=null)=>{if(v==="recommended_only")return age==null?tr("common.age_fit"):tr("common.age_only",{age});if(v==="age_and_easier"||v==="hide_too_simple")return age==null?tr("common.age_easier"):tr("common.age_younger",{age});return tr(v==="custom"?"common.custom":"common.show_all");};
+export const audienceLabel=(a)=>{const lo=a?.recommended_age_min,hi=a?.recommended_age_max;if(lo==null&&hi==null)return tr("common.age_unspecified");if(lo!=null&&hi==null)return tr("common.age_min",{age:lo});if(lo==null)return tr("common.up_to_age",{age:hi});return tr("common.age_range",{min:lo,max:hi});};
 export const activityCategory=(a)=>{const c=Array.isArray(a?.launcher_categories)?a.launcher_categories:Array.isArray(a?.presentation_categories)?a.presentation_categories:[];return["create","play","learn","explore"].find(x=>c.includes(x))||c[0]||"activity";};
-export const categoryLabel=(c)=>({create:"Create",play:"Play",learn:"Learn",explore:"Explore",my_greia:"My Greia"}[c]||"Activity");
+export const categoryLabel=(c)=>tr(`category.${["create","play","learn","explore","my_greia"].includes(c)?c:"unknown"}`);
 export const categoryIcon=(c)=>({create:"palette",play:"sparkles",learn:"book",explore:"compass",my_greia:"settings"}[c]||"activity");
 export const avatarTone=(id)=>({unicorn:"lilac",owl:"sun",robot:"sky",rabbit:"coral",star:"sun"}[id]||"forest");
 export const avatarIcon=(id)=>({unicorn:"sparkles",owl:"book",robot:"settings",rabbit:"star",star:"star"}[id]||"children");
-export const profileSubtitle=(p)=>[p.approximate_age==null?null:`About ${p.approximate_age}`,challengeName(p.challenge_preference)].filter(Boolean).join(" · ");
+export const profileSubtitle=(p)=>[p.approximate_age==null?null:tr("common.about_age",{age:p.approximate_age}),challengeName(p.challenge_preference)].filter(Boolean).join(" · ");
 export const currentRoute=()=>{const raw=location.hash.replace(/^#/,"")||"home";return ROUTE_ALIASES[raw]||(NAV_ITEMS.some(i=>i.id===raw)?raw:"home");};

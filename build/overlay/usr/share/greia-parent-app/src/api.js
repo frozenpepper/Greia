@@ -5,7 +5,7 @@ export class ParentApiError extends Error {
   get authenticationRequired() { return this.status === 401 || this.code === "pairing_required"; }
 }
 export class ParentApiClient {
-  constructor({ origin = globalThis.location?.origin ?? "http://127.0.0.1:8766", apiBase = "/api/v1", credentialStore = null, fetchImpl = globalThis.fetch?.bind(globalThis) } = {}) {
+  constructor({ origin = globalThis.location?.origin ?? "https://127.0.0.1:8766", apiBase = "/api/v1", credentialStore = null, fetchImpl = globalThis.fetch?.bind(globalThis) } = {}) {
     if (!fetchImpl) throw new TypeError("fetch implementation is required");
     this.origin = String(origin).replace(/\/$/, ""); this.apiBase = apiBase.startsWith("/") ? apiBase : `/${apiBase}`; this.credentialStore = credentialStore; this.fetchImpl = fetchImpl;
   }

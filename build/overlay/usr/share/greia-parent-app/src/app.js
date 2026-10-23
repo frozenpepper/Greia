@@ -3,6 +3,7 @@ import { BrowserCredentialStore } from "./credential_store.js";
 import { GreiaDeviceDiscoveryClient, DeviceScopedCredentialStore } from "./device_discovery.js";
 import { ParentAppState } from "./state.js";
 import { NAV_ITEMS, el, icon, button, currentRoute } from "./ui.js";
+import { setChromeLocale, tr, renderChromeTranslations } from "./localization.js";
 import { installHomeChildrenViews } from "./views_home_children.js";
 import { installActivityViews } from "./views_activities.js";
 import { installDeviceViews } from "./views_device.js";
@@ -28,6 +29,7 @@ class GreiaParentApp {
     this.confirmResolver = null;
     this.flashTimer = null;
     this._buildNavigation();
+    renderChromeTranslations();
     this._bindShell();
   }
 
@@ -75,7 +77,7 @@ class GreiaParentApp {
         credentialStore: scopedCredentials,
       }));
     } catch {
-      this._renderDiscoveryFailure("That Greia disappeared before the connection was ready.");
+      this._renderDiscoveryFailure(tr("discovery.lost"));
     }
   }
 
@@ -87,7 +89,7 @@ class GreiaParentApp {
     try {
       await this.state.initialize();
     } catch (error) {
-      if (!error?.authenticationRequired) this.showFlash("This Greia did not answer.", "error");
+      if (!error?.authenticationRequired) this.showFlash(tr("shell.no_response"), "error");
     }
   }
 
@@ -96,25 +98,20 @@ class GreiaParentApp {
       const host = document.getElementById(id);
       host.replaceChildren();
       for (const item of NAV_ITEMS) {
-        const n = button(item.label, { iconName: item.icon, className: "nav-button" });
+        const n = button(tr(item.labelKey), { iconName: item.icon, className: "nav-button" });
         n.dataset.route = item.id;
         n.addEventListener("click", () => this.navigate(item.id));
         host.append(n);
       }
     }
     const refresh = document.getElementById("refresh-button");
-    refresh.replaceChildren(icon("refresh"), el("span", "", "Refresh"));
+    refresh.replaceChildren(icon("refresh"), el("span", "", tr("shell.refresh")));
   }
 
   _bindShell() {
     window.addEventListener("hashchange", () => {
       this.route = currentRoute();
       if (this.state) this.render(this.state.snapshot);
-      this._refreshWifiForDevice();
-    });
-    window.addEventListener("focus", () => this._refreshWifiForDevice());
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible") this._refreshWifiForDevice();
     });
     document.getElementById("refresh-button").addEventListener("click", async () => {
       if (!this.state) {
@@ -123,9 +120,9 @@ class GreiaParentApp {
       }
       try {
         await this.state.refresh();
-        this.showFlash("Greia refreshed.");
+        this.showFlash(tr("shell.refreshed"));
       } catch (error) {
-        if (!error?.authenticationRequired) this.showFlash("This Greia did not answer.", "error");
+        if (!error?.authenticationRequired) this.showFlash(tr("shell.no_response"), "error");
       }
     });
     this.confirmDialog.addEventListener("close", () => {
@@ -138,28 +135,25 @@ class GreiaParentApp {
 
   navigate(route) { location.hash = route; }
 
-  _refreshWifiForDevice() {
-    // The full snapshot is fetched once at startup. Entering the Device view
-    // (or returning to the tab) after the device associated must re-read iwd;
-    // otherwise an existing connection looks absent until a manual connect.
-    if (!this.state || this.route !== "device") return;
-    if (!this.state.capability("network.manage")) return;
-    Promise.resolve(this.state.refreshWifi()).catch(() => {});
-  }
-
   render(snapshot) {
+    // The server selects the device's locale; the browser's preferred
+    // supported language is used only before a device is authenticated.
+    if (snapshot.language?.locale && setChromeLocale(snapshot.language.locale)) {
+      this._buildNavigation();
+      renderChromeTranslations();
+    }
     this._renderConnection(snapshot);
     for (const n of document.querySelectorAll(".nav-button")) {
       n.setAttribute("aria-current", n.dataset.route === this.route ? "page" : "false");
     }
     const info = NAV_ITEMS.find((item) => item.id === this.route) || NAV_ITEMS[0];
-    document.getElementById("page-title").textContent = info.label;
-    document.getElementById("page-subtitle").textContent = info.subtitle;
+    document.getElementById("page-title").textContent = tr(info.labelKey);
+    document.getElementById("page-subtitle").textContent = tr(info.subtitleKey);
     document.getElementById("page-eyebrow").textContent = snapshot.meta?.device_name || this.activeDevice?.device_name || "Greia Parents";
     const pageActions = document.getElementById("page-actions");
     pageActions.replaceChildren();
     if (this.discoveryMode && this.activeDevice) {
-      pageActions.append(button("Switch Greia", {
+      pageActions.append(button(tr("shell.switch"), {
         className: "button secondary small",
         onClick: () => this._switchGreia(),
       }));
@@ -207,47 +201,47 @@ class GreiaParentApp {
 
   _renderDiscoveryLoading() {
     this._setDiscoveryChrome({
-      title: "Finding your Greia",
-      subtitle: "Looking for Greia computers on this network.",
-      connection: "Searching…",
+      title: tr("discovery.title.search"),
+      subtitle: tr("discovery.subtitle.search"),
+      connection: tr("discovery.status.search"),
     });
     const shell = el("div", "pair-screen");
     const card = el("section", "pair-card");
     const emblem = el("div", "pair-emblem");
     emblem.append(icon("search"));
-    card.append(emblem, el("h2", "", "Looking for Greia computers"), el("p", "", "This normally takes a moment on a home network."));
+    card.append(emblem, el("h2", "", tr("discovery.heading.search")), el("p", "", tr("discovery.note.search")));
     shell.append(card);
     this.view.replaceChildren(shell);
   }
 
   _renderConnectingDevice(device) {
     this._setDiscoveryChrome({
-      title: "Connecting",
-      subtitle: `Opening ${device.device_name}.`,
-      connection: "Connecting…",
+      title: tr("discovery.title.connecting"),
+      subtitle: tr("discovery.subtitle.opening", { device: device.device_name }),
+      connection: tr("shell.connecting"),
     });
     const shell = el("div", "pair-screen");
     const card = el("section", "pair-card");
     const emblem = el("div", "pair-emblem");
     emblem.append(icon("device"));
-    card.append(emblem, el("h2", "", device.device_name), el("p", "", "Checking access and loading Parent settings."));
+    card.append(emblem, el("h2", "", device.device_name), el("p", "", tr("discovery.note.connecting")));
     shell.append(card);
     this.view.replaceChildren(shell);
   }
 
   _renderDeviceChooser(devices) {
     this._setDiscoveryChrome({
-      title: "Choose a Greia",
-      subtitle: devices.length ? "Greia computers found on this network." : "No Greia computer was found on this network yet.",
-      connection: devices.length ? `${devices.length} found` : "None found",
+      title: tr("discovery.title.choose"),
+      subtitle: devices.length ? tr("discovery.found") : tr("discovery.none"),
+      connection: devices.length ? tr("discovery.count", { count: devices.length }) : tr("discovery.count.none"),
     });
     const shell = el("div", "pair-screen");
     const card = el("section", "pair-card device-picker");
     const emblem = el("div", "pair-emblem");
     emblem.append(icon(devices.length ? "device" : "search"));
-    card.append(emblem, el("h2", "", devices.length ? "Which Greia do you want to manage?" : "No Greia found"));
+    card.append(emblem, el("h2", "", devices.length ? tr("discovery.heading.choose") : tr("discovery.heading.none")));
     if (!devices.length) {
-      card.append(el("p", "", "Make sure the Greia computer is on and connected to the same local network."));
+      card.append(el("p", "", tr("discovery.note.none")));
     } else {
       const list = el("div", "plain-list device-picker-list");
       for (const device of devices) {
@@ -256,7 +250,7 @@ class GreiaParentApp {
         rowIcon.append(icon("device"));
         const copy = el("div", "row-copy");
         copy.append(el("strong", "", device.device_name), el("span", "", device.host));
-        row.append(rowIcon, copy, button("Connect", {
+        row.append(rowIcon, copy, button(tr("discovery.connect"), {
           className: "button small",
           onClick: () => this._connectDiscoveredDevice(device),
         }));
@@ -264,7 +258,7 @@ class GreiaParentApp {
       }
       card.append(list);
     }
-    card.append(button("Search again", {
+    card.append(button(tr("discovery.search_again"), {
       iconName: "refresh",
       className: "button secondary full-width",
       onClick: () => this.start({ refreshDiscovery: true }),
@@ -273,11 +267,11 @@ class GreiaParentApp {
     this.view.replaceChildren(shell);
   }
 
-  _renderDiscoveryFailure(message = "Greia device discovery could not run on this computer.") {
+  _renderDiscoveryFailure(message = tr("discovery.fail.default")) {
     this._setDiscoveryChrome({
-      title: "Can't search the network",
-      subtitle: "Greia Parents could not look for nearby Greia computers.",
-      connection: "Discovery problem",
+      title: tr("discovery.fail.title"),
+      subtitle: tr("discovery.fail.subtitle"),
+      connection: tr("discovery.fail.status"),
     });
     const shell = el("div", "pair-screen");
     const card = el("section", "pair-card");
@@ -285,9 +279,9 @@ class GreiaParentApp {
     emblem.append(icon("device"));
     card.append(
       emblem,
-      el("h2", "", "Couldn't find a Greia"),
+      el("h2", "", tr("discovery.fail.heading")),
       el("p", "", message),
-      button("Search again", { iconName: "refresh", onClick: () => this.start({ refreshDiscovery: true }) }),
+      button(tr("discovery.search_again"), { iconName: "refresh", onClick: () => this.start({ refreshDiscovery: true }) }),
     );
     shell.append(card);
     this.view.replaceChildren(shell);
@@ -297,15 +291,15 @@ class GreiaParentApp {
     this.connectionDot.className = "connection-dot";
     if (snapshot.phase === "ready") {
       this.connectionDot.classList.add("online");
-      this.connectionLabel.textContent = snapshot.meta?.device_name || this.activeDevice?.device_name || "Connected";
+      this.connectionLabel.textContent = snapshot.meta?.device_name || this.activeDevice?.device_name || tr("shell.connected");
     } else if (snapshot.phase === "authentication") {
       this.connectionDot.classList.add("warning");
-      this.connectionLabel.textContent = "Password required";
+      this.connectionLabel.textContent = tr("shell.password_required");
     } else if (snapshot.phase === "error") {
       this.connectionDot.classList.add("offline");
-      this.connectionLabel.textContent = "Connection problem";
+      this.connectionLabel.textContent = tr("shell.connection_problem");
     } else {
-      this.connectionLabel.textContent = "Connecting…";
+      this.connectionLabel.textContent = tr("shell.connecting");
     }
   }
 
@@ -314,7 +308,7 @@ class GreiaParentApp {
     const card = el("section", "pair-card");
     const emblem = el("div", "pair-emblem");
     emblem.append(icon("refresh"));
-    card.append(emblem, el("h2", "", "Opening your Greia"), el("p", "", "Loading children, Activities and device settings."));
+    card.append(emblem, el("h2", "", tr("session.loading.title")), el("p", "", tr("session.loading.note")));
     shell.append(card);
     return shell;
   }
@@ -325,15 +319,15 @@ class GreiaParentApp {
     const emblem = el("div", "pair-emblem");
     emblem.append(icon("device"));
     const message = ["network_error", "selected_greia_unreachable", "greia_device_not_selected"].includes(error?.code)
-      ? "The selected Greia did not answer. It may be off or no longer on this network."
-      : error?.message || "The Parent API did not respond.";
-    card.append(emblem, el("h2", "", "This Greia isn't reachable right now"), el("p", "", message));
+      ? tr("session.error.unreachable")
+      : error?.message || tr("session.error.generic");
+    card.append(emblem, el("h2", "", tr("session.error.title")), el("p", "", message));
     const actions = el("div", "button-row");
-    actions.append(button("Try again", { iconName: "refresh", onClick: async () => { try { await this.state?.refresh(); } catch {} } }));
+    actions.append(button(tr("session.error.try_again"), { iconName: "refresh", onClick: async () => { try { await this.state?.refresh(); } catch {} } }));
     if (this.discoveryMode) {
-      actions.append(button("Choose another Greia", { className: "button secondary", onClick: () => this._switchGreia() }));
+      actions.append(button(tr("session.error.choose_another"), { className: "button secondary", onClick: () => this._switchGreia() }));
     } else {
-      actions.append(button("Forget connection", {
+      actions.append(button(tr("session.error.forget"), {
         className: "button secondary",
         onClick: () => { this.api?.forgetCredential?.(); this.start(); },
       }));
@@ -350,16 +344,16 @@ class GreiaParentApp {
     emblem.append(icon("shield"));
     card.append(
       emblem,
-      el("h2", "", "Connect to this Greia"),
-      el("p", "", `Enter the Greia password for ${snapshot.meta?.device_name || this.activeDevice?.device_name || "this Greia"}. New Greia systems start with the password “greia”.`),
+      el("h2", "", tr("auth.heading")),
+      el("p", "", tr("auth.instructions", { device: snapshot.meta?.device_name || this.activeDevice?.device_name || tr("auth.this_device") })),
     );
     const form = el("form", "form-grid");
-    const name = this._textField("This device", "device_name", navigator.platform ? `${navigator.platform} browser` : "Parent browser");
-    const password = this._textField("Greia password", "password", "", "password");
+    const name = this._textField(tr("auth.device_label"), "device_name", navigator.platform ? `${navigator.platform} browser` : "Parent browser");
+    const password = this._textField(tr("auth.password_label"), "password", "", "password");
     name.classList.add("full");
     password.classList.add("full");
     const actions = el("div", "form-actions");
-    const submit = button("Connect", { iconName: "key", type: "submit" });
+    const submit = button(tr("discovery.connect"), { iconName: "key", type: "submit" });
     actions.append(submit);
     form.append(name, password, actions);
     form.addEventListener("submit", async (event) => {
@@ -372,9 +366,9 @@ class GreiaParentApp {
           deviceName: String(data.get("device_name") || "Parent browser"),
         });
         await this.state.refresh();
-        this.showFlash("This browser is connected to Greia.");
+        this.showFlash(tr("auth.connected"));
       } catch (error) {
-        this.showFlash(error?.message || "The Greia password was not accepted.", "error");
+        this.showFlash(error?.message || tr("auth.invalid"), "error");
       } finally {
         submit.disabled = false;
       }

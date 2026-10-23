@@ -62,7 +62,7 @@ export class GreiaDeviceDiscoveryClient {
 
 export function validDevice(device) {
   if (!device || typeof device !== "object") return false;
-  if (typeof device.origin !== "string" || !/^http:\/\/[^/]+:8766$/.test(device.origin)) return false;
+  if (typeof device.origin !== "string" || !/^https:\/\/[^/]+:8766$/.test(device.origin)) return false;
   if (typeof device.device_name !== "string" || !device.device_name.trim()) return false;
   return device.api_version === "v1" || device.api_version === 1 || device.api_version === "1";
 }

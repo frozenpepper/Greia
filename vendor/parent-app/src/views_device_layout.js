@@ -1,4 +1,5 @@
 import { el, humanBytes, humanUptime, percent } from "./ui.js";
+import { tr } from "./localization.js";
 
 export function installDeviceManagementLayout(proto) {
   proto._device = function(snapshot) {
@@ -7,7 +8,7 @@ export function installDeviceManagementLayout(proto) {
 
     const systemCards = [];
     const health = el("section", "card device-setting-card");
-    health.append(this._cardHeader("System health", "Useful facts about this Greia"));
+    health.append(this._cardHeader(tr("device.health"), tr("device.health.subtitle")));
     const diskUsed = Math.max(
       0,
       Number(snapshot.system?.disk_total_bytes || 0) - Number(snapshot.system?.disk_free_bytes || 0),
@@ -18,40 +19,40 @@ export function installDeviceManagementLayout(proto) {
     );
     health.append(
       this._meter(
-        "Storage",
+        tr("device.storage"),
         diskUsed,
         snapshot.system?.disk_total_bytes,
-        `${humanBytes(snapshot.system?.disk_free_bytes)} free`,
+        tr("device.storage.free", { amount: humanBytes(snapshot.system?.disk_free_bytes) }),
       ),
       this._meter(
-        "Memory",
+        tr("device.memory"),
         memUsed,
         snapshot.system?.memory_total_bytes,
-        `${percent(snapshot.system?.memory_available_bytes, snapshot.system?.memory_total_bytes)}% available`,
+        tr("device.memory.available", { percent: percent(snapshot.system?.memory_available_bytes, snapshot.system?.memory_total_bytes) }),
       ),
-      this._statusRow("device", "Uptime", humanUptime(snapshot.system?.uptime_seconds)),
+      this._statusRow("device", tr("device.uptime"), humanUptime(snapshot.system?.uptime_seconds)),
     );
     systemCards.push(health);
     if (caps["system.update.read"] && snapshot.systemUpdate) systemCards.push(this._updateCard(snapshot));
-    root.append(this._deviceGroup("System", "Health, storage and Greia software updates.", systemCards));
+    root.append(this._deviceGroup(tr("device.group.system"), tr("device.group.system.subtitle"), systemCards));
 
     const networkCards = [];
     if (caps["network.manage"]) networkCards.push(this._wifiCard(snapshot));
     else networkCards.push(this._wifiUnavailableCard());
     if (caps["settings.language"] && snapshot.language) networkCards.push(this._languageCard(snapshot));
-    root.append(this._deviceGroup("Network & language", "Connect Greia and choose its everyday language.", networkCards));
+    root.append(this._deviceGroup(tr("device.group.network"), tr("device.group.network.subtitle"), networkCards));
 
     const interactionCards = [];
     if (caps["settings.input"] || caps["settings.display"]) interactionCards.push(this._hardwareCard(snapshot));
     if (caps["settings.system_controls"]) interactionCards.push(this._systemControlsCard(snapshot));
     if (caps["settings.audio"] && snapshot.audio) interactionCards.push(this._audioCard(snapshot));
-    if (interactionCards.length) root.append(this._deviceGroup("Input, display & sound", "Mouse, touchpad, screen, speaker and microphone behaviour.", interactionCards));
+    if (interactionCards.length) root.append(this._deviceGroup(tr("device.group.interaction"), tr("device.group.interaction.subtitle"), interactionCards));
 
     const securityCards = [];
     if (caps["parent.password"]) securityCards.push(this._parentPasswordCard());
     if (caps["maintenance.ssh"]) securityCards.push(this._sshCard(snapshot));
     if (caps["paired_devices.manage"]) securityCards.push(this._devicesCard(snapshot));
-    if (securityCards.length) root.append(this._deviceGroup("Security & access", "Parent password, paired devices and maintenance access.", securityCards));
+    if (securityCards.length) root.append(this._deviceGroup(tr("device.group.security"), tr("device.group.security.subtitle"), securityCards));
 
     return root;
   };
@@ -59,11 +60,11 @@ export function installDeviceManagementLayout(proto) {
   proto._wifiUnavailableCard = function() {
     const card = el("section", "card device-setting-card");
     card.append(
-      this._cardHeader("Wi-Fi", "Network setup on this device"),
+      this._cardHeader(tr("device.wifi.title"), tr("device.wifi.subtitle")),
       this._empty(
         "wifi",
-        "Wi-Fi changes aren't available here",
-        "Use Greia itself to change networks on this device. Parent only enables Wi-Fi controls when Greia can apply them directly.",
+        tr("device.wifi.unavailable"),
+        tr("device.wifi.unavailable.note"),
       ),
     );
     return card;

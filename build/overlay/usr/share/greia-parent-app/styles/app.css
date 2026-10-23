@@ -202,10 +202,6 @@ h1,h2,h3,.row-copy,.status-copy,.list-subtitle,.manager-summary-copy{overflow-wr
 .meter-track{height:7px;border-radius:99px;background:var(--surface-soft);overflow:hidden}
 .meter-fill{height:100%;background:var(--forest);border-radius:inherit}
 .wifi-list{display:grid}
-.wifi-connection{display:flex;align-items:center;gap:8px;margin:0 0 10px;color:var(--muted);font-size:12px;font-weight:600}
-.wifi-connection::before{content:"";width:8px;height:8px;border-radius:50%;background:#ccd3cc;flex:none}
-.wifi-connection.on{color:var(--ok)}
-.wifi-connection.on::before{background:var(--ok)}
 .signal{display:flex;align-items:flex-end;gap:2px;height:18px;width:25px}
 .signal i{display:block;width:4px;background:#ccd3cc;border-radius:2px}
 .signal i:nth-child(1){height:5px}

@@ -1,4 +1,5 @@
 import { el, button, humanBytes, humanUptime, percent, MAX_UPDATE_BYTES } from "./ui.js";
+import { tr, getChromeLocale } from "./localization.js";
 
 export function installDeviceViews(proto) {
   proto._device = function(snapshot) {
@@ -6,7 +7,7 @@ export function installDeviceViews(proto) {
     const caps = snapshot.index?.capabilities || {};
 
     const health = el("section", "card span-5");
-    health.append(this._cardHeader("System health", "A small set of useful facts"));
+    health.append(this._cardHeader(tr("device.health"), tr("device.health.subtitle")));
     const diskUsed = Math.max(
       0,
       Number(snapshot.system?.disk_total_bytes || 0) - Number(snapshot.system?.disk_free_bytes || 0),
@@ -17,18 +18,18 @@ export function installDeviceViews(proto) {
     );
     health.append(
       this._meter(
-        "Storage",
+        tr("device.storage"),
         diskUsed,
         snapshot.system?.disk_total_bytes,
-        `${humanBytes(snapshot.system?.disk_free_bytes)} free`,
+        tr("device.storage.free",{amount:humanBytes(snapshot.system?.disk_free_bytes)}),
       ),
       this._meter(
-        "Memory",
+        tr("device.memory"),
         memUsed,
         snapshot.system?.memory_total_bytes,
-        `${percent(snapshot.system?.memory_available_bytes, snapshot.system?.memory_total_bytes)}% available`,
+        tr("device.memory.available",{percent:percent(snapshot.system?.memory_available_bytes,snapshot.system?.memory_total_bytes)}),
       ),
-      this._statusRow("device", "Uptime", humanUptime(snapshot.system?.uptime_seconds)),
+      this._statusRow("device", tr("device.uptime"), humanUptime(snapshot.system?.uptime_seconds)),
     );
     root.append(health);
 
@@ -45,26 +46,17 @@ export function installDeviceViews(proto) {
 
   proto._wifiCard = function(snapshot) {
     const card = el("section", "card span-7");
-    card.append(this._cardHeader("Wi-Fi", "Connect Greia to a nearby network"));
+    card.append(this._cardHeader("Wi-Fi", tr("device.wifi.connect_help")));
     if (snapshot.featureErrors?.wifi) {
       card.append(
         this._empty(
           "wifi",
-          "Wi-Fi isn't available right now",
-          snapshot.featureErrors.wifi.message || "Try again later.",
+          tr("device.wifi.no_service"),
+          snapshot.featureErrors.wifi.message || tr("device.wifi.retry"),
         ),
       );
       return card;
     }
-
-    const connectedSsid = String(snapshot.wifi?.connected_ssid || "");
-    card.append(
-      el(
-        "div",
-        connectedSsid ? "wifi-connection on" : "wifi-connection",
-        connectedSsid ? `Connected to ${connectedSsid}` : "Not connected to Wi-Fi",
-      ),
-    );
 
     const list = el("div", "wifi-list");
     for (const net of snapshot.wifi?.networks || []) {
@@ -79,20 +71,17 @@ export function installDeviceViews(proto) {
       const copy = el("div", "wifi-copy");
       copy.append(
         el("strong", "", net.ssid),
-        el("span", "", net.security === "open" ? "Open network" : "Password protected"),
+        el("span", "", net.security === "open" ? tr("device.wifi.open_network") : tr("device.wifi.password_protected")),
       );
-      const isConnected = Boolean(connectedSsid) && net.ssid === connectedSsid;
-      const connect = isConnected
-        ? el("span", "pill ok", "Connected")
-        : button("Connect", {
-            className: "button small secondary",
-            onClick: () => this._connectWifi(net),
-          });
+      const connect = button(tr("device.wifi.connect"), {
+        className: "button small secondary",
+        onClick: () => this._connectWifi(net),
+      });
       row.append(signal, copy, connect);
       list.append(row);
     }
     if (!list.childElementCount) {
-      list.append(this._empty("wifi", "No networks found", "Refresh Greia to scan again."));
+      list.append(this._empty("wifi", tr("device.wifi.none"), tr("device.wifi.scan_again")));
     }
     card.append(list);
     return card;
@@ -100,19 +89,19 @@ export function installDeviceViews(proto) {
 
   proto._connectWifi = function(network) {
     const dialog = this._openDialog({
-      title: `Connect to ${network.ssid}`,
+      title: tr("device.wifi.connect_to",{name:network.ssid}),
       subtitle:
         network.security === "open"
-          ? "This network does not use a password."
-          : "Enter the Wi-Fi password. It is sent only to Greia.",
+          ? tr("device.wifi.open_help")
+          : tr("device.wifi.password_help"),
       iconName: "wifi",
     });
     const body = dialog.querySelector(".dialog-content");
     const form = el("form", "form-grid");
-    const password = this._textField("Wi-Fi password", "passphrase", "", "password");
+    const password = this._textField(tr("device.wifi.password"), "passphrase", "", "password");
     if (network.security !== "open") form.append(password);
     const actions = el("div", "form-actions");
-    const submit = button("Connect", { iconName: "wifi", type: "submit" });
+    const submit = button(tr("device.wifi.connect"), { iconName: "wifi", type: "submit" });
     actions.append(submit);
     form.append(actions);
     form.addEventListener("submit", async (event) => {
@@ -126,9 +115,9 @@ export function installDeviceViews(proto) {
         });
         dialog.close();
         await this.state.refreshWifi();
-        this.showFlash(`Connected to ${network.ssid}.`);
+        this.showFlash(tr("device.wifi.connected",{name:network.ssid}));
       } catch (error) {
-        this.showFlash(error?.message || "Could not connect Wi-Fi.", "error");
+        this.showFlash(error?.message || tr("device.wifi.failed"), "error");
       } finally {
         submit.disabled = false;
       }
@@ -138,7 +127,7 @@ export function installDeviceViews(proto) {
 
   proto._languageCard = function(snapshot) {
     const card = el("section", "card span-5");
-    card.append(this._cardHeader("Language", "Greia's default language"));
+    card.append(this._cardHeader(tr("device.language.title"), tr("device.language.description")));
     const grid = el("div", "language-grid");
     for (const lang of snapshot.language?.languages || []) {
       const item = el(
@@ -157,9 +146,9 @@ export function installDeviceViews(proto) {
         try {
           await this.api.updateLanguage(lang.locale);
           await this.state.refreshLanguage();
-          this.showFlash(`Greia language changed to ${lang.name || lang.locale}.`);
+          this.showFlash(tr("device.language.changed", { language: lang.native_name || lang.name || lang.locale }));
         } catch (error) {
-          this.showFlash(error?.message || "Could not change language.", "error");
+          this.showFlash(error?.message || tr("device.language.failed"), "error");
         }
       });
       grid.append(item);
@@ -174,22 +163,22 @@ export function installDeviceViews(proto) {
     const hasMicGain = Object.prototype.hasOwnProperty.call(desired, "mic_gain");
     card.append(
       this._cardHeader(
-        hasMicGain ? "Input, microphone & display" : "Mouse, touchpad & display",
+        hasMicGain ? tr("device.hardware.full") : tr("device.hardware.simple"),
         hasMicGain
-          ? "Everyday pointer, recording and screen settings"
-          : "Everyday input and screen settings",
+          ? tr("device.hardware.full_help")
+          : tr("device.hardware.simple_help"),
       ),
     );
 
     const form = el("form", "form-grid");
-    const mouse = this._rangeField("Mouse speed", "mouse_speed", desired.mouse_speed ?? 0);
-    const touch = this._rangeField("Touchpad speed", "touchpad_speed", desired.touchpad_speed ?? 0);
+    const mouse = this._rangeField(tr("device.hardware.mouse"), "mouse_speed", desired.mouse_speed ?? 0);
+    const touch = this._rangeField(tr("device.hardware.touchpad"), "touchpad_speed", desired.touchpad_speed ?? 0);
     const modes = [
-      ["auto", "Automatic"],
+      ["auto", tr("device.hardware.auto")],
       ...(snapshot.hardware?.display_modes || []).map((mode) => [mode.id, mode.id]),
     ];
     const resolution = this._selectField(
-      "Resolution",
+      tr("device.hardware.resolution"),
       "resolution",
       modes,
       desired.resolution || "auto",
@@ -197,21 +186,21 @@ export function installDeviceViews(proto) {
 
     form.append(mouse, touch);
     if (hasMicGain) {
-      form.append(this._gainRangeField("Microphone level", "mic_gain", desired.mic_gain ?? 2.0));
+      form.append(this._gainRangeField(tr("device.hardware.microphone"), "mic_gain", desired.mic_gain ?? 2.0));
     }
     form.append(
       resolution,
-      this._checkField("Tap touchpad to click", "touchpad_tap", Boolean(desired.touchpad_tap)),
+      this._checkField(tr("device.hardware.tap"), "touchpad_tap", Boolean(desired.touchpad_tap)),
       this._checkField(
-        "Natural scrolling",
+        tr("device.hardware.scroll"),
         "natural_scrolling",
         Boolean(desired.natural_scrolling),
       ),
     );
 
     const actions = el("div", "form-actions");
-    const reset = button("Restore defaults", { className: "button secondary" });
-    const save = button("Apply settings", { iconName: "check", type: "submit" });
+    const reset = button(tr("device.hardware.defaults"), { className: "button secondary" });
+    const save = button(tr("device.hardware.apply"), { iconName: "check", type: "submit" });
     actions.append(reset, save);
     form.append(actions);
 
@@ -230,9 +219,9 @@ export function installDeviceViews(proto) {
       try {
         await this.api.updateHardware(payload);
         await this.state.refresh();
-        this.showFlash(hasMicGain ? "Device settings applied." : "Input and display settings applied.");
+        this.showFlash(hasMicGain ? tr("device.hardware.applied_full") : tr("device.hardware.applied_simple"));
       } catch (error) {
-        this.showFlash(error?.message || "Could not apply settings.", "error");
+        this.showFlash(error?.message || tr("device.hardware.failed"), "error");
       } finally {
         save.disabled = false;
       }
@@ -240,15 +229,15 @@ export function installDeviceViews(proto) {
 
     reset.addEventListener("click", async () => {
       const message = hasMicGain
-        ? "Current pointer, microphone and resolution preferences will be reset."
-        : "Current mouse, touchpad and resolution preferences will be reset.";
-      if (!await this.confirm("Restore device defaults?", message)) return;
+        ? tr("device.hardware.reset_full")
+        : tr("device.hardware.reset_simple");
+      if (!await this.confirm(tr("device.hardware.reset_confirm"), message)) return;
       try {
         await this.api.resetHardware();
         await this.state.refresh();
-        this.showFlash("Defaults restored.");
+        this.showFlash(tr("device.hardware.restored"));
       } catch (error) {
-        this.showFlash(error?.message || "Could not restore defaults.", "error");
+        this.showFlash(error?.message || tr("device.hardware.restore_failed"), "error");
       }
     });
 
@@ -258,13 +247,13 @@ export function installDeviceViews(proto) {
 
   proto._audioCard = function(snapshot) {
     const card = el("section", "card span-5");
-    card.append(this._cardHeader("Microphone cleanup", "Greia can clean the microphone before Activities hear it"));
+    card.append(this._cardHeader(tr("device.mic.title"), tr("device.mic.subtitle")));
     if (snapshot.featureErrors?.audio) {
       card.append(
         this._empty(
           "device",
-          "Microphone cleanup is unavailable",
-          snapshot.featureErrors.audio.message || "Try refreshing Greia.",
+          tr("device.mic.unavailable"),
+          snapshot.featureErrors.audio.message || tr("device.sound.try_again"),
         ),
       );
       return card;
@@ -275,18 +264,18 @@ export function installDeviceViews(proto) {
     const effective = audio.effective || {};
     const available = audio.available || {};
     const modeText = effective.microphone_processing_mode === "advanced"
-      ? "Enhanced cleanup active"
+      ? tr("device.mic.active_advanced")
       : effective.microphone_processing_mode === "lightweight"
-        ? "Lightweight cleanup active"
-        : "Using the raw microphone";
+        ? tr("device.mic.active_light")
+        : tr("device.mic.raw");
     const detail = effective.fallback_reason
-      ? "The requested processor is not available, so Greia is using the safest available fallback."
-      : "Changes take effect the next time an Activity opens the microphone.";
+      ? tr("device.mic.fallback")
+      : tr("device.mic.next_open");
     card.append(this._statusRow("device", modeText, detail));
 
     const form = el("form", "form-grid");
     const processing = this._checkField(
-      "Improve microphone sound",
+      tr("device.mic.improve"),
       "microphone_processing_enabled",
       Boolean(desired.microphone_processing_enabled),
     );
@@ -295,28 +284,28 @@ export function installDeviceViews(proto) {
     const explanation = el(
       "div",
       "list-subtitle full",
-      "Uses Greia's very lightweight microphone cleanup by default. Turn this off to give Activities the raw microphone signal.",
+      tr("device.mic.help"),
     );
     form.append(explanation);
 
     if (available.advanced) {
       form.append(
         this._checkField(
-          "Enhanced noise reduction",
+          tr("device.mic.advanced"),
           "advanced_noise_reduction",
           Boolean(desired.advanced_noise_reduction),
         ),
         el(
           "div",
           "list-subtitle full",
-          "Uses more processor power. Enable it only if this Greia handles it comfortably; Greia never turns it on automatically.",
+          tr("device.mic.advanced_help"),
         ),
       );
     }
 
     const actions = el("div", "form-actions");
-    const reset = button("Restore microphone defaults", { className: "button secondary" });
-    const save = button("Apply microphone settings", { iconName: "check", type: "submit" });
+    const reset = button(tr("device.mic.restore"), { className: "button secondary" });
+    const save = button(tr("device.mic.apply"), { iconName: "check", type: "submit" });
     actions.append(reset, save);
     form.append(actions);
 
@@ -333,9 +322,9 @@ export function installDeviceViews(proto) {
       try {
         await this.api.updateAudio(payload);
         await this.state.refreshAudio();
-        this.showFlash("Microphone settings applied.");
+        this.showFlash(tr("device.mic.applied"));
       } catch (error) {
-        this.showFlash(error?.message || "Could not apply microphone settings.", "error");
+        this.showFlash(error?.message || tr("device.mic.apply_failed"), "error");
       } finally {
         save.disabled = false;
       }
@@ -343,15 +332,15 @@ export function installDeviceViews(proto) {
 
     reset.addEventListener("click", async () => {
       if (!await this.confirm(
-        "Restore microphone defaults?",
-        "Lightweight microphone cleanup will be enabled and enhanced cleanup will be turned off.",
+        tr("device.mic.restore_confirm"),
+        tr("device.mic.restore_warning"),
       )) return;
       try {
         await this.api.resetAudio();
         await this.state.refreshAudio();
-        this.showFlash("Microphone defaults restored.");
+        this.showFlash(tr("device.mic.restored"));
       } catch (error) {
-        this.showFlash(error?.message || "Could not restore microphone defaults.", "error");
+        this.showFlash(error?.message || tr("device.mic.restore_failed"), "error");
       }
     });
 
@@ -361,14 +350,14 @@ export function installDeviceViews(proto) {
 
   proto._parentPasswordCard = function() {
     const card = el("section", "card span-5");
-    card.append(this._cardHeader("Parent password", "Change the main Parent password"));
+    card.append(this._cardHeader(tr("device.parentpw.title"), tr("device.parentpw.subtitle")));
     const form = el("form", "form-grid");
-    const current = this._textField("Current password", "current_password", "", "password");
-    const fresh = this._textField("New password", "new_password", "", "password");
+    const current = this._textField(tr("device.parentpw.current"), "current_password", "", "password");
+    const fresh = this._textField(tr("device.parentpw.new"), "new_password", "", "password");
     current.classList.add("full");
     fresh.classList.add("full");
     const actions = el("div", "form-actions");
-    const save = button("Change password", { iconName: "key", type: "submit" });
+    const save = button(tr("device.parentpw.change"), { iconName: "key", type: "submit" });
     actions.append(save);
     form.append(current, fresh, actions);
     form.addEventListener("submit", async (event) => {
@@ -381,9 +370,9 @@ export function installDeviceViews(proto) {
           newPassword: String(data.get("new_password") || ""),
         });
         form.reset();
-        this.showFlash("Parent password changed.");
+        this.showFlash(tr("device.parentpw.changed"));
       } catch (error) {
-        this.showFlash(error?.message || "Could not change Parent password.", "error");
+        this.showFlash(error?.message || tr("device.parentpw.failed"), "error");
       } finally {
         save.disabled = false;
       }
@@ -394,13 +383,13 @@ export function installDeviceViews(proto) {
 
   proto._sshCard = function(snapshot) {
     const card = el("section", "card span-5");
-    card.append(this._cardHeader("SSH maintenance", "Remote shell access for deliberate maintenance"));
+    card.append(this._cardHeader(tr("device.ssh.title"), tr("device.ssh.subtitle")));
     if (snapshot.featureErrors?.ssh) {
       card.append(
         this._empty(
           "terminal",
-          "SSH status is unavailable",
-          snapshot.featureErrors.ssh.message || "Try refreshing Greia.",
+          tr("device.ssh.unavailable"),
+          snapshot.featureErrors.ssh.message || tr("device.sound.try_again"),
         ),
       );
       return card;
@@ -409,27 +398,27 @@ export function installDeviceViews(proto) {
     card.append(
       this._statusRow(
         "terminal",
-        active ? "SSH is on" : "SSH is off",
+        active ? tr("device.ssh.on") : tr("device.ssh.off"),
         active
-          ? snapshot.ssh?.connection_string || "Maintenance access enabled"
-          : "Normal Greia use does not need SSH",
+          ? snapshot.ssh?.connection_string || tr("device.ssh.enabled_description")
+          : tr("device.ssh.disabled_description"),
       ),
     );
-    const action = button(active ? "Turn SSH off" : "Turn SSH on", {
+    const action = button(active ? tr("device.ssh.turn_off") : tr("device.ssh.turn_on"), {
       iconName: "terminal",
       className: active ? "button danger" : "button secondary",
     });
     action.addEventListener("click", async () => {
-      if (active && !await this.confirm("Turn SSH off?", "Existing remote maintenance sessions may end.")) {
+      if (active && !await this.confirm(tr("device.ssh.turn_off_confirm"), tr("device.ssh.disconnect_warning"))) {
         return;
       }
       action.disabled = true;
       try {
         await this.api.updateSsh({ enabled: !active });
         await this.state.refreshSsh();
-        this.showFlash(!active ? "SSH maintenance enabled." : "SSH maintenance disabled.");
+        this.showFlash(!active ? tr("device.ssh.enabled") : tr("device.ssh.disabled"));
       } catch (error) {
-        this.showFlash(error?.message || "Could not change SSH maintenance.", "error");
+        this.showFlash(error?.message || tr("device.ssh.failed"), "error");
       } finally {
         action.disabled = false;
       }
@@ -440,7 +429,7 @@ export function installDeviceViews(proto) {
 
   proto._devicesCard = function(snapshot) {
     const card = el("section", "card span-7");
-    card.append(this._cardHeader("Parent devices", "Browsers and devices allowed to manage this Greia"));
+    card.append(this._cardHeader(tr("device.paired.title"), tr("device.paired.subtitle")));
     const list = el("div", "list");
     for (const device of snapshot.devices || []) {
       const row = el("div", "list-item");
@@ -452,22 +441,22 @@ export function installDeviceViews(proto) {
         el(
           "div",
           "list-subtitle",
-          device.created_at ? `Paired ${new Date(device.created_at).toLocaleDateString()}` : "Paired device",
+          device.created_at ? tr("device.paired.date",{date:new Date(device.created_at).toLocaleDateString(getChromeLocale())}) : tr("device.paired.generic"),
         ),
       );
       copy.append(text);
-      const revoke = button("Revoke", {
+      const revoke = button(tr("device.paired.revoke"), {
         className: "button small danger",
         onClick: async () => {
-          if (!await this.confirm(`Revoke ${device.display_name}?`, "That device will need to pair again.")) {
+          if (!await this.confirm(tr("device.paired.revoke_confirm",{name:device.display_name}), tr("device.paired.revoke_warning"))) {
             return;
           }
           try {
             await this.api.revokeDevice(device.device_id);
             await this.state.refresh();
-            this.showFlash("Parent device revoked.");
+            this.showFlash(tr("device.paired.revoked"));
           } catch (error) {
-            this.showFlash(error?.message || "Could not revoke device.", "error");
+            this.showFlash(error?.message || tr("device.paired.failed"), "error");
           }
         },
       });
@@ -475,7 +464,7 @@ export function installDeviceViews(proto) {
       list.append(row);
     }
     if (!list.childElementCount) {
-      list.append(this._empty("shield", "No paired devices listed", "Pairing records will appear here."));
+      list.append(this._empty("shield", tr("device.paired.none"), tr("device.paired.none_help")));
     }
     card.append(list);
     return card;
@@ -483,37 +472,37 @@ export function installDeviceViews(proto) {
 
   proto._updateCard = function(snapshot) {
     const card = el("section", "card span-12");
-    card.append(this._cardHeader("Greia OS update", "System update status"));
+    card.append(this._cardHeader(tr("device.update.title"), tr("device.update.subtitle")));
     const status = snapshot.systemUpdate || {};
     const text =
       status.state === "received" && status.release?.version
-        ? `Update ${status.release.version} received.`
+        ? tr("device.update.received",{version:status.release.version})
         : status.activation_available
-          ? "Updates are available on this Greia."
-          : "No system update is currently staged on this Greia.";
-    card.append(this._statusRow("refresh", "Update status", text));
+          ? tr("device.update.available")
+          : tr("device.update.none");
+    card.append(this._statusRow("refresh", tr("device.update.status"), text));
     if (snapshot.index?.capabilities?.["system.update.upload"]) {
       const form = el("form", "install-row");
       const input = document.createElement("input");
       input.type = "file";
       input.accept = ".greiaupdate,application/vnd.greia.system-update+zip,application/zip";
-      const submit = button("Send update", { iconName: "upload", type: "submit" });
+      const submit = button(tr("device.update.send"), { iconName: "upload", type: "submit" });
       form.append(input, submit);
       form.addEventListener("submit", async (event) => {
         event.preventDefault();
         const file = input.files?.[0];
-        if (!file) return this.showFlash("Choose a .greiaupdate file first.", "error");
+        if (!file) return this.showFlash(tr("device.update.choose"), "error");
         if (file.size <= 0 || file.size > MAX_UPDATE_BYTES) {
-          return this.showFlash("The update file is outside Greia's allowed size.", "error");
+          return this.showFlash(tr("device.update.size"), "error");
         }
         submit.disabled = true;
         try {
           await this.api.uploadSystemUpdate(file);
           form.reset();
           await this.state.refresh();
-          this.showFlash("Update sent to Greia.");
+          this.showFlash(tr("device.update.sent"));
         } catch (error) {
-          this.showFlash(error?.message || "Could not send update.", "error");
+          this.showFlash(error?.message || tr("device.update.failed"), "error");
         } finally {
           submit.disabled = false;
         }
