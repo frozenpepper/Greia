@@ -323,6 +323,10 @@ A clean `INCOMPLETE` is better evidence than a manufactured PASS.
 
 ---
 
+## 9A. Parent HTTPS source/device testing (2026-10-23)
+
+Use `docs/testing/2026-10-23_PARENT_HTTPS_ACCEPTANCE.md` for the latest transport change. Installed Greia serves self-signed HTTPS on LAN 8766 and HTTP only on 127.0.0.1:8767 for the built-in Parent panel. OpenSSL is packaged in the installed base. Do not change Parent password/paired devices on a family device, install certificates on host machines, or deploy/reboot the Acer without owner authorization. The Parent HTML source and exact Greia pin must agree; browser, image and physical acceptance are distinct from unit tests.
+
 ## 10. Local-agent instruction standard
 
 When delegating local/hardware testing, instructions must include:
