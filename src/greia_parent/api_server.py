@@ -416,7 +416,7 @@ class ParentApiApplication(ParentStatusApplication):
             "service_type": SERVICE_TYPE,
             "port": SERVICE_PORT,
             "pairing_required": True,
-            "transport_security": "provisional-http",
+            "transport_security": "self-signed-https",
         }
 
     @staticmethod
