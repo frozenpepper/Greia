@@ -69,6 +69,7 @@ class ParentProductionApiTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             app = self._app(Path(temporary))
             self.assertIsInstance(app.wifi_backend, IwdWifiBackend)
+            self.assertEqual(app.api_meta_payload()["transport_security"], "self-signed-https")
 
     def test_unavailable_wifi_fails_closed_without_sample_data(self) -> None:
         backend = _UnavailableWifiBackend()
