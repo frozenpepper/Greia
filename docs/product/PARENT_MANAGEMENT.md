@@ -1,6 +1,6 @@
 # Greia Parents — Product and Interaction Requirements
 
-**Status:** accepted product direction; core local Parent API/client authentication implemented, with authenticated encrypted transport and some management domains still incremental  
+**Status:** accepted product direction; core local Parent API/client authentication implemented, with self-signed HTTPS source integration and some management domains still incremental  
 **Date:** 2026-08-23  
 **Authentication review:** 2026-09-08  
 **Architecture owner:** ADR 0022; microphone-processing extension ADR 0031  
@@ -70,7 +70,7 @@ mDNS or bounded LAN probing may help find Greia, but discovery data contains no 
 
 ### Release security boundary
 
-Password authentication and revocable device credentials are implemented source architecture, but current plaintext HTTP remains provisional. Before ordinary-family release, Parent traffic requires authenticated encrypted transport plus a reviewed Greia endpoint/device-identity lifecycle so a client can know it is talking to the intended Greia and credentials cannot be intercepted on the LAN.
+Owner-approved network transport is now HTTPS with a persistent Greia-generated self-signed certificate. Browser users accept a first-visit trust warning for their own local Greia; this does not supply public-CA endpoint authentication. Unencrypted HTTP is available only to the built-in panel over loopback. Physical browser and image acceptance remain open.
 
 That transport work must preserve the simple Parent-password experience. It must not add a second human secret, hidden filesystem token, mandatory QR/PIN/Allow ritual, or Linux-administration ceremony merely to compensate for transport design.
 
@@ -149,7 +149,7 @@ Parents can currently:
 
 Still incremental/future package-management work includes explicit Activity update/remove product flows and the complete R10 lifecycle. The Parent App delegates package mutation to the Greia package-management service; it must not unzip/copy packages itself or run package-manager commands.
 
-Ordinary/release images currently keep `activities.install` unavailable while the Parent transport remains provisional HTTP. Developer/owner-enabled environments may advertise it through the typed capability.
+Ordinary/release images currently keep `activities.install` unavailable pending independent package/release acceptance; adopting HTTPS does not automatically enable it. Developer/owner-enabled environments may advertise it through the typed capability.
 
 ### Per-child Activity discovery and visibility
 
@@ -371,7 +371,7 @@ Destructive or recovery-sensitive operations require explicit confirmation appro
 
 ## 9. Transport security
 
-The early development HTTP endpoint is provisional.
+Network Greia Parents runs on HTTPS port 8766 using a self-signed on-device certificate. First-time browser warnings are expected; the parent proceeds only for their own Greia. The built-in panel uses HTTP bound to 127.0.0.1:8767.
 
 Parent-password authentication and per-device bearer credentials require authenticated encryption for ordinary-family release. The transport must bind the client to the intended Greia device rather than trusting a hostname or LAN address alone.
 
@@ -437,7 +437,7 @@ Greia physical devices provide an on-device Parent Settings Panel directly on th
   4. **Password:** change the Parent password.
   5. **Wi-Fi:** scan nearby SSIDs, select a network, enter a passphrase with on-screen masking, and connect via the platform Wi-Fi service.
   6. **SSH:** on-demand maintenance switch with connection guidance and the security warning first.
-  7. **Remote access:** device LAN IP, mDNS service and instructions for the browser client at `http://<ip>:8766` during the provisional HTTP phase.
+  7. **Remote access:** device LAN IP, mDNS service and instructions for the browser client at `https://<ip>:8766` (first-visit self-signed certificate warning expected).
   8. **Pointer:** touchpad/mouse speed presets, tap-to-click, natural scrolling, off-while-typing, reset and a test area.
 - **Keyboard and controller:** Tab moves to the next section (walking a form's fields first); arrows and Enter/Space act inside the current section; Backspace edits the focused field; Esc (controller cancel) leaves an open form or confirmation first and otherwise closes the panel. Focus rings appear only after keyboard/controller input. The Shell maps controllers to arrows/activate/cancel only, so a controller cannot change section yet.
 - **Layout evidence:** `tools/panel_screenshots.py` renders every section and state at 1024×600 and 800×480 in EN/IT/ES/FR and reports overlapping or clipped controls; `tests/test_parent_panel_polish.py` repeats the 800×480 check in the suite.
