@@ -13,6 +13,7 @@ from greia_voice_core.natural_carrier import NaturalCarrierPolicy, DELIVERY
 from greia_voice_core.number_comparison import (COMPARISON_POLICY, PARAKEET_COMPARISON_POLICY,
                                                 SPOKEN_TARGET_COMPARISON_POLICY)
 from greia_voice_core.asr_policy import DEFAULT_PARAKEET_MODEL, DEFAULT_PARAKEET_REVISION
+from greia_voice_core.spoken_target import POLICY as SPOKEN_TARGET_POLICY
 
 
 def select_canary(rows, maximum=12):
@@ -185,6 +186,7 @@ def prepare_natural(args, root, *, policy_id=NATURAL_POLICY):
             'owner_authorization':'2026-10-23 owner order: recover Takeboard-approved targets, then record exact 77 unresolved cues with explicit locale letter/cardinal spelling; up to3 new calls per cue',
             'execution_profile':'natural-spoken-target-parakeet-v4-77-v1',
             'comparison_policy':SPOKEN_TARGET_COMPARISON_POLICY,
+            'spoken_target_policy':SPOKEN_TARGET_POLICY,
             'recognizer_model':DEFAULT_PARAKEET_MODEL,'recognizer_revision':DEFAULT_PARAKEET_REVISION,
             'producer_commit':revision,
             'producer_source_hashes':{path:digest(root/path) for path in producer_files},
