@@ -19,7 +19,7 @@ Greia never serves moving Parent `main`. `runtime/parent-app-client.toml` pins o
 The currently integrated Parent revision is:
 
 ```text
-01301d285c6ba2a9a1f2948a9768b821d2536729
+5518a9eed8ba61503249a1c827b7ef4fef5dab36
 ```
 
 This revision uses Greia Parent password bootstrap (`greia` by default, changeable by parents) to issue a revocable per-device browser credential. The retired household-wide pairing token is not a production browser credential.
@@ -32,7 +32,7 @@ The installed Parent client is served from:
 /usr/share/greia-parent-app
 ```
 
-by the same Greia Parent HTTP service that owns `/api/v1`.
+by the same Greia Parent HTTPS service that owns `/api/v1` on LAN port 8766. The on-device settings panel communicates with the same application on loopback-only HTTP port 8767. The network certificate is generated on the installed device, not included in this pinned HTML bundle.
 
 ```text
 GET /                  public static client shell
