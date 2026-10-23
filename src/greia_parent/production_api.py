@@ -47,6 +47,11 @@ class ProductionParentApiApplication(UpdateParentApiApplication):
         self._wifi_scan_at = 0.0
         self._wifi_scan_results: tuple[WifiNetwork, ...] = ()
 
+    def api_meta_payload(self) -> dict[str, object]:
+        payload = super().api_meta_payload()
+        payload["transport_security"] = "self-signed-https"
+        return payload
+
     def _wifi_management_available(self) -> bool:
         # Joining a network no longer requires writing into iwd's root-owned
         # state directory: the passphrase is supplied over iwd's own agent API
