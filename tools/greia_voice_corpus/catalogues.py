@@ -31,6 +31,8 @@ def derived_replacements(root: Path, relative: str, receipt: dict, staging: Path
 
     shared = root / "assets/audio/characters/shared/v0.2"
     if relative.startswith(str(shared.relative_to(root)) + "/"):
+        human_review = receipt.get("human_review", "PENDING")
+        waived = human_review == "WAIVED_BY_OWNER"
         manifest = shared / "manifest.toml"
         filename = str((root / relative).relative_to(shared))
         sections = manifest.read_text(encoding="utf-8").split("[[utterance]]")
@@ -44,7 +46,7 @@ def derived_replacements(root: Path, relative: str, receipt: dict, staging: Path
                 "sha256": receipt["output"]["sha256"], "bytes": receipt["output"]["bytes"],
                 "speaker": receipt["request"]["speaker"], "kind": receipt["request"]["kind"],
                 "provider_id": receipt["provider_id"], "voice_id": receipt["voice_id"],
-                "voice_registry_version": receipt["voice_registry_version"], "human_review": "PENDING",
+                "voice_registry_version": receipt["voice_registry_version"], "human_review": human_review,
                 "delivery_prompt": receipt["request"]["delivery_prompt"],
                 "verification_disposition": verification["disposition"],
                 "verification_score": verification.get("score") if verification.get("score") is not None else "",
@@ -54,7 +56,8 @@ def derived_replacements(root: Path, relative: str, receipt: dict, staging: Path
         if not found:
             raise ValueError(f"shared recording missing from manifest: {relative}")
         sections[0] = _toml_fields(sections[0], {
-            "status": "corpus regeneration in progress; replaced cues require human review",
+            "status": ("corpus regeneration in progress; native system replacements use explicit owner review waiver"
+                       if waived else "corpus regeneration in progress; replaced cues require human review"),
             "character_renderer_family": "mixed corpus; exact renderer and acceptance are recorded per cue",
             "dani_provider": "mixed corpus; consult per-cue receipts",
             "verifier": "per-cue receipt; no automatic acceptance",
@@ -63,6 +66,7 @@ def derived_replacements(root: Path, relative: str, receipt: dict, staging: Path
             "total_character_introductions": sum(tomllib.loads(s).get("family") == "character.intro" for s in sections[1:]),
             "verifier_warn_count": sum(tomllib.loads(s).get("verification_disposition") == "WARN" for s in sections[1:]),
             "human_review_pending_count": sum(tomllib.loads(s).get("human_review") == "PENDING" for s in sections[1:]),
+            "human_review_waived_count": sum(tomllib.loads(s).get("human_review") == "WAIVED_BY_OWNER" for s in sections[1:]),
         })
         text = "[[utterance]]".join(sections)
         tomllib.loads(text)
@@ -79,7 +83,8 @@ def derived_replacements(root: Path, relative: str, receipt: dict, staging: Path
                              "text": receipt["request"]["text"], "file": filename})
             for row in rows:
                 if row.get("file") == filename:
-                    row.update(result="REVIEW_PENDING", note="New VoxStage/master generation; listening required.",
+                    row.update(result="OWNER_WAIVED" if waived else "REVIEW_PENDING",
+                               note=receipt.get("acceptance_note", "New generation; listening required."),
                                verification_disposition=receipt["verification"]["disposition"],
                                verification_score=receipt["verification"].get("score") or "")
             output = io.StringIO(newline="")

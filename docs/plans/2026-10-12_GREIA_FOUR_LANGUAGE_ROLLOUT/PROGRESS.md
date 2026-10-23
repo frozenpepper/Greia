@@ -1673,3 +1673,10 @@ scope (shell retained-surface threshold, MBR message mismatch, unsupported ARM64
 profile build, build_profile executable bit, and missing host `lsblk` in two
 installer tests). The complete output is retained externally at
 `/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-corpus-v3/source-check-verify.log`.
+
+
+### 2026-10-23 — Owner-directed native system voice for the exact 52 unresolved rows
+
+The owner requested recording the missing 52 with the appropriate installed system voice and waived listening review. Run: `/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/native-system-tts-missing-52-v1/`. The existing VoiceEngine and journaled CorpusRunner path made 52 one-call native macOS recordings and installed them transactionally; no character clones, VoxStage, ASR or Parakeet were involved. Locale mapping: EN Samantha (8), IT Alice (4), ES Mónica (12), FR Thomas (28). Exact semantic request and separately pinned spoken text are preserved in receipts.
+
+Terminal and independent receipt audits PASS: 52 changed, 615 of 667 unchanged; all original backups and provenance reconciled. Each receipt truthfully states `verification=NOT_RUN` and `human_review=WAIVED_BY_OWNER` under authorization `owner-2026-10-23-native-system-tts-missing-52`; no machine or listening pass is claimed. The old Parakeet plans and review decisions remain unchanged. Focused voice-pattern verification passed 240 tests. `make verify PYTHON=/opt/anaconda3/bin/python3` ended at its test target with `Abort trap: 6` after 3 failure markers and before a unittest summary; it is NOT GREEN. Log: `/tmp/greia-native-tts-make-verify.log`; HANDOVER records this boundary.

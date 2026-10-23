@@ -18,6 +18,7 @@ from .models import (
     VerificationResult,
     VoiceProfile,
     VoiceRequest,
+    SYSTEM_TTS_WAIVER_AUTHORIZATION,
 )
 from .providers import VoiceProvider, VoiceProviderError
 from .paths import voice_home
@@ -113,6 +114,11 @@ class VoiceEngine:
         profile = self._profile_for(request)
         if profile is not None and profile.anchor_path is not None:
             self.registry.verify_anchor(profile)
+        if request.owner_authorization == SYSTEM_TTS_WAIVER_AUTHORIZATION:
+            for provider in self.providers:
+                if provider.provider_id == "macos-native-say" and provider.supports(request, profile):
+                    return provider, profile
+            raise VoiceRoutingError("owner-authorized fallback requires the installed native system speech provider")
         for provider in self.providers:
             if provider.supports(request, profile):
                 if request.delivery_prompt and not provider.supports_delivery_prompt:
@@ -167,9 +173,11 @@ class VoiceEngine:
             "created_utc": datetime.now(timezone.utc).isoformat(),
             "request": request_payload,
             "provider_id": provider.provider_id,
-            "voice_id": profile.voice_id if profile else None,
+            "voice_id": (generation_parameters.get("voice") if provider.provider_id == "macos-native-say"
+                         else profile.voice_id if profile else None),
             "voice_registry_version": self.registry.registry_version,
-            "reference_sha256": profile.anchor_sha256 if profile else None,
+            "reference_sha256": (None if provider.provider_id == "macos-native-say"
+                                 else profile.anchor_sha256 if profile else None),
             "generation_parameters": generation_parameters,
             "verification": verification.to_dict(),
             "attempts": attempts,
@@ -178,12 +186,17 @@ class VoiceEngine:
                 "bytes": output.stat().st_size,
                 "sha256": hashlib.sha256(output.read_bytes()).hexdigest(),
             },
-            "human_review": "PENDING",
+            "human_review": "WAIVED_BY_OWNER" if request.owner_authorization == SYSTEM_TTS_WAIVER_AUTHORIZATION else "PENDING",
             "acceptance_note": (
+                "Owner explicitly waived listening review for this deterministic system-voice replacement; "
+                "verification was not run and this is not a machine PASS."
+                if request.owner_authorization == SYSTEM_TTS_WAIVER_AUTHORIZATION else
                 "Machine generation/verification is never Greia audio acceptance. "
                 "A human listening gate is still required."
             ),
         }
+        if request.owner_authorization == SYSTEM_TTS_WAIVER_AUTHORIZATION:
+            receipt["owner_authorization"] = request.owner_authorization
         temporary = receipt_path.with_name(receipt_path.name + ".tmp")
         temporary.write_text(json.dumps(receipt, indent=2, ensure_ascii=False) + "\n",
                              encoding="utf-8")
@@ -196,16 +209,34 @@ class VoiceEngine:
         This is reserved for the frozen corpus carrier flow: the resulting audio
         is an intermediate containing an introduction and requested target, and
         is never the product recording. The caller must extract and verify the
-        final target before it can be installed. Public ``generate`` rejects OFF.
+        final target before it can be installed. Public ``generate`` rejects OFF
+        except for the separately pinned one-call native owner waiver.
         """
         from .disposable_carrier import DisposableCarrierGenerator
         return DisposableCarrierGenerator(self).generate(request)
 
     def generate(self, request: VoiceRequest) -> GenerationResult:
+        owner_native_waiver = (
+            request.owner_authorization == SYSTEM_TTS_WAIVER_AUTHORIZATION
+            and request.kind is SpeechKind.CHARACTER_DIALOGUE
+            and request.verification is VerificationMode.OFF
+            and request.max_attempts == 1
+            and request.short_text_mode == "off"
+            and not request.delivery_prompt
+            and request.spoken_text is not None
+        )
+        if request.owner_authorization is not None and not owner_native_waiver:
+            return GenerationResult(
+                GenerationDisposition.REJECTED, request, None, None, None,
+                VerificationResult(VerificationDisposition.NOT_RUN, "none",
+                                   detail="owner waiver only applies to one exact native fallback request with verification off"),
+                0, "owner-authorized deterministic system speech policy does not match this request",
+            )
         # New public speech must never silently bypass the delivered-audio gate.
         # ShortPhrasePipeline uses OFF only for its disposable carrier request,
         # which is internal and always followed by target extraction + Parakeet.
-        if request.verification is VerificationMode.OFF:
+        # The exact owner-scoped native route below is the sole public exception.
+        if request.verification is VerificationMode.OFF and not owner_native_waiver:
             return GenerationResult(
                 GenerationDisposition.REJECTED, request, None, None, None,
                 VerificationResult(VerificationDisposition.NOT_RUN, "none",
@@ -248,7 +279,8 @@ class VoiceEngine:
             )
 
         probe_verifier = getattr(self.verifier, "probe", None)
-        ready, verifier_detail = probe_verifier() if callable(probe_verifier) else (True, "injected verifier")
+        ready, verifier_detail = (True, "explicit owner listening-review waiver") if owner_native_waiver else (
+            probe_verifier() if callable(probe_verifier) else (True, "injected verifier"))
         if not ready:
             return GenerationResult(
                 GenerationDisposition.UNAVAILABLE, request, provider.provider_id, None, None,
@@ -268,8 +300,9 @@ class VoiceEngine:
                 VerificationResult(VerificationDisposition.NOT_RUN, "none", detail=str(exc)), 0, str(exc))
         evidence = GenerationEvidence(request.to_dict())
         best_verification = VerificationResult(
-            VerificationDisposition.NOT_RUN, getattr(self.verifier, "verifier_id", "parakeet"),
-            detail="not yet run")
+            VerificationDisposition.NOT_RUN,
+            "owner-listening-review-waiver" if owner_native_waiver else getattr(self.verifier, "verifier_id", "parakeet"),
+            detail="owner waived ASR/listening review; audio format/integrity checks only" if owner_native_waiver else "not yet run")
         attempts = 0
         take = None
         try:
@@ -290,7 +323,8 @@ class VoiceEngine:
                     self.audio.package(raw, candidate)
                     self.audio.decode_for_review(candidate, delivered)
                     self.audio.validate_review_wav(delivered)
-                    verification = self.verifier.verify(request, delivered)
+                    verification = (best_verification if owner_native_waiver
+                                    else self.verifier.verify(request, delivered))
                     best_verification = verification
                     row = {
                         "attempt": attempts,
@@ -303,6 +337,26 @@ class VoiceEngine:
                     }
                     evidence.append(row)
                     evidence.write_state("QUALITY_CHECKED", attempt=attempts)
+                    if owner_native_waiver:
+                        output.parent.mkdir(parents=True, exist_ok=True)
+                        staging = output.with_name(output.name + "." + evidence.path.name + ".tmp")
+                        shutil.copyfile(candidate, staging)
+                        staging.replace(output)
+                        receipt = self._write_receipt(
+                            request, provider, profile, output, verification, attempts,
+                            take.generation_parameters)
+                        receipt_payload = json.loads(receipt.read_text(encoding="utf-8"))
+                        receipt_payload["generation_evidence"] = {
+                            "path": str(evidence.path),
+                            "history": str(evidence.path / "history.json"),
+                        }
+                        save_json(receipt, receipt_payload)
+                        evidence.write_state("OWNER_WAIVED_UNVERIFIED", output=str(output), receipt=str(receipt))
+                        return GenerationResult(
+                            GenerationDisposition.OWNER_WAIVED, request, provider.provider_id,
+                            output, receipt, verification, attempts,
+                            "owner-authorized deterministic system speech packaged; no ASR or listening review",
+                            evidence_dir=evidence.path)
                     if verification.disposition is VerificationDisposition.PASS:
                         output.parent.mkdir(parents=True, exist_ok=True)
                         staging = output.with_name(output.name + "." + evidence.path.name + ".tmp")

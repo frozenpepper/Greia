@@ -27,6 +27,18 @@ listening-pending. The separate 667-pair audit and 475-row review batch URL are
 recorded in `HANDOVER.md`; this result does not rewrite historical plans or
 automatically accept audio.
 
+**Owner-directed native fallback (2026-10-23):** for the exact 52 preserved
+v4 rows, the owner authorized deterministic macOS system speech and waived
+listening review. This run uses the existing `MacOSNativeSpeechProvider`, with
+the existing locale profiles Samantha/en, Alice/it, Mónica/es and Thomas/fr.
+The versioned request authorization `owner-2026-10-23-native-system-tts-missing-52`
+is accepted only for one character-dialogue request with exact frozen `spoken_text`,
+verification OFF, short mode OFF and one attempt. The engine still packages and
+validates the delivered WAV, but skips ASR and records `verification=NOT_RUN`,
+`human_review=WAIVED_BY_OWNER`, and the actual native voice ID. This is an
+owner-authorized recording/install, not an automatic Parakeet or listening PASS;
+the old Parakeet plans and receipts remain unchanged.
+
 | Need | Entry point | Implemented behavior |
 |---|---|---|
 | One new line, JSONL batch, or requests over time | `greia_voice.py generate / batch / serve / request` | Automatic short carrier/cut/Parakeet routing; serialized synthesis; review audio and receipt |

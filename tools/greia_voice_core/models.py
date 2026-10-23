@@ -6,6 +6,9 @@ from pathlib import Path
 from typing import Any
 
 
+SYSTEM_TTS_WAIVER_AUTHORIZATION = "owner-2026-10-23-native-system-tts-missing-52"
+
+
 class SpeechKind(str, Enum):
     CHARACTER_DIALOGUE = "character_dialogue"
     SHARED_CHARACTER_UTTERANCE = "shared_character_utterance"
@@ -29,6 +32,7 @@ class VerificationDisposition(str, Enum):
 class GenerationDisposition(str, Enum):
     REVIEW_REQUIRED = "REVIEW_REQUIRED"
     REVIEW_REQUIRED_ASR_WARNING = "REVIEW_REQUIRED_ASR_WARNING"
+    OWNER_WAIVED = "OWNER_WAIVED"
     UNAVAILABLE = "UNAVAILABLE"
     REJECTED = "REJECTED"
 
@@ -51,6 +55,10 @@ class VoiceRequest:
     # None selects the current backend default; registered plans may pin a
     # version so their frozen comparison semantics do not drift.
     comparison_policy: str | None = None
+    # Narrow, auditable exception for the owner's explicitly authorized
+    # deterministic system-voice corpus replacement. Never a machine PASS.
+    owner_authorization: str | None = None
+    spoken_text: str | None = None
 
     def __post_init__(self) -> None:
         if self.short_text_mode not in {"auto", "off", "on"}:
@@ -67,6 +75,14 @@ class VoiceRequest:
             from .number_comparison import SUPPORTED_COMPARISON_POLICIES
             if self.comparison_policy not in SUPPORTED_COMPARISON_POLICIES:
                 raise ValueError("unsupported comparison_policy")
+        if self.owner_authorization is not None and (
+                not isinstance(self.owner_authorization, str) or not self.owner_authorization.strip()):
+            raise ValueError("owner_authorization must be null or a non-empty string")
+        if self.spoken_text is not None and (
+                not isinstance(self.spoken_text, str) or not self.spoken_text.strip()):
+            raise ValueError("spoken_text must be null or a non-empty string")
+        if self.spoken_text is not None:
+            object.__setattr__(self, "spoken_text", self.spoken_text.strip())
         if not isinstance(self.ignore_accents, bool):
             raise ValueError("ignore_accents must be a boolean")
         speaker = self.speaker.strip().lower()

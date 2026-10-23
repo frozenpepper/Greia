@@ -84,6 +84,14 @@ remaining or blocked rows. Generated receipts remain `human_review=PENDING`;
 the 475-row listening batch is at `http://127.0.0.1:8819/`. Exact transaction
 and whole-scope audit evidence is linked in `HANDOVER.md`.
 
+An explicit 2026-10-23 owner exception authorizes native macOS system-voice
+replacement for the exact 52 unresolved v4 corpus rows. It uses the existing
+`MacOSNativeSpeechProvider` through `VoiceEngine`, with an exact authorization
+ID and frozen locale-spelled `spoken_text`; it records `verification=NOT_RUN`
+and `human_review=WAIVED_BY_OWNER`. This is not a Parakeet or listening PASS.
+The exception is scoped to that external run; ordinary new speech continues to
+require its configured delivered-audio verification and human review.
+
 ## Voice Studio identity and existing owner-approved assets
 
 `SETUP.md` §7 and `docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md`

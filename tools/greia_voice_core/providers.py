@@ -11,7 +11,8 @@ import sys
 import tempfile
 from typing import Any
 
-from .models import GeneratedTake, ProviderStatus, SpeechKind, VoiceProfile, VoiceRequest
+from .models import (GeneratedTake, ProviderStatus, SpeechKind, VoiceProfile, VoiceRequest,
+                     SYSTEM_TTS_WAIVER_AUTHORIZATION)
 from .native import (
     MACOS_DANI_PROFILES,
     MACOS_PEDAGOGICAL_PROFILES,
@@ -252,6 +253,9 @@ class MacOSNativeSpeechProvider(VoiceProvider):
     def supports(self, request: VoiceRequest, profile: VoiceProfile | None) -> bool:
         if sys.platform != "darwin":
             return False
+        if (request.owner_authorization == SYSTEM_TTS_WAIVER_AUTHORIZATION
+                and request.kind is SpeechKind.CHARACTER_DIALOGUE and profile is not None):
+            return True
         if request.kind in {
             SpeechKind.PEDAGOGICAL_SPEECH,
             SpeechKind.DANI_SYSTEM_SPEECH,
@@ -311,7 +315,7 @@ class MacOSNativeSpeechProvider(VoiceProvider):
         if not status.available:
             raise VoiceProviderError(status.detail)
         native = self._profile(request, profile)
-        synthesis_text = (
+        synthesis_text = request.spoken_text if request.owner_authorization == SYSTEM_TTS_WAIVER_AUTHORIZATION else (
             pedagogical_synthesis_text(request.text, request.language)
             if request.kind is SpeechKind.PEDAGOGICAL_SPEECH
             else request.text

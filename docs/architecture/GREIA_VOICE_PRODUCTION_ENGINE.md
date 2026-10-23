@@ -211,6 +211,17 @@ Known quality WARNs can retry; exhausted or indeterminate results are not publis
 as accepted output, and infrastructure uncertainty stops for recovery. Human
 listening is required after machine PASS.
 
+One scoped exception is versioned for the owner-authorized native replacement
+of the exact 52 unresolved v4 rows. `owner-2026-10-23-native-system-tts-missing-52`
+forces the existing macOS native adapter ahead of the character provider only
+for a one-call character request with a frozen `spoken_text`, `short_text_mode=off`
+and `verification=off`. The adapter uses the installed locale voice and the
+normal `AudioPipeline` packaging/validation path, while Parakeet is not probed
+or run. Receipts identify the native voice, `verification=NOT_RUN`, and
+`human_review=WAIVED_BY_OWNER`; none of these values is a machine or listening
+PASS. This exact owner authorization does not change ordinary verification or
+historical corpus plans.
+
 Automatic short requests use `voice_carrier_search.extract` v7. Raw synthesis
 verification is OFF; the disposable intro is never transcribed for alignment.
 Bounded PCM quiet-run candidates are transcribed as independent target-only
