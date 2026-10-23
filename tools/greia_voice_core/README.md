@@ -18,19 +18,7 @@ not relabeled. Machine PASS remains `human_review=PENDING`.
 
 ## Choose the right workflow
 
-**Current owner-authorized corpus replacement (2026-10-23):** one separately
-versioned Parakeet-TDT v3 run processed the exact 237 rows in
-`natural-completion-audit-v5/remaining.json`, with up to three new actual
-provider calls per cue and historical attempt totals retained separately. It
-uses `locale-number-tokens-v3-chck-orthographic`, the existing natural carrier,
-and normal recoverable VoiceEngine/CorpusRunner installation. It completed
-147 installed Parakeet-PASS pairs and preserved 90 originals after quality
-exhaustion, with no remaining or blocked rows. The external terminal audit
-verifies all 667 frozen pairs; 430 out-of-scope pairs remain unchanged. The
-unreviewed 1,241-entry Takeboard batch is served at `http://127.0.0.1:8818/`.
-The exact plan, audit, scope hashes and producer evidence are linked in HANDOVER
-and `docs/agents/GREIA_NATURAL_VOICE_COMPLETION.md`. Every new receipt remains
-listening-pending; do not equate automatic PASS with acceptance.
+**Current owner-authorized corpus replacement (2026-10-23, v4 spoken-target run):** the prior v3 Parakeet run is terminal (147 installed automatic PASS, 90 preserved). Takeboard 8818 human approvals recovered 13 exact extracted target cuts through RunStore transactions; each receipt carries the unchanged automatic FAIL/WARN and separate human-review provenance. One additional approved cut corresponds to an already-DONE French alphabet E pair and was not installed. The new, separately versioned v4 plan covers the exact 77 unresolved rows after recovery (16 contextual letter-name cues, 7 already-worded number cues, 54 ordinary cues), uses locale-spelled spoken targets and `locale-number-tokens-v4-spoken-target-v1`, and keeps the three-fresh-call cap. No automated result is promoted to human acceptance. See the current v4 entry in HANDOVER for the external plan, producer state and verification evidence.
 
 | Need | Entry point | Implemented behavior |
 |---|---|---|

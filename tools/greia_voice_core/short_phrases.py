@@ -56,6 +56,7 @@ class ShortPhrasePipeline:
         if comparison_policy not in SUPPORTED_COMPARISON_POLICIES:
             raise ValueError("unsupported short-phrase comparison policy")
         prefix, composite, delivery = self.policy.composite(request, character_delivery()[profile.character])
+        spoken_target = getattr(self.policy, "spoken_target", lambda item: item.text)(request)
         available, detail = self.readiness()
         if not available:
             return GenerationResult(GenerationDisposition.UNAVAILABLE, request, provider.provider_id,
@@ -104,7 +105,7 @@ class ShortPhrasePipeline:
                     kwargs = {} if self.transcriber is None else {"transcriber": self.transcriber}
                     try:
                         extracted = attempt / "target.wav"
-                        extraction = extract(raw, extracted, locale=request.locale, prefix=prefix, target=request.text,
+                        extraction = extract(raw, extracted, locale=request.locale, prefix=prefix, target=spoken_target,
                                              remove_first_words=len(spoken_words(prefix)), source_receipt_path=raw_receipt,
                                              target_verification="warn", ignore_accents=request.ignore_accents,
                                              comparison_policy=comparison_policy, **kwargs)
@@ -115,7 +116,7 @@ class ShortPhrasePipeline:
                         decoded = attempt / "delivered.wav"
                         engine.audio.decode_for_review(candidate, decoded)
                         engine.audio.validate_review_wav(decoded)
-                        quality = checker.check(extracted, decoded, extraction, text=request.text, locale=request.locale,
+                        quality = checker.check(extracted, decoded, extraction, text=spoken_target, locale=request.locale,
                                                 ignore_accents=request.ignore_accents,
                                                 enabled=True,
                                                 require_word_count=True)
@@ -160,7 +161,10 @@ class ShortPhrasePipeline:
                     payload = json.loads(receipt.read_text())
                     payload["short_phrase"] = {"mode": "automatic-carrier", "composition_policy": self.policy.composition_policy, "evidence_dir": str(work),
                                                "prefix": prefix, "composite_text": composite,
-                                               "effective_delivery": delivery, "extraction": extraction,
+                                               "effective_delivery": delivery, "semantic_target": request.text,
+                                               "spoken_target": spoken_target,
+                                               "spoken_target_policy": getattr(self.policy, "spoken_target_policy", "identity-v1"),
+                                               "extraction": extraction,
                                                "quality": quality, "history": history}
                     save_evidence(receipt, payload)
                     save_evidence(work / "state.json", {"status": "VERIFIED" if quality["disposition"] == "PASS" else "UNVERIFIED",

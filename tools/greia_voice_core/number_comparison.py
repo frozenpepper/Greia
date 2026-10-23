@@ -17,12 +17,13 @@ from .number_lexicon import cardinal_spellings
 LEGACY_COMPARISON_POLICY = "locale-number-tokens-v1"
 COMPARISON_POLICY = "locale-number-tokens-v2"
 PARAKEET_COMPARISON_POLICY = "locale-number-tokens-v3-chck-orthographic"
+SPOKEN_TARGET_COMPARISON_POLICY = "locale-number-tokens-v4-spoken-target-v1"
 ORTHOGRAPHIC_COMPARISON_POLICY = "locale-number-tokens-v2-oskar-en-v1"
 ENGLISH_SPOKEN_COMPARISON_POLICY = "locale-number-tokens-v2-spoken-en-v1"
 OSKAR_LOCALE_COMPARISON_POLICY = "locale-number-tokens-v2-oskar-all-v1"
 SUPPORTED_COMPARISON_POLICIES = frozenset({
     OSKAR_LOCALE_COMPARISON_POLICY, LEGACY_COMPARISON_POLICY, COMPARISON_POLICY,
-    PARAKEET_COMPARISON_POLICY, ORTHOGRAPHIC_COMPARISON_POLICY,
+    PARAKEET_COMPARISON_POLICY, SPOKEN_TARGET_COMPARISON_POLICY, ORTHOGRAPHIC_COMPARISON_POLICY,
     ENGLISH_SPOKEN_COMPARISON_POLICY,
 })
 
@@ -103,6 +104,15 @@ def canonical_number_tokens(locale: str, text: str, *, ignore_accents: bool = Tr
     if policy not in SUPPORTED_COMPARISON_POLICIES:
         raise ValueError("unsupported number comparison policy")
 
+    if policy == SPOKEN_TARGET_COMPARISON_POLICY:
+        letter = _spoken_letter_prefix(locale, text, ignore_accents=ignore_accents)
+        if letter is not None:
+            code, _form, tail = letter
+            return (f"<letter:{code}>",) + canonical_number_tokens(
+                locale, tail, ignore_accents=ignore_accents, policy=PARAKEET_COMPARISON_POLICY)
+        return canonical_number_tokens(locale, text, ignore_accents=ignore_accents,
+                                       policy=PARAKEET_COMPARISON_POLICY)
+
     normalized = _normalize(text, ignore_accents)
     if policy == ENGLISH_SPOKEN_COMPARISON_POLICY and locale == "en":
         # W has a multiword spoken name; these two exact transcriber spellings
@@ -164,6 +174,7 @@ class TargetTranscriptComparison:
     score: float
     expected_tokens: tuple[str, ...]
     actual_tokens: tuple[str, ...]
+    letter_matches: bool = True
 
     @property
     def exact_match(self) -> bool:
@@ -180,6 +191,8 @@ class TargetTranscriptComparison:
 
     def flags(self, *, require_word_count: bool = True) -> list[str]:
         result = []
+        if not self.letter_matches:
+            result.append("TARGET_LETTER_MISMATCH")
         if not self.numbers_match:
             result.append("TARGET_NUMBER_MISMATCH")
         if require_word_count and not self.word_count_matches:
@@ -194,6 +207,22 @@ def compare_target_transcript(locale: str, expected: str, actual: str, *,
     from .verification import transcript_similarity
     expected_tokens = canonical_number_tokens(locale, expected, ignore_accents=ignore_accents, policy=policy)
     actual_tokens = canonical_number_tokens(locale, actual, ignore_accents=ignore_accents, policy=policy)
+    letter_matches = True
+    if policy == SPOKEN_TARGET_COMPARISON_POLICY:
+        expected_letter = _spoken_letter_prefix(locale, expected, ignore_accents=ignore_accents)
+        actual_letter = _spoken_letter_prefix(locale, actual, ignore_accents=ignore_accents)
+        # The owner-approved C/K/CH lexical interchange applies to a written
+        # glyph at this explicit letter-example position. Different spoken
+        # letter names (for example "see" and "kay") remain distinct.
+        if expected_letter and actual_letter:
+            letter_matches = (expected_letter[0] == actual_letter[0] or
+                ((expected_letter[1] == "glyph" or actual_letter[1] == "glyph") and
+                 expected_letter[0] in {"C", "K", "CH"} and actual_letter[0] in {"C", "K", "CH"}))
+            if letter_matches and expected_letter[0] in {"C", "K", "CH"} and actual_letter[0] in {"C", "K", "CH"}:
+                expected_tokens = ("<letter:CK>",) + expected_tokens[1:]
+                actual_tokens = ("<letter:CK>",) + actual_tokens[1:]
+        elif expected_letter or actual_letter:
+            letter_matches = False
     if policy == ENGLISH_SPOKEN_COMPARISON_POLICY and locale.casefold() == "en" and len(expected_tokens) == len(actual_tokens):
         # These exact English homophones cannot be distinguished acoustically.
         # Resolve only corresponding positions; never erase a different number,
@@ -213,4 +242,35 @@ def compare_target_transcript(locale: str, expected: str, actual: str, *,
                         for t in tokens)
     score = transcript_similarity(scoring_text(expected_tokens), scoring_text(actual_tokens),
                                   ignore_accents=ignore_accents)
-    return TargetTranscriptComparison(score, expected_tokens, actual_tokens)
+    return TargetTranscriptComparison(score, expected_tokens, actual_tokens, letter_matches)
+
+
+def _spoken_letter_prefix(locale: str, text: str, *, ignore_accents: bool):
+    """Return an exact locale letter alias only at a letter-example prefix.
+
+    The following connector makes aliases such as English "see", French
+    "enne", or Italian "di" safe to recognize without treating homophones in
+    ordinary sentences as letter names. Results are (code, form, tail).
+    """
+    locale = locale.casefold().split("-", 1)[0]
+    if locale not in {"en", "it", "fr", "es"}:
+        return None
+    from .spoken_target import CONNECTORS, letter_aliases
+    normalized = _normalize(text, ignore_accents)
+    tokens = _WORD_OR_DIGIT.findall(normalized)
+    connector = CONNECTORS[locale]
+    aliases = []
+    for code, spellings in letter_aliases(locale).items():
+        for alias in spellings:
+            normalized_alias = tuple(_normalize(part, ignore_accents) for part in alias)
+            aliases.append((normalized_alias, code))
+    # CH is an explicit glyph-compatible form under the owner's C/K/CH rule.
+    aliases.append((("ch",), "CH"))
+    aliases.sort(key=lambda item: (-len(item[0]), item[0], item[1]))
+    for alias, code in aliases:
+        if (tuple(tokens[:len(alias)]) == alias and len(tokens) > len(alias)
+                and tokens[len(alias)] == connector):
+            form = "glyph" if alias == (code.casefold(),) or code == "CH" else "name"
+            tail = " ".join(tokens[len(alias):])
+            return code, form, tail
+    return None

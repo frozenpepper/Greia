@@ -180,6 +180,30 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-23 — Spoken-target replacement scope frozen; pending producer launch
+
+Owner ordered replacing the unresolved recordings using spoken letter names and
+number words. Exact approved Takeboard 8818 cuts were transactionally recovered
+from the preceding full Parakeet run: **13 preserved rows installed** with
+review provenance and original automated FAIL/WARN retained; one approved cut
+for an already-DONE French E row was left untouched. The duplicate approved
+`Trouve deux pareils !` choices had no score, so attempt 1 was selected and the
+other decision remains in the original review file. The unresolved v4 source
+scope is frozen at **77 rows**: 16 contextual letter examples, 7 number cues
+already written as words (including “Start at four!”), and 54 ordinary cues.
+All 16 exact semantic-to-spoken spellings and the row list are in
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-remaining-77/`.
+
+The versioned producer policy keeps authored semantic request text unchanged,
+speaks locale letter names only in explicit letter-example syntax, and retains
+the exact-number, count, signal and packaged Parakeet gates. Its maximum is
+three fresh actual calls per cue, reserved once per provider call; no historical
+budget or plan is rewritten. Human-approved recovery evidence is at
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/human-approved-recovery-13/`.
+Producer source and focused tests are being finalized before plan freeze and
+launch; the 77-row production has **not started**. No new synthesis was used
+for these 13 reviewed recoveries.
+
 ### 2026-10-23 — Owner-authorized full Parakeet replacement completed
 
 The owner explicitly superseded the previous bulk holds and authorized a fresh

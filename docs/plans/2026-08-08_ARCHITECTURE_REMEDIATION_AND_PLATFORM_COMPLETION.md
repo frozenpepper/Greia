@@ -3993,3 +3993,13 @@ and eight skipped tests. No full-suite baseline comparison was run; these are
 recorded only as this execution's observed failures. Log:
 `/tmp/greia-parakeet-full237-make-verify.log`. No architecture completion
 phase is closed by this voice work.
+
+### 2026-10-23 — Spoken-target voice continuation (scoped authoring work)
+
+Added a versioned locale-spelled spoken-target variation to the existing
+natural carrier and final-target verification path. The semantic request stays
+unchanged; only explicit standalone letter examples receive locale letter names.
+This voice-authoring policy preserves exact count/numeric/signal checks and
+historical v1/v3 plan identities. Focused spoken-target and natural-run tests
+passed. This scoped corpus operation does not close any architecture-remediation
+phase or provide OS/runtime/hardware acceptance.

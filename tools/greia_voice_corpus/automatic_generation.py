@@ -4,7 +4,8 @@ import json
 from pathlib import Path
 from greia_voice_core.models import VoiceRequest, SpeechKind, VerificationMode
 from greia_voice_core.number_comparison import (
-    COMPARISON_POLICY, PARAKEET_COMPARISON_POLICY, compare_target_transcript,
+    COMPARISON_POLICY, PARAKEET_COMPARISON_POLICY, SPOKEN_TARGET_COMPARISON_POLICY,
+    compare_target_transcript,
 )
 from greia_voice_core.asr_policy import (
     DEFAULT_ASR_MODEL, DEFAULT_ASR_REVISION,
@@ -20,20 +21,25 @@ from .carrier_generation import CarrierExtractionFailure
 POLICY = "automatic-short-v7-period-warm-v2"
 NATURAL_POLICY = "automatic-natural-context-v1"
 NATURAL_PARAKEET_FULL_POLICY = "automatic-natural-context-parakeet-v3-full237-v1"
+NATURAL_SPOKEN_TARGET_POLICY = "automatic-natural-context-parakeet-v4-spoken-target-v1"
 
 
 def natural_enabled(plan):
     return plan.get("automatic_short_generation_policy") in {
-        NATURAL_POLICY, NATURAL_PARAKEET_FULL_POLICY,
+        NATURAL_POLICY, NATURAL_PARAKEET_FULL_POLICY, NATURAL_SPOKEN_TARGET_POLICY,
     }
 
 
 def natural_comparison_policy(plan: dict) -> str:
     """Return the frozen comparison semantics for this natural-run version."""
-    if plan.get("automatic_short_generation_policy") == NATURAL_PARAKEET_FULL_POLICY:
+    policy_id = plan.get("automatic_short_generation_policy")
+    if policy_id in {NATURAL_PARAKEET_FULL_POLICY, NATURAL_SPOKEN_TARGET_POLICY}:
         pinned = plan.get("natural_run", {}).get("comparison_policy")
-        if pinned != PARAKEET_COMPARISON_POLICY:
-            raise ValueError("full Parakeet natural plan must pin comparison v3")
+        expected = (SPOKEN_TARGET_COMPARISON_POLICY if policy_id == NATURAL_SPOKEN_TARGET_POLICY
+                    else PARAKEET_COMPARISON_POLICY)
+        if pinned != expected:
+            version = "v4 spoken-target" if policy_id == NATURAL_SPOKEN_TARGET_POLICY else "v3"
+            raise ValueError(f"versioned Parakeet natural plan must pin comparison {version}")
         return pinned
     if plan.get("automatic_short_generation_policy") == NATURAL_POLICY:
         return COMPARISON_POLICY
@@ -42,7 +48,7 @@ def natural_comparison_policy(plan: dict) -> str:
 
 def recognition_identity(plan: dict) -> tuple[str, str]:
     """Keep historical Whisper natural plans distinct from the new Parakeet run."""
-    if plan.get("automatic_short_generation_policy") == NATURAL_PARAKEET_FULL_POLICY:
+    if plan.get("automatic_short_generation_policy") in {NATURAL_PARAKEET_FULL_POLICY, NATURAL_SPOKEN_TARGET_POLICY}:
         return DEFAULT_PARAKEET_MODEL, DEFAULT_PARAKEET_REVISION
     return DEFAULT_ASR_MODEL, DEFAULT_ASR_REVISION
 
@@ -53,9 +59,9 @@ class AutomaticRecoveryRequired(RuntimeError):
 
 def enabled(plan: dict) -> bool:
     value = plan.get("automatic_short_generation_policy")
-    if value is not None and value not in {POLICY, NATURAL_POLICY, NATURAL_PARAKEET_FULL_POLICY}:
+    if value is not None and value not in {POLICY, NATURAL_POLICY, NATURAL_PARAKEET_FULL_POLICY, NATURAL_SPOKEN_TARGET_POLICY}:
         raise ValueError("unsupported automatic short corpus policy")
-    return value in {POLICY, NATURAL_POLICY, NATURAL_PARAKEET_FULL_POLICY}
+    return value in {POLICY, NATURAL_POLICY, NATURAL_PARAKEET_FULL_POLICY, NATURAL_SPOKEN_TARGET_POLICY}
 
 
 def request_for(row: dict, candidate: Path, *, max_attempts: int = 1,
@@ -84,6 +90,9 @@ def generate_candidate(engine, store, row: dict) -> None:
         prefix,text,delivery=policy.composite(request,request.delivery_prompt)
         expected={'prefix':prefix,'composite_text':text,'effective_delivery':delivery,
                   'composition_policy':policy.composition_policy,'comparison_policy':comparison_policy}
+        if comparison_policy == SPOKEN_TARGET_COMPARISON_POLICY:
+            from greia_voice_core.spoken_target import POLICY as SPOKEN_TEXT_POLICY
+            expected.update(spoken_target=policy.spoken_target(request), spoken_target_policy=SPOKEN_TEXT_POLICY)
         if row.get('natural_carrier') != expected:
             raise ValueError('frozen natural recipe differs before submission')
     result = engine.generate(request)
@@ -116,6 +125,7 @@ def validate_candidate(store, row: dict, candidate: Path, receipt: dict, profile
     from greia_voice_core.natural_carrier import NaturalCarrierPolicy
     policy = NaturalCarrierPolicy() if natural else ShortPhrasePolicy()
     prefix, composite, delivery = policy.composite(request, character_delivery()[profile.character])
+    spoken_target = getattr(policy, "spoken_target", lambda item: item.text)(request)
     actual_request = dict(receipt.get("request", {}))
     if actual_request.get("output") == row["path"]:
         actual_request["output"] = str(candidate)
@@ -126,9 +136,11 @@ def validate_candidate(store, row: dict, candidate: Path, receipt: dict, profile
             or short.get("mode") != "automatic-carrier" or short.get("composition_policy") != policy.composition_policy
             or short.get("prefix") != prefix
             or short.get("composite_text") != composite or short.get("effective_delivery") != delivery
+            or short.get("semantic_target", request.text) != request.text
+            or short.get("spoken_target", request.text) != spoken_target
             or extraction.get("algorithm_version") != ALGORITHM_VERSION
             or extraction.get("comparison_policy") != comparison_policy
-            or extraction.get("target") != request.text
+            or extraction.get("target") != spoken_target
             or extraction.get("ignore_accents") != request.ignore_accents
             or receipt.get("verification", {}).get("disposition") != "PASS"
             or receipt.get("verification", {}).get("score") != quality.get("score")
@@ -140,6 +152,9 @@ def validate_candidate(store, row: dict, candidate: Path, receipt: dict, profile
     if natural:
         expected = {"prefix":prefix,"composite_text":composite,"effective_delivery":delivery,
                     "composition_policy":policy.composition_policy,"comparison_policy":comparison_policy}
+        if comparison_policy == SPOKEN_TARGET_COMPARISON_POLICY:
+            from greia_voice_core.spoken_target import POLICY as SPOKEN_TEXT_POLICY
+            expected.update(spoken_target=spoken_target, spoken_target_policy=SPOKEN_TEXT_POLICY)
         if row.get("natural_carrier") != expected:
             raise ValueError("natural carrier differs from frozen recipe")
         from .method_budget import MethodAttemptBudget
@@ -150,7 +165,7 @@ def validate_candidate(store, row: dict, candidate: Path, receipt: dict, profile
                 or any(a['evidence_dir'] != short.get('evidence_dir') or a['request'] != request.to_dict()
                        for a in ledger['attempts'])):
             raise ValueError("natural candidate lacks exact reserved-attempt provenance")
-    comparison = compare_target_transcript(request.locale,request.text,quality.get("transcript", ""),
+    comparison = compare_target_transcript(request.locale,spoken_target,quality.get("transcript", ""),
                                            ignore_accents=request.ignore_accents,
                                            policy=comparison_policy)
     if comparison.score <= .8 or comparison.flags(require_word_count=True) or comparison.score != quality.get("score"):

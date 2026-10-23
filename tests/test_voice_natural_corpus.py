@@ -8,7 +8,7 @@ import test_greia_voice_corpus as fixture
 import test_voice_short_routing as short
 from greia_voice_core.models import VoiceRequest,SpeechKind
 from greia_voice_core.natural_carrier import NaturalCarrierPolicy,DELIVERY
-from greia_voice_core.number_comparison import COMPARISON_POLICY, PARAKEET_COMPARISON_POLICY
+from greia_voice_core.number_comparison import COMPARISON_POLICY, PARAKEET_COMPARISON_POLICY, SPOKEN_TARGET_COMPARISON_POLICY
 from greia_voice_core.asr_policy import DEFAULT_PARAKEET_MODEL, DEFAULT_PARAKEET_REVISION
 from greia_voice_core.short_phrases import ShortPhrasePipeline
 from greia_voice_core.engine import VoiceEngine
@@ -18,7 +18,7 @@ from greia_voice_corpus.store import write_json
 from greia_voice_corpus.inventory import receipt_path
 from greia_voice_corpus.runner import CorpusRunner
 from greia_voice_corpus.method_budget import MethodAttemptBudget
-from greia_voice_corpus.automatic_generation import (NATURAL_POLICY,NATURAL_PARAKEET_FULL_POLICY,
+from greia_voice_corpus.automatic_generation import (NATURAL_POLICY,NATURAL_PARAKEET_FULL_POLICY,NATURAL_SPOKEN_TARGET_POLICY,
     natural_comparison_policy,recognition_identity,request_for)
 from greia_voice_corpus.natural_run import safety_reason,aggregate_stop_reason,_validate_original_or_installed
 from greia_voice_corpus.natural_plan import select_canary, select_remaining_scope
@@ -120,6 +120,18 @@ class NaturalGuardTests(unittest.TestCase):
   with self.assertRaisesRegex(ValueError,'must pin comparison v3'):
    natural_comparison_policy({'automatic_short_generation_policy':NATURAL_PARAKEET_FULL_POLICY,
        'natural_run':{'comparison_policy':COMPARISON_POLICY}})
+
+ def test_spoken_target_policy_is_versioned_and_keeps_three_call_budget(self):
+  plan={'automatic_short_generation_policy':NATURAL_SPOKEN_TARGET_POLICY,
+        'natural_run':{'comparison_policy':SPOKEN_TARGET_COMPARISON_POLICY}}
+  self.assertEqual(natural_comparison_policy(plan),SPOKEN_TARGET_COMPARISON_POLICY)
+  self.assertEqual(recognition_identity(plan),(DEFAULT_PARAKEET_MODEL,DEFAULT_PARAKEET_REVISION))
+  request=request_for({'request':{'speaker':'leo','kind':'character_dialogue','locale':'en',
+      'text':'Y as Yacht','cue_id':'example.y','delivery_prompt':DELIVERY['en']}},Path('/tmp/candidate.wav'),
+      max_attempts=3,comparison_policy=natural_comparison_policy(plan))
+  self.assertEqual(request.max_attempts,3)
+  self.assertEqual(aggregate_stop_reason(plan,[(str(i),'PRESERVED') for i in range(3)],
+      {str(i):{'attempts':[1,2,3]} for i in range(3)}),None)
 
  def test_fullscope_short_pipeline_selects_parakeet_without_injected_whisper(self):
   pipeline=ShortPhrasePipeline(policy=NaturalCarrierPolicy())

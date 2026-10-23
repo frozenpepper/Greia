@@ -5,11 +5,13 @@ import subprocess
 from pathlib import Path
 from .inventory import digest, receipt_path, safe_target, preserved_reason
 from .store import RunStore, write_json
-from .automatic_generation import NATURAL_POLICY, NATURAL_PARAKEET_FULL_POLICY
+from .automatic_generation import (NATURAL_POLICY, NATURAL_PARAKEET_FULL_POLICY,
+                                   NATURAL_SPOKEN_TARGET_POLICY)
 from greia_voice_core.models import VoiceRequest, SpeechKind, VerificationMode
 from greia_voice_core.registry import VoiceRegistry, CANONICAL_MANIFEST
 from greia_voice_core.natural_carrier import NaturalCarrierPolicy, DELIVERY
-from greia_voice_core.number_comparison import COMPARISON_POLICY, PARAKEET_COMPARISON_POLICY
+from greia_voice_core.number_comparison import (COMPARISON_POLICY, PARAKEET_COMPARISON_POLICY,
+                                                SPOKEN_TARGET_COMPARISON_POLICY)
 from greia_voice_core.asr_policy import DEFAULT_PARAKEET_MODEL, DEFAULT_PARAKEET_REVISION
 
 
@@ -36,10 +38,13 @@ def prepare_natural(args, root, *, policy_id=NATURAL_POLICY):
     if len(records)!=len(priority['records']) or len(remaining)!=len(set(remaining)):
         raise ValueError('duplicate priority or remaining path')
     if not set(remaining)<=set(records):raise ValueError('remaining records exceed frozen priority')
-    if policy_id not in {NATURAL_POLICY, NATURAL_PARAKEET_FULL_POLICY}:
+    if policy_id not in {NATURAL_POLICY, NATURAL_PARAKEET_FULL_POLICY, NATURAL_SPOKEN_TARGET_POLICY}:
         raise ValueError('unsupported natural generation policy')
     full_parakeet = policy_id == NATURAL_PARAKEET_FULL_POLICY
-    comparison_policy = PARAKEET_COMPARISON_POLICY if full_parakeet else COMPARISON_POLICY
+    spoken_target_policy = policy_id == NATURAL_SPOKEN_TARGET_POLICY
+    full_scope = full_parakeet or spoken_target_policy
+    comparison_policy = (SPOKEN_TARGET_COMPARISON_POLICY if spoken_target_policy else
+                         PARAKEET_COMPARISON_POLICY if full_parakeet else COMPARISON_POLICY)
     scope_audit_path = args.remaining_file.parent / 'audit.json'
     scope_audit = json.loads(scope_audit_path.read_text()) if scope_audit_path.is_file() else None
     if full_parakeet:
@@ -51,6 +56,15 @@ def prepare_natural(args, root, *, policy_id=NATURAL_POLICY):
                 or set(remaining) != set(remaining_doc.get('unstarted_letters',[]))
                     | set(remaining_doc.get('unstarted_ordinary',[]))):
             raise ValueError('full Parakeet plan scope differs from the current 237-row v5 audit')
+    elif spoken_target_policy:
+        remaining_doc=json.loads(args.remaining_file.read_text())
+        if (scope_audit is None or set(scope_audit.get('remaining',[]))!=set(remaining)
+                or len(remaining)!=77 or scope_audit.get('scope_version')!='spoken-target-unresolved-77-v1'
+                or scope_audit.get('approved_recovery_count')!=13
+                or scope_audit.get('approved_recovery_paths') is None
+                or scope_audit.get('number_digit_targets')!=0
+                or set(remaining)!=set(remaining_doc.get('remaining',[]))):
+            raise ValueError('spoken-target plan scope differs from its reviewed 77-row freeze')
     with sqlite3.connect(args.prior_run/'state.sqlite3') as db:
         done={p for p,s in db.execute('select path,state from cues') if s=='DONE'}
     # Skip only actual completed installations, not stale DONE counters.
@@ -62,7 +76,7 @@ def prepare_natural(args, root, *, policy_id=NATURAL_POLICY):
     # Historical DONE rows from earlier runs do not remove rows from this new
     # allowance; the old candidates and receipts stay in their original runs.
     # Legacy natural-v1 behavior continues to skip only this prior run's DONEs.
-    selected=select_remaining_scope(remaining,done,full_parakeet=full_parakeet)
+    selected=select_remaining_scope(remaining,done,full_parakeet=full_scope)
     counts,_,_=collect_history(args.history_root,selected)
     if any(type(counts.get(p)) is not int or counts[p]<0 for p in selected):
         raise ValueError('missing historical provider-call budget')
@@ -79,12 +93,17 @@ def prepare_natural(args, root, *, policy_id=NATURAL_POLICY):
         if preserved_reason(relative,old.get('request',{})):raise ValueError('deterministic/protected cue selected: '+relative)
         prefix,text,delivery=policy.composite(req,DELIVERY[req.language])
         if digest(target) is None:raise ValueError('priority original missing: '+relative)
+        carrier={'prefix':prefix,'composite_text':text,'effective_delivery':delivery,
+                'composition_policy':policy.composition_policy,'comparison_policy':comparison_policy}
+        if spoken_target_policy:
+            from greia_voice_core.spoken_target import POLICY as SPOKEN_TEXT_POLICY
+            spoken=policy.spoken_target(req)
+            carrier.update(spoken_target=spoken,spoken_target_policy=SPOKEN_TEXT_POLICY)
         rows.append({'path':relative,'state':'READY','reason':'owner-authorized natural method, up to3 new takes',
             'original_sha256':digest(target),'original_receipt_sha256':digest(receipt_path(target)),
             'original_kind':old.get('request',{}).get('kind'),'original_speaker':old.get('request',{}).get('speaker'),
             'request':req.to_dict(),'historical_attempts':counts[relative],'natural_topic':policy.topic(req),
-            'natural_carrier':{'prefix':prefix,'composite_text':text,'effective_delivery':delivery,
-                'composition_policy':policy.composition_policy,'comparison_policy':comparison_policy}})
+            'natural_carrier':carrier})
     plan={'root':str(root.resolve()),'rows':select_canary(rows),'registry_manifest_sha256':digest(root/CANONICAL_MANIFEST),
         'automatic_short_generation_policy':policy_id,
         'natural_run':{'owner_authorization':'2026-10-22 complete remaining Greia recordings using new method; new allowance3takes, historical attempts retained',
@@ -145,6 +164,39 @@ def prepare_natural(args, root, *, policy_id=NATURAL_POLICY):
             },
             'aggregate_yield_guard':'disabled only for this explicitly authorized full237 scope; all per-record quality and infrastructure gates remain enabled',
             'preserved_historical_run_policies':[NATURAL_POLICY],
+        })
+    elif spoken_target_policy:
+        if len(rows)!=77:
+            raise ValueError('spoken-target policy requires the exact 77 unresolved reviewed rows')
+        producer_files=[
+            'tools/greia_voice_corpus/automatic_generation.py','tools/greia_voice_corpus/natural_plan.py',
+            'tools/greia_voice_corpus/natural_run.py','tools/greia_voice_corpus/runner.py',
+            'tools/greia_voice_corpus/method_budget.py','tools/greia_voice_core/natural_carrier.py',
+            'tools/greia_voice_core/spoken_target.py','tools/greia_voice_core/short_phrases.py',
+            'tools/greia_voice_core/number_comparison.py','tools/greia_voice_core/target_quality.py',
+            'tools/voice_carrier_search.py','tools/record_natural_voice_priority.py','tools/greia_voice.py',
+        ]
+        if subprocess.run(['git','diff','--quiet','HEAD','--',*producer_files],cwd=root).returncode:
+            raise ValueError('spoken-target producer sources must be committed before scope freeze')
+        revision=subprocess.check_output(['git','rev-parse','HEAD'],cwd=root,text=True).strip()
+        master_identities={name:{'voice_id':profile.voice_id,'anchor_sha256':profile.anchor_sha256}
+                           for name,profile in sorted(registry.profiles.items())}
+        plan['natural_run'].update({
+            'owner_authorization':'2026-10-23 owner order: recover Takeboard-approved targets, then record exact 77 unresolved cues with explicit locale letter/cardinal spelling; up to3 new calls per cue',
+            'execution_profile':'natural-spoken-target-parakeet-v4-77-v1',
+            'comparison_policy':SPOKEN_TARGET_COMPARISON_POLICY,
+            'recognizer_model':DEFAULT_PARAKEET_MODEL,'recognizer_revision':DEFAULT_PARAKEET_REVISION,
+            'producer_commit':revision,
+            'producer_source_hashes':{path:digest(root/path) for path in producer_files},
+            'scope_audit_file':str(scope_audit_path.resolve()),'scope_audit_sha256':digest(scope_audit_path),
+            'master_identities':master_identities,'maximum_new_attempts':3,'canary_count':0,
+            'aggregate_yield_guard':'disabled by explicit owner authorization for all 77 unresolved records; per-record quality and infrastructure gates remain enabled',
+            'approved_recovery_file':scope_audit.get('approved_recovery_file'),
+            'approved_recovery_sha256':scope_audit.get('approved_recovery_sha256'),
+            'approved_review_file':scope_audit.get('approved_review_file'),
+            'approved_review_sha256':scope_audit.get('approved_review_sha256'),
+            'prior_completed_excluded':sorted(done-selected),
+            'preserved_historical_run_policies':[NATURAL_POLICY,NATURAL_PARAKEET_FULL_POLICY],
         })
     store=RunStore.create(args.work_dir,plan)
     try:

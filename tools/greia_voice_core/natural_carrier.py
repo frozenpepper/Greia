@@ -1,6 +1,8 @@
 """Natural, localized lead-ins for the owner-approved short-phrase recipe."""
 from .short_policy import ShortPhrasePolicy, ALTERNATE_PREFIXES
-from .number_comparison import canonical_number_tokens, PARAKEET_COMPARISON_POLICY
+from .number_comparison import (canonical_number_tokens, PARAKEET_COMPARISON_POLICY,
+                                SPOKEN_TARGET_COMPARISON_POLICY)
+from .spoken_target import POLICY as SPOKEN_TARGET_POLICY, spoken_target as spell_spoken_target
 
 NATURAL_COMPOSITION_POLICY = "natural-context-period-v1"
 DELIVERY = {
@@ -22,6 +24,14 @@ class NaturalCarrierPolicy(ShortPhrasePolicy):
     """Reuse semantic short selection; compose normal sentences without pause commands."""
 
     composition_policy = NATURAL_COMPOSITION_POLICY
+    spoken_target_policy = SPOKEN_TARGET_POLICY
+
+    def spoken_target(self, request) -> str:
+        """Return the exact words to speak while preserving request.text semantics."""
+        comparison_policy = request.comparison_policy or PARAKEET_COMPARISON_POLICY
+        if comparison_policy == SPOKEN_TARGET_COMPARISON_POLICY:
+            return spell_spoken_target(request.language, request.text).spoken_text
+        return request.text
 
     def topic(self, request) -> str:
         cue = (request.cue_id or "").lower()
@@ -46,7 +56,8 @@ class NaturalCarrierPolicy(ShortPhrasePolicy):
         if locale not in DELIVERY:
             raise ValueError("no natural carrier for " + locale)
         comparison_policy = request.comparison_policy or PARAKEET_COMPARISON_POLICY
-        target = canonical_number_tokens(locale, request.text, ignore_accents=request.ignore_accents,
+        target_text = self.spoken_target(request)
+        target = canonical_number_tokens(locale, target_text, ignore_accents=request.ignore_accents,
                                          policy=comparison_policy)
         for prefix in (PREFIXES[self.topic(request)][locale], PREFIXES["general"][locale], *ALTERNATE_PREFIXES[locale]):
             tokens = canonical_number_tokens(locale, prefix, ignore_accents=request.ignore_accents,
@@ -55,7 +66,7 @@ class NaturalCarrierPolicy(ShortPhrasePolicy):
                 break
         else:
             raise ValueError("target overlaps all natural lead-ins")
-        composite = prefix.rstrip(".") + ".\n\n" + request.text
+        composite = prefix.rstrip(".") + ".\n\n" + target_text
         delivery = request.delivery_prompt or DELIVERY[locale]
         language = {"en":"English", "it":"Italian", "fr":"French", "es":"Spanish"}[locale]
         if len(composite) > 240 or len(f"Speak in {language}. {delivery}") > 300:

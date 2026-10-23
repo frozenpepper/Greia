@@ -63,6 +63,21 @@ script. EN/IT/ES/FR are all released (2026-10-17): every new line is
 recorded in all four with the same speaker, and integrated with
 `tools/integrate_reviewed_voices.py --layout mirror` (never overwrites).
 
+### 2026-10-23 owner-authorized spoken-target corpus policy
+
+The current continuation after the exact v3 Parakeet run is versioned as
+`automatic-natural-context-parakeet-v4-spoken-target-v1`. For its 77-row
+reviewed unresolved scope only, a separate spoken-target collaborator spells
+contextual letter examples in the selected locale and passes that exact spoken
+form through the normal short-phrase extractor and final delivered-audio
+verification. The semantic request text is retained unchanged in the plan and
+receipt. Number policy, word-count, signal, and packaged-audio gates remain
+enabled; up to three fresh actual calls are reserved per cue, stopping at the
+first automated PASS. Human-approved saved cuts remain identified as human
+decisions with their original machine findings intact; generated replacements
+remain `human_review=PENDING`. Historical plan/comparison versions are not
+rewritten.
+
 ## Voice Studio identity and existing owner-approved assets
 
 `SETUP.md` §7 and `docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md`

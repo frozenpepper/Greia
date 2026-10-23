@@ -84,6 +84,22 @@ services. Content scripts do not acquire a second provider architecture.
 
 ## 3. Current canonical identities
 
+### Versioned spoken-target replacement path (2026-10-23)
+
+The owner-authorized unresolved-corpus continuation uses the existing
+`NaturalCarrierPolicy` variation seam to retain semantic request text while
+providing a separately recorded locale-spelled speech target to the normal
+short-phrase extractor and packaged-audio verifier. Policy
+`automatic-natural-context-parakeet-v4-spoken-target-v1` pins
+`locale-number-tokens-v4-spoken-target-v1`; legacy and v3 plans keep their
+original comparison identities. The spelling collaborator recognizes only
+standalone digits in the existing 0–100 locale lexicon and explicit letter
+example syntax, failing closed on codes, dates, signed values and decimals.
+Target comparison preserves numeric sequence and word count and has a hard
+letter-identity guard; the owner-approved C/K/CH glyph equivalence is confined
+to the corresponding letter-example token. Exact human-review evidence for
+saved cut installs remains separate from automatic Parakeet status.
+
 `assets/audio/characters/canonical/v0.3/manifest.toml` is the active registry.
 Dani, Momo and Tito use `greia.{dani,tito,momo}.v3`; Lilli, Leo and Flash retain
 their `greia.{lilli,leo,flash}.v2` IDs and exact bytes. Every character has a

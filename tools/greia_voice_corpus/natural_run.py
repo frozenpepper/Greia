@@ -6,7 +6,7 @@ import subprocess
 from .store import RunStore, write_json
 from .runner import CorpusRunner
 from .method_budget import MethodAttemptBudget
-from .automatic_generation import NATURAL_POLICY, NATURAL_PARAKEET_FULL_POLICY
+from .automatic_generation import NATURAL_POLICY, NATURAL_PARAKEET_FULL_POLICY, NATURAL_SPOKEN_TARGET_POLICY
 from greia_voice_core.short_phrases import ShortPhrasePipeline
 from greia_voice_core.natural_carrier import NaturalCarrierPolicy
 from greia_voice_core.verification import WhisperVerifier, ParakeetVerifier
@@ -34,7 +34,7 @@ def safety_reason(terminal, entries):
 def aggregate_stop_reason(plan, terminal, entries):
     """Keep the historical v1 yield stop; honor the separate full-scope order."""
     from .automatic_generation import NATURAL_PARAKEET_FULL_POLICY
-    if plan.get('automatic_short_generation_policy') == NATURAL_PARAKEET_FULL_POLICY:
+    if plan.get('automatic_short_generation_policy') in {NATURAL_PARAKEET_FULL_POLICY, NATURAL_SPOKEN_TARGET_POLICY}:
         return None
     return safety_reason(terminal, entries)
 
@@ -163,6 +163,66 @@ def validate_full_parakeet_plan(store):
         raise ValueError('preinstall snapshot does not pin all667 pairs and every selected original')
 
 
+def validate_spoken_target_plan(store):
+    """Fail before submission unless the exact reviewed 77-row v4 freeze holds."""
+    from .automatic_generation import NATURAL_SPOKEN_TARGET_POLICY, natural_comparison_policy
+    from greia_voice_core.number_comparison import SPOKEN_TARGET_COMPARISON_POLICY
+    from greia_voice_core.spoken_target import POLICY as SPOKEN_POLICY
+    from greia_voice_core.asr_policy import DEFAULT_PARAKEET_MODEL, DEFAULT_PARAKEET_REVISION
+    from greia_voice_core.registry import VoiceRegistry
+
+    if store.plan.get('automatic_short_generation_policy') != NATURAL_SPOKEN_TARGET_POLICY:
+        return
+    meta=store.plan['natural_run']
+    if (len(store.plan['rows'])!=77 or meta.get('execution_profile')!='natural-spoken-target-parakeet-v4-77-v1'
+            or meta.get('maximum_new_attempts')!=3 or meta.get('aggregate_yield_guard') is None
+            or meta.get('recognizer_model')!=DEFAULT_PARAKEET_MODEL
+            or meta.get('recognizer_revision')!=DEFAULT_PARAKEET_REVISION
+            or meta.get('spoken_target_policy')!=SPOKEN_POLICY
+            or natural_comparison_policy(store.plan)!=SPOKEN_TARGET_COMPARISON_POLICY):
+        raise ValueError('spoken-target plan scope, recognizer, or budget differs from its registered version')
+    head=subprocess.check_output(['git','rev-parse','HEAD'],cwd=store.root,text=True).strip()
+    if head!=meta.get('producer_commit'):
+        raise ValueError('producer commit changed after spoken-target scope freeze')
+    for relative,expected in meta['producer_source_hashes'].items():
+        if digest(store.root/relative)!=expected:
+            raise ValueError('spoken-target producer source changed after scope freeze: '+relative)
+    for path_key,hash_key in (('priority_file','priority_sha256'),('remaining_file','remaining_sha256'),
+                              ('scope_audit_file','scope_audit_sha256'),
+                              ('approved_recovery_file','approved_recovery_sha256'),
+                              ('approved_review_file','approved_review_sha256')):
+        if digest(Path(meta[path_key]))!=meta[hash_key]:
+            raise ValueError('spoken-target evidence changed after scope freeze: '+path_key)
+    recovery=json.loads(Path(meta['approved_recovery_file']).read_text())
+    audit=json.loads(Path(meta['scope_audit_file']).read_text())
+    recovered_paths=sorted(item['path'] for item in recovery.get('installed',[]))
+    if (len(recovered_paths)!=13 or recovery.get('review_sha256')!=meta['approved_review_sha256']
+            or recovery.get('status')!='COMPLETE'):
+        raise ValueError('approved-target recovery evidence is incomplete')
+    if recovered_paths!=sorted(audit.get('approved_recovery_paths',[])):
+        raise ValueError('approved-target recovery paths differ from the frozen scope audit')
+    remaining=json.loads(Path(meta['remaining_file']).read_text())
+    expected=set(remaining['remaining'])
+    if len(expected)!=77 or expected!={row['path'] for row in store.plan['rows']} or set(audit.get('remaining',[]))!=expected:
+        raise ValueError('spoken-target plan rows differ from the exact 77-row remaining freeze')
+    registry=VoiceRegistry.load(store.root)
+    identities={name:{'voice_id':profile.voice_id,'anchor_sha256':profile.anchor_sha256}
+                for name,profile in sorted(registry.profiles.items())}
+    if identities!=meta.get('master_identities'):
+        raise ValueError('selected master identities changed after spoken-target freeze')
+    for row in store.plan['rows']:
+        if (row['request'].get('comparison_policy')!=SPOKEN_TARGET_COMPARISON_POLICY
+                or row['request'].get('max_attempts')!=3
+                or row.get('natural_carrier',{}).get('comparison_policy')!=SPOKEN_TARGET_COMPARISON_POLICY):
+            raise ValueError('spoken-target row comparison policy or three-call budget differs: '+row['path'])
+        _validate_original_or_installed(store,row)
+    snapshot=json.loads((store.work/'preinstall-snapshot.json').read_text())
+    if (snapshot.get('plan_sha256')!=digest(store.work/'plan.json') or len(snapshot.get('targets',{}))!=667
+            or any(snapshot['targets'].get(row['path'])!={'audio':row['original_sha256'],
+                'receipt':row['original_receipt_sha256']} for row in store.plan['rows'])):
+        raise ValueError('spoken-target preinstall snapshot does not pin all667 pairs')
+
+
 def run_natural(work):
     """Use one warm engine, durable reservations and immediate progress after each cue."""
     from greia_voice import build_engine
@@ -171,10 +231,11 @@ def run_natural(work):
         store=RunStore(work)
         try:
             policy_id=store.plan.get('automatic_short_generation_policy')
-            if policy_id not in {NATURAL_POLICY,NATURAL_PARAKEET_FULL_POLICY}:
+            if policy_id not in {NATURAL_POLICY,NATURAL_PARAKEET_FULL_POLICY,NATURAL_SPOKEN_TARGET_POLICY}:
                 raise ValueError('not a natural-method plan')
-            full_parakeet=policy_id==NATURAL_PARAKEET_FULL_POLICY
+            full_parakeet=policy_id in {NATURAL_PARAKEET_FULL_POLICY,NATURAL_SPOKEN_TARGET_POLICY}
             validate_full_parakeet_plan(store)
+            validate_spoken_target_plan(store)
             progress=json.loads((work/'progress.json').read_text())
             if progress['status'] in {'OWNER_STOPPED','METHOD_REVIEW_REQUIRED'}:
                 raise ValueError('run stopped for owner/method review; do not blindly resume')

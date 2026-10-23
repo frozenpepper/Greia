@@ -19,18 +19,21 @@ PENDING for all 1,340 replacements; the separate Takeboard batch is served on
 the fresh local port recorded below. Generation DONE and automated PASS are not
 audible/product acceptance.
 
-**Current operation (2026-10-22): STOPPED FOR REJECTION DIAGNOSIS.**
-The frozen 667 problematic short-cue task remains authorized, but do not launch
-`finish_voice_priority.py` or the historical producer unchanged. V7 target-only
-extraction is now used by normal VoiceEngine requests; the frozen corpus still
-uses v6. Use the separately versioned `recover_voice_candidates.py` adapter below to
-replay FAILED saved sources with exact provenance and unchanged cumulative
-three-take budgets, then install only completed passing candidates through
-normal recoverable transactions.
-Do not spend new synthesis attempts before the saved-source recovery gate.
-See [v7 evidence and remaining work](../reviews/2026-10-22_TARGET_ONLY_VOICE_EXTRACTION_V7.md).
-New speech/one-line API usage is documented in
-[the VoiceEngine README](../../tools/greia_voice_core/README.md).
+**Current operation (2026-10-23): owner-authorized v4 spoken-target replacement.**
+The previous v3 Parakeet run processed its exact 237-row freeze and ended with
+147 automatic packaged-audio passes and 90 preserved originals. From saved
+Takeboard 8818 approvals, 13 preserved rows were recovered using exact reviewed
+target cuts and RunStore backup/install transactions; original machine findings
+remain recorded and human approval is separately attributed. The remaining
+scope is now 77 exact unresolved rows. Its new plan uses locale-spelled
+standalone letter names where the authored target is a letter example, preserves
+the authored semantic text and all seven already-worded number cues, and uses
+versioned spoken-target comparison with unchanged number/count/signal guards.
+It allows at most three new actual calls per cue, stops on first packaged PASS,
+and keeps human listening separate. This v4 policy does not rewrite frozen v1/v3
+plans or receipts. See the current v4 entry in HANDOVER and the external
+`spoken-target-recovery-v1` artifacts. The 2026-10-22 saved-source diagnostic
+instructions below are historical for this superseded run.
 
 This is the current executable **replacement** work order within the existing
 four-language rollout. It supersedes the older add-only/no-regeneration
