@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from http.server import ThreadingHTTPServer
 from pathlib import Path
+import sys
 import threading
 from typing import Callable
 import time
@@ -267,26 +268,35 @@ def create_parent_listeners(
     port: int = 8766,
     loopback_port: int = LOCAL_PARENT_PORT,
     static_client: ParentStaticClient | None = None,
-) -> tuple[ProductionParentApiHTTPServer, ProductionParentApiHTTPServer]:
-    """Build encrypted LAN and loopback-only HTTP listeners for one Parent app.
+) -> tuple[ProductionParentApiHTTPServer | None, ProductionParentApiHTTPServer]:
+    """Create local HTTP and encrypted LAN listeners for the same Parent app.
 
-    Both listeners share the existing mutation lock. The localhost HTTP socket
-    is not a network fallback: it always binds to 127.0.0.1.
+    If a device's certificate is damaged or OpenSSL is missing, the LAN
+    listener stays closed but local S+T Parent settings must still work.
+    Never respond to network HTTP as a TLS fallback.
     """
     if port != 0 and port == loopback_port:
         raise ValueError("LAN and loopback Parent ports must be different")
-    tls = parent_tls_context(state_dir)
-    secure = ProductionParentApiHTTPServer(
-        (bind, port), app, static_client=static_client
+    local = ProductionParentApiHTTPServer(
+        ("127.0.0.1", loopback_port), app, static_client=static_client
     )
     try:
-        secure.socket = tls.wrap_socket(secure.socket, server_side=True)
-        local = ProductionParentApiHTTPServer(
-            ("127.0.0.1", loopback_port), app,
-            static_client=static_client, request_lock=secure.request_lock
+        tls = parent_tls_context(state_dir)
+    except (OSError, RuntimeError) as exc:
+        print(f"Greia Parents HTTPS unavailable; local controls remain available: {exc}", file=sys.stderr)
+        return None, local
+    try:
+        secure = ProductionParentApiHTTPServer(
+            (bind, port), app,
+            static_client=static_client, request_lock=local.request_lock
         )
+        try:
+            secure.socket = tls.wrap_socket(secure.socket, server_side=True)
+        except BaseException:
+            secure.server_close()
+            raise
     except BaseException:
-        secure.server_close()
+        local.server_close()
         raise
     return secure, local
 
@@ -311,6 +321,12 @@ def main() -> int:
     secure, local = create_parent_listeners(
         app, state_dir=Path(args.state_dir), bind=args.bind, port=args.port
     )
+    if secure is None:
+        try:
+            local.serve_forever()
+        finally:
+            local.server_close()
+        return 0
     loopback_thread = threading.Thread(
         target=local.serve_forever, name="greia-parent-loopback", daemon=True
     )
