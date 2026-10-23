@@ -40,6 +40,32 @@ class ParentTlsTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "incomplete"):
                 parent_tls_context(root)
 
+    def test_incomplete_tls_keeps_only_on_device_controls_available(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            tls_dir = root / "parent-tls"
+            tls_dir.mkdir()
+            (tls_dir / "parent.crt").write_text("broken certificate")
+            secure, local = create_parent_listeners(
+                _MetaApp(), state_dir=root, bind="127.0.0.1", port=0,
+                loopback_port=0, static_client=ParentStaticClient(root)
+            )
+            self.assertIsNone(secure)
+            self.assertEqual(local.server_address[0], "127.0.0.1")
+            thread = threading.Thread(target=local.serve_forever, daemon=True)
+            thread.start()
+            try:
+                client = http.client.HTTPConnection(
+                    "127.0.0.1", local.server_port, timeout=3
+                )
+                client.request("GET", "/api/v1/meta")
+                self.assertEqual(client.getresponse().status, 200)
+                client.close()
+            finally:
+                local.shutdown()
+                local.server_close()
+                thread.join(timeout=3)
+
     def test_https_and_loopback_http_share_real_request_handler(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -49,6 +75,8 @@ class ParentTlsTests(unittest.TestCase):
                 app, state_dir=root, bind="127.0.0.1", port=0,
                 loopback_port=0, static_client=web
             )
+            self.assertIsNotNone(secure)
+            assert secure is not None
             self.assertIs(secure.request_lock, local.request_lock)
             self.assertEqual(local.server_address[0], "127.0.0.1")
             threads = [
