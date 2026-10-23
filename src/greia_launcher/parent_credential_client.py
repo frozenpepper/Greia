@@ -31,11 +31,10 @@ import urllib.request
 from typing import Any, Protocol, runtime_checkable
 
 from greia_parent.credentials import ParentCredentialError
-from greia_parent.protocol import API_BASE
+from greia_parent.protocol import API_BASE, LOCAL_PARENT_PORT
 
-#: Loopback only. The Parent API binds 0.0.0.0 for browser pairing, but the
-#: on-device panel has no reason to leave the machine.
-DEFAULT_PARENT_API_BASE_URL = "http://127.0.0.1:8766"
+#: The on-device panel uses loopback HTTP. LAN access uses HTTPS on 8766.
+DEFAULT_PARENT_API_BASE_URL = f"http://127.0.0.1:{LOCAL_PARENT_PORT}"
 
 #: Bounded so a wedged service cannot freeze the child Shell's frame loop. The
 #: endpoint is a local PBKDF2 verify, which is deliberately slow by design.
