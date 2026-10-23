@@ -4,7 +4,7 @@ Greia Parents is where adults manage a Greia computer. Children use Greia's pict
 
 You can access parents' controls **on Greia itself** or, when supported by the installed release, **in a web browser on another device**. The core idea is local management, without a mandatory cloud account.
 
-> **Release note:** The browser Parents App still has a known network-security limitation in current development builds: it uses provisional HTTP. It must not be described as fully secured for an ordinary public family release until the encrypted, authenticated connection is implemented and tested. Use the local on-device panel where appropriate during testing, and do not put a development Greia on an untrusted network.
+> **Release note:** Current source uses HTTPS for the network Parents App. Greia automatically creates its own local certificate, so your browser will normally show a certificate warning the first time. Device and browser acceptance testing is still required before calling a public installer release-ready.
 
 ## Open Parents on the Greia computer
 
@@ -31,8 +31,8 @@ Greia also has a lightweight browser-based Parents App, developed as part of the
 
 1. Make sure Greia and your phone/laptop are connected to the **same local network**.
 2. On the Greia computer, open the on-device Parents panel with **S + T for five seconds**, sign in and look at its connection/Info information.
-3. The panel shows an address in the form `http://<GREIA-IP>:8766`. Type the **actual address displayed on your Greia** into your phone's or laptop's browser.
-4. Sign in with the **Greia Parent password** when asked. A paired browser can reconnect on later visits while its device credential remains valid.
+3. The panel shows an address in the form `https://<GREIA-IP>:8766`. Type the **actual address displayed on your Greia** into your phone's or laptop's browser.
+4. On your first visit, the browser may warn that Greia's certificate is not publicly verified. For your own Greia, on your home network, you can use your browser's **Advanced / Continue** option. Do not continue to an unfamiliar address.\n5. Sign in with the **Greia Parent password** when asked. A paired browser can reconnect on later visits while its device credential remains valid.
 
 If Greia has no working network address, the browser route cannot connect. You can still use the on-device controls. Do not expose port 8766 to the internet or forward it on your router.
 
@@ -73,6 +73,6 @@ The current design stores child profiles and progress locally and works offline 
 
 Greia defines a portable `.greiaactivity` file. Once an installed version **advertises Activity installation as available**, open **Activities** in the browser Parents App, choose **Install Activity**, select the file and follow the Greia validation/confirmation steps.
 
-**Current ordinary/release profiles do not advertise Activity installation while network transport remains provisional.** If the button is absent or unavailable, do not work around it by copying files or enabling SSH. The [Activity creation guide](../development/CREATE_AN_ACTIVITY.md) explains development-time testing and packaging.
+**Current ordinary/release profiles still do not advertise Activity installation until its separate release acceptance is complete.** If the button is absent or unavailable, do not work around it by copying files or enabling SSH. The [Activity creation guide](../development/CREATE_AN_ACTIVITY.md) explains development-time testing and packaging.
 
 If you are stuck, report your Greia version, device model and the exact screen/message, without sharing passwords.
