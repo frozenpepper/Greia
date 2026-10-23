@@ -156,17 +156,17 @@ Greia Parents itself continues to use the Parent API, never SSH.
 
 ## 11. Transport security
 
-Current HTTP is development/provisional only.
+Owner-approved home-use transport (2026-10-23): the **installed** Greia Parent server now serves HTTPS on LAN port `8766` using a device-generated, persistent self-signed certificate. Direct browsers show the expected self-signed certificate warning, which parents may acknowledge for their own Greia. The on-device Parent panel uses HTTP **only** on `127.0.0.1:8767`; failure to generate/load TLS disables network HTTPS but does not disable local Parent settings. There is no plaintext HTTP fallback on the LAN.
 
-Password bootstrap solves the product authentication workflow, but it increases the importance of transport closure: neither the Parent password nor device bearer credentials are release-safe over unauthenticated plaintext LAN traffic.
+TLS protects traffic from passive observation but a self-signed certificate is not automatically validated against a public CA. This is the explicit owner-accepted practical home-LAN tradeoff. Existing password bootstrap, per-device credentials, revocation, privilege boundaries and capability rules stay unchanged. Do not add QR/Allow challenges, cloud accounts or public PKI as an implicit requirement.
 
-Ordinary-family release requires authenticated encrypted transport plus a reviewed Greia endpoint/device-identity lifecycle. The solution must preserve the simple Parent-password bootstrap and must not reintroduce hidden filesystem tokens or shell commands as a security ceremony.
+Source implementation and packaging are committed. Exact-head automated, browser, fresh-image and physical hardware acceptance are **not yet recorded as passing**; see `docs/testing/2026-10-23_PARENT_HTTPS_ACCEPTANCE.md`.
 
 ## 12. Resource budget
 
 The Parent service runs on the C0 floor. The current architecture therefore favors:
 
-- stdlib HTTP service composition;
+- stdlib bounded HTTP + TLS server composition;
 - single-process bounded state;
 - bounded JSON requests and credential stores;
 - no database solely for authentication;
@@ -206,7 +206,7 @@ Current integrated Parent client revision:
 
 ```text
 frozenpepper/Greia-Parent-App-Html
-01301d285c6ba2a9a1f2948a9768b821d2536729
+5518a9eed8ba61503249a1c827b7ef4fef5dab36
 ```
 
 Still required before ordinary-family Parent authentication is release-complete:
