@@ -15,6 +15,7 @@ from greia_voice_core.registry import VoiceRegistry
 from greia_voice_core.locking import NullGenerationLock
 from greia_voice_core.short_phrases import ShortPhrasePipeline
 from greia_voice_corpus.automatic_generation import POLICY,request_for
+from greia_voice_core.number_comparison import COMPARISON_POLICY
 from greia_voice_corpus.runner import CorpusRunner
 from greia_voice_corpus.store import write_json
 from greia_voice_corpus.inventory import receipt_path
@@ -50,6 +51,9 @@ class AutomaticCorpusTests(unittest.TestCase):
         self.assertEqual(rec['human_review'],'PENDING')
         self.assertEqual(rec['request']['output'],self.relative)
         self.assertEqual(rec['short_phrase']['extraction']['algorithm_version'],'greia-spoken-carrier-extractor-v7')
+        self.assertEqual(rec['request']['comparison_policy'],COMPARISON_POLICY)
+        self.assertEqual(rec['short_phrase']['extraction']['comparison_policy'],COMPARISON_POLICY)
+        self.assertEqual(rec['short_phrase']['quality']['comparison_policy'],COMPARISON_POLICY)
         self.assertEqual(self.run_corpus(),0);self.assertEqual(len(self.provider.calls),1)
         self.store.restore();self.assertEqual(self.audio.read_bytes(),b'old accepted speech')
 

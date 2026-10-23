@@ -198,8 +198,10 @@ listening is required after machine PASS.
 Automatic short requests use `voice_carrier_search.extract` v7. Raw synthesis
 verification is OFF; the disposable intro is never transcribed for alignment.
 Bounded PCM quiet-run candidates are transcribed as independent target-only
-suffixes with pinned Parakeet-TDT v3. Exactly one must meet score >0.8, equal canonical unit count and an
-identical numeric-token sequence. Exact locale number spellings/digits 0–100
+suffixes with pinned Parakeet-TDT v3. New Parakeet verification and extraction
+use `locale-number-tokens-v3-chck-orthographic` for the same target decision.
+Exactly one must meet score >0.8, equal canonical unit count and an identical
+numeric-token sequence. Exact locale number spellings/digits 0–100
 compare equivalently via `number_comparison.py`; historical v6 receipts keep their
 legacy comparison. The actual delivered target then passes shared
 `TargetQualityChecker` with unchanged signal checks; changed/lossy PCM is checked
@@ -421,3 +423,29 @@ defaults or authorize frozen-corpus continuation. Listening is pending for every
 new output. Exact evidence and the 51-item Takeboard batch are recorded in the
 2026-10-23 review. This is authoring-source evidence, not child runtime/release
 acceptance.
+
+
+### 2026-10-23 — Parakeet lexical comparison version 3
+
+Owner-approved spelling normalization is scoped to new Parakeet creation paths
+under `locale-number-tokens-v3-chck-orthographic`. It recognizes localized
+cardinals and numeric identities before lexical normalization, then maps `ch`
+(longest first), `c` and `k` to `k` for comparison. This accepts exact C/K and
+CH/K substitutions without mutating request text or the recognizer transcript.
+Short extraction records the policy in each search result and receipt; the final
+delivered checker consumes that same recorded policy. Previous v2/v1 and saved
+comparison policies remain separately available for historical evidence. Existing
+hyphen/space/punctuation/case/accent normalization already treats
+`Raconte-moi` and `Raconte moi` equivalently; the recorded French failure also
+had a leading extra word and lexical substitution and therefore remains rejected.
+An unset ordinary request uses v3. Registered automatic/natural corpus plans pass
+their pinned comparison policy explicitly (currently v2), so frozen plan and
+receipt semantics remain stable when the engine default advances.
+
+Read-only replay over the ten-request saved Parakeet run retains the six existing
+final package PASS results. Two existing Italian `Trova Oscar` candidate
+observations now meet the extraction text predicate against `Trova Oskar`; those
+requests had stopped before package/final verification under v2, so they are not
+full-pipeline passes. No ASR, TTS, package creation, installation or receipt
+mutation was performed in the replay. Exact transcript strings, hashes and the
+new full-text listening batch are in `docs/reviews/2026-10-23_VOICE_CK_NORMALIZATION.md`.

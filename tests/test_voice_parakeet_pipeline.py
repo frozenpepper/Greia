@@ -13,6 +13,7 @@ from greia_voice_core.asr_policy import (
     DEFAULT_ASR_MODEL, DEFAULT_ASR_REVISION, DEFAULT_PARAKEET_MODEL,
     DEFAULT_PARAKEET_REVISION,
 )
+from greia_voice_core.number_comparison import PARAKEET_COMPARISON_POLICY
 from greia_voice_core.models import SpeechKind, VerificationDisposition, VoiceRequest
 from greia_voice_core.parakeet_asr import ParakeetTranscriber
 from greia_voice_core.verification import ParakeetVerifier, WhisperVerifier
@@ -59,6 +60,7 @@ class ParakeetContractTests(unittest.TestCase):
         transcriber = FixtureTranscriber()
         verifier = ParakeetVerifier(transcriber=transcriber)
         request = VoiceRequest("tito", SpeechKind.CHARACTER_DIALOGUE, "en", "Count to ten")
+        self.assertNotIn("comparison_policy", request.to_dict())
         with patch("greia_voice_core.review.signal_metrics", return_value=({}, [])):
             transcriber.text = "Count to nine"
             wrong_number = verifier.verify(request, Path("unused.wav"))
@@ -73,6 +75,26 @@ class ParakeetContractTests(unittest.TestCase):
             transcriber.text = "Count to ten"
             exact = verifier.verify(request, Path("unused.wav"))
             self.assertEqual(exact.disposition, VerificationDisposition.PASS)
+            self.assertEqual(exact.comparison_policy, PARAKEET_COMPARISON_POLICY)
+
+            oskar_request = VoiceRequest(
+                "tito", SpeechKind.CHARACTER_DIALOGUE, "it", "Trova Oskar"
+            )
+            transcriber.text = "Trova Oscar."
+            oskar = verifier.verify(oskar_request, Path("unused.wav"))
+            self.assertEqual(oskar.disposition, VerificationDisposition.PASS)
+            self.assertEqual(oskar.transcript, "Trova Oscar.")
+            self.assertEqual(oskar_request.text, "Trova Oskar")
+            self.assertEqual(oskar.comparison_policy, PARAKEET_COMPARISON_POLICY)
+
+            historical_request = VoiceRequest(
+                "tito", SpeechKind.CHARACTER_DIALOGUE, "it", "Trova Oskar",
+                comparison_policy="locale-number-tokens-v2",
+            )
+            historical = verifier.verify(historical_request, Path("unused.wav"))
+            self.assertEqual(historical.disposition, VerificationDisposition.WARN)
+            self.assertEqual(historical.comparison_policy, "locale-number-tokens-v2")
+            self.assertEqual(historical_request.to_dict()["comparison_policy"], "locale-number-tokens-v2")
 
 
 if __name__ == "__main__":

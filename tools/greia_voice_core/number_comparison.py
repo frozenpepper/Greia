@@ -1,11 +1,11 @@
 """Exact locale-aware number equivalence for speech verification.
 
 Current spellings cover 0..100; historical v1 retains its 0..25 inventory.
-There is no fuzzy or substring match. Separately versioned opt-in policies
-add exact English name spelling and a finite set of acoustic homophones;
-normal and historical number policies retain their original semantics.
-Callers opt in with the versioned comparison policy;
-historical extraction receipts retain their original comparisons.
+There is no fuzzy or substring match. Parakeet requests use a separately
+versioned lexical CH/C/K normalization after locale-number parsing; v2 and
+historical policies retain their original semantics. Finite English spoken-letter
+and name policies remain separately named. Extraction receipts retain their
+comparison-policy identity.
 """
 from __future__ import annotations
 from dataclasses import dataclass
@@ -16,10 +16,15 @@ from .number_lexicon import cardinal_spellings
 
 LEGACY_COMPARISON_POLICY = "locale-number-tokens-v1"
 COMPARISON_POLICY = "locale-number-tokens-v2"
+PARAKEET_COMPARISON_POLICY = "locale-number-tokens-v3-chck-orthographic"
 ORTHOGRAPHIC_COMPARISON_POLICY = "locale-number-tokens-v2-oskar-en-v1"
 ENGLISH_SPOKEN_COMPARISON_POLICY = "locale-number-tokens-v2-spoken-en-v1"
 OSKAR_LOCALE_COMPARISON_POLICY = "locale-number-tokens-v2-oskar-all-v1"
-SUPPORTED_COMPARISON_POLICIES = frozenset({OSKAR_LOCALE_COMPARISON_POLICY,LEGACY_COMPARISON_POLICY, COMPARISON_POLICY, ORTHOGRAPHIC_COMPARISON_POLICY, ENGLISH_SPOKEN_COMPARISON_POLICY})
+SUPPORTED_COMPARISON_POLICIES = frozenset({
+    OSKAR_LOCALE_COMPARISON_POLICY, LEGACY_COMPARISON_POLICY, COMPARISON_POLICY,
+    PARAKEET_COMPARISON_POLICY, ORTHOGRAPHIC_COMPARISON_POLICY,
+    ENGLISH_SPOKEN_COMPARISON_POLICY,
+})
 
 # Explicit inventories; tuple position is the value from 0 to 25.
 _NUMBER_WORDS = {
@@ -83,6 +88,8 @@ def canonical_number_tokens(locale: str, text: str, *, ignore_accents: bool = Tr
     diacritic comparison. Hyphens split lexical tokens, so listed compounds
     and unrelated hyphenated words are both represented as their word parts.
     Apostrophe forms are kept as a single token with a normalized apostrophe.
+    Only the Parakeet v3 policy folds lexical ``ch``, ``c`` and ``k`` together,
+    after localized cardinals and numeric identities have been recognized.
     """
     if not isinstance(locale, str):
         raise TypeError("locale must be str")
@@ -129,7 +136,12 @@ def canonical_number_tokens(locale: str, text: str, *, ignore_accents: bool = Tr
             # the numeric identity guard even inside a long matching sentence.
             result.append(f"<numeric-literal:{token}>")
         else:
-            result.append(token)
+            # Parakeet v3 applies the owner's approved CH/K and C/K
+            # interchangeability to lexical tokens only. Rewrite the digraph
+            # first; number spellings and numeric identities have already been
+            # resolved above and remain exact.
+            result.append(token.replace("ch", "k").replace("c", "k")
+                          if policy == PARAKEET_COMPARISON_POLICY else token)
         index += 1
     # Explicit English proper-name spelling equivalence. Never apply fuzzy
     # aliases to arbitrary names, and never reinterpret historical v1/v2 receipts.

@@ -225,12 +225,21 @@ extra/missing units, leading-zero codes, signed/decimal notation and arbitrary
 joined words are not silently treated as equivalent. Accents are ignored by
 default; `ignore_accents=False` / `--strict-accents` overrides this.
 
-Current number policy is `locale-number-tokens-v2`: canonical units retain exact
-numeric identity, but similarity scores use ordinary digit text, not internal
-`<num:...>` labels. This fixes artificial score inflation (e.g. `Client to 10`
-for `Count to ten`). The current ordinary Parakeet verifier and short-target checking use this
-comparison. Historical reports retain their stored verifier and policy identity;
-locale-explicit reassessment uses its declared version.
+Historical/general number comparison v2 remains `locale-number-tokens-v2`:
+canonical units retain exact numeric identity, but similarity scores use ordinary
+digit text, not internal `<num:...>` labels. This fixes artificial score
+inflation (e.g. `Client to 10` for `Count to ten`). New Parakeet verification,
+short-target extraction and its delivered check use the registered
+`locale-number-tokens-v3-chck-orthographic` policy. It parses locale cardinals and
+literal numeric identities first, then compares lexical `ch`, `c` and `k` as `k`
+for this version only. Expected authored text and exact ASR transcripts remain
+unchanged and are retained in receipts/evidence. Thus `Oskar`/`Oscar`, `casa`/
+`kasa`, `chico`/`kiko`, and `Raconte-moi`/`Raconte moi` compare equivalently.
+Existing v2, saved-replay and historical receipts retain their declared policy;
+this does not make extra/missing words or different numeric values equivalent.
+Ordinary requests leave the policy unset and use the current Parakeet v3 default;
+registered corpus plans explicitly pin their frozen policy (currently v2) so
+resuming them does not reinterpret prior evidence.
 Numeric digits outside the spelling range still have exact identity guards;
 leading-zero codes, signed/decimal literals are kept distinct. The supported
 spelling range is bounded: this is not an arbitrary-number or phonetic parser.

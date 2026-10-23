@@ -104,6 +104,11 @@ class AutomaticShortRoutingTests(unittest.TestCase):
                     self.assertIn('short_phrase',receipt)
                     self.assertEqual(receipt['short_phrase']['extraction']['algorithm_version'],
                                      'greia-spoken-carrier-extractor-v7')
+                    from greia_voice_core.number_comparison import PARAKEET_COMPARISON_POLICY
+                    self.assertEqual(receipt['short_phrase']['extraction']['comparison_policy'],
+                                     PARAKEET_COMPARISON_POLICY)
+                    self.assertEqual(receipt['short_phrase']['quality']['comparison_policy'],
+                                     PARAKEET_COMPARISON_POLICY)
                     self.assertTrue(all(p.name != 'raw.wav' for p, _ in self.asr_calls))
                     with wave.open(str(result.output_path)) as wav:
                         self.assertLess(wav.getnframes()/wav.getframerate(),1.5)

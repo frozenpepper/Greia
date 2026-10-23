@@ -180,6 +180,34 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-23 — Parakeet spelling comparison and saved-run listening batch
+
+Added versioned Parakeet comparison policy `locale-number-tokens-v3-chck-orthographic`.
+Localized number parsing remains first; lexical `ch`, `c`, and `k` then compare
+as `k`. Submitted speech and exact ASR transcript strings are retained verbatim.
+Hyphen/space equivalence was already present in v2. Replaying only the saved
+Parakeet transcripts preserves six prior delivered-package checks; two saved
+Italian `Trova Oscar` candidate cuts now satisfy target extraction against
+`Trova Oskar`, but lack final delivered checks and are not end-to-end passes.
+The saved French `Raconte-moi` transcript remains rejected for extra/changed
+words, not hyphen spacing.
+
+Saved-only report and unchanged 51-recording source batch:
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/parakeet-v3-pipeline-10-v1/saved-comparison-replay-v3.json`.
+The new full-text batch is served at http://127.0.0.1:8817/; it preserves prior
+review states and exposes full submitted phrase, expected retained target, and
+exact saved ASR transcript. All remain human-listening-pending. No ASR, synthesis,
+model run, package creation, install, or receipt mutation occurred. Focused
+comparison/number/locale-policy/short-routing/Parakeet tests passed 50/50.
+All voice-pattern tests passed 225/225 and the VoxStage doctor/provider tests
+passed 21/21. An initial full gate exposed a v3/v2 frozen-corpus compatibility
+regression; the normal request policy is now v3 and automatic/natural registered
+plans pin v2 explicitly. Final `make verify`: 5,827 tests, 1 failure, 3 errors,
+8 skipped (NOT GREEN). Remaining issues are the ARM64 builder-support profile
+test, two installer tests needing `lsblk` (unavailable on macOS), and an MBR
+diagnostic expectation mismatch. Log: `/tmp/greia-parakeet-ck-make-verify-final.log`.
+No architecture phase is closed.
+
 ### 2026-10-23 — Parakeet default and bounded ten-request end-to-end diagnostic
 
 Implemented pinned local Parakeet-TDT v3 as the current VoiceEngine verification

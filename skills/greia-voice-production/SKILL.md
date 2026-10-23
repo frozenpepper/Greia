@@ -649,3 +649,27 @@ prompt default. Six of ten passed automated packaged-audio checks; four were
 rejected after three quality attempts. Every new clip is still listening-pending.
 See `docs/reviews/2026-10-23_PARAKEET_VOICE_PIPELINE.md` before authoring or
 continuing the held corpus.
+
+
+## Current Parakeet comparison policy (2026-10-23)
+
+New Parakeet verification, short target extraction and the delivered-target
+check use `locale-number-tokens-v3-chck-orthographic`. It recognizes locale
+cardinals/numeric literals first, then canonicalizes lexical `ch`, `c` and `k` to
+`k` for comparison. The request's submitted phrase and Parakeet's exact transcript
+are retained unchanged. The pre-existing v2 tokenizer already treated hyphens as
+word separators, so `Raconte-moi` and `Raconte moi` match under v2 and remain
+matched under v3. Extra/missing words and changed numeric values remain guarded;
+no fuzzy spelling rules are implied. Historical receipts/saved evidence preserve
+their recorded comparison-policy IDs and are not silently re-scored.
+Ordinary requests leave the request override unset and use the current Parakeet
+default. Registered automatic/natural corpus jobs explicitly carry their frozen
+policy (currently v2) through extraction and delivered checking; do not rewrite
+registered plans to match a newer engine default.
+
+The 2026-10-23 saved replay found two existing `Trova Oscar` candidate
+transcripts eligible against the authored `Trova Oskar` target under the new
+policy. Those source requests had no packaged-final verification because the
+original v2 run stopped earlier; do not call them end-to-end passes. Review the
+separate full-text Takeboard batch and replay report in
+`docs/reviews/2026-10-23_VOICE_CK_NORMALIZATION.md`.

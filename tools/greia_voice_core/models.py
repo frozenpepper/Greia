@@ -48,6 +48,9 @@ class VoiceRequest:
     short_text_mode: str = "auto"
     short_text_max_words: int = 4
     short_text_max_alnum: int | None = None
+    # None selects the current backend default; registered plans may pin a
+    # version so their frozen comparison semantics do not drift.
+    comparison_policy: str | None = None
 
     def __post_init__(self) -> None:
         if self.short_text_mode not in {"auto", "off", "on"}:
@@ -57,6 +60,13 @@ class VoiceRequest:
         if self.short_text_max_alnum is not None and (
                 type(self.short_text_max_alnum) is not int or not 1 <= self.short_text_max_alnum <= 1000):
             raise ValueError("short_text_max_alnum must be null or an integer between 1 and 1000")
+        if self.comparison_policy is not None and (
+                not isinstance(self.comparison_policy, str) or not self.comparison_policy.strip()):
+            raise ValueError("comparison_policy must be null or a non-empty string")
+        if self.comparison_policy is not None:
+            from .number_comparison import SUPPORTED_COMPARISON_POLICIES
+            if self.comparison_policy not in SUPPORTED_COMPARISON_POLICIES:
+                raise ValueError("unsupported comparison_policy")
         if not isinstance(self.ignore_accents, bool):
             raise ValueError("ignore_accents must be a boolean")
         speaker = self.speaker.strip().lower()
@@ -83,6 +93,10 @@ class VoiceRequest:
 
     def to_dict(self) -> dict[str, Any]:
         payload = asdict(self)
+        # Keep the established request/receipt schema unless a caller explicitly
+        # pins a comparison override for a registered policy.
+        if self.comparison_policy is None:
+            payload.pop("comparison_policy")
         payload["kind"] = self.kind.value
         payload["verification"] = self.verification.value
         payload["output"] = str(self.output) if self.output is not None else None

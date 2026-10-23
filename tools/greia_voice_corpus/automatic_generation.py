@@ -35,9 +35,11 @@ def request_for(row: dict, candidate: Path, *, max_attempts: int = 1) -> VoiceRe
     """One automatic generation only; cumulative reservations live in RunStore."""
     if row.get("spoken_carrier"):
         raise ValueError("automatic corpus row must not wrap a second carrier")
-    data = {k:v for k,v in row["request"].items() if k not in {"kind","max_attempts","verification","short_text_mode","output"}}
+    data = {k:v for k,v in row["request"].items()
+            if k not in {"kind","max_attempts","verification","short_text_mode","output","comparison_policy"}}
     return VoiceRequest(**data, kind=SpeechKind(row["request"]["kind"]), output=candidate,
-                        max_attempts=max_attempts, verification=VerificationMode.REQUIRED, short_text_mode="on")
+                        max_attempts=max_attempts, verification=VerificationMode.REQUIRED, short_text_mode="on",
+                        comparison_policy=COMPARISON_POLICY)
 
 
 def generate_candidate(engine, store, row: dict) -> None:

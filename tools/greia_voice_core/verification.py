@@ -220,14 +220,15 @@ class ParakeetVerifier:
         return self.transcribe(wav_path, locale)
 
     def verify(self, request: VoiceRequest, wav_path: Path) -> VerificationResult:
-        from .number_comparison import COMPARISON_POLICY, compare_target_transcript
+        from .number_comparison import PARAKEET_COMPARISON_POLICY, compare_target_transcript
         from .review import signal_metrics
 
         observed = self.transcribe(wav_path, request.language)
         transcript = observed["text"]
+        policy = request.comparison_policy or PARAKEET_COMPARISON_POLICY
         comparison = compare_target_transcript(
             request.language, request.text, transcript,
-            ignore_accents=request.ignore_accents, policy=COMPARISON_POLICY,
+            ignore_accents=request.ignore_accents, policy=policy,
         )
         flags = comparison.flags(require_word_count=True)
         try:
@@ -245,7 +246,7 @@ class ParakeetVerifier:
             model_id=self.model_id,
             model_revision=self.model_revision,
             ignore_accents=request.ignore_accents,
-            comparison_policy=COMPARISON_POLICY,
+            comparison_policy=policy,
             flags=tuple(flags),
             metrics=metrics,
             detail=("delivered audio passed Parakeet text and signal screening; human listening remains required"

@@ -56,6 +56,10 @@ class FakeEngine:
         return GenerationResult(GenerationDisposition.REVIEW_REQUIRED, request, "voxstage-voxcpm2",
                                request.output, receipt_path(request.output), verification, 1)
 
+    def generate_disposable_carrier(self, request):
+        """Use the same deterministic fake provider path for intermediate carriers."""
+        return self.generate(request)
+
 
 class CarrierGenerationIntegrationTests(unittest.TestCase):
     def setUp(self):

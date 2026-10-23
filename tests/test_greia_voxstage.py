@@ -148,7 +148,7 @@ class SelectedMasterTests(unittest.TestCase):
             with patch("greia_voice.build_providers", return_value=(provider,)), patch.object(
                 provider, "probe", return_value=MagicMock(to_dict=lambda: {"available": available})
             ), patch("greia_voice.ChatterboxMLXProvider"), patch(
-                "greia_voice.WhisperVerifier.probe", return_value=(False, "optional unavailable")
+                "greia_voice.ParakeetVerifier.probe", return_value=(False, "optional unavailable")
             ), patch("greia_voice.AudioPipeline.ffmpeg_available", return_value=True), patch("greia_voice._print") as emit:
                 result = cmd_doctor(build_parser().parse_args(["doctor"]))
             self.assertEqual(result, 0 if available else 2)

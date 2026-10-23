@@ -3916,3 +3916,40 @@ not change production prompts, thresholds, masters, installed audio, corpus budg
 or the held bulk state. All new outputs await human listening. Per-case evidence
 and the 51-item Takeboard batch are documented in
 `docs/reviews/2026-10-23_PARAKEET_VOICE_PIPELINE.md`.
+### 2026-10-23 — Versioned Parakeet lexical normalization
+
+Added `locale-number-tokens-v3-chck-orthographic` to new Parakeet verification
+and short extraction/final checks. Localized number recognition precedes the
+owner-approved lexical `ch`/`c`/`k` normalization. Exact submitted and recognized
+strings remain available; historical v2 semantics and receipts are unchanged.
+Focused comparison/number/locale-policy/short-routing/Parakeet tests pass 50/50.
+Saved-only replay retains six existing packaged checks and makes two Italian
+Oskar/Oscar candidate cuts extraction-eligible, without final package evidence;
+French hyphen spacing was already equivalent and its saved transcript still
+fails on extra/changed words. All 51 listening rows remain unreviewed. Current
+`make verify` completes 5,827 tests with 8 failures, 8 errors and 8 skips, so it
+is NOT GREEN. Failures include broader voice integration contract mismatches,
+the MBR expectation mismatch and environment errors including unavailable
+`lsblk`; see `/tmp/greia-parakeet-ck-make-verify.log`. This is a voice-workstream
+source update only; no architecture phase is closed. Evidence and exact next
+review state are in HANDOVER and `docs/reviews/2026-10-23_VOICE_CK_NORMALIZATION.md`.
+
+### 2026-10-23 — Correction: frozen-plan comparison pin and final verification
+
+The first full-gate run after v3 became the short-route default exposed a real
+compatibility regression: registered automatic/natural plans still froze v2 but
+the short pipeline produced v3 receipts, so their validators rejected results.
+Added a validated optional per-request comparison-policy pin; normal requests
+omit it and remain v3, while those registered corpus plans explicitly use v2.
+Also updated the carrier fake to implement the disposable-carrier collaborator
+and corrected the VoxStage doctor test to mock Parakeet rather than the retired
+Whisper verifier symbol. This fixed all observed voice-pattern failures from
+that first run without changing frozen plans or receipts.
+
+Final-source verification: all 225 `test_voice*.py` tests and 21 VoxStage tests
+PASS. Final `make verify` ran 5,827 tests: 1 failure, 3 errors, 8 skipped; NOT
+GREEN. The remaining issues are one ARM64 builder-support profile error, two
+installer errors because `lsblk` is absent on macOS, and one MBR diagnostic
+expectation mismatch. Log: `/tmp/greia-parakeet-ck-make-verify-final.log`. No
+architecture phase is closed; this voice change is scoped to the authored
+verification path and registered-policy compatibility.

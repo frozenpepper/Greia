@@ -15,6 +15,7 @@ from .short_policy import ShortPhrasePolicy, COMPOSITION_POLICY
 from .short_delivery import prepare_delivery
 from .target_quality import TargetQualityChecker
 from .verification import ParakeetVerifier
+from .number_comparison import PARAKEET_COMPARISON_POLICY, SUPPORTED_COMPARISON_POLICIES
 
 
 def save_evidence(path: Path, value: dict) -> None:
@@ -51,6 +52,9 @@ class ShortPhrasePipeline:
         """Return only a safe final target, retaining failed/uncertain attempts."""
         from voice_carrier import ExtractionRejected, spoken_words
         from voice_carrier_search import extract
+        comparison_policy = request.comparison_policy or PARAKEET_COMPARISON_POLICY
+        if comparison_policy not in SUPPORTED_COMPARISON_POLICIES:
+            raise ValueError("unsupported short-phrase comparison policy")
         prefix, composite, delivery = self.policy.composite(request, character_delivery()[profile.character])
         available, detail = self.readiness()
         if not available:
@@ -102,7 +106,8 @@ class ShortPhrasePipeline:
                         extracted = attempt / "target.wav"
                         extraction = extract(raw, extracted, locale=request.locale, prefix=prefix, target=request.text,
                                              remove_first_words=len(spoken_words(prefix)), source_receipt_path=raw_receipt,
-                                             target_verification="warn", ignore_accents=request.ignore_accents, **kwargs)
+                                             target_verification="warn", ignore_accents=request.ignore_accents,
+                                             comparison_policy=comparison_policy, **kwargs)
                         candidate = attempt / ("candidate" + output.suffix.lower())
                         delivery_wav = attempt / "delivery-target.wav"
                         extraction["delivery"] = prepare_delivery(extracted, delivery_wav, extraction)
