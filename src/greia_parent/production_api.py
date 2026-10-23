@@ -1,14 +1,16 @@
 from __future__ import annotations
 
 from http.server import ThreadingHTTPServer
+from pathlib import Path
 import threading
 from typing import Callable
 import time
 from urllib.parse import urlparse
 
 from greia_parent.credentials import ParentCredentialError
+from greia_parent.parent_tls import parent_tls_context
 from greia_parent.password_auth import ParentPasswordAttemptLimiter
-from greia_parent.protocol import API_BASE
+from greia_parent.protocol import API_BASE, LOCAL_PARENT_PORT
 from greia_parent.server import parse_args
 from greia_parent.static_client import ParentStaticClient
 from greia_parent.update_api import (
@@ -229,10 +231,11 @@ class ProductionParentApiHTTPServer(ThreadingHTTPServer):
         app: ProductionParentApiApplication,
         *,
         static_client: ParentStaticClient | None = None,
+        request_lock: threading.RLock | None = None,
     ) -> None:
         self.app = app
         self.static_client = static_client or ParentStaticClient.from_environment()
-        self.request_lock = threading.RLock()
+        self.request_lock = request_lock if request_lock is not None else threading.RLock()
         self._request_slots = threading.BoundedSemaphore(self.max_concurrent_requests)
         ThreadingHTTPServer.__init__(self, address, ProductionParentApiRequestHandler)
 
@@ -268,7 +271,31 @@ def main() -> int:
         app.registry.discover(fail_closed=False)
     except Exception:  # discovery problems are reported by the real requests
         pass
-    ProductionParentApiHTTPServer((args.bind, args.port), app).serve_forever()
+    # Remote Parents is HTTPS. Existing on-device controls use HTTP, but
+    # only on 127.0.0.1 and on a different port.
+    if args.port == LOCAL_PARENT_PORT:
+        raise ValueError("LAN and loopback Parent ports must be different")
+    tls = parent_tls_context(Path(args.state_dir))
+    secure = ProductionParentApiHTTPServer((args.bind, args.port), app)
+    try:
+        secure.socket = tls.wrap_socket(secure.socket, server_side=True)
+        local = ProductionParentApiHTTPServer(
+            ("127.0.0.1", LOCAL_PARENT_PORT), app, request_lock=secure.request_lock
+        )
+    except BaseException:
+        secure.server_close()
+        raise
+    loopback_thread = threading.Thread(
+        target=local.serve_forever, name="greia-parent-loopback", daemon=True
+    )
+    try:
+        loopback_thread.start()
+        secure.serve_forever()
+    finally:
+        local.shutdown()
+        local.server_close()
+        secure.server_close()
+        loopback_thread.join(timeout=5)
     return 0
 
 
