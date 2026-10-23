@@ -4,6 +4,7 @@ debian-security-support
 e2fsprogs
 kbd
 libpam-systemd
+openssl
 systemd-sysv
 udev
 util-linux
