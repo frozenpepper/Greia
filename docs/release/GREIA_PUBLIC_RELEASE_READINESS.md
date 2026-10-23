@@ -123,7 +123,7 @@ Important ordinary-user release gaps visible in the current authoritative reposi
 1. **R7 remains open.** Production still uses the provisional Xorg/Xinit compatibility path while the final direct display/session/input architecture and its evidence are unresolved.
 2. **The normal legacy-x86 profile is still `certification_state = "unverified"`.** It also uses the current `bios-single-ext4` layout and `display.adapter = "xorg"`.
 3. **Raspberry Pi 400/500 remain first-class required ARM targets but R8/final ARM certification is not closed.**
-4. **Production Greia Parents pairing/transport is not complete.** Current LAN HTTP/bootstrap behavior is explicitly provisional; release requires short-lived pairing challenges, Greia-local Allow/Deny and authenticated encrypted transport.
+4. **Greia Parents HTTPS is implemented in source but not yet physically accepted.** Owner-selected home-LAN HTTPS with self-signed certificate replaces provisional plaintext access. Normal Parent-password pairing remains; QR/Allow/Deny is not required.
 5. **System update activation is not release-capable on current single-root images.** Unsigned v3 bundle construction/inbox work exists, but A/B payload/layout, inactive-slot activation, boot-health confirmation and rollback are not available on the current profile.
 6. **Portable `.greiabackup` release closure is still required.** A normal family needs a supported way to preserve and restore child data before Greia can ask them to trust upgrades/reinstalls.
 7. **`.greiaactivity` initial installation exists, but full update/migration/rollback/provenance lifecycle remains R10 work.**
@@ -337,46 +337,32 @@ Run the complete install from freshly created media on every certified hardware 
 
 **Blocking for ordinary-family release: YES**
 
-Current provisional HTTP/bootstrap behavior must not become the release security model.
+Network Parents uses HTTPS on port 8766 with a persistent device-generated self-signed certificate. The browser may display its normal trust warning; a parent accepts it only when visiting their own Greia on the home LAN. Local Parent controls use loopback-only HTTP on 127.0.0.1:8767. This is the owner-approved simple transport; do not add required cloud PKI, QR/challenge/Allow rituals, or companion software.
 
-## Required pairing flow
+## Required working flow
 
-Implement and prove the accepted product flow:
+1. Parent opens the device-displayed HTTPS URL from the home network.
+2. Parent acknowledges the browser's self-signed certificate warning for their own Greia if shown.
+3. Parent signs in with the existing Greia Parent password.
+4. Greia issues a separate revocable device credential and subsequent requests stay on HTTPS.
+5. Reconnect and independent device revocation continue to work.
+6. No secrets are exposed through network discovery or ordinary logs.
+7. Direct HTTP on the LAN refuses management and no insecure redirect/fallback exists.
 
-1. parent asks to pair;
-2. Greia creates a short-lived challenge;
-3. Greia displays QR + bounded fallback code locally;
-4. requesting device identity is shown on Greia;
-5. a human physically chooses Allow/Deny on Greia;
-6. each approved client receives its own revocable credential;
-7. later connections use authenticated encrypted transport;
-8. revoking one device does not revoke unrelated paired clients;
-9. no credential/secret appears in mDNS advertisements or ordinary logs.
+## Required verification
 
-## Required security review
+- HTTPS with self-signed certificate after first boot; key never preinstalled in a shared image;
+- persistent key and certificate after normal service restart and OS update;
+- browser on real phone/laptop, including first-visit certificate warning;
+- local S+T Parent panel works using loopback-only HTTP, including password changes;
+- a wrong device, expired/invalid credential and revoked client do not gain management access;
+- the existing credential rate limiting, request bounds and unprivileged service boundary remain intact;
+- proper stop/failure if certificate generation cannot run or the key is damaged;
+- known tradeoff: self-signed HTTPS does not automatically authenticate a device against an active LAN impersonator.
 
-Review at least:
+## Initial Parent password
 
-- transport authentication and encryption;
-- certificate/device identity bootstrap;
-- challenge expiry and replay resistance;
-- credential storage on both Greia and browser/client side;
-- CSRF/origin behavior where applicable;
-- brute-force/rate limiting for human credentials;
-- malformed/oversized requests;
-- credential revocation;
-- lost-parent-device recovery;
-- main Parent-password recovery/change behavior;
-- LAN attacker model;
-- no generic shell/root RPC;
-- unprivileged HTTP service boundary;
-- privileged operations only through typed Greia services.
-
-## Default Parent password decision
-
-The current accepted project policy uses `greia` / `greia` as the initial main Parent/admin credential. Before release, perform a dedicated threat-model review of that decision against the final production transport and local-approval model.
-
-Do **not** silently change an accepted product policy in release engineering. Instead, explicitly verify that the final architecture prevents the default credential from becoming remote privileged access without the intended local authorization, or amend the product decision through the proper architecture/product process if that cannot be made safe.
+The owner-approved initial password remains `greia`. Parents can change it through the existing controls. Review the final user-facing instructions and local network exposure; do not silently create a second credential or force a new pairing ceremony.
 
 ## Product UX
 
@@ -1194,7 +1180,7 @@ Do **not** call Greia ordinary-family public-release ready while any of these is
 - the shipping build profile is `unverified`/experimental;
 - developer remote access or development credentials are enabled by default in the release image;
 - the supported child path exposes Linux text, desktop, terminal or login UI during normal/recoverable operation;
-- Greia Parents still depends on provisional plaintext production pairing/credential transport;
+- the production Parents HTTPS transport and local fallback are not validated on the final release candidate;
 - system updates can mutate the active system without proven rollback;
 - the normal supported update path cannot recover automatically from a bad candidate;
 - no supported logical backup/restore exists for child data;
@@ -1276,14 +1262,14 @@ Example:
 | Architecture / R14 | active plan + final review | NOT READY | R7+ open |
 | Release profile | exact profile/image report | NOT READY | current legacy profile unverified/single-root/Xorg |
 | Installer/first boot | physical acceptance | NOT READY | final release profile/evidence pending |
-| Greia Parents production pairing | security + physical integration | NOT READY | provisional transport |
+| Greia Parents production pairing | HTTPS + browser/physical integration | NOT READY | source implemented; real-device/release acceptance pending |
 | OS update/rollback | R13B evidence | NOT READY | A/B activation/health/rollback absent |
 | Backup/restore | R11 evidence | NOT READY | release closure pending |
 | Activity package lifecycle | R10 evidence | PARTIAL | new install exists; update/rollback incomplete |
 | Built-in Activities | per-Activity RC matrix | NOT READY | final RC acceptance pending |
 | Hardware | R14 matrix | NOT READY | release profile unverified; ARM open |
 | Performance | RC measurements | NOT READY | final artifact pending |
-| Security | release threat model/gates | NOT READY | production transport/update work open |
+| Security | release threat model/gates | NOT READY | Parents HTTPS hardware acceptance and update safety pending |
 | Licensing/provenance | governance audit | NOT READY | mechanically pending |
 | Localization | coverage matrix | PARTIAL | selection > proven translation coverage |
 | Parent/user docs | public docs review | NOT READY | not yet release surface |
