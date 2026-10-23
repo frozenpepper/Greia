@@ -46,13 +46,13 @@ Post-R1 product-composition closure is blocking: source composition primitives (
 
 Do not automatically run an old R7 closure procedure merely because it remains under `docs/testing/`. Use `HANDOVER.md` and the active plan to choose the exact gate for the work being accepted.
 
-The single execution authority for the open Parent authentication/runtime tranche is:
+For the owner-approved simple Parents HTTPS implementation, use the current focused acceptance procedure:
 
 ```text
-docs/testing/2026-09-08_PARENT_UNIFIED_AUTH_RUNTIME_ACCEPTANCE.md
+docs/testing/2026-10-23_PARENT_HTTPS_ACCEPTANCE.md
 ```
 
-It replaced the earlier Parent password and Parent real-runtime procedures, which were removed in the 2026-10-16 cleanup (see git history).
+The older `docs/testing/2026-09-08_PARENT_UNIFIED_AUTH_RUNTIME_ACCEPTANCE.md` retains the September baseline for the existing password/per-device authentication behavior; its frozen client revision and provisional HTTP instructions must **not** be used as the current HTTPS acceptance authority.
 
 Other subsystem procedures remain active when their owning workstream is being closed, including:
 
