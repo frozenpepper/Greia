@@ -39,7 +39,9 @@ Compare the Parent HEAD SHA to the revision declared in Greia's runtime TOML/man
 
 ## Device smoke test — only with separate owner authorization for deployment
 
-Do not flash a USB, reinstall, or update the Acer simply for this procedure. If the device is already running the exact new Greia source or owner explicitly authorizes using the existing documented `tools/dev_source_deploy.py` process, record the deployed SHA and test:
+**Deployment compatibility warning:** Do **not** use `tools/dev_source_deploy.py` alone to test this HTTPS change on an older installed image. Its current archive/deploy contract does not update `/usr/share/greia-parent-app/`, while the new source updates the pinned Parent revision and integrity manifest. The installed `greia-parent.service` would then fail its mandatory `ExecStartPre` integrity verification. Do not bypass this by manually copying browser files or disabling integrity checks. Test physically only on a newly composed exact-head image, or a separately reviewed/authorized deployment procedure proven to update the complete browser runtime and source in one coherent operation. Do not flash, reinstall, update, or reboot the Acer without explicit owner authorization. If such an image/deployment is not already available, stop at the source tests and report this hardware-test blocker.
+
+If the complete new version is already installed or an independently authorized complete-image test is performed, record its exact image/source SHA and check:
 
 1. `systemctl is-active greia-parent`; show recent `journalctl -u greia-parent` logs **without passwords/credentials**. Confirm no startup failure from OpenSSL/certificate state.
 2. `ss -lnt` must show LAN HTTPS listener on port 8766 and **only** 127.0.0.1:8767 for local HTTP; neither `0.0.0.0:8767` nor a plaintext LAN API is allowed.
