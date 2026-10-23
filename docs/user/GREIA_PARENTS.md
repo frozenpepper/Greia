@@ -32,7 +32,8 @@ Greia also has a lightweight browser-based Parents App, developed as part of the
 1. Make sure Greia and your phone/laptop are connected to the **same local network**.
 2. On the Greia computer, open the on-device Parents panel with **S + T for five seconds**, sign in and look at its connection/Info information.
 3. The panel shows an address in the form `https://<GREIA-IP>:8766`. Type the **actual address displayed on your Greia** into your phone's or laptop's browser.
-4. On your first visit, the browser may warn that Greia's certificate is not publicly verified. For your own Greia, on your home network, you can use your browser's **Advanced / Continue** option. Do not continue to an unfamiliar address.\n5. Sign in with the **Greia Parent password** when asked. A paired browser can reconnect on later visits while its device credential remains valid.
+4. On your first visit, the browser may warn that Greia's certificate is not publicly verified. For your own Greia, on your home network, you can use your browser's **Advanced / Continue** option. Do not continue to an unfamiliar address.
+5. Sign in with the **Greia Parent password** when asked. A paired browser can reconnect on later visits while its device credential remains valid.
 
 If Greia has no working network address, the browser route cannot connect. You can still use the on-device controls. Do not expose port 8766 to the internet or forward it on your router.
 
