@@ -162,7 +162,7 @@ Positive:
 
 Costs and remaining work:
 
-- password bootstrap now makes authenticated encrypted transport an especially explicit release requirement;
+- the pragmatic home-LAN HTTPS transport is an owner-approved convenience/security tradeoff;
 - API compatibility and device-credential lifecycle remain maintained product contracts;
 - long operations and privileged management still require their planned typed service boundaries;
 - physical multi-device/revocation testing remains necessary in image acceptance.
@@ -209,7 +209,7 @@ Before this authentication migration is described as source-verified at an exact
 
 Before ordinary-family production Parent authentication is accepted:
 
-- authenticated encrypted transport and endpoint identity are implemented and reviewed;
+- installed LAN endpoint uses HTTPS and localhost-only HTTP; certificate persists across updates; browsers can connect after handling the self-signed warning;
 - browser/device reconnect and independent revocation are proven on real hardware;
 - password-change → new bootstrap behavior is proven;
 - image install/upgrade removes obsolete token helper/state;
