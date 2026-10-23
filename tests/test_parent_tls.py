@@ -10,7 +10,7 @@ import unittest
 from pathlib import Path
 
 from greia_parent.parent_tls import parent_tls_context
-from greia_parent.production_api import ProductionParentApiHTTPServer
+from greia_parent.production_api import create_parent_listeners
 from greia_parent.static_client import ParentStaticClient
 
 
@@ -43,14 +43,14 @@ class ParentTlsTests(unittest.TestCase):
     def test_https_and_loopback_http_share_real_request_handler(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            context = parent_tls_context(root)
             app = _MetaApp()
             web = ParentStaticClient(root)
-            secure = ProductionParentApiHTTPServer(("127.0.0.1", 0), app, static_client=web)
-            local = ProductionParentApiHTTPServer(
-                ("127.0.0.1", 0), app, static_client=web, request_lock=secure.request_lock
+            secure, local = create_parent_listeners(
+                app, state_dir=root, bind="127.0.0.1", port=0,
+                loopback_port=0, static_client=web
             )
-            secure.socket = context.wrap_socket(secure.socket, server_side=True)
+            self.assertIs(secure.request_lock, local.request_lock)
+            self.assertEqual(local.server_address[0], "127.0.0.1")
             threads = [
                 threading.Thread(target=server.serve_forever, daemon=True)
                 for server in (secure, local)
