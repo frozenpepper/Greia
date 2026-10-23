@@ -1,6 +1,49 @@
 # Greia remaining recordings — natural-method completion
 
-## Current engine diagnostic — Parakeet v3, corpus still held (2026-10-23)
+## Current owner-authorized run — exact 237-row Parakeet replacement (2026-10-23)
+
+The owner explicitly authorized a new, separately versioned replacement allowance
+for every row in the latest frozen `natural-completion-audit-v5/remaining.json`:
+237 total (44 letter cues, 193 ordinary; EN15/ES45/FR114/IT63). Do not apply
+the earlier 7/25 saved-screen yield stop to this new order, and do not resume or
+rewrite any held v1 plan. The completed external run is
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/`;
+the exact plan SHA, PID, progress/log and latest state are in `HANDOVER.md`.
+
+The plan pins local Parakeet-TDT v3 revision
+`ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15`, comparison
+`locale-number-tokens-v3-chck-orthographic`, the selected masters and all 667
+pre-install audio/receipt pairs. It uses the existing natural-carrier phrase and
+delivery recipe, normal VoiceEngine/CorpusRunner transactions, and at most three
+new actual provider calls for each exact remaining row. Old attempt totals stay
+in history and do not consume or reset the new authorization. Known per-cue
+quality failures may use the remaining new attempts; provider, recognizer or
+installation uncertainty stops for exact recovery without resubmitting. Passing
+replacements retain external originals/backups and `human_review=PENDING`.
+The earlier ten-cue Parakeet diagnostic is hash-pinned but not counted as corpus
+output. The run finished `BOUNDED_COMPLETE`: 147 installed/Parakeet-PASS,
+90 originals preserved after quality exhaustion, 0 remaining or blocked, and
+498 new calls (86/41/110 cues used 1/2/3 calls). The terminal audit verifies
+all 667 snapshot pairs: 147 replacement transactions with exact backups, 90
+unchanged originals, and 430 unchanged out-of-scope pairs. Provider job IDs,
+idempotency keys, selected-master identities and receipt hashes are recorded in
+the external audit.
+
+The unreviewed Takeboard batch is
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/takeboard-listening.json`,
+served at `http://127.0.0.1:8818/`. It includes 498 raw carriers, 583
+materialized target cuts, 13 retained failed package candidates and 147
+installed finals. Twenty search geometries were explicitly discarded before
+audio materialization by voiced/energy preconditions; no candidate file is
+unexplained. Human listening remains required for acceptance.
+
+Producer implementation commits are `772df9cb7` and `14a93e74c`. The complete
+voice-pattern suite passed 231/231 on the final producer source before launch.
+The full repository gate was executed after the run; see
+`docs/reviews/2026-10-23_FULL_PARAKET_VOICE_CORPUS_REPLACEMENT.md` for the exact
+result and remaining limitations.
+
+## Historical ten-cue diagnostic — Parakeet v3 (2026-10-23)
 
 The engine verification backend for new requests is now cached local multilingual
 Parakeet-TDT v3 (`mlx-community/parakeet-tdt-0.6b-v3`, revision
@@ -16,12 +59,12 @@ packages as an unreviewed batch at `http://127.0.0.1:8816/`.
 Evidence and per-case results: `docs/reviews/2026-10-23_PARAKEET_VOICE_PIPELINE.md`
 and external directory
 `/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/parakeet-v3-pipeline-10-v1/`.
-The prior saved/context natural-corpus pipeline is still held (combined frozen-667
+At this diagnostic's time, the prior saved/context natural-corpus pipeline was held (combined frozen-667
 audit: 10 changed/657 unchanged, 430 kept/installed, 237 remaining). The ten-cue
-result does not authorize bulk restart. The next action is human listening to the
-Takeboard batch; no new ASR/model/synthesis is scheduled by this continuation.
+result did not itself authorize bulk restart. The later explicit 237-row owner
+order above is separate authority; its outputs still need human listening.
 
-## Corpus state — ten installed, 237 remaining (2026-10-23)
+## Historical corpus state before the authorized replacement (2026-10-23)
 
 Read `docs/reviews/2026-10-22_SAVED_CONTEXT_CORPUS_ADAPTER.md` for the full
 saved-source recovery evidence. The newer engine diagnostic is above; it is a
@@ -35,11 +78,11 @@ full provenance checks, and normal recoverable transactions are recorded in
 or recognizer calls and no budget/threshold changes; both takes remain
 `human_review=PENDING`.
 
-The combined frozen-667 audit now has 10 changed/657 unchanged, 430 kept or
+At that audit boundary the frozen-667 scope had 10 changed/657 unchanged, 430 kept or
 installed, and 237 remaining: 44 letters, 193 ordinary, 0 exhausted. Takeboard
 is `http://127.0.0.1:8814/` with ten pending clips. The C-as-Cat source belongs
 to already-resolved `alfabeto_leo.letter_C.en`; never reuse it for
-`foresta_parole.find_c` by text alone. Both bulk producers remain held. The
+`foresta_parole.find_c` by text alone. The previous bulk producers were held. The
 current saved-evidence yield screen is 7/25 for corpus parent/child cases
 (28%), not sufficient to restart bulk work.
 

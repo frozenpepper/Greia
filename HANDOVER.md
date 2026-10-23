@@ -180,6 +180,59 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-23 — Owner-authorized full Parakeet replacement completed
+
+The owner explicitly superseded the previous bulk holds and authorized a fresh
+replacement allowance for the exact **237** rows in the latest audit (44 letter,
+193 ordinary; EN15/ES45/FR114/IT63). The new plan is external at
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/`.
+Its frozen plan SHA-256 is `dd8210515c006a974a3ce49771a13f84a2e98c6736f0edc7b1336c5c81b51bf4`,
+and it pins remaining-file SHA `29f125e16c6da5932a7f1fc8b3888f75ac2994f679c56a1405c72bb6a1753879`,
+audit SHA `35a6f1faf82fb5ceb0c024321f63a3c0d340e75c3d61a219b3677a715b7ec618`,
+all 667 pre-install audio/receipt pairs, selected masters, and the Parakeet v3
+revision. Comparison policy is `locale-number-tokens-v3-chck-orthographic`.
+Each cue can reserve at most three **new actual provider calls**; prior attempt
+counts (157 cues at two, 80 at three) are retained and are not this new allowance.
+Each cue stopped on its first automated pass or after at most three known
+quality-failing calls. Provider, recognizer, and installation uncertainty was
+reconciled by exact job/key and never blindly resubmitted. Each installed
+replacement used the normal VoiceEngine/CorpusRunner transaction and retains its
+exact original pair in the external backup.
+
+The separate ten-request diagnostic is hash-pinned as prior evidence but is not
+counted as corpus output. Source commits `772df9cb7` and `14a93e74c` add the
+versioned full-scope policy, scope-preserving selection and journal-aware resume.
+The 231-test voice-pattern suite passed on the exact producer source before
+launch. Terminal journal: **147 `DONE`, 90 `PRESERVED`, 0 remaining, 0 blocked**;
+498 new actual calls (86 cues used one, 41 used two, 110 used three). Every
+`DONE` pair has a Parakeet v3 packaged-audio PASS and exact original backup;
+every `PRESERVED` pair still matches its original audio and receipt. The
+external `terminal-audit.json` confirms all 667 frozen pairs: 147 replacements,
+90 preserved, 430 out-of-scope pairs unchanged. All 237 rows were separately
+processed under new allowance; earlier attempt history and held plans were not
+reset. No human acceptance is inferred.
+
+The Takeboard batch passes validation at
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-23-natural-parakeet-full-237-v1/takeboard-listening.json`
+and is served at `http://127.0.0.1:8818/`. It has 1,241 records: all 498 raw
+carriers, all 583 materialized target cuts, 13 retained failed package
+candidates, and the 147 installed finals. Twenty recorded cut geometries were
+not materialized because the extractor recorded explicit energy/voicing
+precondition failures; there are no unexplained missing cut files. Expected
+target, full submitted carrier phrase, exact cut ASR when present, and explicit
+“not run” raw intro ASR are separated. Every human state is unreviewed.
+
+The producer PID `69415` exited normally with `BOUNDED_COMPLETE`. Exact plan,
+scope, model, comparison-policy and producer hashes remain pinned in the external
+run. The next action is owner listening in Takeboard; source-screening PASS is
+not listening acceptance. Post-run `make verify` ran 5,833 tests and was NOT
+GREEN (1 failure, 3 errors, 8 skipped): unsupported ARM64 builder adapter, two
+macOS installer tests requiring absent `lsblk`, and one MBR diagnostic
+expectation mismatch. No full-suite baseline comparison was run, so these are
+reported as observed, not asserted pre-existing. Exact details and log path are
+in `docs/reviews/2026-10-23_FULL_PARAKET_VOICE_CORPUS_REPLACEMENT.md` and
+`/tmp/greia-parakeet-full237-make-verify.log`.
+
 ### 2026-10-23 — Parakeet spelling comparison and saved-run listening batch
 
 Added versioned Parakeet comparison policy `locale-number-tokens-v3-chck-orthographic`.

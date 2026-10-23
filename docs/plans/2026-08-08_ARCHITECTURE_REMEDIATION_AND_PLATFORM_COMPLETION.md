@@ -3953,3 +3953,43 @@ installer errors because `lsblk` is absent on macOS, and one MBR diagnostic
 expectation mismatch. Log: `/tmp/greia-parakeet-ck-make-verify-final.log`. No
 architecture phase is closed; this voice change is scoped to the authored
 verification path and registered-policy compatibility.
+
+### 2026-10-23 — Owner-authorized full Parakeet corpus replacement in progress
+
+Added a separately versioned exact-scope producer for the owner's explicit order
+to replace all 237 rows of the current remaining audit. It retains historical
+per-cue attempts, grants up to three fresh actual provider calls per selected
+cue, pins Parakeet-TDT v3 and the v3 CH/C/K comparison policy, and keeps each
+original/replacement in the existing journaled backup/install transaction. Full
+plan preflight pins all 667 source pairs and keeps the prior ten-request
+diagnostic outside corpus output. The source now validates completed rows by
+their transaction, installed package and backup on resume, and shares one
+Parakeet verifier instance between cut and final-package checks.
+
+Source commits `772df9cb7` and `14a93e74c` are pushed. Focused natural-run tests
+pass 16/16; full `test_voice*.py` passes 231/231. Local `make verify` has not been
+rerun for this operation. The exact 237-row production is currently running at
+the path and PID in HANDOVER; no implementation phase is closed. Final audit,
+listening evidence and the full repository gate remain due after the run.
+
+### 2026-10-23 — Full Parakeet replacement terminal audit (correction)
+
+Correction to the in-progress status above: the owner-authorized external run
+finished `BOUNDED_COMPLETE` on its exact 237-row freeze. The terminal journal is
+147 `DONE`, 90 `PRESERVED`, 0 remaining, 0 blocked after 498 new provider calls
+(86 cues used one, 41 used two, 110 used three). Each installed replacement
+retains its exact original pair in the transaction backup and passes pinned
+Parakeet v3 packaged-audio verification. The other 90 originals remain
+byte-identical and human-review-pending; no new recording is owner-accepted.
+The terminal audit verifies all 667 frozen pairs: 147 replacement pairs, 90
+preserved originals, and 430 unchanged out-of-scope pairs. The separate 1,241-
+record unreviewed Takeboard batch is served at `http://127.0.0.1:8818/`; exact
+batch/audit/provenance locations are in HANDOVER and
+`docs/reviews/2026-10-23_FULL_PARAKET_VOICE_CORPUS_REPLACEMENT.md`.
+
+Post-run `make verify` ran 5,833 tests and is NOT GREEN: one MBR assertion
+failure, two installer `lsblk` errors on macOS, one ARM64 build-profile error,
+and eight skipped tests. No full-suite baseline comparison was run; these are
+recorded only as this execution's observed failures. Log:
+`/tmp/greia-parakeet-full237-make-verify.log`. No architecture completion
+phase is closed by this voice work.

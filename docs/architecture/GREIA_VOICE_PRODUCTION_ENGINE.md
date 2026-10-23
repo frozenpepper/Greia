@@ -449,3 +449,23 @@ requests had stopped before package/final verification under v2, so they are not
 full-pipeline passes. No ASR, TTS, package creation, installation or receipt
 mutation was performed in the replay. Exact transcript strings, hashes and the
 new full-text listening batch are in `docs/reviews/2026-10-23_VOICE_CK_NORMALIZATION.md`.
+
+### 2026-10-23 — Owner-authorized versioned full-corpus execution
+
+The owner subsequently authorized a separate fresh allowance for the exact 237
+currently remaining priority cues. The new `automatic-natural-context-parakeet-v3-full237-v1`
+plan preserves the earlier held Whisper/context plans and cumulative history,
+pins Parakeet v3 plus `locale-number-tokens-v3-chck-orthographic`, reserves at
+most three new actual provider calls per cue, and retains the natural carrier
+recipe. One VoiceEngine verifier instance is shared by target extraction and
+delivered-package verification. Completed rows resume only when their journal,
+installed candidate/receipt and original backups agree; untouched rows must still
+match the frozen pre-install pair. The active plan, full 667-pair snapshot and
+progress path are recorded in HANDOVER and the current natural completion work
+order. This run completed all 237 frozen rows: 147 replacements passed delivered
+Parakeet verification and were installed with exact backups; 90 exhausted their
+three-call quality allowance and retain their originals. There are no remaining
+or blocked rows. The independent terminal audit confirms 430 other frozen pairs
+are unchanged and every new receipt remains human-listening-pending. Neither
+automated PASS nor a listening page implies owner acceptance or child-device/
+release behavior.

@@ -18,10 +18,19 @@ not relabeled. Machine PASS remains `human_review=PENDING`.
 
 ## Choose the right workflow
 
-The frozen667 problematic-recording continuation currently holds its historical
-bulk producers for method review. For that scope, follow HANDOVER and
-`docs/agents/GREIA_NATURAL_VOICE_COMPLETION.md`; use the explicit recorded-only
-saved recovery below, not an unchanged historical bulk command.
+**Current owner-authorized corpus replacement (2026-10-23):** one separately
+versioned Parakeet-TDT v3 run processed the exact 237 rows in
+`natural-completion-audit-v5/remaining.json`, with up to three new actual
+provider calls per cue and historical attempt totals retained separately. It
+uses `locale-number-tokens-v3-chck-orthographic`, the existing natural carrier,
+and normal recoverable VoiceEngine/CorpusRunner installation. It completed
+147 installed Parakeet-PASS pairs and preserved 90 originals after quality
+exhaustion, with no remaining or blocked rows. The external terminal audit
+verifies all 667 frozen pairs; 430 out-of-scope pairs remain unchanged. The
+unreviewed 1,241-entry Takeboard batch is served at `http://127.0.0.1:8818/`.
+The exact plan, audit, scope hashes and producer evidence are linked in HANDOVER
+and `docs/agents/GREIA_NATURAL_VOICE_COMPLETION.md`. Every new receipt remains
+listening-pending; do not equate automatic PASS with acceptance.
 
 | Need | Entry point | Implemented behavior |
 |---|---|---|
@@ -464,7 +473,7 @@ and HANDOVER; do not restart a held parent or duplicate its child. Existing
 quality/poor-yield guards and humanPENDING state remain binding.
 
 
-Current voice continuation correction2026-10-22: BOTH natural producers are held
+Historical voice continuation correction (2026-10-22): BOTH natural producers were held
 for poor yield; do not restart natural-context-v1 or natural-context-speech-v1.
 Latest exact audit7installed pending,240remaining. Explicit saved-only English spoken
 comparison can recover homophonic recognition errors without another provider
@@ -589,13 +598,18 @@ English letter-name policy. This does not broaden the default or historical
 comparison behavior. The source for `C as Cat` belongs to already-resolved Leo
 letter C and must not be reused for Forest `find_c` by text alone.
 
-The 2026-10-23 audit recovered two pending recordings (French Tito Oskar and
+The 2026-10-23 saved-recovery audit recovered two pending recordings (French Tito Oskar and
 English Leo W): 2 pairs changed, 665 frozen pairs unchanged, and 1,559 other
 protected hashes unchanged. Combined frozen-667 status is 10 changed, 430 kept
-or installed, 237 remaining (44 letters, 193 ordinary, 0 exhausted). Takeboard
+or installed, 237 remaining (44 letters, 193 ordinary, 0 exhausted) at that
+historical audit boundary. Takeboard
 8814 contains ten human-listening-pending clips. Corpus parent/child saved-only
-screening yield is 7/25 (28%); both bulk producers remain held. Next is
+screening yield was 7/25 (28%); the producers were held at that point. The
+owner's later 2026-10-23 order explicitly authorizes the separate full 237-row
+replacement now running; follow the current-run instructions at the top of this
+README and HANDOVER. Do not resume or alter the old plans. The earlier next step
+was
 read-only earliest-failed-predicate attribution over the 25 retained cases.
-Do not call ASR, providers, models or workers, alter thresholds/budgets, or
-install during that investigation. See
+That investigation restriction was superseded by the new explicit production
+order. See
 `docs/reviews/2026-10-22_SAVED_CONTEXT_CORPUS_ADAPTER.md` for exact evidence.

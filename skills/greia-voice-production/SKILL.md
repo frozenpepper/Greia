@@ -6,7 +6,7 @@ description: Canonical Greia authoring skill for producing prerecorded character
 # Greia Voice Production
 
 **Status:** canonical authoring-time voice-production contract  
-**Reviewed:** 2026-10-22
+**Reviewed:** 2026-10-23
 
 ## One rule
 
@@ -673,3 +673,18 @@ policy. Those source requests had no packaged-final verification because the
 original v2 run stopped earlier; do not call them end-to-end passes. Review the
 separate full-text Takeboard batch and replay report in
 `docs/reviews/2026-10-23_VOICE_CK_NORMALIZATION.md`.
+
+## Owner-authorized full corpus replacement — 2026-10-23
+
+The owner explicitly authorized one separately versioned full-scope run for the
+exact 237 rows in the latest frozen remaining list, superseding the saved-only
+poor-yield hold for this new version only. It completed 147 installed
+Parakeet-PASS pairs and preserved the other 90 originals after quality
+exhaustion; there are no remaining or blocked rows. It used the natural-carrier
+recipe, pinned Parakeet v3 and `locale-number-tokens-v3-chck-orthographic`, with
+at most three new actual provider calls per cue. Earlier attempt totals and held
+plans remain historical. Normal CorpusRunner backup/install recovery applied;
+the final audit confirms all 667 frozen pairs and exact originals. The unreviewed
+Takeboard batch at `http://127.0.0.1:8818/` includes raw attempts, recorded cuts,
+failed package candidates and installed finals. All replacements remain
+`human_review=PENDING`; human listening is required for acceptance.
