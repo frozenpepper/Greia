@@ -8,6 +8,8 @@ API_VERSION = 1
 API_BASE = "/api/v1"
 SERVICE_TYPE = "_greia-parent._tcp"
 SERVICE_PORT = 8766
+# Separate local-only HTTP for the built-in Parent panel.
+LOCAL_PARENT_PORT = 8767
 
 
 @dataclass(frozen=True, slots=True)
