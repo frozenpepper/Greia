@@ -273,7 +273,7 @@ def create_parent_listeners(
     Both listeners share the existing mutation lock. The localhost HTTP socket
     is not a network fallback: it always binds to 127.0.0.1.
     """
-    if port == loopback_port:
+    if port != 0 and port == loopback_port:
         raise ValueError("LAN and loopback Parent ports must be different")
     tls = parent_tls_context(state_dir)
     secure = ProductionParentApiHTTPServer(
