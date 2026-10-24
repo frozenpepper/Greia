@@ -614,6 +614,18 @@ class SharedArtifactVerifierTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("policy=quiet", result.stdout)
 
+    def test_installer_extraction_includes_the_generation_layout(self) -> None:
+        verifier = (ROOT / "tools/verify-development-installer.sh").read_text(encoding="utf-8")
+        self.assertIn(
+            'extract_for_contract "$TARGET" "$WORK/target-root" target', verifier
+        )
+        self.assertIn(
+            'extract_for_contract "$LIVE" "$WORK/live-root" live-installer', verifier
+        )
+        self.assertIn("opt/greia-software/generations/base/activity-index-v1.json", verifier)
+        self.assertIn("usr/share/greia/activity-index-v1.json", verifier)
+        self.assertIn("paths+=(opt/greia-os ", verifier)
+
     def test_each_missing_contract_fails(self) -> None:
         for rel, why in (
             ("usr/lib/i386-linux-gnu/alsa-lib/libasound_module_pcm_greia_mic_light.so", "ALSA module"),

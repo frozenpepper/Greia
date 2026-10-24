@@ -227,9 +227,18 @@ check_installed_dev_boot_diagnostics() {
 # Extract the small set of paths the shared root contract reads (no code from
 # the image runs) and apply it to both artifacts.
 extract_for_contract() {
-  local squash="$1" dest="$2" path
+  local squash="$1" dest="$2" role="$3" path
   local paths=(etc boot/grub/grub.cfg var/lib/iwd usr/local/lib/greia-os usr/bin/aplay
-    usr/lib/greia/pycache/opt/greia-os/src/greia_platform opt/greia-os/assets)
+    usr/lib/greia/pycache/opt/greia-os/src/greia_platform)
+  if [[ "$role" == "target" ]]; then
+    # The target's application root and built-in index are symlinks into the
+    # one base generation. Extract the links themselves plus the generation
+    # index so the installed-generation contract sees the real layout.
+    paths+=(opt/greia-os opt/greia-software/generations/base/activity-index-v1.json
+      usr/share/greia/activity-index-v1.json)
+  else
+    paths+=(opt/greia-os/assets)
+  fi
   while IFS= read -r path; do
     paths+=("$path")
   done < <(unsquashfs -ll "$squash" 2>/dev/null \
@@ -243,10 +252,10 @@ extract_for_contract() {
 }
 
 check_composed_roots() {
-  extract_for_contract "$TARGET" "$WORK/target-root"
+  extract_for_contract "$TARGET" "$WORK/target-root" target
   greia_verify_composed_root "$WORK/target-root" target "installed-system payload" "$PROJECT_ROOT"
   TARGET_CONSOLE_POLICY="$BOOT_CONSOLE_POLICY_FOUND"
-  extract_for_contract "$LIVE" "$WORK/live-root"
+  extract_for_contract "$LIVE" "$WORK/live-root" live-installer
   greia_verify_composed_root "$WORK/live-root" live-installer "live installer" "$PROJECT_ROOT"
   [[ "$BOOT_CONSOLE_POLICY_FOUND" == "$TARGET_CONSOLE_POLICY" ]] || {
     echo "live installer and installed payload declare different console policies." >&2
