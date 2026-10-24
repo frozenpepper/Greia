@@ -3059,4 +3059,3 @@ rendered browser/mobile acceptance ran here. The next exact action is to execute
 `docs/testing/2026-10-24_SOFTWARE_UPDATE_ACCEPTANCE.md` on the other Linux machine,
 alongside the full-system work order where applicable. Use the committed operator
 guide `docs/development/GREIA_SOFTWARE_UPDATE_PACKAGES.md` for all package recipes.
-
