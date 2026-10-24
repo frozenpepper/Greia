@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Callable, NoReturn, Protocol
 
 from greia_installer import hardware_support_archive as _archive
+from .boot_transaction import BOOT_JOURNAL_DIR_DEFAULT, BOOT_JOURNAL_DIR_ENV
 
 
 BUNDLE_SUFFIX = ".greiaupdate"
@@ -1191,16 +1192,14 @@ if TYPE_CHECKING:  # pragma: no cover - typing only; runtime imports stay local
     from .boot_transaction import BootTransactionJournal as _Journal
     from .persistent_layout import InstalledLayoutRecord as _LayoutRecord
 
-#: Journal directory name under ``state_dir / "system-updates"``. The same
-#: ``BootTransactionJournal`` record the A8-FAULTS harness and later
-#: boot-health work reconcile, so crash recovery sees exactly one record.
+#: Journal directory name under ``state_dir / "system-updates"`` for isolated
+#: fixtures without an installed shared-journal override. Installed updater,
+#: first-install and boot-health service use ``BOOT_JOURNAL_DIR_DEFAULT``.
 UPDATE_JOURNAL_DIR_NAME = "journal"
 
-#: Peer UIDs authorized for the update socket service. Root only: the Parent
-#: control plane stays unprivileged and reaches the privileged side solely
-#: through the inbox candidate it stages. Mirrors
-#: ``update_privileged.UPDATE_PRIVILEGED_ALLOWED_UIDS`` without importing that
-#: module (it imports this one).
+#: Default peer UIDs for isolated endpoint use. The installed socket service
+#: injects the greiapanel UID with the narrower operation allowlist in
+#: ``update_privileged``; root retains the complete semantic vocabulary.
 UPDATE_SERVICE_ALLOWED_UIDS = (0,)
 
 #: Environment overrides for the socket-activated composition root. Defaults
@@ -1209,7 +1208,7 @@ UPDATE_SERVICE_ALLOWED_UIDS = (0,)
 UPDATE_STATE_DIR_ENV = "GREIA_UPDATE_STATE_DIR"
 UPDATE_STATE_DIR_DEFAULT = "/var/lib/greia-os"
 INSTALLED_LAYOUT_RECORD_ENV = "GREIA_INSTALLED_LAYOUT_RECORD"
-INSTALLED_LAYOUT_RECORD_DEFAULT = "/etc/greia-os/installed-layout.json"
+INSTALLED_LAYOUT_RECORD_DEFAULT = "/etc/greia-os/layout/installed-layout.json"
 #: Installed product identity: the single image-owned release authority written
 #: by ``SlotFinalizer`` into every finalized slot
 #: (``etc/greia-os/release-identity.json``), visible on the running system at
@@ -1570,13 +1569,45 @@ def inactive_slot_for(record: "_LayoutRecord") -> str | None:
 
 
 def _default_slot_profile_policy(record: "_LayoutRecord") -> object:
-    """Derive the finalizer profile policy from the trusted layout record."""
+    """Derive finalizer policy from layout plus verified shared mounts."""
     from .slot_writer import SlotProfilePolicy
+    from .fstab import read_fstab_uuid_for_mount
+    from .update_activation import (
+        BOOT_CONTROL_MOUNTPOINT,
+        GREIA_OS_STATE_MOUNTPOINT,
+        PERSIST_MOUNTPOINT,
+        RuntimeMountProbe,
+    )
+
+    persist_uuid = record.persist.filesystem_uuid
+    mounts = RuntimeMountProbe()
+    if not mounts.mounted_uuid_matches(
+        PERSIST_MOUNTPOINT, persist_uuid, expected_mount_root="/"
+    ) or not mounts.mounted_uuid_matches(
+        GREIA_OS_STATE_MOUNTPOINT,
+        persist_uuid,
+        expected_mount_root="/greia/namespaces/parent-credentials",
+    ):
+        raise SystemUpdateError(
+            "expected PERSIST filesystem and Greia state bind are not mounted"
+        )
+    try:
+        boot_uuid = read_fstab_uuid_for_mount(Path("/etc/fstab"), "/boot")
+    except ValueError as exc:
+        raise SystemUpdateError("shared boot-control UUID is unavailable") from exc
+    if not mounts.mounted_uuid_matches(
+        BOOT_CONTROL_MOUNTPOINT, boot_uuid, expected_mount_root="/"
+    ):
+        raise SystemUpdateError(
+            "shared boot-control filesystem is not mounted from its installed UUID"
+        )
 
     return SlotProfilePolicy(
         layout_id=record.layout_id,
         system_slot_bytes=record.slot_bytes,
         boot_backend=record.boot_backend,
+        persist_filesystem_uuid=persist_uuid,
+        boot_control_filesystem_uuid=boot_uuid,
     )
 
 
@@ -1598,6 +1629,8 @@ def _bind_release_facts_to_policy(policy: object, manifest: UpdateManifest) -> o
         layout_id=policy.layout_id,
         system_slot_bytes=policy.system_slot_bytes,
         boot_backend=policy.boot_backend,
+        persist_filesystem_uuid=policy.persist_filesystem_uuid,
+        boot_control_filesystem_uuid=policy.boot_control_filesystem_uuid,
         architecture=manifest.architecture,
         platform_family=manifest.platform_family,
         profile=manifest.profile,
@@ -1668,9 +1701,20 @@ class SlotBackedSystemUpdateBackend:
         layout_record_path: Path | None = None,
         seams: UpdateSlotSeams | None = None,
         boot_backend: object | None = None,
+        journal_dir: Path | None = None,
     ) -> None:
         self.state_dir = Path(state_dir)
-        self.journal_dir = self.state_dir / "system-updates" / UPDATE_JOURNAL_DIR_NAME
+        configured_journal = os.environ.get(BOOT_JOURNAL_DIR_ENV, "").strip()
+        if journal_dir is not None:
+            self.journal_dir = Path(journal_dir)
+        elif configured_journal:
+            self.journal_dir = Path(configured_journal)
+        elif self.state_dir == Path(UPDATE_STATE_DIR_DEFAULT):
+            self.journal_dir = BOOT_JOURNAL_DIR_DEFAULT
+        else:
+            # Isolated fixtures use their temporary update-state tree unless
+            # they explicitly inject the installed shared PERSIST journal.
+            self.journal_dir = self.state_dir / "system-updates" / UPDATE_JOURNAL_DIR_NAME
         self.layout_record_path = (
             Path(layout_record_path)
             if layout_record_path is not None
@@ -2348,6 +2392,16 @@ class SystemUpdateServiceAuthority:
     def reconcile(self) -> dict[str, object]:
         return self.service.reconcile()
 
+    def status_payload(self) -> dict[str, object]:
+        from .update_activation import InstalledUpdateActivation
+
+        return InstalledUpdateActivation(self).status_payload()
+
+    def request_restart(self) -> dict[str, object]:
+        from .update_activation import InstalledUpdateActivation
+
+        return InstalledUpdateActivation(self).request_restart()
+
     def _backend_layout_path(self) -> Path | None:
         backend = self.backend
         path = getattr(backend, "layout_record_path", None)
@@ -2509,7 +2563,19 @@ def handle_update_connection(
             if chunk.endswith(b"\n"):
                 break
         raw = b"".join(chunks)
-        endpoint = UpdatePrivilegedEndpoint(authority)  # type: ignore[arg-type]
+        try:
+            import pwd
+
+            panel_uid = pwd.getpwnam("greiapanel").pw_uid
+        except (ImportError, KeyError):
+            panel_uid = None
+        allowed_uids = (0,) if panel_uid is None or panel_uid == 0 else (0, panel_uid)
+        endpoint = UpdatePrivilegedEndpoint(
+            authority,  # type: ignore[arg-type]
+            allowed_uids=allowed_uids,
+            root_uid=0,
+            panel_uid=panel_uid,
+        )
         response = endpoint.handle_request(raw, peer=peer, boot_state=boot_state)
     except (
         UpdatePrivilegedError,
@@ -3177,7 +3243,10 @@ class _LazyTargetPackageInstaller:
 
 
 def build_production_update_seams(
-    *, layout_record_path: Path | None = None, state_dir: Path | None = None
+    *,
+    layout_record_path: Path | None = None,
+    state_dir: Path | None = None,
+    persist_root: Path | None = None,
 ) -> UpdateSlotSeams:
     """Compose the installed A/B production seams (no device IO here).
 
@@ -3212,7 +3281,9 @@ def build_production_update_seams(
         support_set_factory=_production_support_set_factory(context),
         profile_policy_factory=_production_profile_policy_factory(),
         selection_factory=_production_selection_factory(context),
-        installed_contract_factory=_production_installed_contract_factory(),
+        installed_contract_factory=_production_installed_contract_factory(
+            persist_root=persist_root
+        ),
         support_stage_cleanup=_close_current_stage,
         support_pool_factory=_production_support_pool_factory(context),
     )
@@ -3459,39 +3530,46 @@ def _production_selection_factory(
     return _factory
 
 
-def _production_installed_contract_factory() -> Callable[[], bytes]:
-    """PROVISIONAL installed PERSIST schema marker (ADR 0036 §6 integer check).
+def _production_installed_contract_factory(
+    *, persist_root: Path | None = None
+) -> Callable[[], bytes]:
+    """Read the canonical marker from the mounted PERSIST filesystem.
 
-    Synthesized constant fallback only — NOT a live PERSIST read. Fresh
-    PERSIST init does not create the marker yet; Session 04 owns real
-    marker init, the live device read, and migration/recovery. The
-    physical update path has NOT proved PERSIST compatibility through
-    this seam. This composition stays importable offline and fail-closed.
+    An explicit ``persist_root`` is a disposable-root injection for focused
+    source tests. The installed composition reads from the fstab-owned
+    ``/run/greia-persist`` mount, never from the ``/var/lib/greia-os`` bind.
+    Missing, non-canonical, or unreadable state fails closed before a slot
+    destination factory can be contacted.
     """
+    from .persistent_layout import (
+        PersistentLayoutError,
+        persist_schema_marker_path,
+        read_persist_schema_marker,
+    )
+    from .fstab import PERSIST_BOOT_MOUNTPOINT
 
-    # TODO(Session 04): replace this synthesized constant with a read of
-    # the already-mounted PERSIST marker (or a required injected/read
-    # marker once A/B activation is genuinely enabled) plus
-    # migration/recovery. Do NOT mount PERSIST here: that mount
-    # lifecycle belongs to Session 04, not this tranche.
+    marker_path = persist_schema_marker_path(
+        Path(persist_root)
+        if persist_root is not None
+        else Path(PERSIST_BOOT_MOUNTPOINT)
+    )
 
-    def _provisional_fallback_factory() -> bytes:
-        from .persistent_layout import (
-            PERSIST_SCHEMA_CURRENT,
-            emit_persist_schema_marker,
-        )
+    def _installed_marker_factory() -> bytes:
+        try:
+            return read_persist_schema_marker(marker_path)
+        except PersistentLayoutError as exc:
+            raise UpdateBackendUnavailable(
+                f"installed PERSIST schema marker is unavailable: {exc}"
+            ) from exc
 
-        # Provisional: synthesizes the marker from the constant; performs
-        # no PERSIST mount, read, or migration.
-        return emit_persist_schema_marker(PERSIST_SCHEMA_CURRENT)
-
-    return _provisional_fallback_factory
+    return _installed_marker_factory
 
 
 def build_live_update_service(
     *,
     state_dir: Path | None = None,
     layout_record_path: Path | None = None,
+    persist_root: Path | None = None,
     boot_backend: object | None = None,
     boot_backend_auto: bool = True,
     seams: UpdateSlotSeams | None = None,
@@ -3534,7 +3612,9 @@ def build_live_update_service(
         seams=seams
         if seams is not None
         else build_production_update_seams(
-            layout_record_path=record_path, state_dir=root
+            layout_record_path=record_path,
+            state_dir=root,
+            persist_root=persist_root,
         ),
         boot_backend=resolved_boot_backend,
     )

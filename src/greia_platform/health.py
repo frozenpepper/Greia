@@ -47,11 +47,14 @@ def collect_health(
 def installed_os_identity(
     build_info: Path = Path("/etc/greia-os/build-info"),
     image_profile: Path = Path("/etc/greia-os/image-profile.json"),
+    release_identity: Path = Path("/etc/greia-os/release-identity.json"),
 ) -> dict[str, object]:
-    """Which Greia release this device runs, for update checks by Parent clients.
+    """Return the installed release identity used by Parent update clients.
 
-    Reads the image's own build records; absent fields are ``None`` (for
-    example on a development host)."""
+    Finalized A/B installations use the updater's canonical release/layout
+    resolver. Older single-root images fall back to their build-info and image
+    profile records, which are the only identity facts those images contain.
+    """
     values: dict[str, str] = {}
     try:
         for line in build_info.read_text(encoding="utf-8").splitlines():
@@ -60,20 +63,75 @@ def installed_os_identity(
                 values[name.strip()] = raw.strip().strip('"')
     except OSError:
         pass
-    architecture = None
-    try:
-        import json
+    release: dict[str, object] | None = None
+    installed = None
+    identity_error = None
+    from .system_updates import (
+        UpdateLayoutError,
+        load_installed_release_identity,
+        resolve_installed_system_identity,
+    )
 
-        profile = json.loads(image_profile.read_text(encoding="utf-8"))
-        architecture = profile.get("base", {}).get("architecture")
-    except (OSError, ValueError, AttributeError):
-        pass
+    try:
+        release = load_installed_release_identity(release_identity)
+        installed = resolve_installed_system_identity(
+            release_identity_path=release_identity,
+            image_profile_path=image_profile,
+        )
+    except (OSError, ValueError, UpdateLayoutError) as exc:
+        # A present but invalid finalized identity must not be disguised by
+        # the weaker build-info fallback.
+        identity_error = "installed release identity is unavailable"
+
+    has_release_identity = release is not None
+
+    def _resolved(value: object) -> str | None:
+        return value if isinstance(value, str) and value and value != "unknown" else None
+
+    profile = _resolved(getattr(installed, "profile", None))
+    platform_family = _resolved(getattr(installed, "platform_family", None))
+    architecture = _resolved(getattr(installed, "architecture", None))
+    version = _resolved(getattr(installed, "version", None))
+    board = _resolved(getattr(installed, "board", None))
+    if not has_release_identity and identity_error is None:
+        version = version or values.get("GREIA_OS_VERSION")
+        profile = profile or values.get("PIP_BUILD_PROFILE")
+        platform_family = platform_family or values.get("PIP_PLATFORM_FAMILY")
+        # The installed profile manifest remains the compatibility authority
+        # when the old build-info record predates finalized release identity.
+        try:
+            import json
+
+            profile_document = json.loads(image_profile.read_text(encoding="utf-8"))
+            base = profile_document.get("base", {}) if isinstance(profile_document, dict) else {}
+            if architecture is None and isinstance(base, dict):
+                candidate = base.get("architecture")
+                architecture = candidate if isinstance(candidate, str) and candidate else None
+        except (OSError, ValueError, AttributeError):
+            pass
+        architecture = architecture or values.get("PIP_BUILD_ARCHITECTURE")
+
+    channel = os.environ.get("GREIA_SYSTEM_UPDATE_CHANNEL", "stable").strip()
+    if channel not in {"stable", "dev"}:
+        channel = values.get("GREIA_UPDATE_CHANNEL")
+    if channel not in {"stable", "dev"}:
+        channel = None
+
     return {
-        "version": values.get("GREIA_OS_VERSION"),
-        "profile": values.get("PIP_BUILD_PROFILE"),
-        "platform_family": values.get("PIP_PLATFORM_FAMILY"),
-        "architecture": architecture if isinstance(architecture, str) else None,
+        "version": version,
+        "release_id": (
+            release.get("release_id")
+            if isinstance(release, dict)
+            else values.get("GREIA_RELEASE_ID") if identity_error is None else None
+        ),
+        "profile": profile,
+        "platform_family": platform_family,
+        "architecture": architecture,
+        "board": board or (values.get("GREIA_SYSTEM_BOARD") if identity_error is None else None),
+        "channel": channel,
+        "current_slot": release.get("slot") if isinstance(release, dict) else None,
         "build_phase": values.get("PIP_BUILD_PHASE"),
+        "identity_error": identity_error,
     }
 
 

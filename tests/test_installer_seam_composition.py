@@ -48,9 +48,11 @@ from greia_installer.device_seams import (
     ProductionAbSeamsConfig,
     SubprocessHardwareSupportRunner,
     SubprocessPartitionRunner,
+    build_bios_bootloader_installer,
     build_production_seam_pair,
     config_from_facts_and_state,
 )
+from greia_installer.persist import SubprocessPersistRunner
 from greia_installer.disk import DeviceObservation, DiskInventory, LiveMediaAncestry
 from greia_installer.fresh_ab_install import FreshAbInstallError, FreshAbInstallSeams
 from greia_installer.transaction_service import (
@@ -242,10 +244,18 @@ class ProductionSeamCompositionTests(unittest.TestCase):
     def test_partition_and_support_runners_stay_arg_array_shell_false(self) -> None:
         import inspect as _inspect
 
-        for cls in (SubprocessPartitionRunner, SubprocessHardwareSupportRunner):
+        for cls in (
+            SubprocessPartitionRunner,
+            SubprocessHardwareSupportRunner,
+            SubprocessPersistRunner,
+        ):
             source = _inspect.getsource(cls.run)
             self.assertIn("shell=False", source)
             self.assertNotIn("shell=True", source)
+        adapter_source = _inspect.getsource(build_bios_bootloader_installer)
+        self.assertIn("bios_grub_install_command", adapter_source)
+        self.assertIn("runner.run(argv)", adapter_source)
+        self.assertNotIn("subprocess.run", adapter_source)
         # Live refusal path runs zero valued commands (proved below); the
         # runner classes themselves record nothing at construction.
         self.assertEqual(SubprocessPartitionRunner().__class__, SubprocessPartitionRunner)
@@ -564,19 +574,18 @@ class PartialSelectionSupportClassTests(unittest.TestCase):
             developer=False,
         )
         staging = root / "staging"
-        for name in ("persist", "boot-control", "backend-state", "journal", "mounts"):
+        for name in ("persist", "boot-control", "mounts"):
             (staging / name).mkdir(parents=True)
         config = config_from_facts_and_state(
             facts=facts,
             hardware_support_pool=pool,
             persist_stage_dir=staging / "persist",
             boot_control_dir=staging / "boot-control",
-            backend_state_dir=staging / "backend-state",
-            journal_dir=staging / "journal",
             mount_root=staging / "mounts",
         )
         seams_factory, _ = build_production_seam_pair(config)
         seams = seams_factory(_whole_disk_target())
+        self.assertTrue(callable(seams.bios_bootloader_installer))
         return seams, verified, _support_set_from_seams
 
     def test_production_seams_cover_exactly_the_machine_selection(self) -> None:

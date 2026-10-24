@@ -259,6 +259,7 @@ class SemanticServiceDefinitionGuardTests(unittest.TestCase):
                 "ARM_CURRENT_CANDIDATE",
                 "CONFIRM_BOOT_HEALTH",
                 "RECONCILE",
+                "REQUEST_RESTART",
             ),
         )
 
@@ -285,7 +286,8 @@ class SemanticServiceDefinitionGuardTests(unittest.TestCase):
         service_unit = "build/overlay/etc/systemd/system/greia-system-update.service"
         socket_text = read(socket_unit)
         self.assertIn("ListenStream=/run/greia-os/", socket_text)
-        self.assertIn("SocketMode=0600", socket_text)
+        self.assertIn("SocketMode=0660", socket_text)
+        self.assertIn("SocketGroup=greiapanel", socket_text)
         self.assertIn("Accept=no", socket_text)
         self.assertNotIn("ConditionPathExists=", socket_text)
         for line in socket_text.splitlines():
@@ -310,7 +312,7 @@ class SemanticServiceDefinitionGuardTests(unittest.TestCase):
         self.assertIn("WantedBy=sockets.target", socket_text)
         self.assertIn("RestrictAddressFamilies=AF_UNIX", service_text)
         self.assertIn(
-            "ExecStart=/usr/bin/python3 -m greia_platform.system_updates "
+            "ExecStart=/usr/bin/python3 -m greia_platform.update_privileged "
             "--socket-activated",
             service_text,
         )

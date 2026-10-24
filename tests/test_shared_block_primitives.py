@@ -629,6 +629,8 @@ class FinalizerIntegrationTests(unittest.TestCase):
                     layout_id="modern-gpt-ab-v1",
                     system_slot_bytes=_SLOT_BYTES,
                     boot_backend="grub-ab-v1",
+                    persist_filesystem_uuid="cccccccc-dddd-eeee-ffff-000000000000",
+                    boot_control_filesystem_uuid="dddddddd-eeee-ffff-0000-111111111111",
                 )
                 receipt = SlotFinalizer().finalize(
                     write=write,

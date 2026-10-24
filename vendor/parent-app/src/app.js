@@ -83,6 +83,7 @@ class GreiaParentApp {
 
   async _bindApi(api) {
     this.unsubscribeState?.();
+    this.state?.dispose();
     this.api = api;
     this.state = new ParentAppState(api);
     this.unsubscribeState = this.state.subscribe((snapshot) => this.render(snapshot));

@@ -1,9 +1,8 @@
 """Root-owned semantic CONFIRM_BOOT_HEALTH service (P4.2).
 
 The single root-owned boot-health endpoint owns all privileged
-health-commit mutation for both the first-install pending journal
-(``GREIA_BOOT_JOURNAL_DIR``, default ``/var/lib/greia-os/boot-journal``)
-and the update pending journal (``<update-state>/system-updates/journal``),
+health-commit mutation for the first-install/update journal
+(``GREIA_BOOT_JOURNAL_DIR``, default ``/run/greia-persist/greia/boot-journal``),
 so the unprivileged launcher never writes ``/boot``, ``/etc/greia-os`` or
 root update state (``POSTR1-P4-HEALTH-PROOF`` removes the launcher-side
 mutation; this service is its replacement owner).
@@ -12,8 +11,8 @@ The endpoint exposes exactly one semantic operation,
 ``CONFIRM_BOOT_HEALTH``, over the ``greia-boot-health`` socket. It takes
 no selectors: no slot, journal name, path, device, command or arbitrary
 journal operation is accepted and raw-authority params fail closed. The
-service selects the pending journal internally from Greia-owned state and
-refuses when both journals are pending rather than guessing.
+service selects the pending transaction internally. First-install and update
+cannot create parallel journals because they share the same transaction file.
 
 Mutation ownership per journal kind:
 
@@ -59,6 +58,8 @@ from typing import Callable, Mapping, Protocol
 
 from .boot_transaction import (
     BootArtifactSet,
+    BOOT_JOURNAL_DIR_DEFAULT,
+    BOOT_JOURNAL_DIR_ENV,
     BootHistory,
     BootJournalError,
     BootTransactionCoordinator,
@@ -119,10 +120,6 @@ BOOT_HEALTH_CALLER_ENV = "GREIA_BOOT_HEALTH_CALLER"
 #: AF_UNIX listener node owned by the socket unit (mirrors the
 #: system-update socket naming).
 BOOT_HEALTH_SOCKET_PATH = "/run/greia-os/boot-health.sock"
-
-#: First-install boot journal directory (image-integration parameter).
-BOOT_JOURNAL_DIR_ENV = "GREIA_BOOT_JOURNAL_DIR"
-BOOT_JOURNAL_DIR_DEFAULT = "/var/lib/greia-os/boot-journal"
 
 #: Bounded boot-history ring directory (PERSIST bind-visible alias).
 BOOT_HISTORY_DIR_ENV = "GREIA_BOOT_HISTORY_DIR"
@@ -455,7 +452,10 @@ class BootHealthService:
 
     @property
     def update_journal_dir(self) -> Path:
-        """The update pending journal resolved internally (never a selector)."""
+        """Return the shared journal in installed units, test-local fallback otherwise."""
+        override = os.environ.get(BOOT_JOURNAL_DIR_ENV, "").strip()
+        if override:
+            return Path(override)
         from .system_updates import UPDATE_JOURNAL_DIR_NAME
 
         return self.update_state_dir / "system-updates" / UPDATE_JOURNAL_DIR_NAME
@@ -463,22 +463,38 @@ class BootHealthService:
     def confirm(self, *, token: str) -> dict[str, object]:
         """Consume the capability, then commit the single pending journal.
 
-        Read-only journal selection happens first (both-pending refuses
-        without guessing); the capability is consumed before any journal,
-        GRUB, sequence, layout or history mutation.
+        Read-only selection happens first from the shared installed journal;
+        isolated legacy roots still refuse ambiguous dual-pending state. The
+        capability is consumed before journal, GRUB, layout or history mutation.
         """
-        update_journal = _load_non_terminal_journal(self.update_journal_dir)
-        install_journal = _load_non_terminal_journal(self.boot_journal_dir)
-        pending: list[tuple[str, Path, BootTransactionJournal]] = []
-        if update_journal is not None:
-            pending.append(("update", self.update_journal_dir, update_journal))
-        if install_journal is not None:
-            pending.append(("first-install", self.boot_journal_dir, install_journal))
-        if len(pending) > 1:
-            raise BootHealthServiceError(
-                "ambiguous boot authority: update and first-install journals "
-                "are both pending; refusing to guess"
+        if self.update_journal_dir == self.boot_journal_dir:
+            shared = _load_non_terminal_journal(self.boot_journal_dir)
+            pending = (
+                [
+                    (
+                        "first-install" if shared.first_install else "update",
+                        self.boot_journal_dir,
+                        shared,
+                    )
+                ]
+                if shared is not None
+                else []
             )
+        else:
+            # Keep ambiguity refusal for isolated legacy fixtures that model
+            # two separate roots. Installed units set one shared PERSIST path.
+            update_journal = _load_non_terminal_journal(self.update_journal_dir)
+            install_journal = _load_non_terminal_journal(self.boot_journal_dir)
+            pending: list[tuple[str, Path, BootTransactionJournal]] = []
+            if update_journal is not None:
+                pending.append(("update", self.update_journal_dir, update_journal))
+            if install_journal is not None:
+                pending.append(("first-install", self.boot_journal_dir, install_journal))
+            if len(pending) > 1:
+                raise BootHealthServiceError(
+                    "ambiguous boot authority: update and first-install journals "
+                    "are both pending; refusing to guess"
+                )
         if not pending:
             raise BootHealthServiceError("no pending boot-health transaction")
         kind, journal_dir, journal = pending[0]

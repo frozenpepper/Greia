@@ -1272,6 +1272,8 @@ def inspect_installed_roots(
     backend_state_dir: Path,
     journal_dir: Path,
     observed_identities: Mapping[str, Mapping[str, str]],
+    layout_record_path: Path | None = None,
+    schema_marker_path: Path | None = None,
 ) -> dict[str, object]:
     """Host-side install inspection through production parsers only.
 
@@ -1326,12 +1328,60 @@ def inspect_installed_roots(
         )
     if journal.candidate_slot != "A" or journal.accepted_slot != "A":
         raise LifecycleHarnessError("first-install journal does not bind SYSTEM_A")
+    layout_record = None
+    if layout_record_path is not None:
+        from greia_platform.system_updates import (
+            UpdateLayoutError,
+            load_installed_layout_record,
+        )
+
+        try:
+            layout_record = load_installed_layout_record(Path(layout_record_path))
+        except UpdateLayoutError as exc:
+            raise LifecycleHarnessError(
+                f"installed PERSIST layout record is not authoritative: {exc}"
+            ) from exc
+        if layout_record is None:
+            raise LifecycleHarnessError("installed PERSIST layout record is absent")
+        if layout_record.system_b is None or layout_record.accepted_slot != "A":
+            raise LifecycleHarnessError("installed layout record is not fresh A/B state")
+        expected_identities = {
+            "system-a": layout_record.system_a,
+            "system-b": layout_record.system_b,
+            "persist": layout_record.persist,
+        }
+        for role, expected in expected_identities.items():
+            observed = identities.get(role)
+            if observed is None or (
+                observed.get("partuuid") != expected.partuuid
+                or observed.get("filesystem_uuid") != expected.filesystem_uuid
+            ):
+                raise LifecycleHarnessError(
+                    f"installed layout record disagrees with observed {role} identity"
+                )
+    schema_version = None
+    if schema_marker_path is not None:
+        from greia_platform.persistent_layout import (
+            PersistentLayoutError,
+            parse_persist_schema_marker,
+        )
+
+        try:
+            schema_version = parse_persist_schema_marker(
+                Path(schema_marker_path).read_bytes()
+            )
+        except (OSError, PersistentLayoutError) as exc:
+            raise LifecycleHarnessError(
+                f"installed PERSIST schema marker is not authoritative: {exc}"
+            ) from exc
     return {
         "system_a_present": True,
         "grub_cfg_valid": True,
         "grubenv_default": state.default_slot,
         "journal_state": str(journal.state.value),
         "identities": identities,
+        "layout_record_present": layout_record is not None,
+        "persist_schema_version": schema_version,
     }
 
 
@@ -1418,6 +1468,10 @@ def gather_installed_target_observation(
     from greia_installer.fresh_ab_install import GRUB_CONFIG_NAME
     from greia_platform.boot_transaction import JOURNAL_FILE_NAME
     from greia_platform.grub_ab import GRUBENV_FILE_NAME
+    from greia_platform.persistent_layout import (
+        LAYOUT_RECORD_NAME,
+        PERSIST_SCHEMA_MARKER_NAME,
+    )
 
     from .lifecycle import run_file_cross_check
 
@@ -1493,7 +1547,10 @@ def gather_installed_target_observation(
         )
         mounted_persist = True
         boot_control_dir = _resolve_marker_dir(
-            boot_mnt, ["", "boot"], GRUB_CONFIG_NAME, what="installed GRUB config"
+            boot_mnt,
+            ["grub", "", "boot"],
+            GRUB_CONFIG_NAME,
+            what="installed GRUB config",
         )
         backend_state_dir = _resolve_marker_dir(
             boot_mnt,
@@ -1503,15 +1560,26 @@ def gather_installed_target_observation(
         )
         journal_dir = _resolve_marker_dir(
             persist_mnt,
-            ["", "boot", "greia", "boot-journal"],
+            ["greia/boot-journal", "", "boot", "greia"],
             JOURNAL_FILE_NAME,
-            what="first-install journal",
+            what="canonical PERSIST boot journal",
+        )
+        layout_record_dir = _resolve_marker_dir(
+            persist_mnt,
+            ["greia/namespaces/layout-authority", "greia", ""],
+            LAYOUT_RECORD_NAME,
+            what="installed layout record",
+        )
+        schema_marker_path = (
+            persist_mnt / "greia" / PERSIST_SCHEMA_MARKER_NAME
         )
         inspection = inspect_installed_roots(
             boot_control_dir=boot_control_dir,
             backend_state_dir=backend_state_dir,
             journal_dir=journal_dir,
             observed_identities=observed_identities,
+            layout_record_path=layout_record_dir / LAYOUT_RECORD_NAME,
+            schema_marker_path=schema_marker_path,
         )
     finally:
         if mounted_boot:
@@ -1537,6 +1605,8 @@ def gather_installed_target_observation(
             "boot_control_dir": str(boot_control_dir),
             "backend_state_dir": str(backend_state_dir),
             "journal_dir": str(journal_dir),
+            "layout_record_path": str(layout_record_dir / LAYOUT_RECORD_NAME),
+            "schema_marker_path": str(schema_marker_path),
         },
     }
 
@@ -2916,6 +2986,16 @@ def _ensure_clone_serial_console(
     }
 
 
+def _installed_grub_config_dir(mountpoint: Path) -> Path:
+    """Locate the installer-owned config in a mounted boot-control clone."""
+    from greia_installer.fresh_ab_install import GRUB_CONFIG_NAME, GRUB_CONFIG_REL_PATH
+
+    return _resolve_marker_dir(
+        mountpoint, [str(Path(GRUB_CONFIG_REL_PATH).parent), "", "boot"],
+        GRUB_CONFIG_NAME, what="installed GRUB config",
+    )
+
+
 def enable_installed_clone_serial_console(
     clone_path: Path,
     *,
@@ -2960,10 +3040,7 @@ def enable_installed_clone_serial_console(
             ) from exc
         _mount_fs(node, mountpoint, read_only=False, runner=runner, which=which)
         try:
-            boot_control = _resolve_marker_dir(
-                mountpoint, ["", "boot"], GRUB_CONFIG_NAME,
-                what="installed GRUB config",
-            )
+            boot_control = _installed_grub_config_dir(mountpoint)
             rel = boot_control.relative_to(mountpoint) / GRUB_CONFIG_NAME
             proof = _ensure_clone_serial_console(
                 mountpoint,
@@ -3143,10 +3220,7 @@ def inject_boot_slot(
         boot_node = str(partition_number_path(Path(loopdev), 1))
         _mount_fs(boot_node, mountpoint, read_only=False, runner=runner, which=which)
         try:
-            boot_control = _resolve_marker_dir(
-                mountpoint, ["", "boot"], GRUB_CONFIG_NAME,
-                what="installed GRUB config",
-            )
+            boot_control = _installed_grub_config_dir(mountpoint)
             rel = boot_control.relative_to(mountpoint) / GRUB_CONFIG_NAME
             serial_proof = _ensure_clone_serial_console(
                 mountpoint,
@@ -3300,9 +3374,17 @@ def inspect_boot_health_roots(
         raise LifecycleHarnessError(
             f"journal release is {journal.release_id!r}, expected {expected_release_id!r}"
         )
-    from greia_platform.system_updates import load_installed_layout_record
+    from greia_platform.system_updates import (
+        UpdateLayoutError,
+        load_installed_layout_record,
+    )
 
-    record = load_installed_layout_record(Path(layout_record_path))
+    try:
+        record = load_installed_layout_record(Path(layout_record_path))
+    except UpdateLayoutError as exc:
+        raise LifecycleHarnessError(
+            f"layout authority record is not authoritative: {exc}"
+        ) from exc
     if record is None:
         raise LifecycleHarnessError("layout authority carries no installed record")
     if record.accepted_slot != expected_slot:
@@ -3383,7 +3465,10 @@ def _resolve_boot_evidence_dirs(
     """
     from greia_platform.boot_transaction import JOURNAL_FILE_NAME
     from greia_platform.grub_ab import GRUBENV_FILE_NAME
-    from greia_platform.persistent_layout import LAYOUT_RECORD_NAME
+    from greia_platform.persistent_layout import (
+        LAYOUT_RECORD_NAME,
+        PERSIST_SCHEMA_MARKER_NAME,
+    )
     from greia_platform.system_updates import UPDATE_JOURNAL_DIR_NAME
 
     backend_state_dir = _resolve_marker_dir(
@@ -3392,35 +3477,30 @@ def _resolve_boot_evidence_dirs(
         GRUBENV_FILE_NAME,
         what="grubenv state",
     )
-    # Prefer the update pending journal when present, else the
-    # first-install journal: exactly one must verify for the
-    # committed slot (both-pending refuses inside the service; here
-    # a missing journal dir fails closed naming searched paths).
-    # The namespace-sourced candidate is grounded in the durable-path
-    # audit (/var/lib/greia-os binds from PERSIST namespace
-    # parent-credentials, whose sources live under greia/namespaces);
-    # the persist-root candidates preserve the previously probed
-    # layout and fail closed when every candidate misses.
+    # Production uses one shared PERSIST boot journal for first install and
+    # all later updates. Older namespace-backed update and first-install
+    # fixtures remain bounded fallbacks for historical disposable images.
     journal_dir: Path | None = None
     last_error: LifecycleHarnessError | None = None
     for candidates in (
+        ["greia/boot-journal"],
         [
             "greia/namespaces/parent-credentials/system-updates/"
             + UPDATE_JOURNAL_DIR_NAME,
             "system-updates/" + UPDATE_JOURNAL_DIR_NAME,
             "system-updates/journal",
         ],
-        ["", "boot", "greia", "boot-journal"],
+        ["", "boot/greia/boot-journal", "boot", "greia"],
     ):
         marker = JOURNAL_FILE_NAME
         try:
-            if "system-updates" in candidates[0]:
+            if any("system-updates" in candidate for candidate in candidates):
                 journal_dir = _resolve_marker_dir(
                     persist_mnt, candidates, marker, what="update journal"
                 )
             else:
                 journal_dir = _resolve_marker_dir(
-                    persist_mnt, candidates, marker, what="first-install journal"
+                    persist_mnt, candidates, marker, what="PERSIST boot journal"
                 )
             break
         except LifecycleHarnessError as exc:
@@ -3430,23 +3510,22 @@ def _resolve_boot_evidence_dirs(
     if journal_dir is None:
         raise LifecycleHarnessError(str(last_error))
     assert journal_dir is not None
-    # Layout authority resolves from the same persist tree while still
-    # mounted: the installed layout record's authoritative on-persist
-    # copy is greia/installed-layout.json
-    # (greia_platform.persistent_layout.persist_record_path), with
-    # the layout-authority namespace source as the bounded second
-    # candidate. A miss fails closed naming every searched path.
+    # The installed record lives inside the layout-authority namespace that
+    # fstab directory-binds at /etc/greia-os/layout, so atomic replacement
+    # remains visible to both slots. Keep this exact production path first.
     layout_record_dir = _resolve_marker_dir(
         persist_mnt,
-        ["greia", "greia/namespaces/layout-authority", ""],
+        ["greia/namespaces/layout-authority", "greia", ""],
         LAYOUT_RECORD_NAME,
         what="installed layout record",
     )
+    schema_marker_path = persist_mnt / "greia" / PERSIST_SCHEMA_MARKER_NAME
     return {
         "backend_state_dir": backend_state_dir,
         "journal_dir": journal_dir,
         "layout_record_dir": layout_record_dir,
         "layout_record_path": layout_record_dir / LAYOUT_RECORD_NAME,
+        "schema_marker_path": schema_marker_path,
     }
 
 
@@ -3572,6 +3651,20 @@ def gather_boot_health_observation(
             expected_slot=expected_slot,
             expected_release_id=expected_release_id,
         )
+        from greia_platform.persistent_layout import (
+            PersistentLayoutError,
+            parse_persist_schema_marker,
+        )
+
+        try:
+            persist_schema_version = parse_persist_schema_marker(
+                resolved["schema_marker_path"].read_bytes()
+            )
+        except (OSError, PersistentLayoutError) as exc:
+            raise LifecycleHarnessError(
+                f"boot-health PERSIST schema marker is not authoritative: {exc}"
+            ) from exc
+        health["persist_schema_version"] = persist_schema_version
         inspection = {
             "disk_identities": disk_identities,
             "observed_identities": observed_identities,
@@ -3579,6 +3672,7 @@ def gather_boot_health_observation(
             "journal_dir": str(journal_dir),
             "layout_record_dir": str(layout_record_dir),
             "layout_record": str(layout_record_dir / LAYOUT_RECORD_NAME),
+            "schema_marker": str(resolved["schema_marker_path"]),
         }
     finally:
         if mounted_boot:
@@ -3609,6 +3703,7 @@ def gather_boot_health_observation(
             "journal_dir": str(inspection["journal_dir"]),
             "layout_record_dir": str(inspection["layout_record_dir"]),
             "layout_record": str(inspection["layout_record"]),
+            "schema_marker": str(inspection["schema_marker"]),
         },
     }
 

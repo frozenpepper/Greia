@@ -65,6 +65,12 @@ BOOT_RECORD_SCHEMA_VERSION = 1
 #: Journal file name inside the caller-provided PERSIST-side directory.
 JOURNAL_FILE_NAME = "boot-journal.json"
 
+# Installed first-install and update transactions share this root-owned
+# PERSIST journal directory. Image units may explicitly provide the same
+# path through GREIA_BOOT_JOURNAL_DIR; isolated tests pass their own directory.
+BOOT_JOURNAL_DIR_ENV = "GREIA_BOOT_JOURNAL_DIR"
+BOOT_JOURNAL_DIR_DEFAULT = Path("/run/greia-persist/greia/boot-journal")
+
 #: Journal files are readable only by their owner (root on device).
 JOURNAL_FILE_MODE = 0o600
 

@@ -31,6 +31,7 @@ import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from greia_platform.boot_health_service import (
     BOOT_HEALTH_OPS,
@@ -45,6 +46,7 @@ from greia_platform.boot_health_service import (
 from greia_platform.boot_transaction import (
     BootArtifactSet,
     BootHistory,
+    BOOT_JOURNAL_DIR_ENV,
     BootTransactionJournal,
     BootTransactionState,
 )
@@ -203,7 +205,9 @@ class _Composed:
     def __init__(self, root: Path) -> None:
         self.root = root
         self.state_dir = root / "update-state"
-        self.boot_journal_dir = root / "boot-journal"
+        self.boot_journal_dir = Path(
+            os.environ.get(BOOT_JOURNAL_DIR_ENV, str(root / "boot-journal"))
+        )
         self.grubenv_dir = root / "grubenv"
         self.history_dir = root / "history"
         self.layout_path = _write_layout(root)
@@ -333,6 +337,24 @@ class FirstInstallConfirmTests(unittest.TestCase):
             self.assertEqual(entry.transaction_type, "first-install")
             self.assertEqual(entry.transaction_id, journal.transaction_id)
 
+    def test_installed_shared_journal_confirms_first_install(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            shared = root / "persist" / "greia" / "boot-journal"
+            with mock.patch.dict(os.environ, {BOOT_JOURNAL_DIR_ENV: str(shared)}):
+                composed = _Composed(root)
+                self.assertEqual(composed.update_authority.backend.journal_dir, shared)
+                self.assertEqual(composed.service.update_journal_dir, shared)
+                self.assertEqual(composed.service.boot_journal_dir, shared)
+                composed.stage_first_install_booted()
+                token = composed.verifier.issue("shared-first-install-token")
+                detail = _decode_ok(composed.confirm(token))["detail"]
+                self.assertEqual(detail["journal"], "first-install")
+                self.assertEqual(
+                    BootTransactionJournal.load(shared).state,
+                    BootTransactionState.ACCEPTED,
+                )
+
 
 class UpdateConfirmTests(unittest.TestCase):
     def test_update_commits_all_five_through_reused_path(self) -> None:
@@ -375,6 +397,54 @@ class UpdateConfirmTests(unittest.TestCase):
             self.assertEqual(entry.terminal_state, "accepted")
             self.assertEqual(entry.slot, "B")
             self.assertEqual(entry.transaction_type, "update")
+
+    def test_installed_shared_journal_confirms_update(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            shared = root / "persist" / "greia" / "boot-journal"
+            with mock.patch.dict(os.environ, {BOOT_JOURNAL_DIR_ENV: str(shared)}):
+                composed = _Composed(root)
+                _write_layout(root, accepted_release_id="greia-0.14.0")
+                self.assertEqual(composed.update_authority.backend.journal_dir, shared)
+                self.assertEqual(composed.service.update_journal_dir, shared)
+                self.assertEqual(composed.service.boot_journal_dir, shared)
+                composed.stage_update_candidate_booted()
+                token = composed.verifier.issue("shared-update-token")
+                detail = _decode_ok(composed.confirm(token))["detail"]
+                self.assertEqual(detail["journal"], "update")
+                self.assertEqual(
+                    BootTransactionJournal.load(shared).state,
+                    BootTransactionState.ACCEPTED,
+                )
+
+    def test_shared_terminal_first_install_journal_is_reused_for_update(self) -> None:
+        """The installed service has one reusable terminal-to-active journal."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            shared = root / "persist" / "greia" / "boot-journal"
+            with mock.patch.dict(os.environ, {BOOT_JOURNAL_DIR_ENV: str(shared)}):
+                composed = _Composed(root)
+                composed.stage_first_install_booted()
+                first_install_token = composed.verifier.issue("shared-install-token")
+                install_detail = _decode_ok(composed.confirm(first_install_token))["detail"]
+                self.assertEqual(install_detail["journal"], "first-install")
+                self.assertEqual(
+                    BootTransactionJournal.load(shared).state,
+                    BootTransactionState.ACCEPTED,
+                )
+
+                # Model a later installed release while retaining the same
+                # mounted PERSIST journal. The next transaction may replace
+                # the terminal first-install record, never a pending record.
+                _write_layout(root, accepted_release_id="greia-0.14.0")
+                composed.stage_update_candidate_booted()
+                update_token = composed.verifier.issue("shared-update-token")
+                update_detail = _decode_ok(composed.confirm(update_token))["detail"]
+                self.assertEqual(update_detail["journal"], "update")
+                final = BootTransactionJournal.load(shared)
+                self.assertEqual(final.state, BootTransactionState.ACCEPTED)
+                self.assertFalse(final.first_install)
+                self.assertEqual(final.release_id, _RELEASE)
 
 
 class AmbiguousOrAbsentJournalTests(unittest.TestCase):

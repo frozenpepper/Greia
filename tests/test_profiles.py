@@ -318,6 +318,41 @@ class ProfileStoreTests(unittest.TestCase):
             self.assertNotIn("secret", raw)
             self.assertNotIn("digest", raw)
 
+    def test_restart_fence_blocks_a_new_profile_activation(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            store = self.make_store(root / "profiles")
+            profile = store.ensure_initialized()[0]
+            status = root / "run" / "active.json"
+            fence = root / "runtime" / "restart-pending.json"
+            fence.parent.mkdir(parents=True)
+            fence.write_text("pending\n", encoding="ascii")
+            session = ActiveProfileSession(status, restart_fence_path=fence)
+            with self.assertRaisesRegex(ProfileError, "restart is pending"):
+                session.activate(store, profile.profile_id)
+            self.assertFalse(status.exists())
+
+    def test_restart_guard_requires_explicit_idle_marker_and_refuses_active(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            status = root / "run" / "active.json"
+            session = ActiveProfileSession(status, lock_path=root / "runtime" / "lock")
+            with self.assertRaisesRegex(ProfileError, "state is missing"):
+                with session.profile_picker_restart_guard():
+                    self.fail("missing profile state must not authorize restart")
+            # Launcher clear publishes explicit picker-idle evidence.
+            session.clear()
+            with session.profile_picker_restart_guard():
+                pass
+            status.parent.mkdir(parents=True, exist_ok=True)
+            status.write_text(
+                '{"profile_id":"11111111111141118111111111111111"}\n',
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ProfileError, "profile picker"):
+                with session.profile_picker_restart_guard():
+                    self.fail("restart must not pass while a child profile is active")
+
 
 
     def test_session_claim_blocks_deletion_until_profile_is_inactive(self) -> None:

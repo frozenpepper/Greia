@@ -21,7 +21,7 @@
 # any reference platform.
 #
 # Environment overrides (tests / integration):
-#   GREIA_BOOT_JOURNAL_DIR   first-install journal dir
+#   GREIA_BOOT_JOURNAL_DIR   shared installed transaction journal dir
 #   GREIA_UPDATE_STATE_DIR   update state dir (journal at
 #                            $GREIA_UPDATE_STATE_DIR/system-updates/journal)
 #   GREIA_GRUBENV_DIR        x86 boot-control dir (grubenv)
@@ -83,11 +83,11 @@ from greia_platform import boot_transaction as bt
 
 update_state = os.environ.get("GREIA_UPDATE_STATE_DIR", "").strip() \
     or "/var/lib/greia-os"
-journal_dirs = [
+journal_dirs = list(dict.fromkeys([
     Path(update_state) / "system-updates" / "journal",
     Path(os.environ.get("GREIA_BOOT_JOURNAL_DIR", "").strip()
-         or "/var/lib/greia-os/boot-journal"),
-]
+         or str(bt.BOOT_JOURNAL_DIR_DEFAULT)),
+]))
 
 # Plain boot: no journal file anywhere.
 live = []

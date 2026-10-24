@@ -137,7 +137,7 @@ def _observed_mbr_identities():
         "persist": {
             "scheme": "MBR_PARTUUID",
             "partuuid": f"{_MBR_SIGNATURE}-04",
-            "filesystem_uuid": "dddddddd-dddd-dddd-dddd-ddddddddddd4",
+            "filesystem_uuid": _PERSIST_FS_UUID,
         },
     }
 
@@ -269,6 +269,11 @@ class FakePersistRunner(PersistCommandRunner):
         assert isinstance(command, list)
         self.commands.append(list(command))
         if command[0] == "blkid":
+            if command[-1] in ("/dev/sda1", "/dev/sda3"):
+                return PersistCommandResult(
+                    stdout="dddddddd-dddd-dddd-dddd-dddddddddddd",
+                    returncode=0,
+                )
             self._blkid_calls += 1
             if self._blkid_calls == 1:
                 return PersistCommandResult(stdout="", returncode=1)
@@ -347,13 +352,7 @@ class AbInstallCompositionProofTests(unittest.TestCase):
 
     def _composition(self, root: Path):
         """Assemble the shipped service; return service + seam handles."""
-        for name in (
-            "persist-stage",
-            "boot-control",
-            "backend-state",
-            "journal",
-            "slot-a-mnt",
-        ):
+        for name in ("persist-stage", "boot-control", "slot-a-mnt"):
             (root / name).mkdir(exist_ok=True)
         profile_path = self._write_ab_profile(root)
         bundle, key_dir, manifest = self._write_bundle(root)
@@ -395,8 +394,7 @@ class AbInstallCompositionProofTests(unittest.TestCase):
                 persist_stage_dir=root / "persist-stage",
                 persist_uuid_factory=lambda: uuid.UUID(_PERSIST_FS_UUID),
                 boot_control_dir=root / "boot-control",
-                backend_state_dir=root / "backend-state",
-                journal_dir=root / "journal",
+                bios_bootloader_installer=lambda target, boot_directory: None,
             )
 
         def _identities(target, plan):  # type: ignore[no-untyped-def]
@@ -463,7 +461,7 @@ class AbInstallCompositionProofTests(unittest.TestCase):
 
         # A/B/PERSIST layout with observed identities -> finalized SYSTEM_A.
         observed = harness["observed"]
-        grub_cfg = root / "boot-control" / "grub.cfg"
+        grub_cfg = root / "boot-control" / "grub" / "grub.cfg"
         self.assertTrue(grub_cfg.is_file())
         grub_text = grub_cfg.read_text(encoding="utf-8")
         validate_grub_ab_text(grub_text)
@@ -471,11 +469,12 @@ class AbInstallCompositionProofTests(unittest.TestCase):
         self.assertIn(observed["system-b"]["partuuid"], grub_text)
 
         # Boot backend defaults to A.
-        backend = GrubEnvBackend.attach(root / "backend-state")
+        backend = GrubEnvBackend.attach(root / "boot-control" / "grub")
         self.assertEqual(backend.inspect().default_slot, "A")
 
         # FIRST_INSTALL_PENDING journal binds layout/backend/release/slot.
-        journal = BootTransactionJournal.load(root / "journal")
+        journal_dir = root / "persist-stage" / "greia" / "boot-journal"
+        journal = BootTransactionJournal.load(journal_dir)
         self.assertEqual(journal.state, BootTransactionState.FIRST_INSTALL_PENDING)
         self.assertTrue(journal.first_install)
         self.assertEqual(journal.layout_id, "legacy-bios-ab-v1")
@@ -486,7 +485,7 @@ class AbInstallCompositionProofTests(unittest.TestCase):
         # Observed boot -> trusted health -> accepted A (production backend).
         with self.assertRaises(FreshAbInstallError):
             accept_first_install(
-                journal_dir=root / "journal",
+                journal_dir=journal_dir,
                 backend=backend,
                 artifact_a=BootArtifactSet(
                     slot="A",
@@ -501,7 +500,7 @@ class AbInstallCompositionProofTests(unittest.TestCase):
             )
         self.assertEqual(backend.simulate_reboot(), "A")
         accepted = accept_first_install(
-            journal_dir=root / "journal",
+            journal_dir=journal_dir,
             backend=backend,
             artifact_a=BootArtifactSet(
                 slot="A",
@@ -516,7 +515,7 @@ class AbInstallCompositionProofTests(unittest.TestCase):
         )
         self.assertEqual(accepted.state, BootTransactionState.ACCEPTED)
         self.assertEqual(
-            GrubEnvBackend.attach(root / "backend-state").inspect().default_slot,
+            GrubEnvBackend.attach(root / "boot-control" / "grub").inspect().default_slot,
             "A",
         )
 
@@ -528,8 +527,6 @@ class AbInstallCompositionNegativeTests(unittest.TestCase):
         for name in (
             "persist-stage",
             "boot-control",
-            "backend-state",
-            "journal",
             "slot-a-mnt",
         ):
             (root / name).mkdir(exist_ok=True)
@@ -568,8 +565,7 @@ class AbInstallCompositionNegativeTests(unittest.TestCase):
                 persist_stage_dir=root / "persist-stage",
                 persist_uuid_factory=lambda: uuid.UUID(_PERSIST_FS_UUID),
                 boot_control_dir=root / "boot-control",
-                backend_state_dir=root / "backend-state",
-                journal_dir=root / "journal",
+                bios_bootloader_installer=lambda target, boot_directory: None,
             )
 
         def _identities(target, plan):  # type: ignore[no-untyped-def]

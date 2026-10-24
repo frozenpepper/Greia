@@ -3,10 +3,27 @@ const optionalResult = async (promise) => {
   catch (error) { return { value: null, error }; }
 };
 
+const UPDATE_CAPABILITIES = [
+  ["system.update.check", "check_available"],
+  ["system.update.prepare", "prepare_available"],
+  ["system.update.restart", "restart_available"],
+];
+
+function updateCapabilityMismatch(index, systemUpdate) {
+  if (!systemUpdate) return false;
+  return UPDATE_CAPABILITIES.some(([capability, field]) =>
+    typeof systemUpdate[field] === "boolean"
+      && Boolean(index?.capabilities?.[capability]) !== systemUpdate[field]
+  );
+}
+
 export class ParentAppState {
   constructor(api) {
     this.api = api;
     this.listeners = new Set();
+    this.systemUpdatePollTimer = null;
+    this.systemUpdatePollInFlight = false;
+    this.disposed = false;
     this.snapshot = Object.freeze({
       phase: "booting",
       meta: null,
@@ -42,6 +59,14 @@ export class ParentAppState {
   publish(patch) {
     this.snapshot = Object.freeze({ ...this.snapshot, ...patch });
     for (const listener of this.listeners) listener(this.snapshot);
+    this.#syncSystemUpdatePolling();
+  }
+
+  dispose() {
+    this.disposed = true;
+    if (this.systemUpdatePollTimer !== null) clearTimeout(this.systemUpdatePollTimer);
+    this.systemUpdatePollTimer = null;
+    this.listeners.clear();
   }
 
   async initialize() {
@@ -58,7 +83,7 @@ export class ParentAppState {
   async refresh() {
     this.publish({ phase: "loading", error: null });
     try {
-      const index = await this.api.index();
+      let index = await this.api.index();
       const [system, profiles, activities, hardware, devices] = await Promise.all([
         this.api.system(),
         this.api.profiles(),
@@ -93,6 +118,10 @@ export class ParentAppState {
       for (const [name, result] of Object.entries(optional)) {
         if (result.error) featureErrors[name] = result.error;
       }
+      if (!optional.systemUpdate.error && updateCapabilityMismatch(index, optional.systemUpdate.value)) {
+        const refreshedIndex = await optionalResult(this.api.index());
+        if (!refreshedIndex.error) index = refreshedIndex.value;
+      }
       this.publish({
         phase: "ready",
         index,
@@ -111,7 +140,7 @@ export class ParentAppState {
         language: optional.language.value,
         wifi: optional.wifi.value,
         ssh: optional.ssh.value,
-        systemUpdate: optional.systemUpdate.value,
+        systemUpdate: optional.systemUpdate.error ? this.snapshot.systemUpdate : optional.systemUpdate.value,
         parentPassword: optional.parentPassword.value,
         featureErrors,
         error: null,
@@ -212,6 +241,92 @@ export class ParentAppState {
     this.publish({ ssh: result.value, featureErrors });
     if (result.error) throw result.error;
     return result.value;
+  }
+
+  async refreshSystemUpdate({ refreshIndex = false } = {}) {
+    if (!this.capability("system.update.read")) return null;
+    const result = await optionalResult(this.api.systemUpdate());
+    const featureErrors = { ...this.snapshot.featureErrors };
+    if (result.error) featureErrors.systemUpdate = result.error; else delete featureErrors.systemUpdate;
+    let index = this.snapshot.index;
+    const statusChanged = !result.error && updateCapabilityMismatch(index, result.value);
+    if (!result.error && (refreshIndex || statusChanged)) {
+      const refreshedIndex = await optionalResult(this.api.index());
+      if (refreshedIndex.error) featureErrors.systemUpdateIndex = refreshedIndex.error;
+      else {
+        index = refreshedIndex.value;
+        delete featureErrors.systemUpdateIndex;
+      }
+    }
+    this.publish({
+      systemUpdate: result.error ? this.snapshot.systemUpdate : result.value,
+      index,
+      featureErrors,
+    });
+    if (result.error) throw result.error;
+    return result.value;
+  }
+
+  async checkSystemUpdate() {
+    if (!this.capability("system.update.check") || this.snapshot.systemUpdate?.check_available !== true) {
+      throw new Error("Online Greia update checks are unavailable");
+    }
+    return this.#startSystemUpdateOperation(() => this.api.checkSystemUpdate());
+  }
+
+  async prepareSystemUpdate(releaseId) {
+    const releases = this.snapshot.systemUpdate?.delivery?.catalog?.releases;
+    const listed = Array.isArray(releases) && releases.some((release) => release?.release_id === releaseId);
+    if (!this.capability("system.update.prepare") || this.snapshot.systemUpdate?.prepare_available !== true || !listed) {
+      throw new Error("This Greia cannot prepare that update");
+    }
+    return this.#startSystemUpdateOperation(() => this.api.prepareSystemUpdate(releaseId));
+  }
+
+  async restartSystemUpdate() {
+    if (!this.capability("system.update.restart") || this.snapshot.systemUpdate?.restart_available !== true) {
+      throw new Error("This Greia cannot restart into the prepared update");
+    }
+    return this.#startSystemUpdateOperation(() => this.api.restartSystemUpdate());
+  }
+
+  async #startSystemUpdateOperation(start) {
+    let operationError = null;
+    try {
+      await start();
+    } catch (error) {
+      operationError = error;
+    }
+    // The device persists accepted jobs. Always reconcile after the POST so a
+    // lost response or phone disconnect cannot make the UI assume it stopped.
+    try {
+      await this.refreshSystemUpdate({ refreshIndex: true });
+    } catch (refreshError) {
+      if (!operationError) operationError = refreshError;
+    }
+    if (operationError) throw operationError;
+    return this.snapshot.systemUpdate;
+  }
+
+  #syncSystemUpdatePolling() {
+    if (this.disposed) return;
+    const job = this.snapshot.systemUpdate?.delivery?.job;
+    const active = ["checking", "queued", "downloading", "receiving", "verifying", "staging", "restart_pending"].includes(job?.state);
+    if (!active) {
+      if (this.systemUpdatePollTimer !== null) clearTimeout(this.systemUpdatePollTimer);
+      this.systemUpdatePollTimer = null;
+      return;
+    }
+    if (this.systemUpdatePollTimer !== null || this.systemUpdatePollInFlight) return;
+    this.systemUpdatePollTimer = setTimeout(() => {
+      this.systemUpdatePollTimer = null;
+      if (this.systemUpdatePollInFlight) return;
+      this.systemUpdatePollInFlight = true;
+      void this.refreshSystemUpdate().catch(() => undefined).finally(() => {
+        this.systemUpdatePollInFlight = false;
+        this.#syncSystemUpdatePolling();
+      });
+    }, 2500);
   }
 
   #selectProfileId(profiles) {

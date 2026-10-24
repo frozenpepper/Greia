@@ -19,7 +19,8 @@ Typical use after ``tools/greia_release.py`` produced a release directory::
 
 Then upload the release's ``updates/*.greiaupdate`` files under ``--base-url``
 and the index file to the site. Re-running for the same version replaces that
-version's entries; other releases and the ``parents_app`` block are kept.
+version's entries; the newest three releases per exact target and the
+``parents_app`` block are kept. Artifact files are never deleted.
 """
 from __future__ import annotations
 
@@ -27,12 +28,17 @@ import argparse
 import datetime as _dt
 import hashlib
 import json
+import os
 import sys
+import tempfile
 from pathlib import Path
 
 SCHEMA = "greia-updates/1"
 CHANNELS = ("stable", "dev")
 MAX_NOTES = 4096
+MAX_CHANNEL_ENTRIES = 128
+MAX_INDEX_BYTES = 512 * 1024
+DEFAULT_KEEP_RELEASES = 3
 
 
 def sha256_file(path: Path) -> str:
@@ -106,13 +112,49 @@ def release_entries(
     return entries
 
 
-def merge(index: dict[str, object], channel: str, entries: list[dict[str, object]]) -> dict[str, object]:
+def merge(
+    index: dict[str, object], channel: str, entries: list[dict[str, object]],
+    *, keep_releases: int = DEFAULT_KEEP_RELEASES,
+) -> dict[str, object]:
     releases = index["greia_os"]["channels"][channel]  # type: ignore[index]
     replaced = {(entry["version"], tuple(entry["profiles"])) for entry in entries}
     kept = [item for item in releases if (item.get("version"), tuple(item.get("profiles", []))) not in replaced]
-    index["greia_os"]["channels"][channel] = [*entries, *kept]  # type: ignore[index]
+    # Retain a short history per exact target without allowing a long-lived
+    # channel to grow beyond the device catalog reader's bounded work budget.
+    counts: dict[tuple[object, ...], int] = {}
+    retained = []
+    for entry in [*entries, *kept]:
+        target = (tuple(entry.get("profiles", [])), entry.get("platform_family"),
+                  entry.get("architecture"), entry.get("board"))
+        count = counts.get(target, 0)
+        if count < keep_releases:
+            retained.append(entry)
+            counts[target] = count + 1
+    if len(retained) > MAX_CHANNEL_ENTRIES:
+        raise SystemExit("channel exceeds 128 entries; reduce --keep-releases or retire old targets")
+    index["greia_os"]["channels"][channel] = retained  # type: ignore[index]
     index["updated_at"] = _dt.datetime.now(_dt.timezone.utc).replace(microsecond=0).isoformat()
     return index
+
+
+def write_index(path: Path, index: dict[str, object]) -> None:
+    """Publish a complete local index, preserving the previous file on failure."""
+    raw = (json.dumps(index, indent=2, ensure_ascii=False) + "\n").encode("utf-8")
+    if len(raw) > MAX_INDEX_BYTES:
+        raise SystemExit("index exceeds the device catalog's 512 KiB limit")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary: str | None = None
+    try:
+        with tempfile.NamedTemporaryFile(dir=path.parent, prefix=f".{path.name}.", delete=False) as handle:
+            temporary = handle.name
+            handle.write(raw)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, path)
+        temporary = None
+    finally:
+        if temporary is not None:
+            Path(temporary).unlink(missing_ok=True)
 
 
 def read_notes(path: str | None) -> str | None:
@@ -132,11 +174,18 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--index", required=True, type=Path, help="greia-updates.json to create or update")
     parser.add_argument("--notes-en")
     parser.add_argument("--notes-it")
+    parser.add_argument("--notes-es")
+    parser.add_argument("--notes-fr")
+    parser.add_argument("--keep-releases", type=int, default=DEFAULT_KEEP_RELEASES,
+                        help="retained releases per exact target (default: 3; artifacts are not deleted)")
     parser.add_argument("--install-help-url")
     parser.add_argument("--published-at", default=_dt.date.today().isoformat())
     args = parser.parse_args(argv)
 
-    notes = {key: value for key, value in (("en", read_notes(args.notes_en)), ("it", read_notes(args.notes_it))) if value}
+    if not 1 <= args.keep_releases <= MAX_CHANNEL_ENTRIES:
+        parser.error("--keep-releases must be between 1 and 128")
+    notes = {locale: value for locale in ("en", "it", "es", "fr")
+             if (value := read_notes(getattr(args, f"notes_{locale}")))}
     index = load_index(args.index)
     entries = release_entries(
         args.release,
@@ -145,9 +194,8 @@ def main(argv: list[str] | None = None) -> int:
         install_help_url=args.install_help_url,
         published_at=args.published_at,
     )
-    merge(index, args.channel, entries)
-    args.index.parent.mkdir(parents=True, exist_ok=True)
-    args.index.write_text(json.dumps(index, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    merge(index, args.channel, entries, keep_releases=args.keep_releases)
+    write_index(args.index, index)
     print(f"{args.index}: {len(entries)} {args.channel} entr{'y' if len(entries) == 1 else 'ies'} for {entries[0]['version'] if entries else '-'}")
     return 0
 

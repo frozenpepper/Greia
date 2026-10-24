@@ -180,6 +180,114 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-24 — Frozen full-gate result recorded; one suite-only memory failure unresolved
+
+Supersedes the prior Oct 24 note that frozen `make verify` was still running.
+The completed worktree run at
+`/tmp/greia-update-completion/make-verify-frozen-bios.log` executed 5,890 tests
+in 302.538 seconds and ended **FAILED: 7 failures, 3 errors, 8 skipped**. Nine
+outcomes match separately reproduced clean-baseline issues (Foresta Parole 3,
+Parent Wi-Fi 2, MBR message 1, ARM64 profile 1, installer-state/macOS `lsblk`
+2). The full gate is NOT GREEN.
+
+The additional failure is
+`test_launcher_long_session_memory.ShellLaunchCycleMemoryTests.test_repeated_launches_do_not_grow_shell_memory`: 675,948 retained-surface bytes
+after 24 launches exceeded its 524,288-byte bound. The two-test memory module
+passes in isolation on both baseline and current trees
+(`/tmp/greia-update-completion/memory-baseline.log`, 8.333 s;
+`/tmp/greia-update-completion/memory-current.log`, 7.296 s). This does not
+establish that the full-suite failure is baseline; retain it as unresolved and
+possibly order-dependent. The separate 38-module source gate remains PASS at
+770 tests, 2 skipped. No Linux image, BIOS VM install/boot, or device acceptance
+ran. Details are appended to the evidence review; Session 04 remains OPEN.
+
+### 2026-10-24 — BIOS installer source evidence finalized; Linux boot still owed
+
+Correction to the earlier Oct 24 snapshot below: the BIOS installer adapter
+fix and focused source reruns are complete. The eight-suite BIOS slice passed
+116 tests; the frozen 38-module gate passed **770 tests, 2 skipped** at
+`/tmp/greia-update-completion/focused-final-frozen.log`, and an independent
+fresh-process rerun passed the same 770/2 at
+`/tmp/greia-update-completion/focused-final-bios-rerun.log`. An earlier run
+during source edits had one seam assertion failure; it was corrected to inspect
+the production `shell=False` runner and adapter argv delegation, and did not
+recur on either final run. Logs and exact scope are in
+`docs/reviews/2026-10-23_SYSTEM_UPDATE_IMPLEMENTATION_EVIDENCE.md`.
+
+The production seam is
+`FreshAbInstallSeams.bios_bootloader_installer(target, boot_directory)`,
+bound through `build_bios_bootloader_installer()` in
+`src/greia_installer/device_seams.py`. This is source/fake-runner evidence;
+no installer image or Linux guest was run. The full frozen-source `make
+verify` run has no final summary yet and remains unresolved; do not report it
+as green. The source is still uncommitted on base
+`2fd29dffa75edc3ce5edd16431a86e6722a68830`, and the work order is untracked.
+No source SHA is available for the external runner. Session 04 remains OPEN;
+the next acceptance gate is blank-disk BIOS install followed by boot through
+installed BIOS GRUB into Greia, then the remaining Linux update/rollback
+predicates.
+
+### 2026-10-24 — System-update evidence and external acceptance gate
+
+Evidence reconciliation is recorded in
+`docs/reviews/2026-10-23_SYSTEM_UPDATE_IMPLEMENTATION_EVIDENCE.md`. The
+integrated current-source run is 743 tests, OK with 2 skips, plus 33 issuer,
+32 recovery, and 76 product/GRUB focused tests. These are all **pre-BIOS-fix
+source/test results**; the lifecycle worker is still implementing the BIOS
+installer correction and its final focused rerun is pending. `make verify` is
+NOT GREEN: the earlier run reported 17 failures/28 errors; later runs ended in
+native `Abort trap: 6` at `typography.py:274` / the Activity tempo test. The
+ARM64 validator error and one MBR message expectation reproduce on the clean
+baseline.
+
+Correction to the Oct 23 entry below: at this evidence snapshot the Linux
+acceptance work order is present but untracked, and Greia source changes remain
+uncommitted on checkout base `2fd29dffa75edc3ce5edd16431a86e6722a68830`.
+That SHA is not the implementation revision. HTML pin
+`e0116787bb324ca4685ad832cbc8d4d9e5b3461d` is pushed; Mobile commit
+`06441e56e5e38d6e4a70f6e435d9d4ea7f339273` is local with no remote. Do not
+launch external acceptance until the source and handoff are committed and the
+Linux runner records the resulting exact source SHA.
+
+The external work order now calls for an actual blank-disk BIOS install and
+boot through installed BIOS GRUB into Greia after the pending installer fix;
+generated files and source tests alone cannot pass that gate. No image build,
+Linux VM/guest, physical device, or authenticated Parent browser/mobile run has
+occurred. Session 04 remains OPEN. Exact evidence and limits are in the review
+above and `docs/testing/2026-10-23_SYSTEM_UPDATE_LINUX_ACCEPTANCE.md`.
+
+### 2026-10-23 — System-update source integration; external Linux acceptance owed
+
+Current lifecycle: **Session 04 OPEN**, Session 03 closed on 2026-09-23.
+The owner requested a committed external-machine handoff:
+`docs/testing/2026-10-23_SYSTEM_UPDATE_LINUX_ACCEPTANCE.md`. It owns the next
+Linux build/install/VM/Parent acceptance; no such operation ran on this Mac.
+
+Source now connects device-owned online check/download/prepare, typed updater
+socket, persistent A/B boot state, explicit profile-picker restart, and Parent
+status/reconnection. Atomic layout advancement uses a directory bind at
+`/etc/greia-os/layout`; schema and the single install/update journal live on
+verified `/run/greia-persist`. The first-boot issuer and deadline helper honor
+that shared journal. The static index builder supports EN/IT/ES/FR notes,
+bounded retention and atomic local replacement. Existing single-root/RC
+profiles remain unable to activate updates.
+
+HTML `e0116787bb324ca4685ad832cbc8d4d9e5b3461d` is pushed and pinned in Greia.
+Mobile `06441e56e5e38d6e4a70f6e435d9d4ea7f339273` is committed locally with
+that shared core; its checkout has no remote. Mobile typecheck and 30 tests
+pass; shared core has six failures also reproduced at clean HTML baseline
+`5518a9e`. Exact local Greia checks, baseline failures, review and evidence
+boundaries are in `docs/reviews/2026-10-23_SYSTEM_UPDATE_IMPLEMENTATION_EVIDENCE.md`.
+Do not infer full `make verify` PASS or device readiness from focused tests.
+
+Full compressed images remain the transfer baseline: Python-only bandwidth
+reduction is unimplemented/unmeasured. Manual upload receives a bundle but
+preparation still needs online catalog selection. No public release/index was
+uploaded. Next: execute the external work order, fix the first real runtime
+failure at its source owner, then measure adjacent-release transfer/storage/RAM
+before selecting a smaller transport. Do not add signing or a parallel updater.
+
+
 ### 2026-10-23 — System-update investigation (SOURCE REVIEW; no enablement)
 
 Owner-requested end-to-end review: `docs/reviews/2026-10-23_SYSTEM_UPDATE_DELIVERY_AND_COMPLETION_REVIEW.md`, Greia source `9fe3c9f6e`. Current single-root legacy/RC images cannot activate transactional updates; Parent read/upload is not wired to prepare/restart/result, while production A/B writer and launcher health primitives do exist. The live public index is reachable with empty stable/dev OS lists. Local mobile source has reproduced cross-board fallback matching and offline cache round-trip defects. Updater service still pins two capabilities/8 tasks despite sharing hardware finalization with the repaired installer; exact-service staging is owed before enablement. Review distinguishes current HTML pin from older local tests and limits mobile findings to the available local checkout.

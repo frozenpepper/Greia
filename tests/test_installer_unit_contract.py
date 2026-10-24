@@ -16,8 +16,8 @@ privilege/writable-path contract the real implementation needs — no more:
 - capabilities are exactly ``CAP_SYS_ADMIN`` (mounts), ``CAP_SYS_CHROOT``
   (hardware-support ``chroot`` install leg), ``CAP_SETUID`` and
   ``CAP_SETGID`` (apt privilege drop), while ``ReadWritePaths`` are exactly
-  the socket dir + the four ``/run/greia-install/*`` staging dirs + the slot
-  mount root, all pre-created by tmpfiles;
+  the socket dir + the PERSIST/boot-control staging dirs + the slot mount
+  root, all pre-created by tmpfiles;
 - filesystem stays strict, network stays ``AF_UNIX``-only, no shell API, the
   semantic ``PREPARE_PLAN``/``EXECUTE`` protocol with kernel peer
   credentials is untouched;
@@ -119,8 +119,6 @@ EXPECTED_READ_WRITE_PATHS = frozenset(
         "/run/greia-os",
         "/run/greia-install/persist",
         "/run/greia-install/boot-control",
-        "/run/greia-install/backend-state",
-        "/run/greia-install/journal",
         "/run/greia-slots",
     }
 )

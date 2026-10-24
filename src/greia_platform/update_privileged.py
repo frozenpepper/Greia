@@ -4,7 +4,8 @@ The ``greia-system-update`` socket-activated service exposes semantic
 operations only::
 
     STATUS, VERIFY_CURRENT_CANDIDATE, STAGE_CURRENT_CANDIDATE,
-    ARM_CURRENT_CANDIDATE, CONFIRM_BOOT_HEALTH, RECONCILE
+    ARM_CURRENT_CANDIDATE, CONFIRM_BOOT_HEALTH, RECONCILE,
+    REQUEST_RESTART
 
 Requests carry no selectors: the service resolves the inbox candidate,
 layout, inactive slot, support set and boot backend internally through
@@ -56,6 +57,20 @@ UPDATE_PRIVILEGED_OPS = (
     "ARM_CURRENT_CANDIDATE",
     "CONFIRM_BOOT_HEALTH",
     "RECONCILE",
+    "REQUEST_RESTART",
+)
+
+#: Operations available to the kernel-attested Parent service identity. The
+#: root service retains the full vocabulary; Parent cannot confirm candidate
+#: health or choose paths, slots, devices or boot commands.
+UPDATE_PRIVILEGED_PANEL_OPS = frozenset(
+    {
+        "STATUS",
+        "VERIFY_CURRENT_CANDIDATE",
+        "STAGE_CURRENT_CANDIDATE",
+        "RECONCILE",
+        "REQUEST_RESTART",
+    }
 )
 
 #: Peer UIDs authorized for the update service. Root owns the privileged
@@ -101,6 +116,10 @@ class UpdatePrivilegedAuthority(Protocol):
 
     def reconcile(self) -> Mapping[str, object]: ...
 
+    def status_payload(self) -> Mapping[str, object]: ...
+
+    def request_restart(self) -> Mapping[str, object]: ...
+
 
 def _require_empty_params(op: str, params: Mapping[str, object]) -> None:
     if not isinstance(params, dict) or params:
@@ -123,9 +142,13 @@ class UpdatePrivilegedEndpoint:
         authority: UpdatePrivilegedAuthority,
         *,
         allowed_uids: tuple[int, ...] = UPDATE_PRIVILEGED_ALLOWED_UIDS,
+        root_uid: int = 0,
+        panel_uid: int | None = None,
     ) -> None:
         self.authority = authority
         self.allowed_uids = allowed_uids
+        self.root_uid = root_uid
+        self.panel_uid = panel_uid
 
     def handle_request(
         self, raw: bytes, *, peer: PeerCredential, boot_state: str
@@ -144,16 +167,24 @@ class UpdatePrivilegedEndpoint:
             raise UpdatePrivilegedError(str(exc)) from exc
         if op not in UPDATE_PRIVILEGED_OPS:
             raise UpdatePrivilegedError(f"unknown system-update op: {op}")
+        if peer.uid != self.root_uid and op not in UPDATE_PRIVILEGED_PANEL_OPS:
+            raise UpdatePrivilegedError(
+                f"Parent is not authorized for system-update op: {op}"
+            )
         reject_raw_authority(params)
         _require_empty_params(op, params)
         transaction_id = new_transaction_id()
         try:
             if op == "STATUS":
-                payload: dict[str, object] = {
-                    "status": "OK",
-                    "candidate": _summary_dict(self.authority.candidate_summary()),
-                    "layout": dict(self.authority.layout_summary()),
-                }
+                status_builder = getattr(self.authority, "status_payload", None)
+                if callable(status_builder):
+                    payload = dict(status_builder())
+                else:  # small protocol fakes predating the production contract
+                    payload = {
+                        "status": "OK",
+                        "candidate": _summary_dict(self.authority.candidate_summary()),
+                        "layout": dict(self.authority.layout_summary()),
+                    }
             elif op == "VERIFY_CURRENT_CANDIDATE":
                 payload = {
                     "status": "VERIFIED",
@@ -176,6 +207,8 @@ class UpdatePrivilegedEndpoint:
                     "status": "CONFIRMED",
                     "detail": dict(self.authority.confirm_boot_health()),
                 }
+            elif op == "REQUEST_RESTART":
+                payload = dict(self.authority.request_restart())
             else:
                 payload = {
                     "status": "RECONCILED",

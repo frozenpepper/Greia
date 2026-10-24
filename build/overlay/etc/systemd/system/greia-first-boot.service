@@ -2,6 +2,7 @@
 Description=Greia OS one-time initialization
 After=local-fs.target
 Before=greia-launcher.service greia-parent.service
+RequiresMountsFor=/run/greia-persist /var/lib/greia-os /etc/machine-id
 
 [Service]
 Type=oneshot

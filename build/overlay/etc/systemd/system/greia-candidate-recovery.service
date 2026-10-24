@@ -17,10 +17,12 @@
 [Unit]
 Description=Greia failed-candidate recovery trigger
 After=local-fs.target
+RequiresMountsFor=/run/greia-persist /boot/grub
 DefaultDependencies=no
 
 [Service]
 Type=oneshot
+Environment=GREIA_BOOT_JOURNAL_DIR=/run/greia-persist/greia/boot-journal
 ExecStart=/usr/local/lib/greia-os/greia-candidate-recovery
 TimeoutStartSec=60
 Restart=no

@@ -72,6 +72,8 @@ Environment=HOME=/var/lib/greia-kid
 Environment=SDL_FRAMEBUFFER_ACCELERATION=0
 Environment=GREIA_PROFILES_DIR=/var/lib/greia-profiles
 Environment=GREIA_ACTIVE_PROFILE_STATUS=/run/greia-os/active-profile.json
+Environment=GREIA_ACTIVE_PROFILE_LOCK=/run/greia-update-authority/profile-session.lock
+Environment=GREIA_UPDATE_RESTART_FENCE=/run/greia-update-authority/restart-pending.json
 Environment=GREIA_MEDIA_ROOT=/media/greia
 Environment=GREIA_SYSTEM_SETTINGS_DIR=/var/lib/greia-system-settings
 Environment=GREIA_HARDWARE_STATUS=/run/greia-hardware/status.json

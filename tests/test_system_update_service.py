@@ -103,6 +103,7 @@ _UUID_B = "22222222-3333-4444-5555-666666666666"
 _UUID_B_FS = "bbbbbbbb-cccc-dddd-eeee-ffffffffffff"
 _UUID_P = "33333333-4444-5555-6666-777777777777"
 _UUID_P_FS = "cccccccc-dddd-eeee-ffff-000000000000"
+_UUID_BOOT_FS = "dddddddd-eeee-ffff-0000-111111111111"
 _INSTALL_SHA = "ab" * 32
 
 _SLOT_BYTES = 1024 * 1024 * 1024
@@ -286,12 +287,14 @@ class RecordingSeams:
             HardwareInventoryAttestation,
             LoopbackSlotFile,
             ReleaseSupportSet,
+            SlotProfilePolicy,
         )
 
         self._root = root
         self._attestation = HardwareInventoryAttestation
         self._loopback = LoopbackSlotFile
         self._support_set = ReleaseSupportSet
+        self._slot_profile_policy = SlotProfilePolicy
         self.contacts: list[str] = []
         mount_dir = root / "mnt"
         mount_dir.mkdir(parents=True, exist_ok=True)
@@ -336,6 +339,16 @@ class RecordingSeams:
         self.contacts.append("contract")
         return _PERSIST_MARKER
 
+    def profile_policy_factory(self, record: object) -> object:
+        persist = getattr(record, "persist")
+        return self._slot_profile_policy(
+            layout_id=str(getattr(record, "layout_id")),
+            system_slot_bytes=int(getattr(record, "slot_bytes")),
+            boot_backend=str(getattr(record, "boot_backend")),
+            persist_filesystem_uuid=str(getattr(persist, "filesystem_uuid")),
+            boot_control_filesystem_uuid=_UUID_BOOT_FS,
+        )
+
     def seams(self) -> UpdateSlotSeams:
         return UpdateSlotSeams(
             slot_store_factory=self.slot_store_factory,
@@ -343,6 +356,7 @@ class RecordingSeams:
             package_installer_factory=self.package_installer_factory,
             inventory_factory=self.inventory_factory,
             support_set_factory=self.support_set_factory,
+            profile_policy_factory=self.profile_policy_factory,
             installed_contract_factory=self.installed_contract_factory,
         )
 
@@ -870,6 +884,40 @@ class AuthoritySocketTests(unittest.TestCase):
             self.assertFalse(layout["single_root"])
             self.assertEqual(layout["active_slot"], "A")
 
+    def test_privileged_status_reports_bounded_installed_readiness_sections(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            authority = self._authority(Path(directory), present=False)
+            payload = authority.status_payload()
+            self.assertEqual(payload["status"], "OK")
+            for section in (
+                "identity",
+                "backend",
+                "layout",
+                "persist",
+                "journal",
+                "candidate",
+            ):
+                self.assertIsInstance(payload.get(section), dict)
+            self.assertEqual(
+                set(payload["identity"]),
+                {
+                    "version",
+                    "release_id",
+                    "profile",
+                    "platform_family",
+                    "architecture",
+                    "board",
+                    "current_slot",
+                },
+            )
+            self.assertEqual(
+                set(payload["persist"]),
+                {"available", "readable", "schema", "readable_min", "readable_max", "free_bytes"},
+            )
+            self.assertFalse(payload["persist"]["available"])
+            self.assertFalse(payload["activation_available"])
+            self.assertTrue(payload["activation_reason"])
+
     def test_single_root_layout_summary_reports_unavailable_shape(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -1137,7 +1185,7 @@ class OverlayContractTests(unittest.TestCase):
             "build/overlay/etc/systemd/system/greia-system-update.service"
         )
         self.assertIn(
-            "ExecStart=/usr/bin/python3 -m greia_platform.system_updates "
+            "ExecStart=/usr/bin/python3 -m greia_platform.update_privileged "
             "--socket-activated",
             service,
         )
@@ -1154,6 +1202,11 @@ class OverlayContractTests(unittest.TestCase):
         self.assertNotIn("[Install]", service)
         self.assertIn("Requires=greia-system-update.socket", service)
         self.assertIn("After=greia-system-update.socket", service)
+        self.assertIn(
+            "Environment=GREIA_BOOT_JOURNAL_DIR="
+            "/run/greia-persist/greia/boot-journal",
+            service,
+        )
         non_comment = [
             line.strip()
             for line in service.splitlines()
@@ -1165,7 +1218,11 @@ class OverlayContractTests(unittest.TestCase):
                 f"activated contract keeps no Before= edge: {line!r}",
             )
         self.assertIn("RestrictAddressFamilies=AF_UNIX", service)
-        self.assertIn("ReadWritePaths=/var/lib/greia-os /run/greia-os", service)
+        self.assertIn(
+            "ReadWritePaths=/var/lib/greia-os /run/greia-os "
+            "/run/greia-update-authority /run/greia-persist",
+            service,
+        )
 
     def test_update_socket_stays_separate_and_on_demand(self) -> None:
         # Activated contract: gate absent on the socket too; the listener
@@ -1175,7 +1232,8 @@ class OverlayContractTests(unittest.TestCase):
             "build/overlay/etc/systemd/system/greia-system-update.socket"
         )
         self.assertIn("ListenStream=/run/greia-os/system-update.sock", text)
-        self.assertIn("SocketMode=0600", text)
+        self.assertIn("SocketMode=0660", text)
+        self.assertIn("SocketGroup=greiapanel", text)
         self.assertIn("SocketUser=root", text)
         self.assertIn("Accept=no", text)
         for line in text.splitlines():
@@ -1247,8 +1305,12 @@ class OverlayContractTests(unittest.TestCase):
 
     def test_parent_activation_stays_unavailable(self) -> None:
         source = self._read("src/greia_parent/update_api.py")
-        self.assertIn('"system.update.activate": False', source)
-        self.assertIn('"activation_available"] = False', source)
+        self.assertNotIn('"system.update.activate": False', source)
+        self.assertIn(
+            '"system.update.activate": self._system_update_activation_available()',
+            source,
+        )
+        self.assertIn('"activation_available"] = activation_available', source)
         with tempfile.TemporaryDirectory() as directory:
             inbox = SystemUpdateInbox(Path(directory))
             status = inbox.status_payload()

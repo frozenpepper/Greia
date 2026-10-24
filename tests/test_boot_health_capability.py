@@ -510,12 +510,21 @@ class ReadOnlyDeliveryTests(unittest.TestCase):
             any("--issue-for-pending" in value for value in gen.get("Service.ExecStart", []))
         )
         # The generator never writes journal/GRUB/layout state.
-        self.assertIn("/var/lib/greia-os", gen.get("Service.BindReadOnlyPaths", []))
+        generator_binds = {
+            path
+            for directive in gen.get("Service.BindReadOnlyPaths", [])
+            for path in directive.split()
+        }
+        self.assertIn("/var/lib/greia-os", generator_binds)
 
         svc = directives(launcher)
         self.assertEqual(svc.get("Service.User"), ["greiakid"])
-        binds = svc.get("Service.BindReadOnlyPaths", [])
-        self.assertIn("-/run/greia-os/boot-health", binds)
+        launcher_binds = {
+            path
+            for directive in svc.get("Service.BindReadOnlyPaths", [])
+            for path in directive.split()
+        }
+        self.assertIn("-/run/greia-os/boot-health", launcher_binds)
         after = " ".join(svc.get("Unit.After", []))
         wants = " ".join(svc.get("Unit.Wants", []))
         self.assertIn("greia-boot-health-credential.service", after)
@@ -1237,6 +1246,24 @@ class GeneratorEntryTests(unittest.TestCase):
                 read_boot_id(bad)
             good = _write_boot_id(root, "boot-id-good", _BOOT_ID_1)
             self.assertEqual(read_boot_id(good), _BOOT_ID_1)
+
+    def test_installed_issuer_discovers_shared_environment_journal_once(self) -> None:
+        for first_install in (True, False):
+            with self.subTest(first_install=first_install), tempfile.TemporaryDirectory() as raw:
+                shared = Path(raw) / "persist" / "greia" / "boot-journal"
+                shared.mkdir(parents=True)
+                if first_install:
+                    BootTransactionJournal.begin_first_install(shared, layout_id=_LAYOUT_ID,
+                        boot_backend=_BACKEND_ID, release_id=_RELEASE)
+                else:
+                    BootTransactionJournal.begin_update(shared, layout_id=_LAYOUT_ID,
+                        boot_backend=_BACKEND_ID, release_id=_RELEASE,
+                        candidate_slot="B", accepted_slot="A")
+                with mock.patch.dict(os.environ, {"GREIA_BOOT_JOURNAL_DIR": str(shared)}):
+                    found = load_pending_boot_journal()
+                self.assertIsNotNone(found)
+                self.assertEqual(found[0], shared)
+                self.assertEqual(found[1].first_install, first_install)
 
     def test_pending_journal_discovery_helpers(self) -> None:
         with tempfile.TemporaryDirectory() as raw:

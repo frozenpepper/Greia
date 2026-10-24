@@ -17,6 +17,7 @@
 Description=Greia platform-owned early-boot observation owner
 After=local-fs.target
 Before=greia-launcher.service
+RequiresMountsFor=/run/greia-persist /etc/greia-os/layout /boot/grub
 
 [Service]
 Type=oneshot
@@ -31,7 +32,7 @@ Environment=PYTHONPATH=/opt/greia-os/src
 Environment=PYTHONNOUSERSITE=1
 Environment=PYTHONDONTWRITEBYTECODE=1
 Environment=GREIA_GRUBENV_DIR=/boot/grub
-Environment=GREIA_INSTALLED_LAYOUT_RECORD=/etc/greia-os/installed-layout.json
+Environment=GREIA_INSTALLED_LAYOUT_RECORD=/etc/greia-os/layout/installed-layout.json
 Environment=GREIA_RELEASE_IDENTITY_PATH=/etc/greia-os/release-identity.json
 Environment=GREIA_BOOT_CMDLINE=/proc/cmdline
 # Read-only boot facts plus the single authoritative grubenv observation
@@ -40,7 +41,7 @@ ProtectSystem=strict
 ProtectHome=yes
 PrivateTmp=yes
 ReadWritePaths=/boot/grub
-BindReadOnlyPaths=/proc/cmdline /etc/greia-os/installed-layout.json /etc/greia-os/release-identity.json
+BindReadOnlyPaths=/proc/cmdline /etc/greia-os/layout /etc/greia-os/release-identity.json
 NoNewPrivileges=yes
 LimitCORE=0
 TasksMax=4

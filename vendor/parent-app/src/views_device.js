@@ -474,13 +474,61 @@ export function installDeviceViews(proto) {
     const card = el("section", "card span-12");
     card.append(this._cardHeader(tr("device.update.title"), tr("device.update.subtitle")));
     const status = snapshot.systemUpdate || {};
-    const text =
-      status.state === "received" && status.release?.version
-        ? tr("device.update.received",{version:status.release.version})
+    const delivery = status.delivery || {};
+    const job = delivery.job;
+    const capabilities = snapshot.index?.capabilities || {};
+    const jobState = typeof job?.state === "string" ? job.state : "";
+    const text = jobState
+      ? tr(`device.update.job.${jobState}`)
+      : status.state === "received" && status.release?.version
+        ? tr("device.update.received", { version: status.release.version })
         : status.activation_available
           ? tr("device.update.available")
           : tr("device.update.none");
     card.append(this._statusRow("refresh", tr("device.update.status"), text));
+    if (job?.operation === "prepare" && Number(job.total_bytes) > 0) {
+      const total = Number(job.total_bytes);
+      const downloaded = Math.max(0, Math.min(total, Number(job.downloaded_bytes) || 0));
+      const progress = document.createElement("progress");
+      progress.className = "system-update-progress";
+      progress.max = 100;
+      progress.value = Math.round((downloaded / total) * 100);
+      progress.setAttribute("aria-label", tr("device.update.progress", { percent: progress.value }));
+      card.append(progress, el("p", "muted", tr("device.update.bytes", { downloaded: humanBytes(downloaded), total: humanBytes(total) })));
+    }
+    if (job?.error_message) card.append(el("p", "form-error", job.error_message));
+    if (status.activation_available === false && status.activation_reason) {
+      card.append(el("p", "muted", status.activation_reason));
+    }
+
+    const activeJob = ["checking", "queued", "downloading", "receiving", "verifying", "staging", "restart_pending"].includes(jobState);
+    const updateActions = el("div", "actions system-update-actions");
+    if (capabilities["system.update.check"] && status.check_available === true) {
+      const check = button(tr("device.update.check"), { iconName: "refresh", className: "button secondary" });
+      check.disabled = activeJob;
+      check.addEventListener("click", () => this._runSystemUpdateAction(check, () => this.state.checkSystemUpdate()));
+      updateActions.append(check);
+    }
+    const releases = Array.isArray(delivery.catalog?.releases) ? delivery.catalog.releases.slice(0, 12) : [];
+    if (capabilities["system.update.prepare"] && status.prepare_available === true) {
+      for (const release of releases) {
+        if (typeof release?.release_id !== "string" || !release.release_id) continue;
+        const prepare = button(tr("device.update.prepare", { version: release.version || release.release_id }), { iconName: "download", className: "button secondary" });
+        prepare.disabled = activeJob;
+        prepare.addEventListener("click", () => this._runSystemUpdateAction(prepare, () => this.state.prepareSystemUpdate(release.release_id)));
+        updateActions.append(prepare);
+      }
+    }
+    if (capabilities["system.update.restart"] && status.restart_available === true && jobState === "ready_to_restart") {
+      const restart = button(tr("device.update.restart"), { iconName: "refresh" });
+      restart.addEventListener("click", async () => {
+        if (!await this.confirm(tr("device.update.restart_confirm_title"), tr("device.update.restart_confirm_body"))) return;
+        await this._runSystemUpdateAction(restart, () => this.state.restartSystemUpdate());
+      });
+      updateActions.append(restart);
+    }
+    if (updateActions.childElementCount) card.append(updateActions);
+
     if (snapshot.index?.capabilities?.["system.update.upload"]) {
       const form = el("form", "install-row");
       const input = document.createElement("input");
@@ -510,6 +558,17 @@ export function installDeviceViews(proto) {
       card.append(form);
     }
     return card;
+  };
+
+  proto._runSystemUpdateAction = async function(control, action) {
+    control.disabled = true;
+    try {
+      await action();
+    } catch (error) {
+      this.showFlash(error?.message || tr("device.update.failed"), "error");
+    } finally {
+      control.disabled = false;
+    }
   };
 
   proto._meter = function(label, used, total, detail) {

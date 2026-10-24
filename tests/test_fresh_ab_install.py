@@ -132,6 +132,7 @@ _MBR_SIGNATURE = "a1b2c3d4"
 #: Filesystem UUID the orchestration generates for PERSIST (role-owned, read
 #: back through the persist runner; PARTUUIDs are the observed identities).
 _PERSIST_FS_UUID = "cccccccc-cccc-cccc-cccc-ccccccccccc3"
+_BOOT_CONTROL_FS_UUID = "dddddddd-dddd-dddd-dddd-dddddddddddd"
 
 
 def _observed_mbr_identities(signature: str = _MBR_SIGNATURE):
@@ -150,7 +151,7 @@ def _observed_mbr_identities(signature: str = _MBR_SIGNATURE):
         "persist": {
             "scheme": "MBR_PARTUUID",
             "partuuid": f"{signature}-04",
-            "filesystem_uuid": "dddddddd-dddd-dddd-dddd-ddddddddddd4",
+            "filesystem_uuid": _PERSIST_FS_UUID,
         },
     }
 
@@ -171,7 +172,7 @@ def _observed_gpt_identities():
         "persist": {
             "scheme": "GPT_GUID",
             "partuuid": "33333333-3333-3333-3333-3333333333c3",
-            "filesystem_uuid": "dddddddd-dddd-dddd-dddd-ddddddddddd4",
+            "filesystem_uuid": _PERSIST_FS_UUID,
         },
     }
 
@@ -315,6 +316,7 @@ class FakePersistRunner(PersistCommandRunner):
         self.commands: list[list[str]] = []
         self._readback = readback_uuid
         self._blkid_calls = 0
+        self.active_mounts: set[Path] = set()
 
     def run(self, command) -> PersistCommandResult:
         assert isinstance(command, list), "PERSIST commands must be argument arrays"
@@ -322,11 +324,19 @@ class FakePersistRunner(PersistCommandRunner):
         self.commands.append(list(command))
         name = command[0]
         if name == "blkid":
+            if command[-1] == "/dev/sda1":
+                return PersistCommandResult(
+                    stdout=_BOOT_CONTROL_FS_UUID, returncode=0
+                )
             self._blkid_calls += 1
             if self._blkid_calls == 1:
                 return PersistCommandResult(stdout="", returncode=1)
             return PersistCommandResult(stdout=self._readback, returncode=0)
         if name in ("mkfs.ext4", "mount", "umount"):
+            if name == "mount":
+                self.active_mounts.add(Path(command[-1]))
+            elif name == "umount":
+                self.active_mounts.discard(Path(command[-1]))
             return PersistCommandResult(stdout="", returncode=0)
         raise AssertionError(f"unexpected PERSIST command: {name}")
 
@@ -370,14 +380,14 @@ class FreshAbInstallTests(unittest.TestCase):
         persist_stage = root / "persist-stage"
         persist_stage.mkdir()
         boot_control = root / "boot-control"
-        backend_state = root / "backend-state"
-        journal = root / "journal"
-        for directory in (boot_control, backend_state, journal):
-            directory.mkdir()
+        boot_control.mkdir()
+        backend_state = boot_control / "grub"
+        journal = persist_stage / "greia" / "boot-journal"
         mount_dir = root / "slot-a-mnt"
         touched: list[str] = []
         storage_holder: dict[str, SparseSlotStorage] = {}
         observer_calls: list[str] = []
+        boot_installs: list[tuple[DeviceObservation, Path]] = []
 
         def _storage(role: str):  # type: ignore[no-untyped-def]
             touched.append(role)
@@ -395,6 +405,18 @@ class FreshAbInstallTests(unittest.TestCase):
         installer = FakePackageInstaller()
         runner = RecordingPartitionRunner()
         persist_runner = FakePersistRunner(readback_uuid=_PERSIST_FS_UUID)
+
+        def _install_bios_bootloader(
+            target: DeviceObservation, boot_directory: Path
+        ) -> None:
+            if boot_directory not in persist_runner.active_mounts:
+                raise AssertionError("BIOS GRUB install ran outside the boot-control mount")
+            if not (boot_directory / "grub" / "grub.cfg").is_file():
+                raise AssertionError("BIOS GRUB install ran before config was written")
+            if GrubEnvBackend.attach(boot_directory / "grub").inspect().default_slot != "A":
+                raise AssertionError("BIOS GRUB install ran before grubenv was initialized")
+            boot_installs.append((target, boot_directory))
+
         seams = FreshAbInstallSeams(
             partition_runner=runner,  # type: ignore[arg-type]
             slot_storage_factory=_storage,
@@ -408,9 +430,8 @@ class FreshAbInstallTests(unittest.TestCase):
             persist_stage_dir=persist_stage,
             persist_uuid_factory=lambda: uuid.UUID(_PERSIST_FS_UUID),
             boot_control_dir=boot_control,
-            backend_state_dir=backend_state,
-            journal_dir=journal,
             post_layout_identity_observer=_observer,
+            bios_bootloader_installer=_install_bios_bootloader,
         )
         request = FreshAbInstallRequest(
             bundle_path=bundle,
@@ -436,6 +457,7 @@ class FreshAbInstallTests(unittest.TestCase):
             "installer": installer,
             "persist_runner": persist_runner,
             "observer_calls": observer_calls,
+            "boot_installs": boot_installs,
             "dirs": {
                 "root": root,
                 "boot_control": boot_control,
@@ -489,7 +511,7 @@ class FreshAbInstallTests(unittest.TestCase):
         self.assertTrue(result.journal.first_install)
 
         # Stable GRUB backend: two fixed entries from the trusted record.
-        grub_cfg = harness["dirs"]["boot_control"] / "grub.cfg"
+        grub_cfg = harness["dirs"]["boot_control"] / "grub" / "grub.cfg"
         self.assertTrue(grub_cfg.is_file())
         text = grub_cfg.read_text(encoding="utf-8")
         self.assertEqual(text, result.grub_config_text)
@@ -499,6 +521,118 @@ class FreshAbInstallTests(unittest.TestCase):
         backend = GrubEnvBackend.attach(harness["dirs"]["backend_state"])
         self.assertEqual(backend.inspect().default_slot, "A")
         self.assertIsNone(backend.inspect().one_shot_slot)
+
+        # Production composition: fresh PERSIST creates the marker/layout
+        # record; generated fstab maps those canonical sources into the
+        # installed root; installed boot-health reads the same durable
+        # first-install journal from the mounted PERSIST root.
+        from greia_platform.fstab import (
+            BOOT_CONTROL_MOUNTPOINT,
+            PERSIST_BOOT_MOUNTPOINT,
+            read_fstab_uuid_for_mount,
+        )
+        from greia_platform.persistent_layout import (
+            PERSIST_SCHEMA_CURRENT,
+            PERSIST_SCHEMA_MARKER_NAME,
+            build_namespace_map,
+            parse_persist_schema_marker,
+            persist_mount_source_path,
+            persist_record_path,
+            persist_schema_marker_path,
+        )
+
+        persist_root = harness["dirs"]["root"] / "persist-stage"
+        schema_path = persist_schema_marker_path(persist_root)
+        layout_path = persist_record_path(persist_root)
+        self.assertTrue(schema_path.is_file())
+        self.assertEqual(
+            parse_persist_schema_marker(schema_path.read_bytes()),
+            PERSIST_SCHEMA_CURRENT,
+        )
+        self.assertTrue(layout_path.is_file())
+        self.assertEqual(schema_path.name, PERSIST_SCHEMA_MARKER_NAME)
+
+        fstab = harness["filesystem"].files["etc/fstab"].decode("ascii")
+        fstab_path = harness["dirs"]["root"] / "finalized-fstab"
+        fstab_path.write_text(fstab, encoding="ascii")
+        self.assertEqual(
+            read_fstab_uuid_for_mount(fstab_path, PERSIST_BOOT_MOUNTPOINT),
+            harness["result"].record.persist.filesystem_uuid,
+        )
+        self.assertEqual(
+            read_fstab_uuid_for_mount(fstab_path, BOOT_CONTROL_MOUNTPOINT),
+            _BOOT_CONTROL_FS_UUID,
+        )
+        for mount in build_namespace_map().mount_plan():
+            source = persist_mount_source_path(
+                Path(PERSIST_BOOT_MOUNTPOINT), mount
+            )
+            row = next(
+                fields
+                for fields in (
+                    line.split()
+                    for line in fstab.splitlines()
+                    if line.strip() and not line.lstrip().startswith("#")
+                )
+                if len(fields) >= 2 and fields[1] == mount.target
+            )
+            self.assertEqual(row[0], str(source))
+        self.assertEqual(
+            persist_mount_source_path(
+                Path(PERSIST_BOOT_MOUNTPOINT),
+                next(
+                    mount
+                    for mount in build_namespace_map().mount_plan()
+                    if mount.target == "/etc/greia-os/layout"
+                ),
+            ),
+            Path(PERSIST_BOOT_MOUNTPOINT)
+            / "greia"
+            / "namespaces"
+            / "layout-authority",
+        )
+        self.assertEqual(
+            layout_path,
+            persist_root
+            / "greia"
+            / "namespaces"
+            / "layout-authority"
+            / "installed-layout.json",
+        )
+        first_install_journal = persist_root / "greia" / "boot-journal"
+        self.assertEqual(harness["dirs"]["journal"], first_install_journal)
+        self.assertEqual(
+            BootTransactionJournal.load(first_install_journal).as_dict(),
+            result.journal.as_dict(),
+        )
+        self.assertFalse(
+            (
+                persist_root
+                / "greia"
+                / "namespaces"
+                / "parent-credentials"
+                / "boot-journal"
+            ).exists()
+        )
+        boot_health = (
+            Path(__file__).resolve().parents[1]
+            / "build/overlay/etc/systemd/system/greia-boot-health.service"
+        ).read_text(encoding="utf-8")
+        self.assertIn(
+            "Environment=GREIA_BOOT_JOURNAL_DIR=/run/greia-persist/greia/boot-journal",
+            boot_health,
+        )
+        self.assertIn("RequiresMountsFor=/run/greia-persist", boot_health)
+        self.assertIn("/run/greia-persist/greia/boot-journal", boot_health)
+
+        self.assertTrue(
+            (harness["filesystem"].mount_dir / "run/greia-persist").is_dir()
+        )
+        self.assertEqual(
+            harness["boot_installs"],
+            [(_target(), harness["dirs"]["boot_control"])],
+        )
+        self.assertEqual(harness["persist_runner"].active_mounts, set())
 
         # Partitioning happened through argument arrays only.
         names = [command[0] for command in harness["runner"].commands]
@@ -519,6 +653,29 @@ class FreshAbInstallTests(unittest.TestCase):
         # simply fails to boot — the X8-GRUB seam, not a staged system).
         text = harness["result"].grub_config_text
         self.assertIn(harness["observed"]["system-b"]["partuuid"], text)
+
+    def test_missing_bios_bootloader_seam_refuses_before_partitioning(self) -> None:
+        harness = self._harness(Path(tempfile.mkdtemp(prefix="x8-no-bios-seam-")), _payload())
+        self.addCleanup(shutil.rmtree, harness["dirs"]["root"], True)
+        harness["seams"].bios_bootloader_installer = None
+        with self.assertRaisesRegex(FreshAbInstallError, "refusing to erase"):
+            execute_fresh_ab_install(harness["request"], harness["seams"])
+        self.assertEqual(harness["runner"].commands, [])
+
+    def test_bios_install_failure_propagates_and_detaches_boot_control(self) -> None:
+        harness = self._harness(Path(tempfile.mkdtemp(prefix="x8-failed-bios-")), _payload())
+        self.addCleanup(shutil.rmtree, harness["dirs"]["root"], True)
+
+        def _fail_install(target: DeviceObservation, boot_directory: Path) -> None:
+            self.assertEqual(target, harness["request"].target)
+            self.assertIn(boot_directory, harness["persist_runner"].active_mounts)
+            raise FreshAbInstallError("simulated grub-install failure")
+
+        harness["seams"].bios_bootloader_installer = _fail_install
+        with self.assertRaisesRegex(FreshAbInstallError, "simulated grub-install failure"):
+            execute_fresh_ab_install(harness["request"], harness["seams"])
+        self.assertEqual(harness["persist_runner"].active_mounts, set())
+        self.assertEqual(harness["persist_runner"].commands[-1][0], "umount")
 
     # -- observed-identity binding (POSTR1-P2 post-layout sequencing) --------
 
@@ -861,7 +1018,7 @@ class FreshAbInstallTests(unittest.TestCase):
         )
         backend = GrubEnvBackend.attach(dirs["backend_state"])
         probe_dir = dirs["journal"] / "failed-probe"
-        probe_dir.mkdir()
+        probe_dir.mkdir(parents=True)
         coordinator = BootTransactionCoordinator.begin_first_install(
             journal_dir=probe_dir, backend=backend, artifact_a=artifact_a
         )
@@ -1053,9 +1210,15 @@ class AbServiceRoutingTests(unittest.TestCase):
         persist_stage.mkdir()
         boot_control = root / "boot-control"
         backend_state = root / "backend-state"
-        journal = root / "journal"
-        for directory_path in (boot_control, backend_state, journal):
-            directory_path.mkdir()
+        boot_control.mkdir()
+        backend_state = boot_control / "grub"
+        journal = (
+            persist_stage
+            / "greia"
+            / "namespaces"
+            / "parent-credentials"
+            / "boot-journal"
+        )
         touched: list[str] = []
         seen: list[tuple[object, object]] = []
         partition_runners: list[RecordingPartitionRunner] = []
@@ -1090,8 +1253,7 @@ class AbServiceRoutingTests(unittest.TestCase):
                 persist_stage_dir=persist_stage,
                 persist_uuid_factory=lambda: uuid.UUID(_PERSIST_FS_UUID),
                 boot_control_dir=boot_control,
-                backend_state_dir=backend_state,
-                journal_dir=journal,
+                bios_bootloader_installer=lambda target, boot_directory: None,
             )
 
         facts = AbExecutorFacts(
@@ -1161,6 +1323,7 @@ class AbServiceRoutingTests(unittest.TestCase):
                 support_digest=manifest.hardware_support_sha256,
                 support_size=manifest.hardware_support_size,
                 support_installed_bound=_SUPPORT_BOUND,
+                bios_bootloader_installer=lambda target, boot_directory: None,
             )
 
         executor = build_ab_executor(facts, _seams)
@@ -1240,8 +1403,6 @@ class ModuleHygieneTests(unittest.TestCase):
             '"partprobe"',
             '"udevadm"',
             '"blkid"',
-            '"mount"',
-            '"umount"',
             '"chroot"',
             "import subprocess",
             "from subprocess",

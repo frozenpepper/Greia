@@ -118,10 +118,9 @@ def _whole_install(bundle: Path, case: Path) -> int:
     persist_stage = case / "persist-stage"
     persist_stage.mkdir(parents=True, exist_ok=True)
     boot_control = case / "boot-control"
-    backend_state = case / "backend-state"
-    journal = case / "journal"
+    journal = persist_stage / "greia" / "boot-journal"
     mount_dir = case / "mnt"
-    for directory_path in (boot_control, backend_state, journal):
+    for directory_path in (boot_control,):
         directory_path.mkdir(parents=True, exist_ok=True)
     storage = stream_mod.LoopbackSlotFile.create(case / "slot-a.bin", 1 * GIB)
     try:
@@ -144,9 +143,8 @@ def _whole_install(bundle: Path, case: Path) -> int:
                 observed["persist"]["filesystem_uuid"]
             ),
             boot_control_dir=boot_control,
-            backend_state_dir=backend_state,
-            journal_dir=journal,
             post_layout_identity_observer=lambda target, plan: observed,
+            bios_bootloader_installer=lambda target, boot_directory: None,
         )
         request = FreshAbInstallRequest(
             bundle_path=bundle,

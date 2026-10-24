@@ -7,8 +7,9 @@ timing instrument (``POSTR1-P3-PREINTRO-TIMING-INSTRUMENT``):
 - The exact installed update socket/service is the normal on-demand product
   contract (no absent-marker gate), stays off the pre-intro critical path,
   and a normal boot with no update candidate performs no block-device work.
-  The service keeps exactly the six semantic operations (no generic
-  Parent->root command surface) and the seven-second intro is unchanged.
+  The service keeps seven root semantic operations and a narrower five-op
+  greiapanel allowlist (no generic Parent->root command surface); the
+  seven-second intro is unchanged.
 - The timing instrument consumes the single-owner production marker shape
   ``GREIA_BOOT event=<name> monotonic_ns=<int>`` (emitted only via
   ``src/greia_platform/boot_markers.py::emit_boot_marker``), with the
@@ -58,6 +59,7 @@ _EXPECTED_OPS = (
     "ARM_CURRENT_CANDIDATE",
     "CONFIRM_BOOT_HEALTH",
     "RECONCILE",
+    "REQUEST_RESTART",
 )
 
 # Units that own the pre-intro first-frame path. None of them may pull the
@@ -202,7 +204,8 @@ class ActivationDeclarationTests(unittest.TestCase):
             "/run/greia-os/system-update.sock",
         )
         self.assertEqual(parser.get("Socket", "Accept").strip(), "no")
-        self.assertEqual(parser.get("Socket", "SocketMode").strip(), "0600")
+        self.assertEqual(parser.get("Socket", "SocketMode").strip(), "0660")
+        self.assertEqual(parser.get("Socket", "SocketGroup").strip(), "greiapanel")
         self.assertEqual(parser.get("Socket", "SocketUser").strip(), "root")
         # Narrow activation: wanted only by sockets.target, nothing else.
         self.assertEqual(
@@ -241,7 +244,7 @@ class ActivationDeclarationTests(unittest.TestCase):
         )
         self.assertEqual(
             parser.get("Service", "ExecStart").strip(),
-            "/usr/bin/python3 -m greia_platform.system_updates --socket-activated",
+            "/usr/bin/python3 -m greia_platform.update_privileged --socket-activated",
         )
 
 
@@ -394,6 +397,7 @@ class CandidateAbsentNoOpTests(unittest.TestCase):
             UpdateBackendUnavailable,
             build_update_bundle,
         )
+        from greia_platform.persistent_layout import emit_persist_schema_marker
 
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -436,6 +440,7 @@ class CandidateAbsentNoOpTests(unittest.TestCase):
                 inventory_factory=lambda: HardwareInventoryAttestation(
                     token="cd" * 32
                 ),
+                installed_contract_factory=lambda: emit_persist_schema_marker(1),
             )
             demanded: list[str] = []
             original_require = authority.backend._require_seam  # type: ignore[attr-defined]
@@ -447,7 +452,13 @@ class CandidateAbsentNoOpTests(unittest.TestCase):
             layout_before = layout_path.read_bytes()
             try:
                 authority.backend._require_seam = _spying_require  # type: ignore[method-assign]
-                with _patched_env(
+                with mock.patch(
+                    "greia_platform.update_activation.RuntimeMountProbe.mounted_uuid_matches",
+                    return_value=True,
+                ), mock.patch(
+                    "greia_platform.fstab.read_fstab_uuid_for_mount",
+                    return_value="dddddddd-eeee-ffff-0000-111111111111",
+                ), _patched_env(
                     GREIA_SYSTEM_VERSION="0.16.0",
                     GREIA_SYSTEM_PLATFORM_FAMILY=_FAMILY,
                     GREIA_SYSTEM_ARCHITECTURE=_ARCH,
@@ -490,7 +501,7 @@ class CandidateAbsentNoOpTests(unittest.TestCase):
 
 
 class NoGenericCommandSurfaceTests(unittest.TestCase):
-    def test_exactly_six_semantic_operations(self) -> None:
+    def test_root_semantic_operations_are_fixed(self) -> None:
         from greia_platform.update_privileged import UPDATE_PRIVILEGED_OPS
 
         self.assertEqual(tuple(UPDATE_PRIVILEGED_OPS), _EXPECTED_OPS)
@@ -566,7 +577,7 @@ class NoGenericCommandSurfaceTests(unittest.TestCase):
         self.assertEqual(
             service_lines,
             [
-                "ExecStart=/usr/bin/python3 -m greia_platform.system_updates "
+                "ExecStart=/usr/bin/python3 -m greia_platform.update_privileged "
                 "--socket-activated"
             ],
         )

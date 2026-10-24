@@ -13,6 +13,12 @@ export class ParentApiClient {
   async index() { return this.#request(""); }
   async system() { return this.#request("/system"); }
   async systemUpdate() { return this.#request("/system/update"); }
+  checkSystemUpdate() { return this.#request("/system/update/check", { method: "POST", body: {} }); }
+  prepareSystemUpdate(releaseId) {
+    if (typeof releaseId !== "string" || !releaseId.trim() || releaseId.length > 96) throw new TypeError("system update release id is required");
+    return this.#request("/system/update/prepare", { method: "POST", body: { release_id: releaseId } });
+  }
+  restartSystemUpdate() { return this.#request("/system/update/restart", { method: "POST", body: {} }); }
   async profiles() { return this.#request("/profiles"); }
   async activities() { return this.#request("/activities"); }
   async hardware() { return this.#request("/settings/hardware"); }

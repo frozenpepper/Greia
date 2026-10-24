@@ -49,7 +49,14 @@ from greia_platform.hardware_enablement import LinuxSysfsHardwareInventory
 from greia_platform.slot_writer import HardwareInventoryAttestation
 
 from .composition import AbInstallCompositionError
-from .disk import DeviceObservation, DiskProbeError, partition_number_path
+from .disk import (
+    DeviceObservation,
+    DiskInventory,
+    DiskProbeError,
+    IdentityProvenance,
+    LsblkDiskProbe,
+    partition_number_path,
+)
 from .fresh_ab_install import AbExecutorFacts, FreshAbInstallError, FreshAbInstallSeams
 from .layout import (
     LayoutError,
@@ -62,8 +69,6 @@ from .layout import (
 #: disposable tmpdirs instead; production never derives these from request bytes.
 DEFAULT_PERSIST_STAGE_DIR = Path("/run/greia-install/persist")
 DEFAULT_BOOT_CONTROL_DIR = Path("/run/greia-install/boot-control")
-DEFAULT_BACKEND_STATE_DIR = Path("/run/greia-install/backend-state")
-DEFAULT_JOURNAL_DIR = Path("/run/greia-install/journal")
 DEFAULT_MOUNT_ROOT = Path("/run/greia-slots")
 
 _SHELL_METACHARACTERS = (";", "&", "|", "$", "`", "(", ")", "<", ">", "\n")
@@ -105,6 +110,66 @@ def _check_arg_array(command: Sequence[str], *, owner: str) -> list[str]:
                     f"{owner} commands must not carry shell metacharacters"
                 )
     return argv
+
+
+def build_bios_bootloader_installer(
+    runner: object,
+    *,
+    target_probe: object | None = None,
+) -> Callable[[DeviceObservation, Path], None]:
+    """Build the final BIOS GRUB adapter for the verified boot-control volume."""
+    from .efi_boot import EfiBootError, bios_grub_install_command
+
+    probe = target_probe if target_probe is not None else LsblkDiskProbe()
+    if not callable(getattr(probe, "probe", None)):
+        raise AbInstallCompositionError("BIOS GRUB adapter requires a disk identity probe")
+    if not callable(getattr(runner, "run", None)):
+        raise AbInstallCompositionError("BIOS GRUB adapter requires the shared command runner")
+
+    def _install(target: DeviceObservation, boot_directory: Path) -> None:
+        if not isinstance(target, DeviceObservation) or target.device_type != "disk":
+            raise FreshAbInstallError("BIOS GRUB target is not the verified whole disk")
+        if not target.path.is_absolute():
+            raise FreshAbInstallError("BIOS GRUB target path is not absolute")
+        if not isinstance(boot_directory, Path) or not boot_directory.is_absolute():
+            raise FreshAbInstallError("BIOS GRUB boot directory is not an absolute mount path")
+        identity = target.device_identity()
+        if identity.provenance is not IdentityProvenance.STRONG_STABLE:
+            raise FreshAbInstallError(
+                "BIOS GRUB target has no strong stable identity; refusing the disk write"
+            )
+        try:
+            inventory = probe.probe()
+        except Exception as exc:
+            raise FreshAbInstallError(
+                f"BIOS GRUB target identity could not be rechecked: {exc}"
+            ) from exc
+        if not isinstance(inventory, DiskInventory):
+            raise FreshAbInstallError("BIOS GRUB target probe returned no typed inventory")
+        current = inventory.by_identity(identity)
+        if (
+            current is None
+            or current.device_type != "disk"
+            or current.path != target.path
+        ):
+            raise FreshAbInstallError(
+                "BIOS GRUB target identity or locator changed before installation"
+            )
+        try:
+            command = bios_grub_install_command(
+                current.path, boot_directory=boot_directory
+            )
+            argv = _check_arg_array(command, owner="BIOS bootloader")
+            result = runner.run(argv)  # type: ignore[attr-defined]
+        except EfiBootError as exc:
+            raise FreshAbInstallError(f"BIOS GRUB command is invalid: {exc}") from exc
+        except Exception as exc:
+            raise FreshAbInstallError(f"BIOS GRUB installation failed: {exc}") from exc
+        returncode = getattr(result, "returncode", None)
+        if isinstance(returncode, bool) or not isinstance(returncode, int) or returncode != 0:
+            raise FreshAbInstallError("BIOS GRUB installation command failed")
+
+    return _install
 
 
 class SubprocessPartitionRunner:
@@ -185,8 +250,6 @@ class ProductionAbSeamsConfig:
     hardware_support_pool: Path | None
     persist_stage_dir: Path = DEFAULT_PERSIST_STAGE_DIR
     boot_control_dir: Path = DEFAULT_BOOT_CONTROL_DIR
-    backend_state_dir: Path = DEFAULT_BACKEND_STATE_DIR
-    journal_dir: Path = DEFAULT_JOURNAL_DIR
     mount_root: Path = DEFAULT_MOUNT_ROOT
 
     def __post_init__(self) -> None:
@@ -220,8 +283,6 @@ class ProductionAbSeamsConfig:
         for field_name in (
             "persist_stage_dir",
             "boot_control_dir",
-            "backend_state_dir",
-            "journal_dir",
             "mount_root",
         ):
             location = getattr(self, field_name)
@@ -237,8 +298,6 @@ def config_from_facts_and_state(
     hardware_support_pool: Path | str | None = None,
     persist_stage_dir: Path | str | None = None,
     boot_control_dir: Path | str | None = None,
-    backend_state_dir: Path | str | None = None,
-    journal_dir: Path | str | None = None,
     mount_root: Path | str | None = None,
 ) -> ProductionAbSeamsConfig:
     """Build the production seam configuration from executor facts + state.
@@ -275,8 +334,6 @@ def config_from_facts_and_state(
         hardware_support_pool=pool,
         persist_stage_dir=_as_path(persist_stage_dir, DEFAULT_PERSIST_STAGE_DIR),
         boot_control_dir=_as_path(boot_control_dir, DEFAULT_BOOT_CONTROL_DIR),
-        backend_state_dir=_as_path(backend_state_dir, DEFAULT_BACKEND_STATE_DIR),
-        journal_dir=_as_path(journal_dir, DEFAULT_JOURNAL_DIR),
         mount_root=_as_path(mount_root, DEFAULT_MOUNT_ROOT),
     )
 
@@ -569,6 +626,7 @@ def build_production_seam_pair(
         # persist.py): production runner + staging dir; the UUID factory stays
         # None so the orchestrator binds the observed PERSIST filesystem UUID.
         from .persist import SubprocessPersistRunner
+        persist_runner = SubprocessPersistRunner()
 
         return FreshAbInstallSeams(
             partition_runner=SubprocessPartitionRunner(),  # type: ignore[arg-type]
@@ -580,12 +638,10 @@ def build_production_seam_pair(
             support_size=support_size,
             support_installed_bound=selected_installed_bound,
             support_classes=support_classes,
-            persist_runner=SubprocessPersistRunner(),
+            persist_runner=persist_runner,
             persist_stage_dir=Path(config.persist_stage_dir),
             persist_uuid_factory=None,
             boot_control_dir=Path(config.boot_control_dir),
-            backend_state_dir=Path(config.backend_state_dir),
-            journal_dir=Path(config.journal_dir),
             firmware_packages=firmware_packages,
             microcode_packages=microcode_packages,
             payload_stream_factory=None,
@@ -593,6 +649,9 @@ def build_production_seam_pair(
             hardware_detection_incomplete=detection_incomplete,
             wifi_firmware_unavailable=wifi_firmware_unavailable,
             post_layout_identity_observer=None,
+            bios_bootloader_installer=build_bios_bootloader_installer(
+                persist_runner
+            ),
         )
 
     def _identities_factory(
@@ -618,14 +677,13 @@ def build_production_seam_pair(
 
 
 __all__ = [
-    "DEFAULT_BACKEND_STATE_DIR",
     "DEFAULT_BOOT_CONTROL_DIR",
-    "DEFAULT_JOURNAL_DIR",
     "DEFAULT_MOUNT_ROOT",
     "DEFAULT_PERSIST_STAGE_DIR",
     "ProductionAbSeamsConfig",
     "SubprocessHardwareSupportRunner",
     "SubprocessPartitionRunner",
+    "build_bios_bootloader_installer",
     "build_production_seam_pair",
     "config_from_facts_and_state",
 ]

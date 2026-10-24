@@ -154,16 +154,16 @@ AmbientCapabilities=CAP_SYS_ADMIN CAP_SYS_CHROOT CAP_SETUID CAP_SETGID CAP_MKNOD
 TasksMax=64
 RestrictSUIDSGID=no
 # Exact writable staging/mount paths the implementation needs — nothing
-# more. Socket directory (privileged-channel endpoint), PERSIST staging,
-# boot-control/grubenv state, first-install journal staging, and the slot
-# mount root (BlockSlotFilesystem mounts SYSTEM_A below it). Everything else
-# stays read-only under ProtectSystem=strict; /etc/greia-os (release facts,
-# payload digest, target profile) is read-only by construction.
+# more. Socket directory (privileged-channel endpoint), PERSIST and shared
+# boot-control mountpoints, and the slot mount root (BlockSlotFilesystem
+# mounts SYSTEM_A below it). GRUB state is written through the mounted
+# boot-control filesystem; the first-install journal is written inside the
+# mounted PERSIST namespace. Everything else stays read-only under
+# ProtectSystem=strict; /etc/greia-os (release facts, payload digest, target
+# profile) is read-only by construction.
 ReadWritePaths=/run/greia-os
 ReadWritePaths=/run/greia-install/persist
 ReadWritePaths=/run/greia-install/boot-control
-ReadWritePaths=/run/greia-install/backend-state
-ReadWritePaths=/run/greia-install/journal
 ReadWritePaths=/run/greia-slots
 ProtectKernelTunables=yes
 # ProtectKernelModules=yes is deliberately NOT set: besides denying module

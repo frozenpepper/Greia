@@ -26,6 +26,7 @@ from greia_platform.persistent_layout import (
     MIN_SYSTEM_SLOT_BYTES,
     NAMESPACE_MAP_SCHEMA_VERSION,
     PERSISTENT_NAMESPACE_ORDER,
+    PERSIST_SCHEMA_MARKER_NAME,
     BlockTopology,
     Durability,
     InstalledLayoutRecord,
@@ -41,6 +42,10 @@ from greia_platform.persistent_layout import (
     fresh_initialize_persist,
     open_existing_persist,
     read_partuuid_map,
+    read_persist_schema_marker,
+    persist_record_path,
+    persist_mount_source_path,
+    persist_schema_marker_path,
     validate_layout_against_topology,
     verify_host_mount_targets,
 )
@@ -249,8 +254,12 @@ class AuditTests(unittest.TestCase):
                 Durability.PERSISTENT_SHARED,
                 "update-acceptance-state",
             ),
-            # layout authority itself
-            "/etc/greia-os/installed-layout.json": (
+            # layout authority directory and its atomic record file
+            "/etc/greia-os/layout": (
+                Durability.PERSISTENT_SHARED,
+                "layout-authority",
+            ),
+            "/etc/greia-os/layout/installed-layout.json": (
                 Durability.PERSISTENT_SHARED,
                 "layout-authority",
             ),
@@ -310,7 +319,7 @@ class NamespaceMapTests(unittest.TestCase):
         plan = namespace_map.mount_plan()
         orders = [item.order for item in plan]
         self.assertEqual(orders, sorted(orders))
-        self.assertEqual(plan[0].target, "/etc/greia-os/installed-layout.json")
+        self.assertEqual(plan[0].target, "/etc/greia-os/layout")
         self.assertEqual(plan[0].order, LAYOUT_BIND_ORDER)
         # rebuild is byte-identical
         self.assertEqual(build_namespace_map().as_dict(), namespace_map.as_dict())
@@ -578,7 +587,7 @@ class PersistLifecycleTests(unittest.TestCase):
         fresh_initialize_persist(root, record, namespace_map)
         return record, namespace_map
 
-    def test_fresh_init_mints_exactly_one_empty_namespace_each(self) -> None:
+    def test_fresh_init_mints_each_namespace_and_places_record_in_layout_owner(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             namespace_map = build_namespace_map()
@@ -588,15 +597,135 @@ class PersistLifecycleTests(unittest.TestCase):
             self.assertEqual(created, sorted(namespace_map.namespaces))
             for child in namespaces_root.iterdir():
                 self.assertTrue(child.is_dir())
-                self.assertEqual(list(child.iterdir()), [])
-            # layout record + contract exist, record is owner-only
-            record_path = state / "installed-layout.json"
+                expected = {
+                    "layout-authority": ["installed-layout.json"],
+                    "machine-identity": ["machine-id"],
+                }.get(child.name, [])
+                self.assertEqual(sorted(path.name for path in child.iterdir()), expected)
+            # Layout authority lives inside its directory bind and remains
+            # atomically replaceable from either installed slot.
+            record_path = persist_record_path(root)
             self.assertEqual(stat.S_IMODE(record_path.stat().st_mode), 0o600)
             contract_raw = (state / "persistent-state-contract.json").read_bytes()
             verify_persistent_state_contract_bytes(contract_raw)
+            marker_path = persist_schema_marker_path(root)
+            marker_raw = marker_path.read_bytes()
+            self.assertEqual(marker_path.name, PERSIST_SCHEMA_MARKER_NAME)
+            self.assertEqual(persist.parse_persist_schema_marker(marker_raw), 1)
+            self.assertEqual(
+                marker_raw, persist.emit_persist_schema_marker(1)
+            )
             # second fresh init never re-mints
             with self.assertRaisesRegex(PersistentLayoutError, "already exists"):
                 fresh_initialize_persist(root, _record(), namespace_map)
+
+    def test_layout_authority_directory_bind_tracks_atomic_record_replacement(self) -> None:
+        from greia_platform.fstab import PERSIST_BOOT_MOUNTPOINT, render_fstab
+
+        with tempfile.TemporaryDirectory() as directory:
+            persist_root = Path(directory)
+            record = _record()
+            namespace_map = build_namespace_map()
+            fresh_initialize_persist(persist_root, record, namespace_map)
+            layout_mount = next(
+                mount
+                for mount in namespace_map.mount_plan()
+                if mount.target == "/etc/greia-os/layout"
+            )
+            self.assertEqual(layout_mount.kind, MountKind.BIND_DIR)
+            source = persist_mount_source_path(persist_root, layout_mount)
+            backing_record = persist_record_path(persist_root)
+            self.assertEqual(backing_record.parent, source)
+
+            # Both slot fstab plans bind the same directory source. Atomic
+            # os.replace in InstalledLayoutRecord.write_to therefore changes
+            # the record visible at the canonical path in either slot.
+            fstab_sources = []
+            for root_uuid in (_UUID_A_FS, _UUID_B_FS):
+                rendered = render_fstab(
+                    root_uuid,
+                    persist_filesystem_uuid=_UUID_P_FS,
+                    boot_control_filesystem_uuid="dddddddd-eeee-ffff-0000-111111111111",
+                )
+                rows = [
+                    line.split()
+                    for line in rendered.splitlines()
+                    if line.split() and line.split()[1] == layout_mount.target
+                ]
+                self.assertEqual(len(rows), 1)
+                self.assertEqual(
+                    rows[0][2:4],
+                    [
+                        "none",
+                        "bind,x-systemd.requires-mounts-for=/run/greia-persist",
+                    ],
+                )
+                fstab_sources.append(Path(rows[0][0]))
+            canonical_source = (
+                Path(PERSIST_BOOT_MOUNTPOINT)
+                / "greia"
+                / "namespaces"
+                / "layout-authority"
+            )
+            self.assertEqual(fstab_sources, [canonical_source, canonical_source])
+            mapped_sources = [
+                persist_root / path.relative_to(PERSIST_BOOT_MOUNTPOINT)
+                for path in fstab_sources
+            ]
+            self.assertEqual(mapped_sources, [source, source])
+
+            advanced = replace(
+                record,
+                accepted_slot="B",
+                accepted_release_id="greia-0.15.0",
+            )
+            advanced.write_to(backing_record)
+            for mounted_source in mapped_sources:
+                visible_record = InstalledLayoutRecord.read_from(
+                    mounted_source / "installed-layout.json",
+                    expect_uid=os.geteuid(),
+                )
+                self.assertEqual(visible_record.accepted_slot, "B")
+                self.assertEqual(
+                    visible_record.accepted_release_id, "greia-0.15.0"
+                )
+
+    def test_fresh_init_refuses_preexisting_schema_marker_without_overwrite(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            marker_path = persist_schema_marker_path(root)
+            marker_path.parent.mkdir(parents=True)
+            original = persist.emit_persist_schema_marker(7)
+            marker_path.write_bytes(original)
+            with self.assertRaisesRegex(PersistentLayoutError, "schema marker already exists"):
+                fresh_initialize_persist(root, _record(), build_namespace_map())
+            self.assertEqual(marker_path.read_bytes(), original)
+
+    def test_schema_marker_reader_is_bounded_canonical_and_no_follow(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            marker_path = root / "persist-schema.json"
+            with self.assertRaisesRegex(PersistentLayoutError, "missing"):
+                read_persist_schema_marker(marker_path)
+
+            marker_path.write_bytes(persist.emit_persist_schema_marker(1))
+            self.assertEqual(read_persist_schema_marker(marker_path),
+                             persist.emit_persist_schema_marker(1))
+
+            marker_path.write_bytes(b'{ "schema_version": 1 }\n')
+            with self.assertRaisesRegex(PersistentLayoutError, "canonical"):
+                read_persist_schema_marker(marker_path)
+
+            marker_path.write_bytes(b" " * (persist.MAX_PERSIST_SCHEMA_MARKER_BYTES + 1))
+            with self.assertRaisesRegex(PersistentLayoutError, "exceeds Greia bound"):
+                read_persist_schema_marker(marker_path)
+
+            marker_path.unlink()
+            target = root / "target"
+            target.write_bytes(persist.emit_persist_schema_marker(1))
+            marker_path.symlink_to(target)
+            with self.assertRaisesRegex(PersistentLayoutError, "unreadable"):
+                read_persist_schema_marker(marker_path)
 
     def test_open_round_trip(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -619,7 +748,7 @@ class PersistLifecycleTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             self._init(root)
-            record_path = root / "greia" / "installed-layout.json"
+            record_path = root / "greia" / "namespaces" / "layout-authority" / "installed-layout.json"
             record_path.write_bytes(b"{not json")
             os.chmod(record_path, 0o600)
             with self.assertRaises(PersistRecoveryRequired):

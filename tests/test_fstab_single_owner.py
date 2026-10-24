@@ -48,6 +48,7 @@ ENGINE_SH = PROJECT_ROOT / "build/lib/compose.sh"
 _UUID_A_FS = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
 _UUID_B_FS = "bbbbbbbb-cccc-dddd-eeee-ffffffffffff"
 _UUID_P_FS = "cccccccc-dddd-eeee-ffff-000000000000"
+_UUID_BOOT_FS = "eeeeeeee-ffff-0000-1111-222222222222"
 _UUID_A = "11111111-2222-3333-4444-555555555555"
 _UUID_B = "22222222-3333-4444-5555-666666666666"
 _UUID_P = "33333333-4444-5555-6666-777777777777"
@@ -127,6 +128,8 @@ def _policy() -> SlotProfilePolicy:
         layout_id="modern-gpt-ab-v1",
         system_slot_bytes=1024 * 1024 * 1024,
         boot_backend="grub-ab-v1",
+        persist_filesystem_uuid=_UUID_P_FS,
+        boot_control_filesystem_uuid=_UUID_BOOT_FS,
     )
 
 
@@ -405,7 +408,14 @@ class FinalizerSpecializationTests(unittest.TestCase):
                 filesystem.ops.index("health"),
             )
             on_disk = (mount_dir / FSTAB_REL_PATH).read_text(encoding="ascii")
-            self.assertEqual(on_disk, render_fstab(_UUID_B_FS))
+            self.assertEqual(
+                on_disk,
+                render_fstab(
+                    _UUID_B_FS,
+                    persist_filesystem_uuid=_UUID_P_FS,
+                    boot_control_filesystem_uuid=_UUID_BOOT_FS,
+                ),
+            )
             self.assertIn(f"UUID={_UUID_B_FS} / ext4", on_disk)
             self.assertIn(EXPECTED_TMPFS_TMP, on_disk)
             self.assertIn(EXPECTED_TMPFS_VAR, on_disk)
@@ -425,14 +435,27 @@ class FinalizerSpecializationTests(unittest.TestCase):
             mount_a, _ = _finalize_to_dir(second, payload, record_a, "A")
             fstab_a = (mount_a / FSTAB_REL_PATH).read_text(encoding="ascii")
             fstab_b = (mount_b / FSTAB_REL_PATH).read_text(encoding="ascii")
-            self.assertEqual(fstab_a, render_fstab(_UUID_A_FS))
-            self.assertEqual(fstab_b, render_fstab(_UUID_B_FS))
-            # Identical policy except the UUID input: strip the first line
-            # and the remainder must be byte-identical tmpfs policy.
+            self.assertEqual(
+                fstab_a,
+                render_fstab(
+                    _UUID_A_FS,
+                    persist_filesystem_uuid=_UUID_P_FS,
+                    boot_control_filesystem_uuid=_UUID_BOOT_FS,
+                ),
+            )
+            self.assertEqual(
+                fstab_b,
+                render_fstab(
+                    _UUID_B_FS,
+                    persist_filesystem_uuid=_UUID_P_FS,
+                    boot_control_filesystem_uuid=_UUID_BOOT_FS,
+                ),
+            )
+            # Only the root UUID differs between slot A and slot B.
             self.assertEqual(fstab_a.splitlines()[1:], fstab_b.splitlines()[1:])
             self.assertEqual(
                 fstab_a.splitlines()[1:],
-                [EXPECTED_TMPFS_TMP, EXPECTED_TMPFS_VAR],
+                fstab_b.splitlines()[1:],
             )
             self.assertNotIn(_TEMPLATE_UUID, fstab_a + fstab_b)
 
@@ -455,9 +478,17 @@ class FinalizerSpecializationTests(unittest.TestCase):
             finalized_text = (mount_a / FSTAB_REL_PATH).read_text(
                 encoding="ascii"
             )
-            # Same role UUID -> byte-identical policy across fresh and
-            # finalizer paths (single owner, no drift).
-            self.assertEqual(fresh_text, finalized_text)
+            # The legacy single-root path remains unchanged; an A/B
+            # finalizer additionally binds the verified shared filesystems.
+            self.assertEqual(fresh_text, render_fstab(_UUID_A_FS))
+            self.assertEqual(
+                finalized_text,
+                render_fstab(
+                    _UUID_A_FS,
+                    persist_filesystem_uuid=_UUID_P_FS,
+                    boot_control_filesystem_uuid=_UUID_BOOT_FS,
+                ),
+            )
 
 
 class FstabFileModeTests(unittest.TestCase):
@@ -521,10 +552,17 @@ class FstabFileModeTests(unittest.TestCase):
             fresh_text = (root / "fresh" / "etc/fstab").read_text(encoding="ascii")
             finalized_path = mount_dir / FSTAB_REL_PATH
             finalized_text = finalized_path.read_text(encoding="ascii")
-            # Same UUID -> byte-identical content asserted from persisted
-            # on-disk bytes on both paths.
-            self.assertEqual(fresh_text, finalized_text)
-            self.assertEqual(finalized_text, render_fstab(_UUID_B_FS))
+            # Legacy fresh assembly stays root-only. A/B finalization adds
+            # its installer-bound PERSIST and shared boot-control mounts.
+            self.assertEqual(fresh_text, render_fstab(_UUID_B_FS))
+            self.assertEqual(
+                finalized_text,
+                render_fstab(
+                    _UUID_B_FS,
+                    persist_filesystem_uuid=_UUID_P_FS,
+                    boot_control_filesystem_uuid=_UUID_BOOT_FS,
+                ),
+            )
             self.assertIn(f"UUID={_UUID_B_FS} / ext4", finalized_text)
             self.assertIn(EXPECTED_TMPFS_TMP, finalized_text)
             self.assertIn(EXPECTED_TMPFS_VAR, finalized_text)
@@ -628,7 +666,14 @@ class FstabFileModeTests(unittest.TestCase):
             self.assertEqual(len(mounts), 1)
             fstab_path = mounts[0] / FSTAB_REL_PATH
             persisted = fstab_path.read_bytes()
-            self.assertEqual(persisted, render_fstab(_UUID_B_FS).encode("ascii"))
+            self.assertEqual(
+                persisted,
+                render_fstab(
+                    _UUID_B_FS,
+                    persist_filesystem_uuid=_UUID_P_FS,
+                    boot_control_filesystem_uuid=_UUID_BOOT_FS,
+                ).encode("ascii"),
+            )
             self.assertEqual(stat.S_IMODE(os.stat(fstab_path).st_mode), 0o644)
             self.assertIn(EXPECTED_TMPFS_TMP.encode("ascii"), persisted)
             self.assertNotIn(_TEMPLATE_UUID.encode("ascii"), persisted)

@@ -14,6 +14,7 @@
 Description=Greia OS boot-health semantic service
 Requires=greia-boot-health.socket
 After=greia-boot-health.socket
+RequiresMountsFor=/run/greia-persist /var/lib/greia-os /boot/grub /etc/greia-os/layout
 # Never part of pre-intro boot and never a generic command runner or broad
 # system manager: this unit only serves the single semantic health-confirm
 # operation. No Before= edge toward the boot chain (see the socket's
@@ -30,15 +31,14 @@ Environment=PYTHONNOUSERSITE=1
 Environment=PYTHONDONTWRITEBYTECODE=1
 # Greia-owned health facts, re-resolved from Greia-owned state on every
 # operation. The first-install pending journal lives under
-# GREIA_BOOT_JOURNAL_DIR; the update pending journal under
-# GREIA_UPDATE_STATE_DIR/system-updates/journal; trust, layout, GRUB and
-# boot facts resolve from the same Greia-owned state the update service
-# uses. No GREIA_* Environment= lines below are request selectors: they
+# GREIA_BOOT_JOURNAL_DIR; fresh install and update use that same journal.
+# Trust, layout, GRUB and boot facts resolve from the same Greia-owned state
+# the update service uses. No GREIA_* Environment= lines below are request selectors: they
 # are image-owned composition roots, never client-supplied authority.
 Environment=GREIA_UPDATE_STATE_DIR=/var/lib/greia-os
-Environment=GREIA_BOOT_JOURNAL_DIR=/var/lib/greia-os/boot-journal
+Environment=GREIA_BOOT_JOURNAL_DIR=/run/greia-persist/greia/boot-journal
 Environment=GREIA_GRUBENV_DIR=/boot/grub
-Environment=GREIA_INSTALLED_LAYOUT_RECORD=/etc/greia-os/installed-layout.json
+Environment=GREIA_INSTALLED_LAYOUT_RECORD=/etc/greia-os/layout/installed-layout.json
 Environment=GREIA_BOOT_HISTORY_DIR=/var/lib/greia-os/diagnostics
 Environment=GREIA_FINALIZATION_RECEIPT_PATH=/etc/greia-os/finalization-receipt.json
 # P4 socket-access: image-owned provisioning of the unprivileged launcher
@@ -65,9 +65,10 @@ PrivateTmp=yes
 PrivateDevices=no
 ProtectHome=yes
 ProtectSystem=strict
-ReadWritePaths=/var/lib/greia-os /run/greia-os
+ReadWritePaths=/var/lib/greia-os /run/greia-os /run/greia-persist
 # Minimum extra writes the implementation requires: atomic installed-layout
-# advancement and accepted-sequence state (/etc/greia-os), GRUB one-shot/
+# advancement on the PERSIST directory bind and accepted-sequence state
+# (/etc/greia-os), GRUB one-shot/
 # default mutation (/boot/grub). Everything else stays read-only.
 ReadWritePaths=/etc/greia-os /boot/grub
 ProtectKernelTunables=yes

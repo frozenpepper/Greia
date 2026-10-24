@@ -48,6 +48,7 @@ _UUID_B = "22222222-3333-4444-5555-666666666666"
 _UUID_B_FS = "bbbbbbbb-cccc-dddd-eeee-ffffffffffff"
 _UUID_P = "33333333-4444-5555-6666-777777777777"
 _UUID_P_FS = "cccccccc-dddd-eeee-ffff-000000000000"
+_BOOT_CONTROL_FS_UUID = "dddddddd-eeee-ffff-0000-111111111111"
 
 _SLOT_BYTES = 1024 * 1024 * 1024
 
@@ -263,6 +264,8 @@ class InstalledReleaseIdentityFactsTests(unittest.TestCase):
                 layout_id="legacy-bios-ab-v1",
                 system_slot_bytes=_SLOT_BYTES,
                 boot_backend="grub-ab-v1",
+                persist_filesystem_uuid=_UUID_P_FS,
+                boot_control_filesystem_uuid=_BOOT_CONTROL_FS_UUID,
                 architecture=_ARCH,
                 platform_family=_FAMILY,
                 profile=_PROFILE,
@@ -299,6 +302,8 @@ class InstalledReleaseIdentityFactsTests(unittest.TestCase):
                 layout_id="legacy-bios-ab-v1",
                 system_slot_bytes=_SLOT_BYTES,
                 boot_backend="grub-ab-v1",
+                persist_filesystem_uuid=_UUID_P_FS,
+                boot_control_filesystem_uuid=_BOOT_CONTROL_FS_UUID,
             )
             document = _finalize_with_policy(root, policy)
             self.assertNotIn("architecture", document)
@@ -323,6 +328,8 @@ class InstalledReleaseIdentityFactsTests(unittest.TestCase):
                 layout_id="legacy-bios-ab-v1",
                 system_slot_bytes=_SLOT_BYTES,
                 boot_backend="grub-ab-v1",
+                persist_filesystem_uuid=_UUID_P_FS,
+                boot_control_filesystem_uuid=_BOOT_CONTROL_FS_UUID,
                 architecture=_ARCH,
                 platform_family=_FAMILY,
                 profile=_PROFILE,
@@ -342,6 +349,8 @@ class InstalledReleaseIdentityFactsTests(unittest.TestCase):
                 layout_id="legacy-bios-ab-v1",
                 system_slot_bytes=_SLOT_BYTES,
                 boot_backend="grub-ab-v1",
+                persist_filesystem_uuid=_UUID_P_FS,
+                boot_control_filesystem_uuid=_BOOT_CONTROL_FS_UUID,
                 architecture="unknown",
                 platform_family="unknown",
                 profile="unknown",
@@ -523,7 +532,7 @@ class ProductionPathProofTests(unittest.TestCase):
                 "persist": {
                     "scheme": "MBR_PARTUUID",
                     "partuuid": "a1b2c3d4-04",
-                    "filesystem_uuid": "dddddddd-dddd-dddd-dddd-ddddddddddd4",
+                    "filesystem_uuid": _UUID_P_FS,
                 },
             }
 
@@ -576,11 +585,16 @@ class ProductionPathProofTests(unittest.TestCase):
                 def run(self, command):  # type: ignore[no-untyped-def]
                     name = command[0]
                     if name == "blkid":
+                        if command[-1] == "/dev/sda1":
+                            return PersistCommandResult(
+                                stdout=_BOOT_CONTROL_FS_UUID,
+                                returncode=0,
+                            )
                         self.calls += 1
                         if self.calls == 1:
                             return PersistCommandResult(stdout="", returncode=1)
                         return PersistCommandResult(
-                            stdout="cccccccc-cccc-cccc-cccc-ccccccccccc3",
+                            stdout=_UUID_P_FS,
                             returncode=0,
                         )
                     return PersistCommandResult(stdout="", returncode=0)
@@ -588,10 +602,9 @@ class ProductionPathProofTests(unittest.TestCase):
             persist_stage = root / "persist-stage"
             persist_stage.mkdir()
             boot_control = root / "boot-control"
-            backend_state = root / "backend-state"
-            journal = root / "journal"
-            for directory in (boot_control, backend_state, journal):
+            for directory in (boot_control,):
                 directory.mkdir()
+            journal = persist_stage / "greia" / "boot-journal"
             seams = FreshAbInstallSeams(
                 partition_runner=_Runner(),  # type: ignore[arg-type]
                 slot_storage_factory=lambda role: _Store(1024 * 1024 * 1024),  # type: ignore[return-value]
@@ -604,14 +617,13 @@ class ProductionPathProofTests(unittest.TestCase):
                 persist_runner=_PersistRunner(),  # type: ignore[arg-type]
                 persist_stage_dir=persist_stage,
                 persist_uuid_factory=lambda: uuid.UUID(
-                    "cccccccc-cccc-cccc-cccc-ccccccccccc3"
+                    _UUID_P_FS
                 ),
                 boot_control_dir=boot_control,
-                backend_state_dir=backend_state,
-                journal_dir=journal,
                 post_layout_identity_observer=lambda target, plan: {
                     role: dict(values) for role, values in observed.items()
                 },
+                bios_bootloader_installer=lambda target, boot_directory: None,
             )
             request = FreshAbInstallRequest(
                 bundle_path=bundle,
@@ -753,7 +765,14 @@ class ProductionPathProofTests(unittest.TestCase):
                 boot_backend=None,
             )
             inspected = SystemUpdateInbox(state_dir).receive(bundle)
-            backend.stage(inspected)
+            with mock.patch(
+                "greia_platform.update_activation.RuntimeMountProbe.mounted_uuid_matches",
+                return_value=True,
+            ), mock.patch(
+                "greia_platform.fstab.read_fstab_uuid_for_mount",
+                return_value="dddddddd-eeee-ffff-0000-111111111111",
+            ):
+                backend.stage(inspected)
             raw = filesystem.files.get("etc/greia-os/release-identity.json")
             assert raw is not None, "staged slot carries no release identity"
             document = json.loads(raw.decode("utf-8"))

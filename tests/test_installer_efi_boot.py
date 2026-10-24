@@ -7,6 +7,7 @@ import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest import mock
 
 from greia_installer.efi_boot import (
@@ -20,6 +21,8 @@ from greia_installer.efi_boot import (
     target_profile_supports_efi,
 )
 from greia_installer.engine import InstallRequest, InstallationEngine, InstallationError
+from greia_installer.disk import DeviceObservation, DiskInventory
+from greia_installer.device_seams import build_bios_bootloader_installer
 from test_installer_engine import RecordingRunner, settings, target
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -155,6 +158,145 @@ class GrubCommandTests(unittest.TestCase):
         self.assertEqual(bios_grub_install_command(DEV), [
             "chroot", "{root}", "grub-install", "--target=i386-pc",
             "--boot-directory=/boot", "--recheck", "/dev/sda"])
+
+    def test_bios_grub_command_uses_verified_boot_control_directory(self) -> None:
+        from greia_installer.efi_boot import bios_grub_install_command
+
+        self.assertEqual(
+            bios_grub_install_command(
+                DEV, boot_directory=Path("/run/greia-install/boot-control")
+            ),
+            [
+                "grub-install",
+                "--target=i386-pc",
+                "--boot-directory",
+                "/run/greia-install/boot-control",
+                "--recheck",
+                "/dev/sda",
+            ],
+        )
+
+    def test_bios_bootloader_adapter_rechecks_identity_and_targets_exact_disk(self) -> None:
+        boot_directory = Path("/run/greia-install/boot-control")
+        target = DeviceObservation(
+            name="sda",
+            path=DEV,
+            size_bytes=8 * 1024**3,
+            device_type="disk",
+            model="Target",
+            serial="SERIAL-BOOT",
+            transport="sata",
+            removable=False,
+            read_only=False,
+            mountpoints=(),
+            wwn="WWN-BOOT",
+        )
+
+        class _Probe:
+            calls = 0
+
+            def probe(self):
+                self.calls += 1
+                return DiskInventory((target,))
+
+        class _Runner:
+            def __init__(self, returncode=0):
+                self.returncode = returncode
+                self.commands = []
+
+            def run(self, command):
+                self.commands.append(list(command))
+                return SimpleNamespace(returncode=self.returncode)
+
+        probe, runner = _Probe(), _Runner()
+        installer = build_bios_bootloader_installer(runner, target_probe=probe)
+        installer(target, boot_directory)
+        self.assertEqual(probe.calls, 1)
+        self.assertEqual(
+            runner.commands,
+            [[
+                "grub-install",
+                "--target=i386-pc",
+                "--boot-directory",
+                str(boot_directory),
+                "--recheck",
+                str(DEV),
+            ]],
+        )
+
+    def test_bios_bootloader_adapter_refuses_reenumerated_disk_and_command_failure(self) -> None:
+        from greia_installer.fresh_ab_install import FreshAbInstallError
+
+        target = DeviceObservation(
+            name="sda",
+            path=DEV,
+            size_bytes=8 * 1024**3,
+            device_type="disk",
+            model="Target",
+            serial="SERIAL-BOOT-2",
+            transport="sata",
+            removable=False,
+            read_only=False,
+            mountpoints=(),
+            wwn="WWN-BOOT-2",
+        )
+        moved = DeviceObservation(
+            name="sdb",
+            path=Path("/dev/sdb"),
+            size_bytes=target.size_bytes,
+            device_type="disk",
+            model=target.model,
+            serial=target.serial,
+            transport=target.transport,
+            removable=False,
+            read_only=False,
+            mountpoints=(),
+            wwn=target.wwn,
+        )
+
+        class _Probe:
+            def __init__(self, current):
+                self.current = current
+
+            def probe(self):
+                return DiskInventory((self.current,))
+
+        class _Runner:
+            def __init__(self, returncode):
+                self.returncode = returncode
+                self.commands = []
+
+            def run(self, command):
+                self.commands.append(list(command))
+                return SimpleNamespace(returncode=self.returncode)
+
+        moved_runner = _Runner(0)
+        moved_installer = build_bios_bootloader_installer(
+            moved_runner, target_probe=_Probe(moved)
+        )
+        with self.assertRaisesRegex(FreshAbInstallError, "identity or locator changed"):
+            moved_installer(target, Path("/run/greia-install/boot-control"))
+        self.assertEqual(moved_runner.commands, [])
+
+        class _FailedProbe:
+            def probe(self):
+                raise RuntimeError("inventory unavailable")
+
+        unavailable_runner = _Runner(0)
+        unavailable_installer = build_bios_bootloader_installer(
+            unavailable_runner, target_probe=_FailedProbe()
+        )
+        with self.assertRaisesRegex(FreshAbInstallError, "identity could not be rechecked"):
+            unavailable_installer(target, Path("/run/greia-install/boot-control"))
+        self.assertEqual(unavailable_runner.commands, [])
+
+        failed_runner = _Runner(1)
+        failed_installer = build_bios_bootloader_installer(
+            failed_runner, target_probe=_Probe(target)
+        )
+        with self.assertRaisesRegex(FreshAbInstallError, "command failed"):
+            failed_installer(target, Path("/run/greia-install/boot-control"))
+        self.assertEqual(failed_runner.commands[0][-1], str(DEV))
 
 
 class FailingNvramRunner(RecordingRunner):

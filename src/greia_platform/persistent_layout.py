@@ -31,6 +31,7 @@ import hashlib
 import json
 import os
 import re
+import stat
 import tempfile
 import uuid
 from dataclasses import dataclass
@@ -70,6 +71,9 @@ LAYOUT_RECORD_NAME = "installed-layout.json"
 
 #: Canonical contract file name (matches system_updates.PERSISTENT_CONTRACT_NAME).
 CONTRACT_NAME = "persistent-state-contract.json"
+
+#: Readability/migration marker consumed by the installed update service.
+PERSIST_SCHEMA_MARKER_NAME = "persist-schema.json"
 
 #: Layout record must be readable only by its owner (root on device).
 LAYOUT_RECORD_MODE = 0o600
@@ -1036,7 +1040,8 @@ PERSISTENT_NAMESPACE_ORDER: tuple[str, ...] = (
     "bounded-logs",
 )
 
-#: Exact installed-layout record bind: must sort before every other mount.
+#: Layout-authority directory bind: must sort before every other mount so
+#: readers see the installed record before trusting other shared state.
 LAYOUT_BIND_ORDER = 5
 
 
@@ -1054,13 +1059,22 @@ LAYOUT_BIND_ORDER = 5
 DURABLE_PATH_AUDIT: tuple[DurablePathEntry, ...] = (
     # -- PERSISTENT_SHARED with an owned bind (deterministic mount order) --
     DurablePathEntry(
-        path="/etc/greia-os/installed-layout.json",
+        path="/etc/greia-os/layout",
         durability=Durability.PERSISTENT_SHARED,
         namespace="layout-authority",
-        mount=MountKind.BIND_FILE,
+        mount=MountKind.BIND_DIR,
         order=LAYOUT_BIND_ORDER,
-        rationale="Root-owned layout record read from PERSIST before any other "
-        "state is trusted; bind-file keeps slot-local /etc read-only otherwise.",
+        rationale="Root-owned layout-authority directory from PERSIST; a directory "
+        "bind keeps atomic record replacement visible to both slots.",
+    ),
+    DurablePathEntry(
+        path="/etc/greia-os/layout/installed-layout.json",
+        durability=Durability.PERSISTENT_SHARED,
+        namespace="layout-authority",
+        mount=MountKind.INHERIT,
+        order=None,
+        rationale="Installed layout record is written atomically inside the shared "
+        "layout-authority directory bind.",
     ),
     DurablePathEntry(
         path="/var/lib/greia-profiles",
@@ -1732,6 +1746,53 @@ def parse_persist_schema_marker(raw: bytes | bytearray) -> int:
     return schema
 
 
+def read_persist_schema_marker(path: Path) -> bytes:
+    """Read one bounded, canonical marker from the already-mounted PERSIST.
+
+    The update service must not mount PERSIST itself. Its caller supplies the
+    marker's bind-visible path; this helper rejects links and non-regular
+    files, bounds the read before parsing, and returns the canonical bytes for
+    the manifest compatibility gate.
+    """
+    candidate = Path(path)
+    flags = (
+        os.O_RDONLY
+        | getattr(os, "O_CLOEXEC", 0)
+        | getattr(os, "O_NOFOLLOW", 0)
+        | getattr(os, "O_NONBLOCK", 0)
+    )
+    try:
+        descriptor = os.open(candidate, flags)
+    except FileNotFoundError as exc:
+        raise PersistentLayoutError(
+            "installed PERSIST schema marker is missing"
+        ) from exc
+    except OSError as exc:
+        raise PersistentLayoutError(
+            "installed PERSIST schema marker is unreadable"
+        ) from exc
+
+    try:
+        try:
+            with os.fdopen(descriptor, "rb") as handle:
+                descriptor = -1
+                if not stat.S_ISREG(os.fstat(handle.fileno()).st_mode):
+                    raise PersistentLayoutError(
+                        "installed PERSIST schema marker is not a regular file"
+                    )
+                raw = handle.read(MAX_PERSIST_SCHEMA_MARKER_BYTES + 1)
+        except OSError as exc:
+            raise PersistentLayoutError(
+                "installed PERSIST schema marker is unreadable"
+            ) from exc
+    finally:
+        if descriptor >= 0:
+            os.close(descriptor)
+
+    parse_persist_schema_marker(raw)
+    return raw
+
+
 def assert_persist_schema_compatible(installed_schema: int, manifest: UpdateManifest) -> int:
     """PERSIST readability gate (ADR 0036 §6): current schema must be readable.
 
@@ -1791,15 +1852,125 @@ def _persist_state_root(persist_root: Path) -> Path:
 
 
 def persist_record_path(persist_root: Path) -> Path:
-    return _persist_state_root(persist_root) / LAYOUT_RECORD_NAME
+    return persist_namespace_root(persist_root, "layout-authority") / LAYOUT_RECORD_NAME
 
 
 def persist_contract_path(persist_root: Path) -> Path:
     return _persist_state_root(persist_root) / CONTRACT_NAME
 
 
+def persist_schema_marker_path(persist_root: Path) -> Path:
+    """Return the PERSIST-side installed schema marker path."""
+    return _persist_state_root(persist_root) / PERSIST_SCHEMA_MARKER_NAME
+
+
 def persist_namespaces_root(persist_root: Path) -> Path:
     return _persist_state_root(persist_root) / PERSIST_NAMESPACES_DIRNAME
+
+
+def persist_namespace_root(persist_root: Path, namespace: str) -> Path:
+    """Return one registered namespace directory beneath mounted PERSIST."""
+    if namespace not in PERSISTENT_NAMESPACE_ORDER:
+        raise PersistentLayoutError(f"unregistered PERSIST namespace: {namespace!r}")
+    return persist_namespaces_root(Path(persist_root)) / namespace
+
+
+def persist_mount_source_path(
+    persist_root: Path,
+    mount: NamespaceMount,
+) -> Path:
+    """Resolve a canonical bind source from one namespace-map entry.
+
+    Directory binds use their registered namespace root. File binds live
+    under their namespace using the canonical target basename.
+    """
+    if not isinstance(mount, NamespaceMount):
+        raise PersistentLayoutError("mount source requires a canonical namespace entry")
+    namespace_root = persist_namespace_root(Path(persist_root), mount.namespace)
+    if mount.kind == MountKind.BIND_FILE:
+        basename = Path(mount.target).name
+        if not basename or basename in (".", ".."):
+            raise PersistentLayoutError("file bind target has no canonical basename")
+        return namespace_root / basename
+    if mount.kind == MountKind.BIND_DIR:
+        return namespace_root
+    raise PersistentLayoutError("namespace map carries a non-bind mount")
+
+
+def present_canonical_mount_targets(
+    slot_root: Path,
+    namespace_map: PersistentNamespaceMap | None = None,
+    *,
+    directory_mode: int = 0o755,
+) -> tuple[Path, ...]:
+    """Create safe bind destinations, including regular file placeholders.
+
+    A bind mount needs its destination to exist. Directory mounts receive
+    the canonical directory tree; file mounts receive an empty regular file
+    unless the staged image already supplied one. Symlinks and type conflicts
+    fail closed before the slot can be accepted.
+    """
+    root = Path(slot_root)
+    if not root.is_absolute() or root.is_symlink() or not root.is_dir():
+        raise PersistentLayoutError("slot root must be an existing absolute real directory")
+    if isinstance(directory_mode, bool) or not isinstance(directory_mode, int) or not 0 <= directory_mode <= 0o777:
+        raise PersistentLayoutError("bind target directory mode is invalid")
+    table = namespace_map if namespace_map is not None else build_namespace_map()
+    base = root.resolve()
+    presented: list[Path] = []
+    for mount in table.mount_plan():
+        candidate = base / mount.target.lstrip("/")
+        try:
+            candidate.relative_to(base)
+        except ValueError as exc:
+            raise PersistentLayoutError(
+                f"canonical bind target escapes slot root: {mount.target}"
+            ) from exc
+        directory = candidate.parent if mount.kind == MountKind.BIND_FILE else candidate
+        current = base
+        for component in directory.relative_to(base).parts:
+            current = current / component
+            if current.is_symlink():
+                raise PersistentLayoutError(
+                    f"canonical bind path passes a symbolic link: {mount.target}"
+                )
+            try:
+                current.mkdir(mode=directory_mode, exist_ok=True)
+            except OSError as exc:
+                raise PersistentLayoutError(
+                    f"canonical bind path cannot be presented: {mount.target}: {exc}"
+                ) from exc
+            if not current.is_dir() or current.is_symlink():
+                raise PersistentLayoutError(
+                    f"canonical bind path is not a real directory: {mount.target}"
+                )
+        try:
+            os.chmod(directory, directory_mode)
+            if mount.kind == MountKind.BIND_FILE:
+                if candidate.is_symlink():
+                    raise PersistentLayoutError(
+                        f"canonical file bind target is a symbolic link: {mount.target}"
+                    )
+                if candidate.exists():
+                    if not candidate.is_file():
+                        raise PersistentLayoutError(
+                            f"canonical file bind target is not a regular file: {mount.target}"
+                        )
+                else:
+                    descriptor = os.open(
+                        candidate,
+                        os.O_CREAT | os.O_EXCL | os.O_WRONLY,
+                        0o644,
+                    )
+                    os.close(descriptor)
+        except PersistentLayoutError:
+            raise
+        except OSError as exc:
+            raise PersistentLayoutError(
+                f"canonical bind target cannot be created: {mount.target}: {exc}"
+            ) from exc
+        presented.append(directory)
+    return tuple(dict.fromkeys(presented))
 
 
 #: PERSIST-side file name of the T5-EVID bounded boot-history ring.
@@ -1839,6 +2010,11 @@ def fresh_initialize_persist(
         raise PersistentLayoutError(
             "fresh initialization refused: layout record already exists"
         )
+    schema_marker_path = persist_schema_marker_path(root)
+    if schema_marker_path.is_symlink() or schema_marker_path.exists():
+        raise PersistentLayoutError(
+            "fresh initialization refused: PERSIST schema marker already exists"
+        )
     state_root = _persist_state_root(root)
     namespaces_root = persist_namespaces_root(root)
     state_root.mkdir(parents=True, exist_ok=True)
@@ -1854,11 +2030,30 @@ def fresh_initialize_persist(
         target.mkdir(mode=0o770)
         os.chmod(target, 0o770)
         created.append(namespace)
+    for mount in namespace_map.mount_plan():
+        if mount.kind != MountKind.BIND_FILE or mount.namespace == "layout-authority":
+            continue
+        source = persist_mount_source_path(root, mount)
+        try:
+            descriptor = os.open(
+                source,
+                os.O_CREAT | os.O_EXCL | os.O_WRONLY,
+                0o644,
+            )
+            os.close(descriptor)
+        except OSError as exc:
+            raise PersistentLayoutError(
+                f"fresh PERSIST file-bind source cannot be initialized: {mount.namespace}"
+            ) from exc
     if sorted(created) != sorted(namespace_map.namespaces) or len(set(created)) != len(created):
         raise PersistentLayoutError("fresh initialization must mint each namespace once")
-    record.write_to(record_path)
     contract_raw = emit_persistent_state_contract(namespace_map)
     _atomic_write_file(persist_contract_path(root), contract_raw, mode=0o644)
+    schema_marker_raw = emit_persist_schema_marker(PERSIST_SCHEMA_CURRENT)
+    _atomic_write_file(schema_marker_path, schema_marker_raw, mode=0o644)
+    # The layout record is the fresh-state authority; publish it only after
+    # its namespaces and both schema/registry markers are durable.
+    record.write_to(record_path)
     return state_root
 
 
@@ -1900,6 +2095,14 @@ def open_existing_persist(
         if candidate.is_symlink() or not candidate.is_dir():
             raise PersistRecoveryRequired(
                 f"PERSIST namespace is missing: {namespace}"
+            )
+    for mount in namespace_map.mount_plan():
+        if mount.kind != MountKind.BIND_FILE or mount.namespace == "layout-authority":
+            continue
+        source = persist_mount_source_path(root, mount)
+        if source.is_symlink() or not source.is_file():
+            raise PersistRecoveryRequired(
+                f"PERSIST file-bind source is missing: {mount.namespace}"
             )
     contract_path = persist_contract_path(root)
     if contract_path.is_symlink() or not contract_path.is_file():

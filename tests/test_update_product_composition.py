@@ -30,11 +30,16 @@ import json
 import os
 import tempfile
 import unittest
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from pathlib import Path
+from unittest import mock
 
 from greia_platform.grub_ab import GrubEnvBackend
-from greia_platform.persistent_layout import InstalledLayoutRecord
+from greia_platform.persistent_layout import (
+    InstalledLayoutRecord,
+    emit_persist_schema_marker,
+    persist_schema_marker_path,
+)
 from greia_platform.system_updates import (
     SystemUpdateInbox,
     UpdateBackendUnavailable,
@@ -43,6 +48,7 @@ from greia_platform.system_updates import (
     build_update_bundle,
     load_installed_layout_record,
 )
+from update_mount_fixtures import installed_mount_patchers
 
 
 @contextmanager
@@ -255,6 +261,9 @@ class ShippedDefaultCompositionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             state_dir = root / "state"
+            marker_path = persist_schema_marker_path(state_dir)
+            marker_path.parent.mkdir(parents=True, exist_ok=True)
+            marker_path.write_bytes(emit_persist_schema_marker(1))
             layout_path = root / "installed-layout.json"
             layout_path.write_bytes(_canonical_record(_record_dict()))
             boot_dir = root / "boot-control"
@@ -275,6 +284,7 @@ class ShippedDefaultCompositionTests(unittest.TestCase):
                 authority = build_live_update_service(
                     state_dir=state_dir,
                     layout_record_path=layout_path,
+                    persist_root=state_dir,
                     boot_backend=grub,
                     boot_backend_auto=False,
                 )
@@ -365,8 +375,11 @@ class ShippedDefaultCompositionTests(unittest.TestCase):
                 # Staging fails closed naming the absent inactive-slot
                 # device path (no devices in this offline proof), not a
                 # generic crash and never a degraded empty-seam refusal.
-                with self.assertRaises(UpdateBackendUnavailable) as raised:
-                    authority.stage_current_candidate()
+                with ExitStack() as stack:
+                    for patcher in installed_mount_patchers(_UUID_P_FS):
+                        stack.enter_context(patcher)
+                    with self.assertRaises(UpdateBackendUnavailable) as raised:
+                        authority.stage_current_candidate()
             finally:
                 backend._require_seam = original_require  # type: ignore[method-assign]
             message = str(raised.exception)
@@ -420,20 +433,29 @@ class ShippedUnitContractTests(unittest.TestCase):
         self.assertEqual(parser.get("Service", "User").strip(), "root")
         self.assertEqual(parser.get("Service", "ProtectSystem").strip(), "strict")
         # Activated sandbox (POSTR1-P3-UPDATE-UNIT): mount/device
-        # administration plus the chroot hardware-support install leg
-        # (CAP_SYS_CHROOT for the shared finalize path's chroot operations),
-        # with the minimum state/layout/GRUB grants.
+        # The shared finalizer also runs the installer-proven offline APT
+        # package path; retain its apt/dpkg capabilities and task headroom,
+        # while excluding full-rootfs unpack/initramfs-only MKNOD.
         self.assertEqual(
             parser.get("Service", "CapabilityBoundingSet").strip(),
-            "CAP_SYS_ADMIN CAP_SYS_CHROOT",
+            "CAP_SYS_ADMIN CAP_SYS_CHROOT CAP_SETUID CAP_SETGID CAP_CHOWN "
+            "CAP_FOWNER CAP_FSETID CAP_DAC_OVERRIDE",
         )
         self.assertEqual(
             parser.get("Service", "AmbientCapabilities").strip(),
-            "CAP_SYS_ADMIN CAP_SYS_CHROOT",
+            "CAP_SYS_ADMIN CAP_SYS_CHROOT CAP_SETUID CAP_SETGID CAP_CHOWN "
+            "CAP_FOWNER CAP_FSETID CAP_DAC_OVERRIDE",
         )
         self.assertEqual(
             _directive_values(SERVICE_PATH, "ReadWritePaths"),
-            {"/var/lib/greia-os", "/run/greia-os", "/etc/greia-os", "/boot/grub"},
+            {
+                "/var/lib/greia-os",
+                "/run/greia-os",
+                "/run/greia-update-authority",
+                "/run/greia-persist",
+                "/etc/greia-os",
+                "/boot/grub",
+            },
         )
         # v3 carries no key material: no key trust root is granted.
         raw = SERVICE_PATH.read_text(encoding="utf-8")
@@ -458,7 +480,8 @@ class ShippedUnitContractTests(unittest.TestCase):
             parser.get("Socket", "ListenStream").strip(),
             "/run/greia-os/system-update.sock",
         )
-        self.assertEqual(parser.get("Socket", "SocketMode").strip(), "0600")
+        self.assertEqual(parser.get("Socket", "SocketMode").strip(), "0660")
+        self.assertEqual(parser.get("Socket", "SocketGroup").strip(), "greiapanel")
         self.assertEqual(parser.get("Socket", "Accept").strip(), "no")
         self.assertIn("WantedBy=sockets.target", SOCKET_PATH.read_text(encoding="utf-8"))
         raw = SOCKET_PATH.read_text(encoding="utf-8")

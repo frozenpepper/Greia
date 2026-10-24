@@ -128,7 +128,7 @@ def _observed_mbr_identities(signature: str = _MBR_SIGNATURE):
         "persist": {
             "scheme": "MBR_PARTUUID",
             "partuuid": f"{signature}-04",
-            "filesystem_uuid": "dddddddd-dddd-dddd-dddd-ddddddddddd4",
+            "filesystem_uuid": _PERSIST_FS_UUID,
         },
     }
 
@@ -260,6 +260,11 @@ class FakePersistRunner(PersistCommandRunner):
         self.commands.append(list(command))
         name = command[0]
         if name == "blkid":
+            if command[-1] in ("/dev/sda1", "/dev/sda3"):
+                return PersistCommandResult(
+                    stdout="dddddddd-dddd-dddd-dddd-dddddddddddd",
+                    returncode=0,
+                )
             self._blkid_calls += 1
             if self._blkid_calls == 1:
                 return PersistCommandResult(stdout="", returncode=1)
@@ -282,7 +287,7 @@ class ScriptedProbeRunner(MbrProbeRunner):
         self._fs_uuids = fs_uuids or {
             "2": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1",
             "3": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2",
-            "4": "dddddddd-dddd-dddd-dddd-ddddddddddd4",
+            "4": _PERSIST_FS_UUID,
         }
         self.calls: list[list[str]] = []
 
@@ -443,10 +448,9 @@ class OrchestratorSequencingTests(unittest.TestCase):
         persist_stage = root / "persist-stage"
         persist_stage.mkdir()
         boot_control = root / "boot-control"
-        backend_state = root / "backend-state"
-        journal = root / "journal"
-        for directory in (boot_control, backend_state, journal):
+        for directory in (boot_control,):
             directory.mkdir()
+        journal = persist_stage / "greia" / "boot-journal"
         touched: list[str] = []
         order: list[str] = []
 
@@ -473,9 +477,10 @@ class OrchestratorSequencingTests(unittest.TestCase):
             persist_stage_dir=persist_stage,
             persist_uuid_factory=lambda: uuid.UUID(_PERSIST_FS_UUID),
             boot_control_dir=boot_control,
-            backend_state_dir=backend_state,
-            journal_dir=journal,
             post_layout_identity_observer=_recording_observer,
+            bios_bootloader_installer=lambda target, boot_directory: order.append(
+                "bios-bootloader"
+            ),
         )
         request = FreshAbInstallRequest(
             bundle_path=bundle,
@@ -513,6 +518,7 @@ class OrchestratorSequencingTests(unittest.TestCase):
         self.assertTrue(harness["runner"].commands)
         self.assertEqual(harness["order"][0], "observe")
         self.assertEqual(harness["order"][1], "slot-storage:A")
+        self.assertEqual(harness["order"][-1], "bios-bootloader")
         self.assertEqual(harness["touched"], ["A"])
         self.assertEqual(
             result.receipt.filesystem_uuid,
@@ -620,10 +626,7 @@ class OrchestratorSequencingTests(unittest.TestCase):
         persist_stage = root / "persist-stage"
         persist_stage.mkdir()
         boot_control = root / "boot-control"
-        backend_state = root / "backend-state"
-        journal = root / "journal"
-        for directory in (boot_control, backend_state, journal):
-            directory.mkdir()
+        boot_control.mkdir()
         calls: list[tuple[str, int]] = []
         runners: list[RecordingPartitionRunner] = []
 
@@ -647,8 +650,7 @@ class OrchestratorSequencingTests(unittest.TestCase):
                 persist_stage_dir=persist_stage,
                 persist_uuid_factory=lambda: uuid.UUID(_PERSIST_FS_UUID),
                 boot_control_dir=boot_control,
-                backend_state_dir=backend_state,
-                journal_dir=journal,
+                bios_bootloader_installer=lambda target, boot_directory: None,
             )
 
         facts = AbExecutorFacts(

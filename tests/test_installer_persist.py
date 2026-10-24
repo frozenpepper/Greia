@@ -43,6 +43,10 @@ from greia_platform.persistent_layout import (
     PartitionFact,
     PersistRecoveryRequired as PlatformRecovery,
     build_namespace_map,
+    emit_persist_schema_marker,
+    parse_persist_schema_marker,
+    persist_record_path,
+    persist_schema_marker_path,
 )
 from greia_platform.system_updates import verify_persistent_state_contract_bytes
 
@@ -247,9 +251,13 @@ class FreshInitTests(unittest.TestCase):
                  "/dev/loop99p4", str(stage)],
             )
             self.assertEqual(runner.commands[4], ["umount", str(stage)])
-            # Layout authority + namespace schema + contract + transaction root.
-            record_path = stage / "greia" / "installed-layout.json"
+            # Layout authority + both schema markers + contract + transaction root.
+            record_path = persist_record_path(stage)
             self.assertEqual(stat.S_IMODE(record_path.stat().st_mode), 0o600)
+            marker_path = persist_schema_marker_path(stage)
+            marker_raw = marker_path.read_bytes()
+            self.assertEqual(marker_raw, emit_persist_schema_marker(1))
+            self.assertEqual(parse_persist_schema_marker(marker_raw), 1)
             self.assertEqual(
                 result.record.persist.filesystem_uuid, _UUID_P_FS
             )
@@ -259,7 +267,16 @@ class FreshInitTests(unittest.TestCase):
             )
             self.assertEqual(namespaces, sorted(PERSISTENT_NAMESPACE_ORDER))
             for child in (stage / "greia" / "namespaces").iterdir():
-                self.assertEqual(list(child.iterdir()), [])
+                if child.name == "machine-identity":
+                    self.assertEqual([path.name for path in child.iterdir()], ["machine-id"])
+                    self.assertEqual((child / "machine-id").read_bytes(), b"")
+                elif child.name == "layout-authority":
+                    self.assertEqual(
+                        [path.name for path in child.iterdir()],
+                        ["installed-layout.json"],
+                    )
+                else:
+                    self.assertEqual(list(child.iterdir()), [])
             verify_persistent_state_contract_bytes(
                 (stage / "greia" / "persistent-state-contract.json").read_bytes()
             )
@@ -345,7 +362,7 @@ class FreshInitTests(unittest.TestCase):
             self.assertEqual(
                 runner.names(), ["blkid", "mkfs.ext4", "blkid", "mount", "umount"]
             )
-            self.assertFalse((stage / "greia" / "installed-layout.json").exists())
+            self.assertFalse(persist_record_path(stage).exists())
             # No silent resume: the occupant still blocks a retry. The
             # retry observes the same (matching) occupant UUID, adopts the
             # node, then fails closed at the initialization gates.
@@ -472,7 +489,7 @@ class ExistingOpenTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             device = Path(directory) / "device"
             self._seed_device(seed, device)
-            record_path = device / "greia" / "installed-layout.json"
+            record_path = persist_record_path(device)
             record_path.write_bytes(b"{not json")
             os.chmod(record_path, 0o600)
             stage = Path(directory) / "stage"
@@ -555,7 +572,7 @@ class ExistingOpenTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             device = Path(directory) / "device"
             self._seed_device(seed, device)
-            record_path = device / "greia" / "installed-layout.json"
+            record_path = persist_record_path(device)
             stolen = record_path.read_bytes()
             record_path.unlink()
             decoy = device / "decoy.json"

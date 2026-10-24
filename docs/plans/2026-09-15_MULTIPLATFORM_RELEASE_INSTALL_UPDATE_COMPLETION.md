@@ -2854,3 +2854,124 @@ Two build regressions found and fixed while producing the media: the build host 
 Built and flashed `legacy-x86-i686-rc` at `c6744c78a` through `tools/build-and-flash-development-usb.sh` inside `sudo -n unshare --mount --propagation private`, log `out/rc-build13-c6744c78.log`, to the authorized 8 GB LaCie `/dev/sdc` (`iamaKey`, serial `eca3505216d7d3`). Image SHA-256 `09c1c9ad4a8abe861fc96027f9165beb99bba47858e535b8f2efde15784a4acf`; live media id `ab395c7f-e2dd-45cd-8d0d-ed4be6e39b2a`; payload accounted **1,323 MiB** (<1,500); target payload 555,003,904 bytes / SHA-256 `babfe052e2cf9e3e8df3aef1c7b8ee96b71f8f94abb0518c1af338869aae2aba`; `boot_console_policy=quiet`.
 
 Gates: artifact verification PASS, live USB read-only verification PASS, `usb_readback_verification=PASS`, `source_artifact_verification=PASS`, `usb_flash_readback_verification=PASS`, `loop_hygiene_verification=PASS`, no Greia loops. Evidence scope: build/artifact/media read-back only; no QEMU boot, no physical install. The EFI path remains UNPROVEN. Next exact step: clean-install the reference Aspire from this LaCie and run the premortem §5 F1–F19 checklist.
+
+
+## 2026-10-23 — Session 04 persistent-state and Parent delivery source integration
+
+Owner direction: complete the reliable update path using GPT-6 Luna workers;
+no Lunacy workflow. Image builds, privileged Linux tests, installs and physical
+acceptance are deferred to another agent/machine through the committed work
+order `docs/testing/2026-10-23_SYSTEM_UPDATE_LINUX_ACCEPTANCE.md`. Keep the
+scope on ordinary reliability and rollback; no signing/anti-tampering or new
+security programme.
+
+Implemented source extends the existing v3/inactive-slot engine:
+
+- Fresh A/B installation writes the schema, layout record and first-install
+  journal to actual PERSIST, and GRUB config/environment to actual verified
+  boot-control storage. Both slots receive UUID-bound fstab composition and
+  namespace-map-derived durable binds. Single-root rendering stays unchanged.
+- The root-owned layout authority is a **directory bind** at
+  `/etc/greia-os/layout`; atomic record replacement remains visible across
+  slots. The shared journal is `/run/greia-persist/greia/boot-journal`, with
+  schema at `/run/greia-persist/greia/persist-schema.json`. Credential issuance,
+  health commit and deadline recovery read the same installed journal.
+- Parent owns one durable background check/download/verify/prepare job through
+  the existing inbox and typed root socket. GET status stays cached while root
+  stages. The static catalog requires exact profile/family/architecture/board
+  compatibility and genuinely newer comparable versions.
+- Restart is explicit. Root rechecks mounted/staged state and holds the same
+  profile-session lock as activation through an explicit picker-idle proof,
+  one-shot arm and bounded systemd handoff. Lost responses reconcile and do
+  not automatically repeat reboot.
+- HTML controls are published at `e0116787bb324ca4685ad832cbc8d4d9e5b3461d`
+  and vendored via the canonical pin tool. Mobile uses that shared core;
+  local Mobile commit `06441e56e5e38d6e4a70f6e435d9d4ea7f339273` has no
+  configured remote. Update UI covers EN/IT/ES/FR.
+- The existing index builder gains four-language notes, bounded per-target
+  history and atomic local publication. Owner build/inspect/index plus shared
+  site-ftp remains the pipeline; no hosted Actions execution was requested/run.
+
+Evidence and residual verification are recorded in HANDOVER and
+`docs/reviews/2026-10-23_SYSTEM_UPDATE_IMPLEMENTATION_EVIDENCE.md`. Local
+source checks do not close Session 04. The real exact-unit finalization,
+A→B→A, interrupted update, bad userspace/kernel recovery and child-data
+survival remain **UNPROVEN** until the external work order runs.
+
+Current transfer remains the full compressed v3 bundle, including for Python
+changes. No small-patch route is implemented or accepted. Manual file upload
+still receives only; staging currently requires online catalog selection.
+These are explicit limits, not release-complete offline/delta claims.
+
+## 2026-10-24 — Source evidence reconciliation and BIOS install proof still owed
+
+Append-only correction to the Oct 23 integration entry: the available
+integrated source run is 743 tests, OK with 2 skips; separate focus runs report
+33 issuer, 32 recovery, and 76 product/GRUB tests PASS. These results all
+predate the lifecycle worker's pending BIOS installer fix. Keep them labeled
+pre-fix until that worker reports its final focused run. Exact paths and
+negative evidence are in
+`docs/reviews/2026-10-23_SYSTEM_UPDATE_IMPLEMENTATION_EVIDENCE.md`.
+
+The checkout sampled for that report has base `2fd29dffa75edc3ce5edd16431a86e6722a68830`
+with an uncommitted source worktree; the base is not a source freeze. The
+work-order file is currently untracked despite the Oct 23 wording that called
+it committed. No source SHA has been invented. Commit the implementation and
+work-order before the external Linux runner starts, then record the exact
+source SHA in the execution receipt.
+
+`make verify` remains NOT GREEN: the first available full run reported 5,876
+tests, 17 failures, 28 errors and 8 skips; subsequent integrated/final runs
+aborted with signal 6 at the typography cleanup / Activity tempo test. The
+ARM64 builder refusal and MBR message expectation were reproduced on the clean
+baseline. No Linux build, QEMU guest, installation, Parent browser/device, or
+physical hardware acceptance ran in this evidence set.
+
+Add an explicit external acceptance gate after the BIOS fix: install onto a
+blank disposable disk with the guest in BIOS mode, then boot the installed
+system through BIOS GRUB into Greia and retain both boot evidence and the
+installed MBR/GRUB state. Installer return status, generated GRUB files and
+source tests are insufficient. Continue to hold Session 04 OPEN until this
+gate and the real updater, A→B→A, rollback, interruption, PERSIST and
+child-data predicates in the work order pass.
+
+## 2026-10-24 — BIOS installer source reruns passed; Linux boot remains open
+
+Append-only correction to the evidence snapshot above: the BIOS installer
+adapter fix is now included in the dirty source worktree. Its eight focused
+suites passed 116 tests. The settled 38-module source gate passed **770 tests,
+2 skipped** at `/tmp/greia-update-completion/focused-final-frozen.log`; an
+independent fresh-process rerun passed the same count at
+`/tmp/greia-update-completion/focused-final-bios-rerun.log`. The earlier
+combined attempt with one seam assertion failure remains recorded; it did not
+recur after the test inspected the production `shell=False` runner and adapter
+argv delegation. Exact details are in the dated implementation evidence
+review.
+
+These are source/fake-runner results. They do not establish that a built
+installer can install to a blank BIOS VM disk or that the installed MBR/GRUB
+chain boots Greia. The frozen-source full `make verify` run had not produced a
+final summary at this snapshot; it remains unresolved, not PASS. Source is
+uncommitted and the work order untracked, so the base SHA is not a source
+freeze. Keep Session 04 OPEN and require the BIOS blank-disk install/boot
+predicate before A/B update acceptance.
+
+## 2026-10-24 — Frozen full gate completed; failure disposition remains open
+
+Append-only correction: the frozen-worktree `make verify` run completed at
+`/tmp/greia-update-completion/make-verify-frozen-bios.log`: **5,890 tests in
+302.538 seconds, FAILED with 7 failures, 3 errors, 8 skipped**. The full gate is
+NOT GREEN. Nine outcomes match separately reproduced clean-baseline issues:
+three Foresta Parole assertions, two Parent Wi-Fi assertions, one MBR message
+expectation, one ARM64 profile-resolution error, and two installer-state
+errors from unavailable macOS `lsblk` behavior.
+
+One additional failure is the aggregate run of
+`test_launcher_long_session_memory.ShellLaunchCycleMemoryTests.test_repeated_launches_do_not_grow_shell_memory`
+(675,948 retained-surface bytes after 24 launches versus a 524,288-byte bound).
+The two-test module passes separately on baseline and current worktrees at
+`/tmp/greia-update-completion/memory-baseline.log` (8.333 s) and
+`/tmp/greia-update-completion/memory-current.log` (7.296 s). The full-suite
+failure is unresolved/order-dependent and is not proven to be baseline. Keep
+it open. The focused 38-module run remains PASS (770 tests, 2 skipped), but
+does not waive the full gate or any Linux boot/update acceptance predicate.

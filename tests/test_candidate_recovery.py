@@ -367,51 +367,53 @@ class RecoveryImageWiringTests(unittest.TestCase):
         + backend observation) without executing any reboot.
         """
         helper = self._paths()["helper"]
-        with tempfile.TemporaryDirectory() as raw:
-            root = Path(raw)
-            grub_dir = root / "grub"
-            backend = GrubEnvBackend.initialize(grub_dir, default_slot="A")
-            journal_parent = root / "update-state"
-            journal_dir = journal_parent / "system-updates" / "journal"
-            candidate, accepted = _artifacts()
-            # GrubEnvBackend speaks the grub-ab-v1 protocol: reuse the
-            # coordinator to stage journal + one-shot through production
-            # code paths (artifact binding, arm guards).
-            coordinator = BootTransactionCoordinator.begin_update(
-                journal_dir=journal_dir, backend=backend,
-                candidate_artifacts=candidate, accepted_artifacts=accepted,
-                release_id="greia-0.15.0",
-            )
-            coordinator.arm()
-            self.assertEqual(backend.simulate_reboot(), "B")
-            attach = GrubEnvBackend.attach(grub_dir)
-            resumed = BootTransactionCoordinator.resume(
-                journal_dir=journal_dir, backend=attach,
-                candidate_artifacts=candidate, accepted_artifacts=accepted,
-            )
-            resumed.observe_boot()
-            self.assertEqual(
-                resumed.journal.state, BootTransactionState.CANDIDATE_BOOTING)
-            env = dict(os.environ)
-            env["GREIA_UPDATE_STATE_DIR"] = str(journal_parent)
-            env["GREIA_BOOT_JOURNAL_DIR"] = str(root / "boot-journal")
-            env["GREIA_GRUBENV_DIR"] = str(grub_dir)
-            env["GREIA_RECOVERY_DRY_RUN"] = "1"
-            env["PYTHONPATH"] = str(ROOT / "src")
-            completed = subprocess.run(
-                ["sh", str(helper)], capture_output=True, text=True,
-                timeout=60, env=env)
-            self.assertEqual(completed.returncode, 0)
-            self.assertIn(
-                "RECOVERY_STATUS=trigger-reboot:health-service-failure",
-                completed.stdout)
-            self.assertIn("RECOVERY_ACCEPTED_SLOT=A", completed.stdout)
-            # Dry run mutates nothing: journal stays candidate-booting and
-            # the backend default stays accepted.
-            reloaded = BootTransactionJournal.load(journal_dir)
-            self.assertEqual(
-                reloaded.state, BootTransactionState.CANDIDATE_BOOTING)
-            self.assertEqual(attach.inspect().default_slot, "A")
+        for shared in (False, True):
+            with self.subTest(shared=shared), tempfile.TemporaryDirectory() as raw:
+                root = Path(raw)
+                grub_dir = root / "grub"
+                backend = GrubEnvBackend.initialize(grub_dir, default_slot="A")
+                journal_parent = root / "update-state"
+                journal_dir = (root / "persist" / "greia" / "boot-journal" if shared
+                               else journal_parent / "system-updates" / "journal")
+                candidate, accepted = _artifacts()
+                # GrubEnvBackend speaks the grub-ab-v1 protocol: reuse the
+                # coordinator to stage journal + one-shot through production
+                # code paths (artifact binding, arm guards).
+                coordinator = BootTransactionCoordinator.begin_update(
+                    journal_dir=journal_dir, backend=backend,
+                    candidate_artifacts=candidate, accepted_artifacts=accepted,
+                    release_id="greia-0.15.0",
+                )
+                coordinator.arm()
+                self.assertEqual(backend.simulate_reboot(), "B")
+                attach = GrubEnvBackend.attach(grub_dir)
+                resumed = BootTransactionCoordinator.resume(
+                    journal_dir=journal_dir, backend=attach,
+                    candidate_artifacts=candidate, accepted_artifacts=accepted,
+                )
+                resumed.observe_boot()
+                self.assertEqual(
+                    resumed.journal.state, BootTransactionState.CANDIDATE_BOOTING)
+                env = dict(os.environ)
+                env["GREIA_UPDATE_STATE_DIR"] = str(journal_parent)
+                env["GREIA_BOOT_JOURNAL_DIR"] = str(journal_dir if shared else root / "boot-journal")
+                env["GREIA_GRUBENV_DIR"] = str(grub_dir)
+                env["GREIA_RECOVERY_DRY_RUN"] = "1"
+                env["PYTHONPATH"] = str(ROOT / "src")
+                completed = subprocess.run(
+                    ["sh", str(helper)], capture_output=True, text=True,
+                    timeout=60, env=env)
+                self.assertEqual(completed.returncode, 0)
+                self.assertIn(
+                    "RECOVERY_STATUS=trigger-reboot:health-service-failure",
+                    completed.stdout)
+                self.assertIn("RECOVERY_ACCEPTED_SLOT=A", completed.stdout)
+                # Dry run mutates nothing: journal stays candidate-booting and
+                # the backend default stays accepted.
+                reloaded = BootTransactionJournal.load(journal_dir)
+                self.assertEqual(
+                    reloaded.state, BootTransactionState.CANDIDATE_BOOTING)
+                self.assertEqual(attach.inspect().default_slot, "A")
 
     def test_helper_already_on_accepted_is_noop(self) -> None:
         helper = self._paths()["helper"]

@@ -98,6 +98,7 @@ from greia_platform.system_updates import (
     inspect_update_bundle,
     load_installed_layout_record,
 )
+from update_mount_fixtures import start_installed_mount_fixture, stop_installed_mount_fixture
 
 
 _LEGACY_LAYOUT = "legacy-bios-ab-v1"
@@ -127,6 +128,18 @@ _KERNEL = hashlib.sha256(b"x8-candidate-kernel").hexdigest()
 _INITRAMFS = hashlib.sha256(b"x8-candidate-initramfs").hexdigest()
 _INVENTORY = "cd" * 32
 _SUPPORT = "ef" * 32
+
+_MOUNT_FIXTURE: tuple[object, object] | None = None
+
+
+def setUpModule() -> None:
+    global _MOUNT_FIXTURE
+    _MOUNT_FIXTURE = start_installed_mount_fixture(_UUID_P_FS)
+
+
+def tearDownModule() -> None:
+    if _MOUNT_FIXTURE is not None:
+        stop_installed_mount_fixture(_MOUNT_FIXTURE)
 
 
 def _payload(size: int, tag: bytes) -> bytes:

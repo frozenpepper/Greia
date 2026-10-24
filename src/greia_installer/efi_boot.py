@@ -255,11 +255,28 @@ class SingleRootLayoutSelector:
 # Boot loader commands (run inside the target chroot)
 # ---------------------------------------------------------------------------
 
-def bios_grub_install_command(device: Path) -> list[str]:
-    """The unchanged legacy ``i386-pc`` install (still used by BIOS layouts)."""
+def bios_grub_install_command(
+    device: Path, *, boot_directory: Path | None = None
+) -> list[str]:
+    """Build the BIOS GRUB install argv for a whole disk.
+
+    The historical single-root path calls this without ``boot_directory``
+    and retains its chroot command byte-for-byte. Fresh A/B installs pass the
+    currently mounted, verified boot-control filesystem path so GRUB's core
+    image and modules land beside the shared ``grub.cfg`` and ``grubenv``.
+    """
+    if boot_directory is None:
+        return [
+            "chroot", "{root}", "grub-install", "--target=i386-pc",
+            "--boot-directory=/boot", "--recheck", str(device),
+        ]
+    if not isinstance(device, Path) or not device.is_absolute():
+        raise EfiBootError("BIOS GRUB target must be an absolute whole-disk path")
+    if not isinstance(boot_directory, Path) or not boot_directory.is_absolute():
+        raise EfiBootError("BIOS GRUB boot directory must be an absolute mounted path")
     return [
-        "chroot", "{root}", "grub-install", "--target=i386-pc",
-        "--boot-directory=/boot", "--recheck", str(device),
+        "grub-install", "--target=i386-pc", "--boot-directory",
+        str(boot_directory), "--recheck", str(device),
     ]
 
 

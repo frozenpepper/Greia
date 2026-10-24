@@ -61,8 +61,17 @@ from .hardware_enablement import (
     SupportDisposition,
     SupportKind,
 )
-from .fstab import FSTAB_FILE_MODE, FSTAB_REL_PATH, render_fstab
-from .persistent_layout import InstalledLayoutRecord
+from .fstab import (
+    FSTAB_FILE_MODE,
+    FSTAB_REL_PATH,
+    PERSIST_BOOT_MOUNTPOINT,
+    render_fstab,
+)
+from .persistent_layout import (
+    InstalledLayoutRecord,
+    PersistentLayoutError,
+    present_canonical_mount_targets,
+)
 
 try:
     from .system_updates import UpdateManifest
@@ -932,6 +941,8 @@ class SlotProfilePolicy:
     platform_family: str | None = None
     profile: str | None = None
     version: str | None = None
+    persist_filesystem_uuid: str | None = None
+    boot_control_filesystem_uuid: str | None = None
 
     def __post_init__(self) -> None:
         if not self.layout_id or len(self.layout_id) > 64:
@@ -965,6 +976,20 @@ class SlotProfilePolicy:
                 or any(ord(character) < 32 for character in self.version)
             ):
                 raise SlotFinalizeError("profile version is invalid")
+        for field_name in (
+            "persist_filesystem_uuid",
+            "boot_control_filesystem_uuid",
+        ):
+            value = getattr(self, field_name)
+            if value is None:
+                continue
+            if not isinstance(value, str):
+                raise SlotFinalizeError(f"profile {field_name} is invalid")
+            try:
+                normalized = str(uuid.UUID(value))
+            except (ValueError, AttributeError) as exc:
+                raise SlotFinalizeError(f"profile {field_name} is invalid") from exc
+            object.__setattr__(self, field_name, normalized)
 
     def release_identity_facts(self) -> dict[str, str]:
         """Return the authoritative release facts to state in the identity.
@@ -1293,6 +1318,13 @@ class SlotFinalizer:
             raise SlotFinalizeError("profile slot bytes do not match the layout slot")
         if profile_policy.layout_id != destination.layout_id:
             raise SlotFinalizeError("profile layout does not match the layout record")
+        if profile_policy.boot_backend == "grub-ab-v1" and (
+            profile_policy.persist_filesystem_uuid is None
+            or profile_policy.boot_control_filesystem_uuid is None
+        ):
+            raise SlotFinalizeError(
+                "A/B finalization requires verified PERSIST and boot-control UUIDs"
+            )
         if support.support_digest != write.member.hardware_support_sha256:
             raise SlotFinalizeError("support set is not the release-bound support member")
         if support.support_size != write.member.hardware_support_size:
@@ -1373,13 +1405,48 @@ class SlotFinalizer:
             if not isinstance(mountpoint, Path):
                 raise SlotFinalizeError("slot mount did not return a path")
 
+            try:
+                present_canonical_mount_targets(mountpoint)
+                if profile_policy.persist_filesystem_uuid is not None:
+                    persist_target = Path(mountpoint) / PERSIST_BOOT_MOUNTPOINT.lstrip("/")
+                    run_directory = persist_target.parent
+                    if run_directory.is_symlink():
+                        raise PersistentLayoutError(
+                            "PERSIST mountpoint path passes a symbolic link"
+                        )
+                    run_directory.mkdir(mode=0o755, parents=True, exist_ok=True)
+                    if not run_directory.is_dir() or run_directory.is_symlink():
+                        raise PersistentLayoutError(
+                            "PERSIST mountpoint parent is not a real directory"
+                        )
+                    if persist_target.is_symlink():
+                        raise PersistentLayoutError(
+                            "PERSIST mountpoint may not be a symbolic link"
+                        )
+                    persist_target.mkdir(mode=0o700, exist_ok=True)
+                    if not persist_target.is_dir() or persist_target.is_symlink():
+                        raise PersistentLayoutError(
+                            "PERSIST mountpoint is not a real directory"
+                        )
+                    os.chmod(persist_target, 0o700)
+            except PersistentLayoutError as exc:
+                raise SlotFinalizeError(
+                    f"canonical persistent bind targets refused: {exc}"
+                ) from exc
+
             # Destination fstab specialization (Repair C): render the
             # single-owner canonical policy for the bound role UUID right
             # after mount, before completeness/health acceptance, so an
             # updated slot carries the same policy as a fresh install and
             # no release-builder template UUID can survive.
             try:
-                fstab_text = render_fstab(filesystem_uuid)
+                fstab_text = render_fstab(
+                    filesystem_uuid,
+                    persist_filesystem_uuid=profile_policy.persist_filesystem_uuid,
+                    boot_control_filesystem_uuid=(
+                        profile_policy.boot_control_filesystem_uuid
+                    ),
+                )
             except ValueError as exc:
                 raise SlotFinalizeError(
                     f"destination fstab refused: {exc}"

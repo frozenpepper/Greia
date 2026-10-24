@@ -74,22 +74,23 @@ closure. That plan owns lifecycle sequencing and closure criteria; the
 2026-08-08 architecture-remediation plan remains blocking only for its
 remaining non-lifecycle obligations.
 
-Session 03's owner-release CLI implementation and source validation are green.
-The current lifecycle entry point is the **real Linux owner-command release
-build acceptance**:
+Session 03 was closed by the Linux owner-command release build on 2026-09-23.
+Session 04 remains OPEN: fresh A/B install, first acceptance, alternating
+updates and rollback must execute using real current bundles. The current
+owner-requested external-machine work order is:
 
-`docs/testing/2026-09-21_SESSION03_LINUX_RELEASE_BUILD_ACCEPTANCE.md`
+`docs/testing/2026-10-23_SYSTEM_UPDATE_LINUX_ACCEPTANCE.md`
 
-Run that only on an owner-approved x86_64 Linux build host. It proves the
-single owner command against the current Acer-only release matrix; it does not
-create or certify the universal Setup image, which remains Session 08 work.
+The 2026-10-23 Parent delivery, persistent mounts and restart integration are
+source work. Do not call them installed/device acceptance before that work
+order runs. `legacy-x86-i686` and its RC profile remain single-root and cannot
+activate A/B updates; do not advertise a software-only migration.
 
 The old signed `.greiaupdate` v2 flow and release signing keys are
 superseded by ADR 0036 and are not the normal production route; older
 references to them are historical only.
 
-After the Session 03 Linux owner-command build is green, Session 04 owns the
-real legacy-i386 fresh-install/update/rollback lifecycle. The
+Session 04 owns the real legacy-i386 fresh-install/update/rollback lifecycle. The
 `POSTR1-P1-INSTALLER-RED` / Gate-P5/V12G/D6 routing below is historical and
 superseded for lifecycle sequencing. Source composition primitives (T3-S) are
 done; exact shipped installer/update/boot-health product composition (T3-P)
@@ -775,6 +776,22 @@ source key parity alone cannot certify translated runtime behavior.
 ## Installer single-root layout and EFI seam (2026-10-21, UNPROVEN)
 
 The whole-disk installer no longer hard-codes its partition commands: `src/greia_installer/efi_boot.py` defines `SingleRootLayout` (`bios-single-ext4`, `uefi-or-bios-gpt-ext4`), `SysfsFirmwareProbe` and `plan_efi_boot`. `InstallationEngine._select_layout` picks the EFI layout only if the live installer booted via EFI and the target profile composed `boot-grub-efi`; BIOS machines keep the old command arrays. Add new firmware/boot variants as new layout classes or command plans there, not as `if` branches in `engine.install`. Target images carry only the `-bin` GRUB EFI packages (the non-bin ones conflict with `grub-pc`). Evidence is source and fake-runner tests only; see `docs/INSTALLER_IMAGE_CREATION_AND_BOOT.md` section 14.
+
+## Fresh A/B BIOS GRUB adapter (2026-10-24, SOURCE / UNPROVEN)
+
+Fresh A/B installation has its own mandatory BIOS bootloader seam: production
+composition injects `device_seams.build_bios_bootloader_installer` as
+`FreshAbInstallSeams.bios_bootloader_installer` in
+`src/greia_installer/fresh_ab_install.py`. The seam is required before erase
+for the `grub-ab-v1` backend and runs only after the plan-derived boot-control
+ext4 volume is verified and mounted, with its shared `grub.cfg` and default-A
+`grubenv` checked. The adapter rechecks whole-disk identity immediately before
+the array-only `efi_boot.bios_grub_install_command` call, placing BIOS GRUB's
+core image/modules beside the shared config. Extend this seam rather than
+adding another BIOS command path to `engine.install` or a fake GRUB success.
+Focused source tests do not prove a boot: the external Session 04 work order
+requires a blank-disk BIOS install followed by a real installed-disk boot
+through BIOS GRUB into Greia. That predicate remains pending on Linux.
 
 
 ### 2026-10-22 voice priority continuation

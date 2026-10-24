@@ -1,19 +1,16 @@
 {
-  "schema_version": 1,
-  "repository": "frozenpepper/Greia-Parent-App-Html",
-  "revision": "5518a9eed8ba61503249a1c827b7ef4fef5dab36",
   "files": {
     "index.html": {
       "bytes": 3801,
       "sha256": "2228ac85947d238f1fa34c360295db3dc86880c4cd1bf24eba7763552c9a7ef7"
     },
     "src/api.js": {
-      "bytes": 10666,
-      "sha256": "e256208072097dd41b7907d6a190d8de7c15d900ecc9404581cefa0567d57539"
+      "bytes": 11165,
+      "sha256": "ab935677b3b0553d5934c2bc63b8b0ef5020813c4ed275111af71e40eb038ef4"
     },
     "src/app.js": {
-      "bytes": 16337,
-      "sha256": "522cbef14053871b7975c0333c6ca08f6da28a1483b31fa825f2589aa78ba44a"
+      "bytes": 16365,
+      "sha256": "4eadfa0f8479c5906b31f470629856a5cf353feaafc30c6c3e6de40220918dfa"
     },
     "src/credential_store.js": {
       "bytes": 607,
@@ -23,9 +20,13 @@
       "bytes": 2912,
       "sha256": "42134f24478852986ca102c7c02d6682d31caccdf1ea53088e3436926cb687cc"
     },
+    "src/localization.js": {
+      "bytes": 84397,
+      "sha256": "092725de5e5e881fa4f40f85d754d9e870bdbcc8218932aff222c4032c8fa348"
+    },
     "src/state.js": {
-      "bytes": 9174,
-      "sha256": "bd01a37f3aaafc69fff8d45e409a5972999462b32ee9e9d3bd0c7e5937aef530"
+      "bytes": 13908,
+      "sha256": "1e7a983806acc37cbbdaeb8909c8ca808c56c805e409feb73eaa6818c9012acc"
     },
     "src/ui.js": {
       "bytes": 7301,
@@ -36,8 +37,8 @@
       "sha256": "73d9aadbef85e958eb4e78a5194bd46d23ee0d444b9a0b37fbd6cf812ba88945"
     },
     "src/views_device.js": {
-      "bytes": 20813,
-      "sha256": "de7a5bf350d361133767ce1e339d7d7e11f800c547e7d6d43d43d7d21f150fef"
+      "bytes": 24170,
+      "sha256": "e8c657d0d44033948bd1b2f704958ffb12bf9697e9184762a4cf903581d73daf"
     },
     "src/views_device_layout.js": {
       "bytes": 3822,
@@ -63,5 +64,8 @@
       "bytes": 3107,
       "sha256": "2c1ad3d11f6b0c3f32fd3b5f1e141cfbfa23a7aed4d2003f8ce5d90d5ee0c58b"
     }
-  }
+  },
+  "repository": "frozenpepper/Greia-Parent-App-Html",
+  "revision": "e0116787bb324ca4685ad832cbc8d4d9e5b3461d",
+  "schema_version": 1
 }

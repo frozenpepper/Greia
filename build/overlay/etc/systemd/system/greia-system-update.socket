@@ -10,8 +10,10 @@
 # this unit performs no Exec and no block-device work (it only creates the
 # /run/greia-os/system-update.sock listener node); the service starts only
 # on the first connection, and the only clients connect post-intro (Parent
-# after launcher first-frame readiness, or an explicit operator update
-# flow). No destructive backend is wired at R0/R1.
+# after launcher first-frame readiness). The root service owns staging,
+# boot-health confirmation and boot control; greiapanel may only request
+# status, candidate verification/staging, reconciliation and the explicit
+# profile-picker restart.
 [Unit]
 Description=Greia OS system-update semantic socket
 # Boot-critical-chain ordering (POSTR1-P3-UPDATE-ACTIVATION): deliberately
@@ -26,9 +28,9 @@ After=local-fs.target
 
 [Socket]
 ListenStream=/run/greia-os/system-update.sock
-SocketMode=0600
+SocketMode=0660
 SocketUser=root
-SocketGroup=root
+SocketGroup=greiapanel
 Accept=no
 MaxConnections=4
 TimeoutSec=5

@@ -404,6 +404,19 @@ class CloneSerialConsoleTests(unittest.TestCase):
         )
         return cfg
 
+    def test_installer_grub_directory_is_resolved_and_recorded(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            mount = Path(tmp)
+            (mount / "grub").mkdir()
+            self._grub(mount / "grub", entries=2)
+            directory = _product._installed_grub_config_dir(mount)
+            self.assertEqual(directory, mount / "grub")
+            relative = directory.relative_to(mount) / "grub.cfg"
+            proof = _ensure_clone_serial_console(
+                mount, grub_relpath=str(relative), expected_consoles=2)
+            self.assertEqual(proof["grub_cfg"], "grub/grub.cfg")
+            self.assertEqual(proof["substitutions"], 2)
+
     def test_fresh_clone_patches_bare_consoles(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             mount = Path(tmp)
@@ -983,8 +996,6 @@ class GatherRealShapeTests(unittest.TestCase):
     def _seed_boot_health_trees(
         self, base: Path, *, slot: str = "B"
     ) -> tuple[Path, Path]:
-        import json as _json
-
         from greia_platform.boot_transaction import (
             BootArtifactSet,
             BootTransactionCoordinator,
@@ -1000,12 +1011,9 @@ class GatherRealShapeTests(unittest.TestCase):
         # Observer-established last_booted: default + reconciled slot.
         GrubEnvBackend.initialize(boot_seed / "grub", default_slot=slot)
         GrubEnvBackend.attach(boot_seed / "grub").reconcile(slot)
-        # Terminal ACCEPTED update journal binding the committed slot,
-        # under the update state dir the services resolve at runtime.
-        state_root = (
-            persist_seed / "greia" / "namespaces" / "parent-credentials"
-        )
-        journal_dir = state_root / "system-updates" / "journal"
+        # The single production journal lives directly under canonical
+        # PERSIST and is shared by first-install and update transactions.
+        journal_dir = persist_seed / "greia" / "boot-journal"
         journal_dir.mkdir(parents=True, exist_ok=True)
         fake_backend = FakeGrubBackend.initialize(base / "fake-grub", default_slot="A")
         candidate = BootArtifactSet(
@@ -1062,10 +1070,18 @@ class GatherRealShapeTests(unittest.TestCase):
                 },
             }
         )
-        (persist_seed / "greia").mkdir(parents=True, exist_ok=True)
-        (persist_seed / "greia" / "installed-layout.json").write_text(
-            _json.dumps(record.as_dict(), sort_keys=True, separators=(",", ":")) + "\n",
-            encoding="utf-8",
+        layout_dir = (
+            persist_seed
+            / "greia"
+            / "namespaces"
+            / "layout-authority"
+        )
+        layout_dir.mkdir(parents=True, exist_ok=True)
+        record.write_to(layout_dir / "installed-layout.json")
+        from greia_platform.persistent_layout import emit_persist_schema_marker
+
+        (persist_seed / "greia" / "persist-schema.json").write_bytes(
+            emit_persist_schema_marker(1)
         )
         return boot_seed, persist_seed
 
@@ -1115,6 +1131,17 @@ class GatherRealShapeTests(unittest.TestCase):
             self.assertTrue(observed["file_cross_check"]["green"])
             self.assertIn("layout_record_dir", observed["resolved_paths"])
             self.assertIn("layout_record", observed["resolved_paths"])
+            self.assertTrue(
+                str(observed["resolved_paths"]["journal_dir"]).endswith(
+                    "/greia/boot-journal"
+                )
+            )
+            self.assertTrue(
+                str(observed["resolved_paths"]["layout_record"]).endswith(
+                    "/greia/namespaces/layout-authority/installed-layout.json"
+                )
+            )
+            self.assertEqual(observed["inspection"]["persist_schema_version"], 1)
             self.assertEqual(len(runner.argv0("blkid")), 3)
             # Real closure on the observed default: no fake observe_fn
             # anywhere on this path.
@@ -1149,7 +1176,13 @@ class GatherRealShapeTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             base = Path(tmp)
             boot_seed, persist_seed = self._seed_boot_health_trees(base / "seeds")
-            (persist_seed / "greia" / "installed-layout.json").unlink()
+            (
+                persist_seed
+                / "greia"
+                / "namespaces"
+                / "layout-authority"
+                / "installed-layout.json"
+            ).unlink()
             with self.assertRaises(LifecycleHarnessError) as caught:
                 self._gather_with_seeds(base, boot_seed, persist_seed)
             self.assertIn("installed layout record", str(caught.exception))

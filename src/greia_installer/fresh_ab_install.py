@@ -31,8 +31,8 @@ here):
    payload stream or a finalization — no second-slot duplication;
 6. initialize PERSIST exactly once (layout authority record bound to the
    finalized-A receipt, versioned namespace schema, transaction root);
-7. install the stable GRUB backend (fixed two-entry config rendered from the
-   trusted layout record plus ``grubenv`` with default ``A``);
+7. install BIOS GRUB core/modules on the verified shared boot-control volume,
+   then write its fixed two-entry config and ``grubenv`` with default ``A``;
 8. write ``FIRST_INSTALL_PENDING`` through
    :class:`greia_platform.boot_transaction.BootTransactionJournal`.
 
@@ -59,7 +59,7 @@ import re
 import time
 import uuid
 import zipfile
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import BinaryIO, Callable, Mapping, Sequence
 
@@ -78,7 +78,10 @@ from greia_platform.grub_ab import (
     render_grub_ab_config_from_record,
     validate_grub_ab_text,
 )
-from greia_platform.persistent_layout import InstalledLayoutRecord
+from greia_platform.persistent_layout import (
+    InstalledLayoutRecord,
+    PersistentNamespaceMap,
+)
 from greia_platform.slot_writer import (
     DestinationSlot,
     FinalizationReceipt,
@@ -101,7 +104,7 @@ from greia_platform.system_updates import (
     inspect_update_bundle,
 )
 
-from .disk import DeviceObservation
+from .disk import DeviceObservation, DiskProbeError, partition_number_path
 from .install_progress import InstallProgressSink
 from .layout import (
     LayoutError,
@@ -110,13 +113,17 @@ from .layout import (
     ProfileSizing,
     adapter_for,
     plan_for_profile,
+    probe_partition_filesystem_uuid,
     require_finalized_slot_capacity,
     validate_observed_identities_against_plan,
 )
 from .persist import (
     FreshPersistSpec,
+    PERSIST_FILESYSTEM,
     PersistError,
     initialize_fresh_persist,
+    mount_verified_ext4_for_write,
+    persist_transaction_path,
 )
 
 
@@ -126,8 +133,9 @@ class FreshAbInstallError(RuntimeError):
 
 _HEX64_RE = re.compile(r"^[0-9a-f]{64}$")
 
-#: File name of the installed GRUB configuration on the boot-control volume.
+#: GRUB config and environment are stored on the shared boot-control volume.
 GRUB_CONFIG_NAME = "grub.cfg"
+GRUB_CONFIG_REL_PATH = "grub/grub.cfg"
 
 
 def _require_hex64(value: object, *, field_name: str) -> str:
@@ -237,16 +245,20 @@ class FreshAbInstallSeams:
     duplication is inexpressible here. ``payload_stream_factory`` opens the
     release payload byte stream (default reads the bundle's payload member);
     ``slot_filesystem_factory``/``package_installer_factory`` own the
-    destination-slot finalization seam. ``persist_stage_dir`` must be an
-    existing empty directory; ``boot_control_dir``/``backend_state_dir``/
-    ``journal_dir`` receive the installed GRUB config, the ``grubenv`` block
-    and the ``FIRST_INSTALL_PENDING`` journal.
+    destination-slot finalization seam. ``persist_stage_dir`` and
+    ``boot_control_dir`` are root-owned mountpoints. The GRUB config and
+    environment are written onto the verified boot-control filesystem; the
+    first-install journal is written into the canonical shared PERSIST
+    transaction root (``/greia/boot-journal``), alongside the update journal.
     ``post_layout_identity_observer`` is the narrow post-layout seam the
     orchestrator invokes as ``observer(target, plan)`` only after
     ``adapter.execute`` has created the partition table and filesystems;
     it is required — production binds the real block observer, tests bind
     recording fakes behind the same seam, and it is never invoked before
-    the first destructive command.
+    the first destructive command. ``bios_bootloader_installer`` receives
+    the rematerialized whole-disk target and verified mounted boot-control
+    directory after config/environment writes have been checked; production
+    rechecks target identity immediately before installing GRUB.
     """
 
     partition_runner: PartitionRunner
@@ -262,8 +274,6 @@ class FreshAbInstallSeams:
     persist_stage_dir: Path | None = None
     persist_uuid_factory: Callable[[], uuid.UUID] | None = None
     boot_control_dir: Path | None = None
-    backend_state_dir: Path | None = None
-    journal_dir: Path | None = None
     firmware_packages: tuple[str, ...] = ()
     microcode_packages: tuple[str, ...] = ()
     payload_stream_factory: Callable[[], BinaryIO] | None = None
@@ -274,6 +284,7 @@ class FreshAbInstallSeams:
     #: A Wi-Fi chip needs firmware/driver Greia cannot include (display-only).
     wifi_firmware_unavailable: bool = False
     post_layout_identity_observer: PostLayoutIdentityObserver | None = None
+    bios_bootloader_installer: Callable[[DeviceObservation, Path], None] | None = None
 
     def __post_init__(self) -> None:
         _require_hex64(self.inventory_token, field_name="hardware inventory token")
@@ -300,6 +311,10 @@ class FreshAbInstallSeams:
             raise FreshAbInstallError(
                 "post-layout identity observer must be a callable observer"
             )
+        if self.bios_bootloader_installer is not None and not callable(
+            self.bios_bootloader_installer
+        ):
+            raise FreshAbInstallError("BIOS bootloader installer must be callable")
 
 
 # ---------------------------------------------------------------------------
@@ -554,8 +569,6 @@ def execute_fresh_ab_install(
     for field_name in (
         "persist_stage_dir",
         "boot_control_dir",
-        "backend_state_dir",
-        "journal_dir",
     ):
         if getattr(seams, field_name) is None:
             raise FreshAbInstallError(f"install seams carry no {field_name}")
@@ -652,6 +665,14 @@ def execute_fresh_ab_install(
             "fresh install requires a post-layout identity observer; "
             "minting an independent UUID4 is retired"
         )
+    bios_bootloader_installer = seams.bios_bootloader_installer
+    if request.sizing.boot_backend == "grub-ab-v1" and (
+        bios_bootloader_installer is None
+        or not callable(bios_bootloader_installer)
+    ):
+        raise FreshAbInstallError(
+            "fresh BIOS A/B install requires a bootloader installer seam; refusing to erase"
+        )
     try:
         from greia_platform.slot_writer import (
             HardwareInventoryAttestation,
@@ -721,6 +742,54 @@ def execute_fresh_ab_install(
             f"post-layout identity observation is not authoritative: {exc}"
         ) from exc
     observed = _bind_post_layout_identities(plan, raw_observed)
+    try:
+        observed_persist_uuid = str(
+            uuid.UUID(str(observed["persist"]["filesystem_uuid"]))
+        )
+        if seams.persist_uuid_factory is not None:
+            try:
+                supplied_persist_uuid = str(uuid.UUID(str(seams.persist_uuid_factory())))
+            except (ValueError, AttributeError, TypeError) as exc:
+                raise FreshAbInstallError(
+                    "PERSIST UUID seam is not a valid observed identity"
+                ) from exc
+            if supplied_persist_uuid != observed_persist_uuid:
+                raise FreshAbInstallError(
+                    "PERSIST UUID seam disagrees with the post-layout observation"
+                )
+        boot_control_part = plan.by_role("boot-control")
+        if boot_control_part is None or boot_control_part.filesystem != PERSIST_FILESYSTEM:
+            raise FreshAbInstallError(
+                "layout plan carries no ext4 boot-control partition"
+            )
+        boot_control_node = partition_number_path(
+            request.target.path, boot_control_part.number
+        )
+        boot_control_uuid = probe_partition_filesystem_uuid(
+            seams.persist_runner, boot_control_node  # type: ignore[arg-type]
+        )
+        observed_uuids = {
+            values["filesystem_uuid"] for values in observed.values()
+        }
+        if boot_control_uuid in observed_uuids:
+            raise FreshAbInstallError(
+                "boot-control filesystem UUID is cloned from another layout role"
+            )
+        policy = replace(
+            policy,
+            persist_filesystem_uuid=observed_persist_uuid,
+            boot_control_filesystem_uuid=boot_control_uuid,
+        )
+    except FreshAbInstallError:
+        raise
+    except (DiskProbeError, LayoutError) as exc:
+        raise FreshAbInstallError(
+            f"post-layout boot-control identity is not authoritative: {exc}"
+        ) from exc
+    except (SlotFinalizeError, ValueError) as exc:
+        raise FreshAbInstallError(
+            f"post-layout boot-control identity is not authoritative: {exc}"
+        ) from exc
     _s04_diag_stage("identities-bound")
 
     # -- 4./5. Stream + finalize SYSTEM_A only (B never addressed) ---------
@@ -835,9 +904,44 @@ def execute_fresh_ab_install(
         system_b=dict(observed["system-b"]),
         persist_partuuid=observed["persist"]["partuuid"],
     )
-    persist_uuid_factory = seams.persist_uuid_factory or (
-        lambda: uuid.UUID(observed["persist"]["filesystem_uuid"])
-    )
+    # The layout adapter already created PERSIST and the post-layout
+    # observer read back its UUID. Reuse that observed identity exactly;
+    # the optional seam is only a consistency assertion for test harnesses.
+    persist_uuid_factory = lambda: uuid.UUID(observed_persist_uuid)
+    journal_holder: list[BootTransactionJournal] = []
+
+    def _initialize_first_install_journal(
+        persist_root: Path,
+        _record: InstalledLayoutRecord,
+        _namespace_map: PersistentNamespaceMap,
+    ) -> None:
+        # The installer initializer already created this canonical
+        # transaction root on the PERSIST filesystem. It is also the runtime
+        # first-install boot-health journal, so do not create a second
+        # namespace-backed journal tree beside it.
+        journal_dir = persist_transaction_path(persist_root)
+        if (
+            journal_dir.is_symlink()
+            or not journal_dir.is_dir()
+            or any(journal_dir.iterdir())
+        ):
+            raise FreshAbInstallError(
+                "canonical first-install journal root is not empty fresh PERSIST state"
+            )
+        try:
+            os.chmod(journal_dir, 0o700)
+            journal = BootTransactionJournal.begin_first_install(
+                journal_dir,
+                layout_id=request.sizing.layout_adapter_id,
+                boot_backend=request.sizing.boot_backend,
+                release_id=member.release_id,
+            )
+        except (BootTransactionError, OSError) as exc:
+            raise FreshAbInstallError(
+                f"first-install journal refused: {exc}"
+            ) from exc
+        journal_holder.append(journal)
+
     try:
         persist_result = initialize_fresh_persist(
             target=request.target,
@@ -846,6 +950,7 @@ def execute_fresh_ab_install(
             mountpoint=Path(seams.persist_stage_dir),
             runner=seams.persist_runner,  # type: ignore[arg-type]
             uuid_factory=persist_uuid_factory,  # type: ignore[arg-type]
+            after_initialize=_initialize_first_install_journal,
         )
     except PersistError as exc:
         raise FreshAbInstallError(f"PERSIST initialization refused: {exc}") from exc
@@ -854,6 +959,11 @@ def execute_fresh_ab_install(
         raise FreshAbInstallError("layout authority does not boot-accept SYSTEM_A")
     if record.system_b is None:
         raise FreshAbInstallError("A/B layout authority requires the inactive SYSTEM_B identity")
+    if len(journal_holder) != 1:
+        raise FreshAbInstallError(
+            "fresh PERSIST did not produce exactly one first-install journal"
+        )
+    journal = journal_holder[0]
     _s04_diag_stage("persist-done")
 
     # -- 7. Stable GRUB backend (fixed entries + grubenv default A) --------
@@ -868,22 +978,20 @@ def execute_fresh_ab_install(
     except (GrubAbConfigError, Exception) as exc:
         raise FreshAbInstallError(f"stable GRUB entries refused: {exc}") from exc
     try:
-        _write_boot_control_config(Path(seams.boot_control_dir), grub_text)
-        GrubEnvBackend.initialize(Path(seams.backend_state_dir), default_slot="A")
+        _write_verified_boot_control(
+            runner=seams.persist_runner,
+            device=boot_control_node,
+            filesystem_uuid=boot_control_uuid,
+            mountpoint=Path(seams.boot_control_dir),
+            grub_text=grub_text,
+            target=request.target,
+            bios_bootloader_installer=bios_bootloader_installer,
+        )
     except (BootTransactionError, GrubAbConfigError, OSError) as exc:
         raise FreshAbInstallError(f"boot backend install failed: {exc}") from exc
     _s04_diag_stage("grub-done")
 
-    # -- 8. FIRST_INSTALL_PENDING (acceptance owns the commit, not this) ----
-    try:
-        journal = BootTransactionJournal.begin_first_install(
-            Path(seams.journal_dir),
-            layout_id=request.sizing.layout_adapter_id,
-            boot_backend=request.sizing.boot_backend,
-            release_id=member.release_id,
-        )
-    except (BootTransactionError, OSError) as exc:
-        raise FreshAbInstallError(f"first-install journal refused: {exc}") from exc
+    # -- 8. FIRST_INSTALL_PENDING is already durable on PERSIST (step 6) ---
     if journal.state is not BootTransactionState.FIRST_INSTALL_PENDING:
         raise FreshAbInstallError("first-install journal is not pending acceptance")
     _s04_diag_stage("journal-done")
@@ -1245,7 +1353,16 @@ def _write_boot_control_config(boot_control_dir: Path, text: str) -> None:
         location.mkdir(parents=True, exist_ok=True)
     except OSError as exc:
         raise FreshAbInstallError(f"boot-control dir is not writable: {exc}") from exc
-    target = location / GRUB_CONFIG_NAME
+    grub_directory = location / "grub"
+    if grub_directory.is_symlink():
+        raise FreshAbInstallError("boot-control GRUB directory may not be a symbolic link")
+    try:
+        grub_directory.mkdir(mode=0o755, exist_ok=True)
+    except OSError as exc:
+        raise FreshAbInstallError(f"boot-control GRUB directory is not writable: {exc}") from exc
+    if not grub_directory.is_dir():
+        raise FreshAbInstallError("boot-control GRUB path is not a directory")
+    target = location / GRUB_CONFIG_REL_PATH
     if target.is_symlink():
         raise FreshAbInstallError("installed GRUB config may not be a symbolic link")
     payload = text.encode("utf-8")
@@ -1254,7 +1371,7 @@ def _write_boot_control_config(boot_control_dir: Path, text: str) -> None:
     import tempfile as _tempfile
 
     descriptor, temporary_name = _tempfile.mkstemp(
-        prefix=".grub.cfg.", dir=str(location)
+        prefix=".grub.cfg.", dir=str(target.parent)
     )
     try:
         with os.fdopen(descriptor, "wb") as handle:
@@ -1264,7 +1381,7 @@ def _write_boot_control_config(boot_control_dir: Path, text: str) -> None:
         os.chmod(temporary_name, 0o644)
         os.replace(temporary_name, target)
         try:
-            descriptor_dir = os.open(str(location), os.O_RDONLY | os.O_DIRECTORY)
+            descriptor_dir = os.open(str(target.parent), os.O_RDONLY | os.O_DIRECTORY)
         except OSError:
             descriptor_dir = None
         if descriptor_dir is not None:
@@ -1282,6 +1399,64 @@ def _write_boot_control_config(boot_control_dir: Path, text: str) -> None:
             raise FreshAbInstallError("installed GRUB config re-read mismatch")
     except OSError as exc:
         raise FreshAbInstallError(f"installed GRUB config is not readable: {exc}") from exc
+
+
+def _write_verified_boot_control(
+    *,
+    runner: object,
+    device: Path,
+    filesystem_uuid: str,
+    mountpoint: Path,
+    grub_text: str,
+    target: DeviceObservation,
+    bios_bootloader_installer: Callable[[DeviceObservation, Path], None] | None,
+) -> None:
+    """Write GRUB state only through the plan-derived verified ext4 role."""
+    if not mountpoint.is_absolute() or mountpoint.is_symlink():
+        raise FreshAbInstallError("boot-control mountpoint is not authoritative")
+    try:
+        mountpoint.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        raise FreshAbInstallError(f"boot-control mountpoint cannot be created: {exc}") from exc
+    if not mountpoint.is_dir() or any(mountpoint.iterdir()):
+        raise FreshAbInstallError("boot-control staging mountpoint must be empty")
+    try:
+        observed_uuid = probe_partition_filesystem_uuid(runner, device)  # type: ignore[arg-type]
+    except LayoutError as exc:
+        raise FreshAbInstallError(
+            f"boot-control filesystem identity cannot be rechecked: {exc}"
+        ) from exc
+    if observed_uuid != filesystem_uuid:
+        raise FreshAbInstallError(
+            "boot-control filesystem changed after layout observation"
+        )
+
+    try:
+        with mount_verified_ext4_for_write(
+            runner=runner,  # type: ignore[arg-type]
+            node=device,
+            filesystem_uuid=filesystem_uuid,
+            mountpoint=mountpoint,
+        ) as mounted:
+            _write_boot_control_config(mounted, grub_text)
+            backend = GrubEnvBackend.initialize(mounted / "grub", default_slot="A")
+            if backend.inspect().default_slot != "A":
+                raise FreshAbInstallError(
+                    "boot-control GRUB environment did not persist default slot A"
+                )
+            if bios_bootloader_installer is None or not callable(
+                bios_bootloader_installer
+            ):
+                raise FreshAbInstallError(
+                    "fresh BIOS A/B install has no bootloader installer"
+                )
+            # Keep the verified boot-control volume mounted while GRUB writes
+            # its BIOS core image and modules beside this config.
+            bios_bootloader_installer(target, mounted)
+    except PersistError as exc:
+        raise FreshAbInstallError(
+            f"verified boot-control filesystem refused: {exc}"
+        ) from exc
 
 
 class _closing:
@@ -1304,6 +1479,7 @@ class _closing:
 
 __all__ = [
     "GRUB_CONFIG_NAME",
+    "GRUB_CONFIG_REL_PATH",
     "AbExecutorFacts",
     "BundlePayloadStream",
     "FreshAbInstallError",

@@ -38,6 +38,10 @@ from types import SimpleNamespace
 from unittest import mock
 
 from greia_platform.grub_ab import GrubEnvBackend
+from greia_platform.persistent_layout import (
+    emit_persist_schema_marker,
+    persist_schema_marker_path,
+)
 from greia_platform.system_updates import (
     SystemUpdateError,
     SystemUpdateInbox,
@@ -50,6 +54,24 @@ from greia_platform.system_updates import (
     inspect_update_bundle,
     load_installed_layout_record,
 )
+from update_mount_fixtures import start_installed_mount_fixture, stop_installed_mount_fixture
+
+
+_MOUNT_PREREQUISITE_PATCHES: tuple[object, object] | None = None
+
+
+def setUpModule() -> None:
+    """Model installed shared mounts so each negative reaches its own gate."""
+    # These product negatives target compatibility, topology, support and
+    # destination failures after the new production mount-readiness gate.
+    # The independent update-composition tests cover mount-readiness refusal.
+    global _MOUNT_PREREQUISITE_PATCHES
+    _MOUNT_PREREQUISITE_PATCHES = start_installed_mount_fixture(_UUID_P_FS)
+
+
+def tearDownModule() -> None:
+    if _MOUNT_PREREQUISITE_PATCHES is not None:
+        stop_installed_mount_fixture(_MOUNT_PREREQUISITE_PATCHES)
 
 
 @contextmanager
@@ -217,6 +239,9 @@ def _rig(root: Path, *, record: dict[str, object] | None = None,
     ``GREIA_*`` environment only.
     """
     state_dir = root / "state"
+    marker_path = persist_schema_marker_path(state_dir)
+    marker_path.parent.mkdir(parents=True, exist_ok=True)
+    marker_path.write_bytes(emit_persist_schema_marker(1))
     layout_path = root / "installed-layout.json"
     layout_path.write_bytes(_canonical_record(record or _record_dict()))
     boot_dir = root / "boot-control"
@@ -237,6 +262,7 @@ def _rig(root: Path, *, record: dict[str, object] | None = None,
         authority = build_live_update_service(
             state_dir=state_dir,
             layout_record_path=layout_path,
+            persist_root=state_dir,
             boot_backend=grub,
             boot_backend_auto=False,
         )
@@ -272,6 +298,7 @@ def _recompose(root: Path, *, record: dict[str, object] | None = None,
         authority = build_live_update_service(
             state_dir=state_dir,
             layout_record_path=layout_path,
+            persist_root=state_dir,
             boot_backend=grub,
             boot_backend_auto=False,
         )

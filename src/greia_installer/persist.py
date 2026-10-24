@@ -58,9 +58,10 @@ from __future__ import annotations
 import os
 import subprocess
 import uuid
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Mapping, Sequence
+from typing import Callable, Iterator, Mapping, Sequence
 
 from greia_platform.persistent_layout import (
     BOOT_CONTROL_KINDS,
@@ -254,6 +255,36 @@ def unmount_persist(mountpoint: Path, runner: PersistCommandRunner) -> None:
         raise PersistError(f"PERSIST unmount failed: {location}")
 
 
+@contextmanager
+def mount_verified_ext4_for_write(
+    *,
+    runner: PersistCommandRunner,
+    node: Path,
+    filesystem_uuid: str,
+    mountpoint: Path,
+) -> Iterator[Path]:
+    """Mount one installer-verified ext4 layout role for bounded writes.
+
+    The caller derives ``node`` and ``filesystem_uuid`` from the completed
+    installer plan/observation. This narrow staging helper rechecks that
+    identity immediately before the mount and always detaches afterward; it
+    is used for shared boot-control state as well as PERSIST.
+    """
+    stage = _require_staging_mountpoint(Path(mountpoint))
+    try:
+        expected_uuid = str(uuid.UUID(filesystem_uuid))
+    except (ValueError, AttributeError) as exc:
+        raise PersistError("verified ext4 UUID is invalid") from exc
+    observed_uuid = _blkid_filesystem_uuid(runner, Path(node))
+    if observed_uuid != expected_uuid:
+        raise PersistError("verified ext4 filesystem identity changed before mount")
+    _mount_staging(runner, Path(node), stage, readonly=False)
+    try:
+        yield stage
+    finally:
+        unmount_persist(stage, runner)
+
+
 # ---------------------------------------------------------------------------
 # Fresh-install path
 # ---------------------------------------------------------------------------
@@ -302,6 +333,10 @@ def initialize_fresh_persist(
     runner: PersistCommandRunner,
     uuid_factory: Callable[[], uuid.UUID] = uuid.uuid4,
     namespace_map: PersistentNamespaceMap | None = None,
+    after_initialize: Callable[
+        [Path, InstalledLayoutRecord, PersistentNamespaceMap], object
+    ]
+    | None = None,
 ) -> FreshPersistResult:
     """Create, mount and exactly-once initialize PERSIST for a fresh install.
 
@@ -438,6 +473,15 @@ def initialize_fresh_persist(
             raise PersistError(
                 f"fresh PERSIST transaction root failed: {exc}"
             ) from exc
+        if after_initialize is not None:
+            try:
+                after_initialize(stage, record, table)
+            except PersistError:
+                raise
+            except Exception as exc:
+                raise PersistError(
+                    f"fresh PERSIST post-initialization failed: {exc}"
+                ) from exc
     except BaseException as exc:
         # Fail closed on partial initialization: detach staging, propagate.
         # The on-partition filesystem now holds partial state; the blkid
@@ -556,66 +600,20 @@ def present_canonical_paths(
     slot_root: Path,
     namespace_map: PersistentNamespaceMap | None = None,
 ) -> tuple[Path, ...]:
-    """Materialize required canonical bind destinations inside a slot root.
+    """Materialize canonical bind destinations through the shared map owner."""
+    from greia_platform.persistent_layout import (
+        PersistentLayoutError,
+        present_canonical_mount_targets,
+    )
 
-    Creates every mount target from the namespace map as a directory (for
-    file binds, the parent directory) with presentation mode, refusing
-    symlink escapes. Pure filesystem work: no runner, no mounts.
-    """
-    from greia_platform.persistent_layout import MountKind
-
-    root = Path(slot_root)
-    if not root.is_absolute():
-        raise PersistError("slot root must be an absolute path")
-    if os.path.islink(root) or not root.is_dir():
-        raise PersistError("slot root must be an existing real directory")
-    table = namespace_map if namespace_map is not None else build_namespace_map()
-    base_resolved = root.resolve()
-    presented: list[Path] = []
-    for mount in table.mount_plan():
-        relative = mount.target.lstrip("/")
-        if not relative:
-            raise PersistError("namespace map carries an unpresentable target")
-        candidate = base_resolved.joinpath(relative)
-        try:
-            candidate.relative_to(base_resolved)
-        except ValueError as exc:
-            raise PersistError(
-                f"canonical path escapes the slot root: {mount.target}"
-            ) from exc
-        if mount.kind == MountKind.BIND_FILE:
-            directory = candidate.parent
-        else:
-            directory = candidate
-        # Walk and create component by component so a planted symlink can
-        # never redirect presentation outside the slot root.
-        current = base_resolved
-        for component in directory.relative_to(base_resolved).parts:
-            current = current / component
-            if os.path.islink(current):
-                raise PersistError(
-                    f"canonical path passes a symbolic link: {mount.target}"
-                )
-            try:
-                current.mkdir(mode=SLOT_PRESENTATION_DIR_MODE, exist_ok=True)
-            except OSError as exc:
-                raise PersistError(
-                    f"canonical path cannot be presented: {mount.target}: {exc}"
-                ) from exc
-            if not current.is_dir() or os.path.islink(current):
-                raise PersistError(
-                    f"canonical path is not a real directory: {mount.target}"
-                )
-        try:
-            os.chmod(directory, SLOT_PRESENTATION_DIR_MODE)
-        except OSError as exc:
-            raise PersistError(
-                f"canonical path mode failed: {mount.target}: {exc}"
-            ) from exc
-        presented.append(directory)
-    # The layout-authority bind file itself is presented by the boot bind,
-    # not pre-created here: only its parent directory is required above.
-    return tuple(dict.fromkeys(presented))
+    try:
+        return present_canonical_mount_targets(
+            Path(slot_root),
+            namespace_map,
+            directory_mode=SLOT_PRESENTATION_DIR_MODE,
+        )
+    except PersistentLayoutError as exc:
+        raise PersistError(str(exc)) from exc
 
 
 __all__ = [
@@ -634,6 +632,7 @@ __all__ = [
     "PersistRecoveryRequired",
     "SubprocessPersistRunner",
     "initialize_fresh_persist",
+    "mount_verified_ext4_for_write",
     "open_installed_persist",
     "persist_node_for",
     "persist_transaction_path",

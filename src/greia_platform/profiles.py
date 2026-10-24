@@ -887,13 +887,35 @@ class ActiveProfileSession:
     """Runtime profile claim shared by launcher and parent mutations."""
 
     LOCK_SUFFIX = ".lock"
+    ACTIVE_STATUS_MAX_BYTES = 16 * 1024
+    IDLE_STATUS = {"schema": 1, "state": "profile_picker_idle"}
 
-    def __init__(self, path: Path):
-        self.path = path.resolve()
-        self.lock_path = self.path.with_name(self.path.name + self.LOCK_SUFFIX)
+    def __init__(
+        self,
+        path: Path,
+        *,
+        lock_path: Path | None = None,
+        restart_fence_path: Path | None = None,
+    ):
+        # Keep the supplied leaf visible so strict restart checks can reject a
+        # symlink instead of silently resolving through it.
+        self.path = Path(os.path.abspath(path))
+        configured_lock = os.environ.get("GREIA_ACTIVE_PROFILE_LOCK", "").strip()
+        self.lock_path = Path(
+            lock_path
+            if lock_path is not None
+            else configured_lock or self.path.with_name(self.path.name + self.LOCK_SUFFIX)
+        )
+        configured_fence = os.environ.get("GREIA_UPDATE_RESTART_FENCE", "").strip()
+        self.restart_fence_path = (
+            Path(restart_fence_path)
+            if restart_fence_path is not None
+            else Path(configured_fence) if configured_fence else None
+        )
 
     def activate(self, store: "ProfileStore", profile_id: str) -> ProfileContext:
         with self._mutation_lock():
+            self._refuse_if_restart_pending_unlocked()
             context = store.context(profile_id)
             self._write_unlocked(context.profile)
             return context
@@ -907,11 +929,14 @@ class ActiveProfileSession:
 
     def write(self, profile: ChildProfile) -> None:
         with self._mutation_lock():
+            self._refuse_if_restart_pending_unlocked()
             self._write_unlocked(profile)
 
     def clear(self) -> None:
         with self._mutation_lock():
-            self.path.unlink(missing_ok=True)
+            # Publish explicit picker-idle evidence. The restart authority
+            # cannot infer a safe boundary from a missing status file.
+            _atomic_write_json(self.path, self.IDLE_STATUS)
 
     def read(self) -> dict[str, object] | None:
         with self._mutation_lock():
@@ -926,6 +951,8 @@ class ActiveProfileSession:
         except (FileNotFoundError, OSError, UnicodeDecodeError, json.JSONDecodeError):
             return None
         if not isinstance(raw, dict):
+            return None
+        if raw == self.IDLE_STATUS:
             return None
         return {
             key: raw.get(key)
@@ -942,34 +969,122 @@ class ActiveProfileSession:
         }
 
     @contextmanager
+    def profile_picker_restart_guard(self) -> Iterator[None]:
+        """Hold the shared session lock while proving the profile picker idle.
+
+        The restart service holds this guard through its one-shot arm and
+        bounded reboot handoff. Launcher activation takes the same lock and
+        checks the root-owned restart fence before it can publish a new child
+        session, closing the check-then-reboot race.
+        """
+        with self._mutation_lock():
+            if self._read_for_restart_unlocked() is not None:
+                raise ProfileError("return to the profile picker before restarting Greia")
+            yield
+
+    def _read_for_restart_unlocked(self) -> dict[str, object] | None:
+        """Strictly distinguish an idle picker from missing/corrupt authority."""
+        flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
+        try:
+            descriptor = os.open(self.path, flags)
+        except FileNotFoundError:
+            raise ProfileError("active profile state is missing; refusing restart")
+        except OSError as exc:
+            raise ProfileError("active profile state is unreadable; refusing restart") from exc
+        try:
+            info = os.fstat(descriptor)
+            if not stat.S_ISREG(info.st_mode) or info.st_size > self.ACTIVE_STATUS_MAX_BYTES:
+                raise ProfileError("active profile state is invalid; refusing restart")
+            with os.fdopen(descriptor, "rb") as handle:
+                descriptor = -1
+                raw = handle.read(self.ACTIVE_STATUS_MAX_BYTES + 1)
+        except OSError as exc:
+            raise ProfileError("active profile state is unreadable; refusing restart") from exc
+        finally:
+            if descriptor >= 0:
+                os.close(descriptor)
+        if len(raw) > self.ACTIVE_STATUS_MAX_BYTES:
+            raise ProfileError("active profile state exceeds Greia bounds; refusing restart")
+        try:
+            value = json.loads(raw.decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise ProfileError("active profile state is invalid; refusing restart") from exc
+        if not isinstance(value, dict):
+            raise ProfileError("active profile state is invalid; refusing restart")
+        if value == self.IDLE_STATUS:
+            return None
+        profile_id = value.get("profile_id")
+        if not isinstance(profile_id, str) or not profile_id:
+            raise ProfileError("active profile state is incomplete; refusing restart")
+        try:
+            _validate_profile_id(profile_id)
+        except ProfileError as exc:
+            raise ProfileError("active profile state is invalid; refusing restart") from exc
+        return value
+
+    def _refuse_if_restart_pending_unlocked(self) -> None:
+        """Prevent a new active child claim after the root restart fence."""
+        path = self.restart_fence_path
+        if path is None:
+            return
+        flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
+        try:
+            descriptor = os.open(path, flags)
+        except FileNotFoundError:
+            return
+        except OSError as exc:
+            raise ProfileError("system restart state is unreadable; refusing profile activation") from exc
+        try:
+            if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+                raise ProfileError("system restart state is invalid; refusing profile activation")
+        finally:
+            os.close(descriptor)
+        raise ProfileError("system restart is pending; profile activation is paused")
+
+    @contextmanager
     def _mutation_lock(self) -> Iterator[None]:
         try:
             self.lock_path.parent.mkdir(parents=True, exist_ok=True)
-            handle = self.lock_path.open("a+b")
-        except OSError:
-            yield
-            return
-
-        with handle:
+        except OSError as exc:
+            raise ProfileError("active profile lock is unavailable") from exc
+        descriptor: int | None = None
+        flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
+        try:
             try:
-                os.chmod(self.lock_path, 0o660)
-            except OSError:
-                pass
+                descriptor = os.open(self.lock_path, flags)
+            except FileNotFoundError:
+                create_flags = (
+                    os.O_CREAT
+                    | os.O_EXCL
+                    | os.O_RDWR
+                    | getattr(os, "O_CLOEXEC", 0)
+                    | getattr(os, "O_NOFOLLOW", 0)
+                )
+                try:
+                    descriptor = os.open(self.lock_path, create_flags, 0o660)
+                except FileExistsError:
+                    descriptor = os.open(self.lock_path, flags)
+            if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+                raise ProfileError("active profile lock is invalid")
+            import fcntl
+
+            fcntl.flock(descriptor, fcntl.LOCK_EX)
+        except (ImportError, OSError, ProfileError) as exc:
+            if descriptor is not None:
+                os.close(descriptor)
+            if isinstance(exc, ProfileError):
+                raise
+            raise ProfileError("active profile lock could not be acquired") from exc
+        try:
+            yield
+        finally:
             try:
                 import fcntl
 
-                fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+                fcntl.flock(descriptor, fcntl.LOCK_UN)
             except (ImportError, OSError):
                 pass
-            try:
-                yield
-            finally:
-                try:
-                    import fcntl
-
-                    fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
-                except (ImportError, OSError):
-                    pass
+            os.close(descriptor)
 
 
 def write_avatar_request(

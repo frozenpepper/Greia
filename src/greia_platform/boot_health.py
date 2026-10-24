@@ -297,7 +297,7 @@ PRODUCTION_RELEASE_IDENTITY_DEFAULT = "/etc/greia-os/release-identity.json"
 
 #: Trusted installed-layout record binding PARTUUIDs to semantic slots.
 PRODUCTION_LAYOUT_RECORD_ENV = "GREIA_INSTALLED_LAYOUT_RECORD"
-PRODUCTION_LAYOUT_RECORD_DEFAULT = "/etc/greia-os/installed-layout.json"
+PRODUCTION_LAYOUT_RECORD_DEFAULT = "/etc/greia-os/layout/installed-layout.json"
 
 #: Upper bound for the kernel command line read (small by construction).
 MAX_CMDLINE_BYTES = 64 * 1024
@@ -1461,7 +1461,10 @@ def load_pending_boot_journal(
     (no pending journal anywhere). Both-pending or corrupt journals fail
     closed rather than guessing.
     """
-    from .boot_transaction import JOURNAL_FILE_NAME, BootJournalError
+    from .boot_transaction import (
+        BOOT_JOURNAL_DIR_DEFAULT, BOOT_JOURNAL_DIR_ENV,
+        JOURNAL_FILE_NAME, BootJournalError,
+    )
 
     try:
         from .system_updates import UPDATE_JOURNAL_DIR_NAME
@@ -1474,15 +1477,20 @@ def load_pending_boot_journal(
         if update_state_dir is not None
         else Path("/var/lib/greia-os")
     )
+    configured_journal = os.environ.get(BOOT_JOURNAL_DIR_ENV, "").strip()
     install_dir = (
         Path(boot_journal_dir)
         if boot_journal_dir is not None
-        else Path("/var/lib/greia-os/boot-journal")
+        else Path(configured_journal or BOOT_JOURNAL_DIR_DEFAULT)
     )
-    journal_dirs = [
-        update_root / "system-updates" / UPDATE_JOURNAL_DIR_NAME,
-        install_dir,
-    ]
+    # The installed credential unit supplies the same shared journal as the
+    # writer and health service. Honor that environment at the actual issuer
+    # entry point; reading only the old per-state aliases would issue no token.
+    update_dir = (
+        Path(configured_journal) if configured_journal
+        else update_root / "system-updates" / UPDATE_JOURNAL_DIR_NAME
+    )
+    journal_dirs = list(dict.fromkeys((update_dir, install_dir)))
     for journal_dir in journal_dirs:
         candidate = journal_dir / JOURNAL_FILE_NAME
         if candidate.is_symlink():

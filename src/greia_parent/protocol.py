@@ -36,6 +36,21 @@ RESOURCES = (
         f"{API_BASE}/system/update/bundle",
         ("POST",),
     ),
+    ParentApiResource(
+        "system_update_check",
+        f"{API_BASE}/system/update/check",
+        ("POST",),
+    ),
+    ParentApiResource(
+        "system_update_prepare",
+        f"{API_BASE}/system/update/prepare",
+        ("POST",),
+    ),
+    ParentApiResource(
+        "system_update_restart",
+        f"{API_BASE}/system/update/restart",
+        ("POST",),
+    ),
     ParentApiResource("profiles", f"{API_BASE}/profiles", ("GET", "POST")),
     ParentApiResource(
         "profile_activity_policy",
@@ -124,6 +139,9 @@ CAPABILITIES = {
     "system.update.read": True,
     "system.update.upload": False,
     "system.update.activate": False,
+    "system.update.check": False,
+    "system.update.prepare": False,
+    "system.update.restart": False,
     # Package mutation remains fail-closed until independent package/release
     # acceptance. Enabling Parent HTTPS alone does not enable
     # install/remove together only in an explicit developer/owner-approved lane.

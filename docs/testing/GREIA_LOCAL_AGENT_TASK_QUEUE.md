@@ -867,6 +867,14 @@ operation. The earlier PASS refers to the previous recording/integration batch.
 - **2026-10-15 approved-audio preservation / targeted missing-clip recording:** The owner has explicitly confirmed **all already committed recordings are personally listened-to and approved**; never re-review/regenerate these. The remaining narrow work order is `docs/testing/2026-10-15_GREIA_TARGETED_MISSING_VOICES_LOCAL_AGENT.md`. It audits 35 proposed target slots (four Bottega/Casa ES/FR titles, 28 Submarine ES/FR missing cue stems, three source-code EN/ES/FR Submarine alarm prompts), **skips any already-existing file**, uses Voice Studio's existing local producer, and returns only newly generated candidate WAVs plus receipts, missing-cue manifest and review evidence. New candidates still await owner hearing; do not use unsafe `integrate_reviewed_voices.py`, do not overwrite existing accepted audio. **Separate implementation task, not agent recording work:** implement canonical cue-to-filename lookup once, prefer localized file, fall back to English for ordinary speech, maintain a stricter pedagogical locale policy; clear Encyclopedia/Dolphin/Submarine silent mappings. Prior source-stage contradictory status lines in this queue are historical and do not override this owner clarification.
 ### GLA-009 — Installed lifecycle Acer / installer / first boot
 
+- **2026-10-23 continuation:** the owner requested a committed handoff for another
+  agent/machine: `docs/testing/2026-10-23_SYSTEM_UPDATE_LINUX_ACCEPTANCE.md`.
+  It covers current source checks, Linux release/installer builds, disposable
+  product-mode QEMU lifecycle and Parent delivery/restart. No such image/VM/
+  physical run occurred in the Mac implementation turn. This supplies the
+  procedure; it does not identify/authorize a physical disk to erase. The
+  physical-target block below remains until that target is explicitly selected.
+
 - **Status:** BLOCKED
 - **Priority:** separate hardware owner gate; **dependency:** explicit owner
   authorization and `docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md`.

@@ -157,19 +157,29 @@ class ProductionParentApiRequestHandler(UpdateParentApiRequestHandler):
     _WIFI_PATHS = frozenset(
         {f"{API_BASE}/network/wifi", f"{API_BASE}/network/wifi/connect"}
     )
+    _UPDATE_STATUS_PATHS = frozenset({f"{API_BASE}/system/update"})
+    _UPDATE_JOB_PATHS = frozenset(
+        {
+            f"{API_BASE}/system/update/check",
+            f"{API_BASE}/system/update/prepare",
+            f"{API_BASE}/system/update/restart",
+        }
+    )
 
-    def _serialized(self, handler: Callable[[], None]) -> None:
-        if urlparse(self.path).path in self._WIFI_PATHS:
+    def _serialized(self, handler: Callable[[], None], *, fast_path: bool = False) -> None:
+        if fast_path or urlparse(self.path).path in self._WIFI_PATHS:
             handler()
             return
         with self.server.request_lock:  # type: ignore[attr-defined]
             handler()
 
     def do_GET(self) -> None:  # noqa: N802
-        self._serialized(self._get)
+        path = urlparse(self.path).path
+        self._serialized(self._get, fast_path=path in self._UPDATE_STATUS_PATHS)
 
     def do_POST(self) -> None:  # noqa: N802
-        self._serialized(self._post)
+        path = urlparse(self.path).path
+        self._serialized(self._post, fast_path=path in self._UPDATE_JOB_PATHS)
 
     def do_PUT(self) -> None:  # noqa: N802
         self._serialized(super().do_PUT)

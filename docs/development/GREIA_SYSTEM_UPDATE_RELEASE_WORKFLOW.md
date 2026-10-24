@@ -1,12 +1,16 @@
 # Greia System Update Release Workflow
 
 **Status:** developer/release-operator runbook for the ADR 0036 v3 flow
-**Date:** 2026-09-16
+**Reviewed:** 2026-10-23
 **Architecture:** ADR 0036 (supersedes the old signed-bundle requirements of ADR 0030 where they conflict)
 **Product requirements:** `docs/product/SYSTEM_UPDATES.md`
 **Normal owner tool:** `tools/greia_release.py`
 **Low-level implementation tools:** `tools/build_release.py`, `tools/greia_update.py`
-**Implementation state:** Session 02/R4 is GREEN. Session 03 owner-release CLI source implementation is now present and awaiting the source-only validation in `docs/testing/2026-09-20_SESSION03_RELEASE_CLI_LOCAL_VALIDATION.md`. A real release build is deliberately not part of owner-host validation; it belongs on the supported x86_64 Linux build host after source acceptance.
+**Implementation state:** Session 03 closed with the 2026-09-23 Linux owner build.
+Session 04 is OPEN. Current source integrates online Parent jobs, mounted
+persistent state and explicit restart; execute
+`docs/testing/2026-10-23_SYSTEM_UPDATE_LINUX_ACCEPTANCE.md` on the other machine
+requested by the owner before claiming current installed acceptance.
 
 This is the short practical procedure for **building, checking and sending a Greia `.greiaupdate` v3 package**.
 
@@ -274,7 +278,7 @@ machine rebooted
 update confirmed
 ```
 
-Those effects belong to the future privileged `SystemUpdateService` + proven slot backend.
+Those effects belong to the privileged `SystemUpdateService` + proven slot backend.
 
 ## 7. Check device status
 
@@ -299,7 +303,7 @@ When `system.update.upload` is advertised, Greia Parents shows a `.greiaupdate` 
 
 When the capability is false, the client must not fake the feature with SSH, raw filesystem upload, `apt`, shell commands or a hidden maintenance route.
 
-Normal future Internet update UX will ask Greia to download the release directly; the phone/browser should not relay the entire system image during an ordinary online update.
+The current source implements Internet delivery through Greia itself: check → prepare by release ID → cached progress → explicit restart at the profile picker. The phone/browser may disconnect after authorization. Exact API and module ownership are in `docs/product/SYSTEM_UPDATES.md`; current runtime acceptance remains open.
 
 ## 9. Inbox safety
 
@@ -358,7 +362,7 @@ npm test
 
 Do not label the current update tranche PASS until those commands execute at the exact recorded revisions.
 
-## 11. Current Session 03 state
+## 11. Release and channel continuation
 
 The owner release CLI source path is implemented through:
 
@@ -380,16 +384,23 @@ consumes the payload receipt and profile facts. Failed release builds do not
 publish a final release directory and preserve their scratch tree for
 diagnosis.
 
-Source validation is pending through
-`docs/testing/2026-09-20_SESSION03_RELEASE_CLI_LOCAL_VALIDATION.md`. That
-validation is source/test-only and explicitly must **not** run
-`greia_release.py build`, root composition, debootstrap, QEMU, mounts, media
-writes or other artifact builds on the owner's local machine.
+Session 03 source and Linux build acceptance are historical completed evidence,
+not the next gate. Rebuild from current source and execute the Session 04 work
+order named above. Do not reuse a September bundle to claim these new mounted
+state and Parent paths executed.
 
-After source validation is green, the remaining Session 03 acceptance is one
-real Acer release invocation on the appropriate supported x86_64 Linux build
-host, followed by inspection of the produced report/bundle. Session 04 then
-owns the real legacy i386 install/update/rollback lifecycle using that bundle.
+After an accepted real build, `tools/build_update_index.py` consumes the complete
+report and hashes each bundle. Supply `--notes-en`, `--notes-it`, `--notes-es`,
+`--notes-fr`; `--keep-releases` defaults to three per exact target. It preserves
+other channels/Parent app metadata and atomically replaces the local index,
+refusing output above the device's 512 KiB bound. Retention removes index rows,
+not artifact files. Upload immutable bundles first and replace the index last
+using the existing shared `site-ftp` tool and its publication procedure.
+
+Full compressed v3 bundles are the supported transport. A Python-only change
+currently still transfers the complete compressed payload/support bundle.
+Measure real adjacent-release bytes/RAM/storage before selecting any smaller
+transport; no second updater or unmeasured delta scheme is enabled here.
 
 Note: the old signed-bundle `keygen`/`manifest.sig`/Ed25519 workflow (ADR 0030)
 is superseded by ADR 0036 and is historical only; do not use it for new releases.

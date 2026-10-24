@@ -48,6 +48,7 @@ _UUID_B = "22222222-3333-4444-5555-666666666666"
 _UUID_B_FS = "bbbbbbbb-cccc-dddd-eeee-ffffffffffff"
 _UUID_P = "33333333-4444-5555-6666-777777777777"
 _UUID_P_FS = "cccccccc-dddd-eeee-ffff-000000000000"
+_UUID_BOOT_FS = "eeeeeeee-ffff-0000-1111-222222222222"
 #: Release-builder template filesystem UUID: the deterministic base payload
 #: carries this identity, so any staged slot still carrying it after
 #: finalization proves the role UUID was cloned instead of restored.
@@ -126,6 +127,8 @@ def _policy(*, slot_bytes: int = 1024 * 1024 * 1024) -> SlotProfilePolicy:
         layout_id="modern-gpt-ab-v1",
         system_slot_bytes=slot_bytes,
         boot_backend="grub-ab-v1",
+        persist_filesystem_uuid=_UUID_P_FS,
+        boot_control_filesystem_uuid=_UUID_BOOT_FS,
     )
 
 

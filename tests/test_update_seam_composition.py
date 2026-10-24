@@ -30,25 +30,29 @@ import os
 import tempfile
 import unittest
 import zipfile
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from pathlib import Path
 from types import SimpleNamespace
+from unittest import mock
 
 from greia_platform.grub_ab import GrubEnvBackend
 from greia_platform.persistent_layout import (
     emit_persist_schema_marker,
     parse_persist_schema_marker,
+    persist_schema_marker_path,
 )
 from greia_platform.system_updates import (
     SlotBackedSystemUpdateBackend,
     SystemUpdateInbox,
     UpdateBackendUnavailable,
+    UpdateCompatibilityError,
     UpdateSlotSeams,
     build_live_update_service,
     build_production_update_seams,
     build_update_bundle,
     inspect_update_bundle,
 )
+from update_mount_fixtures import installed_mount_patchers
 
 
 @contextmanager
@@ -86,6 +90,15 @@ _R8_ID = "greia-0.16.0"
 _R8_SEQ = 8
 _R9_ID = "greia-0.17.0"
 _R9_SEQ = 9
+
+
+@contextmanager
+def _installed_mount_prerequisites():
+    """Model exact installed mount and fstab facts for downstream tests."""
+    with ExitStack() as stack:
+        for patcher in installed_mount_patchers(_UUID_P_FS):
+            stack.enter_context(patcher)
+        yield
 
 
 def _record_dict(**overrides: object) -> dict[str, object]:
@@ -226,6 +239,9 @@ def _rig(
 ):
     """Disposable A/B machine composed through the shipped default path."""
     state_dir = root / "state"
+    marker_path = persist_schema_marker_path(state_dir)
+    marker_path.parent.mkdir(parents=True, exist_ok=True)
+    marker_path.write_bytes(emit_persist_schema_marker(1))
     layout_path = root / "installed-layout.json"
     layout_path.write_bytes(_canonical_record(record or _record_dict()))
     boot_dir = root / "boot-control"
@@ -246,6 +262,7 @@ def _rig(
         authority = build_live_update_service(
             state_dir=state_dir,
             layout_record_path=layout_path,
+            persist_root=state_dir,
             boot_backend=grub,
             boot_backend_auto=False,
         )
@@ -433,8 +450,9 @@ class ProductionRefusalTests(unittest.TestCase):
             state_before = sorted(
                 str(p.relative_to(root)) for p in root.rglob("*") if p.is_file()
             )
-            with self.assertRaises(UpdateBackendUnavailable) as raised:
-                authority.stage_current_candidate()
+            with _installed_mount_prerequisites():
+                with self.assertRaises(UpdateBackendUnavailable) as raised:
+                    authority.stage_current_candidate()
             message = str(raised.exception)
             # Production refusal names the inactive-slot device path, never
             # the degraded empty-seam construction and never a loop fallback.
@@ -457,28 +475,74 @@ class ProductionRefusalTests(unittest.TestCase):
 class ProductionFactoryTypeTests(unittest.TestCase):
     """Contract/policy/inventory/support/selection use the production types."""
 
-    def test_installed_contract_is_canonical_marker(self) -> None:
+    def test_installed_contract_reads_canonical_mounted_marker(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            authority, _grub, _layout, _state, _key, _r = _rig(root)
+            authority, _grub, _layout, state_dir, _key, _r = _rig(root)
             raw = authority.backend.seams.installed_contract_factory()
             self.assertEqual(parse_persist_schema_marker(raw), 1)
             self.assertEqual(raw, emit_persist_schema_marker(1))
+            self.assertEqual(
+                persist_schema_marker_path(state_dir).read_bytes(), raw
+            )
 
-    def test_installed_contract_factory_is_provisional_session04(self) -> None:
-        """T07: constant fallback reads as provisional, never a live read."""
-        import inspect
-
+    def test_installed_contract_refuses_missing_and_malformed_markers(self) -> None:
         from greia_platform import system_updates
 
-        source = inspect.getsource(
-            system_updates._production_installed_contract_factory
-        )
-        self.assertIn("PROVISIONAL", source)
-        self.assertIn("Session 04", source)
-        self.assertIn("NOT a live PERSIST read", source)
-        factory = system_updates._production_installed_contract_factory()
-        self.assertIn("provisional", factory.__name__)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            factory = system_updates._production_installed_contract_factory(
+                persist_root=root
+            )
+            with self.assertRaisesRegex(UpdateBackendUnavailable, "missing"):
+                factory()
+
+            marker_path = persist_schema_marker_path(root)
+            marker_path.parent.mkdir(parents=True)
+            marker_path.write_bytes(b"not-json")
+            with self.assertRaisesRegex(UpdateBackendUnavailable, "valid JSON"):
+                factory()
+
+    def test_missing_and_malformed_markers_refuse_before_slot_mutation(self) -> None:
+        for marker_state in ("missing", "malformed"):
+            with self.subTest(marker_state=marker_state):
+                with tempfile.TemporaryDirectory() as directory:
+                    root = Path(directory)
+                    authority, _grub, _layout, state_dir, _key, _r = _rig(root)
+                    marker_path = persist_schema_marker_path(state_dir)
+                    if marker_state == "missing":
+                        marker_path.unlink()
+                    else:
+                        marker_path.write_bytes(b"not-json")
+                    bundle = _v3_bundle(root)
+                    SystemUpdateInbox(state_dir).receive(bundle)
+
+                    with _installed_mount_prerequisites():
+                        with self.assertRaises(UpdateBackendUnavailable):
+                            authority.stage_current_candidate()
+
+                    self.assertFalse(
+                        (state_dir / "system-updates" / "journal").exists()
+                    )
+                    self.assertEqual(list(root.rglob("slot-*.img")), [])
+
+    def test_incompatible_marker_refuses_before_any_slot_mutation(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            authority, _grub, _layout, state_dir, _key, _r = _rig(root)
+            persist_schema_marker_path(state_dir).write_bytes(
+                emit_persist_schema_marker(2)
+            )
+            bundle = _v3_bundle(root)
+            SystemUpdateInbox(state_dir).receive(bundle)
+
+            with _installed_mount_prerequisites():
+                with self.assertRaises(UpdateCompatibilityError) as raised:
+                    authority.stage_current_candidate()
+
+            self.assertIn("cannot read the installed PERSIST schema 2", str(raised.exception))
+            self.assertFalse((state_dir / "system-updates" / "journal").exists())
+            self.assertEqual(list(root.rglob("slot-*.img")), [])
 
     def test_profile_policy_derives_from_record(self) -> None:
         from greia_platform.slot_writer import SlotProfilePolicy
@@ -490,7 +554,8 @@ class ProductionFactoryTypeTests(unittest.TestCase):
 
             record = load_installed_layout_record(layout_path)
             assert record is not None
-            policy = authority.backend.seams.profile_policy_factory(record)
+            with _installed_mount_prerequisites():
+                policy = authority.backend.seams.profile_policy_factory(record)
             self.assertIsInstance(policy, SlotProfilePolicy)
             self.assertEqual(policy.layout_id, record.layout_id)
             self.assertEqual(policy.system_slot_bytes, record.slot_bytes)

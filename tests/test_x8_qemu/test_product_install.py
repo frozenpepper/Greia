@@ -1122,7 +1122,10 @@ class GatherObservationTests(unittest.TestCase):
     def _seed_installed_tree(self, base: Path) -> tuple[Path, Path]:
         from greia_platform.boot_transaction import BootTransactionJournal
         from greia_platform.grub_ab import GrubEnvBackend
-        from greia_platform.persistent_layout import InstalledLayoutRecord
+        from greia_platform.persistent_layout import (
+            InstalledLayoutRecord,
+            emit_persist_schema_marker,
+        )
         from greia_platform.grub_ab import render_grub_ab_config_from_record
 
         record = InstalledLayoutRecord.from_dict(
@@ -1156,7 +1159,9 @@ class GatherObservationTests(unittest.TestCase):
         persist = base / "persist-seed"
         boot.mkdir(parents=True)
         persist.mkdir(parents=True)
-        (boot / "grub.cfg").write_text(
+        grub_dir = boot / "grub"
+        grub_dir.mkdir()
+        (grub_dir / "grub.cfg").write_text(
             render_grub_ab_config_from_record(
                 record=record,
                 password_hash="grub.pbkdf2.sha512.10000.ABCDEF0123456789",
@@ -1164,9 +1169,17 @@ class GatherObservationTests(unittest.TestCase):
             ),
             encoding="utf-8",
         )
-        GrubEnvBackend.initialize(boot / "grub", default_slot="A")
+        GrubEnvBackend.initialize(grub_dir, default_slot="A")
+        layout_dir = persist / "greia" / "namespaces" / "layout-authority"
+        layout_dir.mkdir(parents=True)
+        record.write_to(layout_dir / "installed-layout.json")
+        (persist / "greia").mkdir(exist_ok=True)
+        (persist / "greia" / "persist-schema.json").write_bytes(
+            emit_persist_schema_marker(1)
+        )
+        journal_dir = persist / "greia" / "boot-journal"
         BootTransactionJournal.begin_first_install(
-            persist,
+            journal_dir,
             layout_id="legacy-bios-ab-v1",
             boot_backend="grub-ab-v1",
             release_id="greia-0.20.0",
@@ -1176,7 +1189,7 @@ class GatherObservationTests(unittest.TestCase):
     def _gather(self, base, *, with_grub_cfg=True):
         boot_seed, persist_seed = self._seed_installed_tree(base / "seeds")
         if not with_grub_cfg:
-            (boot_seed / "grub.cfg").unlink()
+            (boot_seed / "grub" / "grub.cfg").unlink()
         target = self._mbr_file(base)
         uuids = {
             "/dev/loop9p2": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
@@ -1217,7 +1230,21 @@ class GatherObservationTests(unittest.TestCase):
             inspection = observed["inspection"]
             self.assertTrue(inspection["system_a_present"])
             self.assertEqual(inspection["journal_state"], "first_install_pending")
+            self.assertEqual(inspection["persist_schema_version"], 1)
             self.assertIn("boot_control_dir", observed["resolved_paths"])
+            self.assertEqual(
+                Path(observed["resolved_paths"]["boot_control_dir"]).name, "grub"
+            )
+            self.assertTrue(
+                str(observed["resolved_paths"]["layout_record_path"]).endswith(
+                    "/greia/namespaces/layout-authority/installed-layout.json"
+                )
+            )
+            self.assertTrue(
+                str(observed["resolved_paths"]["journal_dir"]).endswith(
+                    "/greia/boot-journal"
+                )
+            )
             blkid_calls = runner.argv0("blkid")
             self.assertEqual(len(blkid_calls), 3)
 

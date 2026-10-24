@@ -360,6 +360,21 @@ class BootObserverUnitContractTests(unittest.TestCase):
             any("local-fs.target" in value for value in after),
             "observer unit must be ordered After local-fs.target",
         )
+        required_mounts = " ".join(directives.get("Unit.RequiresMountsFor", [])).split()
+        self.assertIn("/run/greia-persist", required_mounts)
+        self.assertIn("/etc/greia-os/layout", required_mounts)
+        self.assertIn("/boot/grub", required_mounts)
+        self.assertIn(
+            "GREIA_INSTALLED_LAYOUT_RECORD=/etc/greia-os/layout/installed-layout.json",
+            directives.get("Service.Environment", []),
+        )
+        readonly_binds = {
+            path
+            for directive in directives.get("Service.BindReadOnlyPaths", [])
+            for path in directive.split()
+        }
+        self.assertIn("/etc/greia-os/layout", readonly_binds)
+        self.assertNotIn("/etc/greia-os/installed-layout.json", readonly_binds)
         # References the production observer entry point (module + owner).
         exec_starts = directives.get("Service.ExecStart", [])
         self.assertTrue(exec_starts, "observer unit must declare ExecStart")

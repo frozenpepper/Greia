@@ -379,18 +379,23 @@ class ReleaseIdentityAuthorityTests(unittest.TestCase):
 
 
 class UpdateUnitSandboxTests(unittest.TestCase):
-    def test_capabilities_are_exactly_cap_sys_admin_and_cap_sys_chroot(
-        self,
-    ) -> None:
+    EXPECTED_CAPABILITIES = [
+        "CAP_SYS_ADMIN",
+        "CAP_SYS_CHROOT",
+        "CAP_SETUID",
+        "CAP_SETGID",
+        "CAP_CHOWN",
+        "CAP_FOWNER",
+        "CAP_FSETID",
+        "CAP_DAC_OVERRIDE",
+    ]
+
+    def test_capabilities_match_shared_finalizer_package_workload(self) -> None:
         parser = _parse_unit(SERVICE_PATH)
-        self.assertEqual(
-            parser.get("Service", "CapabilityBoundingSet").strip(),
-            "CAP_SYS_ADMIN CAP_SYS_CHROOT",
-        )
-        self.assertEqual(
-            parser.get("Service", "AmbientCapabilities").strip(),
-            "CAP_SYS_ADMIN CAP_SYS_CHROOT",
-        )
+        for key in ("CapabilityBoundingSet", "AmbientCapabilities"):
+            self.assertEqual(
+                parser.get("Service", key).split(), self.EXPECTED_CAPABILITIES
+            )
 
     def test_chroot_install_leg_requires_declared_capability_and_argv_arrays(
         self,
@@ -401,9 +406,9 @@ class UpdateUnitSandboxTests(unittest.TestCase):
         hardware-support set via ``TargetHardwareSupportInstaller.install``,
         which runs ``chroot <slot> apt-get ...`` (update / install / clean)
         through the production argv-array runner (``shell=False``).
-        ``chroot(2)`` fails with EPERM without ``CAP_SYS_CHROOT``, so the
-        unit must carry exactly that capability alongside ``CAP_SYS_ADMIN``
-        — and the install path must stay argv arrays, never a shell string.
+        ``chroot(2)`` fails with EPERM without ``CAP_SYS_CHROOT``. The finalizer
+        also reuses the installer-proven APT/dpkg operations; the service
+        carries those package capabilities and the path stays argv arrays.
         """
         parser = _parse_unit(SERVICE_PATH)
         for key in ("CapabilityBoundingSet", "AmbientCapabilities"):
@@ -413,11 +418,7 @@ class UpdateUnitSandboxTests(unittest.TestCase):
                 declared,
                 f"{key} must declare the capability the chroot install leg needs",
             )
-            self.assertEqual(
-                sorted(declared),
-                ["CAP_SYS_ADMIN", "CAP_SYS_CHROOT"],
-                f"{key} must declare exactly the evidenced capability set",
-            )
+            self.assertEqual(declared, self.EXPECTED_CAPABILITIES)
         install_source = (
             ROOT / "src" / "greia_installer" / "hardware_support_install.py"
         ).read_text(encoding="utf-8")
@@ -437,35 +438,25 @@ class UpdateUnitSandboxTests(unittest.TestCase):
         self.assertNotIn("shell=True", seams_source)
 
     def test_withdraw_cap_sys_chroot_turns_contract_red(self) -> None:
-        """Positive control: the contract predicate (not test syntax) gates GREEN.
-
-        Withdrawing ``CAP_SYS_CHROOT`` from the declared pair must fail the
-        exact-pair predicate (RED); the shipped file with the pair restored
-        must satisfy it (GREEN).
-        """
+        """Positive control: withdrawing a required finalizer cap turns RED."""
         raw = SERVICE_PATH.read_text(encoding="utf-8")
-        self.assertIn(
-            "CAP_SYS_ADMIN CAP_SYS_CHROOT",
-            raw,
-            "precondition: the shipped unit must carry the pair (GREEN)",
-        )
-        withdrawn = raw.replace(
-            "CAP_SYS_ADMIN CAP_SYS_CHROOT", "CAP_SYS_ADMIN"
-        )
+        expected = " ".join(self.EXPECTED_CAPABILITIES)
+        self.assertIn(expected, raw, "precondition: shipped unit must be GREEN")
+        withdrawn = raw.replace("CAP_SYS_CHROOT", "CAP_WITHDRAWN")
         parser = configparser.ConfigParser(strict=False, interpolation=None)
         parser.optionxform = str  # type: ignore[assignment]
         parser.read_string(withdrawn)
         for key in ("CapabilityBoundingSet", "AmbientCapabilities"):
             self.assertNotEqual(
                 parser.get("Service", key).split(),
-                ["CAP_SYS_ADMIN", "CAP_SYS_CHROOT"],
+                self.EXPECTED_CAPABILITIES,
                 f"withdrawn {key} must fail the exact-pair predicate (RED)",
             )
         shipped = _parse_unit(SERVICE_PATH)
         for key in ("CapabilityBoundingSet", "AmbientCapabilities"):
             self.assertEqual(
                 shipped.get("Service", key).split(),
-                ["CAP_SYS_ADMIN", "CAP_SYS_CHROOT"],
+                self.EXPECTED_CAPABILITIES,
                 f"restored {key} must satisfy the exact-pair predicate (GREEN)",
             )
 
@@ -478,6 +469,8 @@ class UpdateUnitSandboxTests(unittest.TestCase):
             {
                 "/var/lib/greia-os",
                 "/run/greia-os",
+                "/run/greia-update-authority",
+                "/run/greia-persist",
                 "/etc/greia-os",
                 "/boot/grub",
             },
@@ -522,7 +515,8 @@ class UpdateUnitSandboxTests(unittest.TestCase):
             "/run/greia-os/system-update.sock",
         )
         self.assertEqual(parser.get("Socket", "Accept").strip(), "no")
-        self.assertEqual(parser.get("Socket", "SocketMode").strip(), "0600")
+        self.assertEqual(parser.get("Socket", "SocketMode").strip(), "0660")
+        self.assertEqual(parser.get("Socket", "SocketGroup").strip(), "greiapanel")
 
 
 if __name__ == "__main__":

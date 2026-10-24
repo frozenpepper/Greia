@@ -16,7 +16,8 @@ Before running or changing anything:
 ```text
 1. AGENTS.md
 2. HANDOVER.md
-3. docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md
+3. docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md for lifecycle
+   OR docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md for other architecture work
 4. skills/greia-os-work/SKILL.md for OS/platform work
    OR skills/greia-activity-authoring/SKILL.md for Activity work
 5. the exact testing procedure(s) named by HANDOVER.md / the active plan
@@ -42,7 +43,17 @@ and first-boot lifecycle authorization.
 
 ## 2. Current blocking route
 
-Post-R1 product-composition closure is blocking: source composition primitives (T3-S) are done, exact shipped installer/update/boot-health product composition (T3-P) is OPEN/BLOCKING, and the next executable task is **`POSTR1-P1-INSTALLER-RED`**. Do not start Raspberry Pi 400/500 work, UEFI work, or destructive Acer installation in this lane. R8 ARM64/Pi board adapters resume only after the common product lifecycle is proven — they are not the current blocking route.
+Install/update/release work follows the ADR 0036 successor plan,
+`docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md`.
+Session 03 closed on 2026-09-23; Session 04 remains OPEN for the real A/B
+install/update/rollback lifecycle. The current external-machine work order is
+`docs/testing/2026-10-23_SYSTEM_UPDATE_LINUX_ACCEPTANCE.md`. It includes current
+Parent delivery/restart acceptance and exact evidence requirements. Run its
+Linux build/VM steps on the other machine requested by the owner; physical
+media installation still requires an identified disposable target.
+
+Old POSTR1-P1/Gate-P5 sequencing does not supersede Session 04. The
+architecture-remediation plan remains active for its non-lifecycle work.
 
 Do not automatically run an old R7 closure procedure merely because it remains under `docs/testing/`. Use `HANDOVER.md` and the active plan to choose the exact gate for the work being accepted.
 

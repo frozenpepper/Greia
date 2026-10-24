@@ -54,7 +54,10 @@ from greia_platform.boot_transaction import (
     BootTransactionState,
 )
 from greia_platform.grub_ab import GrubEnvBackend
-from greia_platform.persistent_layout import InstalledLayoutRecord
+from greia_platform.persistent_layout import (
+    InstalledLayoutRecord,
+    persist_schema_marker_path,
+)
 from greia_platform.privileged_channel import PeerCredential, PrivilegedChannelError
 from greia_platform.slot_writer import (
     FINALIZER_VERSION,
@@ -81,6 +84,7 @@ from greia_platform.update_privileged import (
     build_request,
     read_response,
 )
+from update_mount_fixtures import start_installed_mount_fixture, stop_installed_mount_fixture
 
 
 @contextmanager
@@ -116,6 +120,18 @@ _R8_ID = "greia-0.16.0"
 _R8_SEQ = 8
 _R9_ID = "greia-0.17.0"
 _R9_SEQ = 9
+
+_MOUNT_FIXTURE: tuple[object, object] | None = None
+
+
+def setUpModule() -> None:
+    global _MOUNT_FIXTURE
+    _MOUNT_FIXTURE = start_installed_mount_fixture(_UUID_P_FS)
+
+
+def tearDownModule() -> None:
+    if _MOUNT_FIXTURE is not None:
+        stop_installed_mount_fixture(_MOUNT_FIXTURE)
 
 
 def _shipped_identity() -> tuple[str, str, str]:
@@ -937,6 +953,9 @@ class DefaultCompositionFailClosedTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             state_dir = root / "state"
+            marker_path = persist_schema_marker_path(state_dir)
+            marker_path.parent.mkdir(parents=True, exist_ok=True)
+            marker_path.write_bytes(_PERSIST_MARKER)
             layout_path = root / "installed-layout.json"
             layout_path.write_bytes(_canonical_record(_record_dict(family, profile)))
             boot_dir = root / "boot-control"
@@ -955,6 +974,7 @@ class DefaultCompositionFailClosedTests(unittest.TestCase):
                 authority = build_live_update_service(
                     state_dir=state_dir,
                     layout_record_path=layout_path,
+                    persist_root=state_dir,
                 )
                 self.assertIsInstance(authority.backend.boot_backend, GrubEnvBackend)
                 status = authority.backend.status_payload()

@@ -1,7 +1,7 @@
 schema_version = 1
 api_version = 1
 repository = "frozenpepper/Greia-Parent-App-Html"
-revision = "5518a9eed8ba61503249a1c827b7ef4fef5dab36"
+revision = "e0116787bb324ca4685ad832cbc8d4d9e5b3461d"
 runtime_root = "/usr/share/greia-parent-app"
 integration_state = "vendored-image-integrity-enforced"
 

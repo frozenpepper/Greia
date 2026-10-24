@@ -31,6 +31,12 @@ from greia_platform.system_updates import (
     SystemUpdateError,
     SystemUpdateInbox,
 )
+from greia_parent.update_catalog import (
+    DEFAULT_UPDATE_INDEX_URL,
+    UpdateCatalogClient,
+    UpdateCatalogError,
+)
+from greia_parent.update_delivery import UpdateDeliveryError, UpdateDeliveryService
 
 
 _ALLOWED_UPDATE_TYPES = frozenset(
@@ -57,9 +63,28 @@ class UpdateParentApiApplication(PackageParentApiApplication):
         audio_backend = cast(
             AudioProcessingBackend | None, kwargs.pop("audio_backend", None)
         )
+        update_privileged_client = kwargs.pop("update_privileged_client", None)
+        update_catalog_client = kwargs.pop("update_catalog_client", None)
+        configured_channel = os.environ.get("GREIA_SYSTEM_UPDATE_CHANNEL", "stable").strip()
+        self.system_update_channel = configured_channel if configured_channel in {"stable", "dev"} else "stable"
+        self.system_update_online_enabled = configured_channel in {"stable", "dev"}
+        if update_catalog_client is None:
+            index_url = os.environ.get("GREIA_SYSTEM_UPDATE_INDEX_URL", DEFAULT_UPDATE_INDEX_URL)
+            try:
+                update_catalog_client = UpdateCatalogClient(index_url)
+            except UpdateCatalogError:
+                self.system_update_online_enabled = False
+                update_catalog_client = UpdateCatalogClient(DEFAULT_UPDATE_INDEX_URL)
         super().__init__(*args, **kwargs)
         self.update_inbox = SystemUpdateInbox(self.state_dir)
         self.system_update_upload_enabled = _system_update_upload_enabled()
+        self.update_delivery = UpdateDeliveryService(
+            self.state_dir,
+            self.update_inbox,
+            catalog=cast(UpdateCatalogClient, update_catalog_client),
+            privileged=cast(object, update_privileged_client),
+            channel=self.system_update_channel,
+        )
         self.language_store = SystemLanguageStore(
             self.hardware_settings_dir,
             install_record_path=Path(
@@ -81,9 +106,10 @@ class UpdateParentApiApplication(PackageParentApiApplication):
             {
                 "activities.install": self.activity_install_enabled,
                 "system.update.upload": self.system_update_upload_enabled,
-                # No current single-root Greia profile has a proven transactional
-                # slot backend. Do not infer activation from upload availability.
-                "system.update.activate": False,
+                "system.update.check": self.system_update_online_enabled,
+                "system.update.prepare": self._system_update_prepare_available(),
+                "system.update.restart": self._system_update_restart_available(),
+                "system.update.activate": self._system_update_activation_available(),
                 # This concrete top-level composition owns the typed AudioService.
                 "settings.audio": True,
                 "settings.system_controls": True,
@@ -137,12 +163,69 @@ class UpdateParentApiApplication(PackageParentApiApplication):
 
     def system_update_payload(self) -> dict[str, object]:
         payload = self.update_inbox.status_payload()
-        payload["upload_available"] = self.system_update_upload_enabled
-        payload["activation_available"] = False
-        payload["activation_reason"] = (
-            "A/B system-slot backend is not configured for this image"
+        delivery = self.update_delivery.snapshot()
+        readiness = delivery["readiness"]
+        job = delivery["job"]
+        activation_available = (
+            isinstance(readiness, dict) and readiness.get("available") is True
         )
+        public_job = _public_delivery_job(job)
+        if isinstance(public_job, dict) and public_job.get("operation") != "check":
+            payload["state"] = public_job.get("state", payload.get("state"))
+        elif isinstance(public_job, dict) and payload.get("state") == "idle":
+            payload["state"] = public_job.get("state", "idle")
+        payload["upload_available"] = self.system_update_upload_enabled
+        payload["activation_available"] = activation_available
+        payload["activation_reason"] = (
+            readiness.get("reason", "Greia update readiness is unavailable")
+            if isinstance(readiness, dict)
+            else "Greia update readiness is unavailable"
+        )
+        payload["check_available"] = self.system_update_online_enabled
+        payload["prepare_available"] = self._system_update_prepare_available()
+        payload["restart_available"] = self._system_update_restart_available()
+        payload["delivery"] = {
+            "job": public_job,
+            "readiness": readiness,
+            "catalog": delivery["catalog"],
+        }
         return payload
+
+    def check_system_update(self) -> dict[str, object]:
+        if not self.system_update_online_enabled:
+            raise UpdateDeliveryError("online Greia update checks are not configured")
+        return self.update_delivery.check()
+
+    def prepare_system_update(self, release_id: str) -> dict[str, object]:
+        if not self.system_update_online_enabled:
+            raise UpdateDeliveryError("online Greia update preparation is not configured")
+        return self.update_delivery.prepare(release_id)
+
+    def request_system_update_restart(self) -> dict[str, object]:
+        return self.update_delivery.request_restart()
+
+    def _system_update_activation_available(self) -> bool:
+        readiness = self.update_delivery.snapshot().get("readiness")
+        return isinstance(readiness, dict) and readiness.get("available") is True
+
+    def _system_update_prepare_available(self) -> bool:
+        if not self.system_update_online_enabled or not self._system_update_activation_available():
+            return False
+        catalog = self.update_delivery.snapshot().get("catalog")
+        releases = catalog.get("releases") if isinstance(catalog, dict) else None
+        return isinstance(releases, list) and bool(releases)
+
+    def _system_update_restart_available(self) -> bool:
+        snapshot = self.update_delivery.snapshot()
+        job = snapshot.get("job")
+        # A staged job remains explicitly retryable after an uncertain
+        # handoff even when the cached identity/readiness snapshot is stale.
+        # Root rechecks the profile-picker fence and staged journal before it
+        # accepts REQUEST_RESTART, so this only controls the Parent affordance.
+        return (
+            isinstance(job, dict)
+            and job.get("state") == "ready_to_restart"
+        )
 
     def language_payload(self) -> dict[str, object]:
         return self.language_store.as_json_dict()
@@ -336,6 +419,14 @@ class UpdateParentApiRequestHandler(PackageParentApiRequestHandler):
                 return
             self._send_json(200, payload)
             return
+        operation = {
+            f"{API_BASE}/system/update/check": "check",
+            f"{API_BASE}/system/update/prepare": "prepare",
+            f"{API_BASE}/system/update/restart": "restart",
+        }.get(parsed.path)
+        if operation is not None:
+            self._handle_update_operation(operation)
+            return
         if parsed.path != f"{API_BASE}/system/update/bundle":
             super().do_POST()
             return
@@ -376,19 +467,23 @@ class UpdateParentApiRequestHandler(PackageParentApiRequestHandler):
             # temporary (candidate.uploading) is atomically renamed to the
             # single fixed candidate (candidate.greiaupdate), avoiding a
             # second full-size local copy on the C0/Acer disk floor.
-            upload = self.app.update_inbox.create_receive_staging(length)
-            self.connection.settimeout(_UPDATE_UPLOAD_SOCKET_TIMEOUT_SECONDS)
-            with upload.open("wb") as handle:
-                remaining = length
-                while remaining:
-                    chunk = self.rfile.read(min(1024 * 1024, remaining))
-                    if not chunk:
-                        raise SystemUpdateError("system update upload ended unexpectedly")
-                    handle.write(chunk)
-                    remaining -= len(chunk)
-            if upload.stat().st_size != length:
-                raise SystemUpdateError("system update upload size did not match Content-Length")
-            queued = self.app.update_inbox.receive_staged(upload)
+            with self.app.update_delivery.manual_upload_lease():
+                upload = self.app.update_inbox.create_receive_staging(length)
+                self.connection.settimeout(_UPDATE_UPLOAD_SOCKET_TIMEOUT_SECONDS)
+                with upload.open("wb") as handle:
+                    remaining = length
+                    while remaining:
+                        chunk = self.rfile.read(min(1024 * 1024, remaining))
+                        if not chunk:
+                            raise SystemUpdateError("system update upload ended unexpectedly")
+                        handle.write(chunk)
+                        remaining -= len(chunk)
+                if upload.stat().st_size != length:
+                    raise SystemUpdateError("system update upload size did not match Content-Length")
+                queued = self.app.update_inbox.receive_staged(upload)
+        except UpdateDeliveryError:
+            self._send_api_error(409, "system_update_busy", "Another Greia update operation is active")
+            return
         except (SystemUpdateError, OSError, TimeoutError) as exc:
             self._send_api_error(400, "system_update_rejected", str(exc))
             return
@@ -404,6 +499,46 @@ class UpdateParentApiRequestHandler(PackageParentApiRequestHandler):
                 "status": self.app.system_update_payload(),
             },
         )
+
+    def _handle_update_operation(self, operation: str) -> None:
+        query = parse_qs(urlparse(self.path).query)
+        if not self._require_api_authorization(query):
+            return
+        if operation in {"check", "prepare"} and not self.app.system_update_online_enabled:
+            self._send_api_error(
+                403,
+                "capability_unavailable",
+                "Online Greia updates are disabled on this image",
+            )
+            return
+        try:
+            body = self._read_json_object()
+            if operation == "prepare":
+                if set(body) != {"release_id"}:
+                    raise ValueError("prepare requires only release_id")
+                job = self.app.prepare_system_update(self._json_text(body, "release_id"))
+            else:
+                if body:
+                    raise ValueError(f"{operation} does not accept request fields")
+                if operation == "check":
+                    job = self.app.check_system_update()
+                else:
+                    job = self.app.request_system_update_restart()
+        except ValueError as exc:
+            self._send_api_error(400, "invalid_system_update_request", str(exc))
+            return
+        except UpdateDeliveryError:
+            self._send_api_error(
+                409,
+                "system_update_not_ready",
+                "Greia cannot accept this update operation in its current state",
+            )
+            return
+        public_job = _public_delivery_job(job)
+        if public_job is None:
+            self._send_api_error(500, "system_update_failed", "Greia could not queue the update operation")
+            return
+        self._send_json(202, {"job": public_job})
 
 
 class UpdateParentApiHTTPServer(HTTPServer):
@@ -436,9 +571,10 @@ def _system_update_upload_enabled() -> bool:
         return True
     if explicit in {"0", "false", "no", "off"}:
         return False
-    # Code/system bundle delivery remains disabled on provisional plaintext Parent
-    # transport except on the explicit developer lane. Receiving is still only an
-    # unprivileged inbox operation; privileged activation remains unavailable.
+    # Manual code/system bundle upload remains opt-in on the explicit developer
+    # lane. The Parent only receives the fixed inbox candidate; root independently
+    # checks installed identity, A/B/PERSIST readiness and the candidate before
+    # any inactive-slot write.
     marker = Path(
         os.environ.get(
             "GREIA_DEVELOPER_REMOTE_MARKER",
@@ -446,6 +582,64 @@ def _system_update_upload_enabled() -> bool:
         )
     )
     return marker.is_file()
+
+
+def _public_delivery_job(value: object) -> dict[str, object] | None:
+    """Whitelist the finite Parent job contract, excluding URL and disk data."""
+
+    if not isinstance(value, dict):
+        return None
+    operation = value.get("operation")
+    state = value.get("state")
+    if operation not in {"check", "prepare", "restart"} or state not in {
+        "checking",
+        "checked",
+        "queued",
+        "downloading",
+        "receiving",
+        "verifying",
+        "staging",
+        "ready_to_restart",
+        "restart_pending",
+        "updated",
+        "rolled_back",
+        "failed",
+    }:
+        return None
+    job_id = value.get("job_id")
+    if not isinstance(job_id, str) or len(job_id) != 32:
+        return None
+    return {
+        "job_id": job_id,
+        "operation": operation,
+        "state": state,
+        "release_id": _public_text(value.get("release_id"), 96),
+        "version": _public_text(value.get("version"), 64),
+        "downloaded_bytes": _public_int(value.get("downloaded_bytes")),
+        "total_bytes": _public_int(value.get("total_bytes")),
+        "created_at": _public_text(value.get("created_at"), 64),
+        "updated_at": _public_text(value.get("updated_at"), 64),
+        "error_code": _public_text(value.get("error_code"), 64),
+        "error_message": _safe_public_error(value.get("error_message")),
+        "restart_request_id": _public_text(value.get("restart_request_id"), 64),
+    }
+
+
+def _public_text(value: object, limit: int) -> str | None:
+    return value[:limit] if isinstance(value, str) and value else None
+
+
+def _public_int(value: object) -> int:
+    return value if isinstance(value, int) and not isinstance(value, bool) and value >= 0 else 0
+
+
+def _safe_public_error(value: object) -> str | None:
+    text = _public_text(value, 256)
+    if text is None:
+        return None
+    if "/" in text or "\\" in text:
+        return "Greia could not complete the update operation."
+    return text
 
 
 def main() -> int:

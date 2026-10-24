@@ -55,6 +55,7 @@ from greia_platform.system_updates import (
     build_production_update_seams,
     build_update_bundle,
 )
+from update_mount_fixtures import start_installed_mount_fixture, stop_installed_mount_fixture
 
 
 _FAMILY = "t04test"
@@ -65,6 +66,20 @@ _X_FIRMWARE = "firmware-xonly"
 _X_MICROCODE = "xonly-microcode"
 _Y_FIRMWARE = "firmware-yonly"
 _Y_MICROCODE = "yonly-microcode"
+
+_MOUNT_FIXTURE: tuple[object, object] | None = None
+
+
+def setUpModule() -> None:
+    global _MOUNT_FIXTURE
+    _MOUNT_FIXTURE = start_installed_mount_fixture(
+        "cccccccc-dddd-eeee-ffff-000000000000"
+    )
+
+
+def tearDownModule() -> None:
+    if _MOUNT_FIXTURE is not None:
+        stop_installed_mount_fixture(_MOUNT_FIXTURE)
 
 
 def _sha(payload: bytes) -> str:

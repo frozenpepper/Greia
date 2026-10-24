@@ -1,9 +1,9 @@
 # Greia System Updates — Product and Operator Requirements
 
 **Status:** accepted product direction; implementation incremental
-**Date:** 2026-09-16
+**Reviewed:** 2026-10-23
 **Architecture owner:** ADR 0036 (supersedes ADR 0030's release-signing requirements where they conflict)  
-**Primary future phase:** R13B
+**Current lifecycle owner:** 2026-09-15 completion plan, Session 04 (OPEN)
 
 ## 1. Parent-facing goal
 
@@ -77,6 +77,11 @@ Parent authorizes -> Greia downloads -> Greia verifies/stages
 ```
 
 The phone/browser does not need to relay the full release and may disconnect after authorization.
+
+The current source implements this online path. Manual file upload remains a
+receive-only developer path: preparing that candidate currently still needs
+an online catalog selection. Fully offline Parent staging and USB discovery
+remain open work; do not describe upload success as installed success.
 
 ### Parent-uploaded file
 
@@ -272,35 +277,35 @@ The upload endpoint receives bytes only. It does not grant slot-write authority 
 
 ## 6. Current implementation boundary
 
-The first implementation slice intentionally stops before destructive activation on current machines.
+The owner release CLI has produced real Acer bundles (Session 03 closed
+2026-09-23). The 2026-10-23 integration adds the device-owned online job,
+Parent controls, mounted PERSIST/boot-control composition and idle-picker
+restart. These changes are **SOURCE** work; the current Linux/VM/device
+acceptance is `docs/testing/2026-10-23_SYSTEM_UPDATE_LINUX_ACCEPTANCE.md`.
+Session 04 remains OPEN.
 
-Current `legacy-x86-i686` uses:
+`legacy-x86-i686` and `legacy-x86-i686-rc` still use single-root storage and
+omit the update package set. They cannot activate transactional updates;
+there is no automatic single-root-to-A/B conversion. The A/B candidate is
+`acer-aspire-one-i386-ab`, with two 1536 MiB slots and shared PERSIST.
+Runtime readiness must prove actual mounted state and accepted first boot;
+profile names or the existence of slot B are insufficient.
 
 ```text
-layout = bios-single-ext4
-```
-
-and does not select the reserved `system-update` package set. Therefore the correct current status is:
-
-```text
-unsigned v3 bundle creation      source implemented
-bundle inspection API            source implemented
-real ext4 slot payload builder   source implemented (SOURCE-level; build-host artifact run pending)
-shared slot completeness gate    source implemented
-Parent update status             source implemented
-Parent developer upload/queue    source implemented
-single fixed-candidate inbox     source implemented
-privileged A/B slot activation   unavailable
-boot health confirmation         unavailable
-automatic rollback               unavailable
-normal online channel download   not implemented yet
-USB/SD update delivery           not implemented yet
+owner release CLI / v3 bundle        implemented; prior Linux build evidence
+Parent status / bounded file inbox  implemented
+online check/download/prepare job   source implemented; runtime UNPROVEN
+explicit idle-picker restart        source implemented; runtime UNPROVEN
+A/B writer / health / rollback      source integrated; current lifecycle OPEN
+single-root activation             unavailable
+USB/SD automatic update discovery   DEFERRED
+Python-only delta transport         DEFERRED, unmeasured
 ```
 
 The Parent inbox validates archive structure and the manifest's declared
 payload hash/size before publishing exact bytes under one fixed
 Greia-owned candidate name, but intentionally performs no signature
-check: there is no signature in v3. The future privileged
+check: there is no signature in v3. The privileged
 `SystemUpdateService` re-checks exact machine/profile/board compatibility
 and PERSIST schema readability before any inactive-slot write.
 
@@ -315,6 +320,9 @@ Current semantic capabilities are:
 ```text
 system.update.read
 system.update.upload
+system.update.check
+system.update.prepare
+system.update.restart
 system.update.activate
 ```
 
@@ -324,20 +332,50 @@ system.update.activate
 
 `system.update.activate` remains false on current single-root images regardless of upload availability.
 
-The installed Parent daemon remains the unprivileged `greiapanel` service with `NoNewPrivileges=yes`, `ProtectSystem=strict` and an empty capability bounding set. Slot writing/reboot/boot selection must live in the later privileged typed update service, not in the network-facing HTTP daemon.
+The installed Parent daemon remains the unprivileged `greiapanel` service with `NoNewPrivileges=yes`, `ProtectSystem=strict` and an empty capability bounding set. Slot writing/reboot/boot selection live in the privileged typed update service, not in the network-facing HTTP daemon.
 
-## 8. Future online channel
+## 8. Device-owned online channel
 
-A network channel can remain intentionally simple. Conceptually:
+Greia reads a single static index using the image/service-owned
+`GREIA_SYSTEM_UPDATE_INDEX_URL` (default
+`https://www.frozenpepper.it/greia/updates/greia-updates.json`) and
+`GREIA_SYSTEM_UPDATE_CHANNEL=stable|dev` (default stable). The phone does not
+send a URL. No account or separate update server application is required.
 
-```text
-stable/<platform-family>/<architecture>/channel.json
-stable/<platform-family>/<architecture>/<release>.greiaupdate
-```
+The API is source-owned by `greia_parent.update_api` and `protocol`:
 
-Channel metadata advertises the latest compatible release, size, release notes and bundle URL. The bundle's own manifest digest/size checks remain ordinary transfer/integrity aids; compatibility (profile, architecture, board, PERSIST schema) is enforced before any slot write. There is no release signature and no signing-key trust to check.
+| Request | Body | Result |
+| --- | --- | --- |
+| GET `/api/v1/system/update` | none | cached inbox/job/readiness/catalog status |
+| POST `/api/v1/system/update/check` | `{}` | 202 with durable `job` |
+| POST `/api/v1/system/update/prepare` | `{"release_id":"..."}` | 202 with durable `job` |
+| POST `/api/v1/system/update/restart` | `{}` | 202 with durable `job` |
 
-No cloud account is required merely to obtain a public Greia system update.
+GET retains `state`, `release`, `upload_available`, `activation_available`
+and adds `activation_reason`, `check_available`, `prepare_available`,
+`restart_available`, `delivery: {job, readiness, catalog}`. Clients refresh
+capabilities as readiness changes. The catalog contains compatible release
+facts, never a caller-selected download URL or filesystem path.
+
+`UpdateDeliveryService` owns one bounded durable background operation;
+`UpdateJobStore`, `UpdateCatalogClient` and `UpdateBundleReceiver` own storage,
+metadata/network and streaming respectively. The existing fixed inbox and
+`SystemUpdateService` remain the verification/slot-writing owners. Status
+reads never wait for root's serial staging operation. Closing the Parent app
+does not cancel an accepted job. A Parent-process restart reconciles staging
+before retrying; a reconnect never automatically authorizes reboot.
+
+The root broker accepts only semantic Parent operations. Restart holds the
+shared profile-session lock, requires explicit picker-idle evidence, rechecks
+the staged transaction and records a volatile fence before systemd handoff.
+New profile selection uses the same lock/fence. Missing/corrupt state refuses
+restart. Successful staging is not healthy boot acceptance.
+
+Source implementation states: `checking`, `checked`, `queued`, `downloading`,
+`receiving`, `verifying`, `staging`, `ready_to_restart`, `restart_pending`,
+`updated`, `rolled_back`, `failed`. Exact public fields and capability gates
+remain source-owned. Runtime acceptance must exercise lost responses,
+reconnection, first boot and rollback through both Parent clients.
 
 ### 8.1 Selected first channel format: `greia-updates/1` (2026-10-16)
 
@@ -367,12 +405,14 @@ Rules:
 
 - Parent clients fetch it with a plain GET (no device identifiers, no query
   parameters) and compare it with the device's `GET /api/v1/system` `os`
-  identity: exact `profiles` match first, then `platform_family` +
-  `architecture`. Developer images (profile ending in `-dev`) read `dev`.
+  identity: exact profile **and** platform family **and** architecture, with
+  exact board match unless the release deliberately has `board: null`.
+  The device-owned channel is configured as above; native discovery also
+  recognizes developer and RC identities.
 - The index is discovery only: unsigned, no trust authority. Greia still
   validates compatibility and integrity before any slot write, and
-  installation remains a Greia-side action (§6–7); the phone only informs and
-  links to instructions until a Greia-side download/staging route exists.
+  installation remains a Greia-side action (§6–7). The Parent controls the
+  durable device job; it does not relay an ordinary online bundle.
 - `parents_app` lets native Parent clients show "update available/required";
   the HTML client may ignore it.
 
@@ -384,7 +424,7 @@ Before candidate confirmation, shared-state migrations must remain reversible/ba
 
 ## 10. Power, free-space and interruption
 
-Before receiving a manually uploaded bundle, the current inbox preserves a bounded free-space reserve. Before future staging/activation, Greia must additionally check the applicable backend's inactive-slot capacity and safety requirements. Where power state is available, unsafe battery conditions should block activation.
+Before receiving a manually uploaded bundle, the current inbox preserves a bounded free-space reserve. Before staging/activation, Greia additionally checks the applicable backend's inactive-slot capacity and safety requirements. Where power state is available, unsafe battery conditions should block activation.
 
 Downloading/receiving an update may become resumable in a later slice; loss of connection while receiving must never corrupt the currently running OS.
 
@@ -405,7 +445,7 @@ Production system-update capability remains false until Greia has evidence for:
 - rollback after interrupted/broken candidate;
 - shared-data compatibility/rollback;
 - power/free-space handling;
-- C0 disk/RAM/process/latency footprint, including the crypto/backend dependency delta;
+- C0 disk/RAM/process/latency footprint, including the updater/backend dependency footprint;
 - Parent upload and normal network delivery;
 - offline removable-media delivery;
 - physical Acer and ARM reference acceptance.

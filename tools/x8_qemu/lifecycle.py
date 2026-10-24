@@ -2196,6 +2196,9 @@ def prove_install_composition(
         def write_file(self, relative_path: str, data: bytes) -> None:
             if not self.mounted:
                 raise SlotFinalizeError("slot writes require a mounted destination")
+            candidate = self._mount_dir / relative_path
+            candidate.parent.mkdir(parents=True, exist_ok=True)
+            candidate.write_bytes(bytes(data))
 
         def missing_files(self, required: tuple[str, ...]) -> tuple[str, ...]:
             return ()
@@ -2218,6 +2221,11 @@ def prove_install_composition(
 
         def run(self, command) -> PersistCommandResult:  # type: ignore[no-untyped-def]
             if command[0] == "blkid":
+                if command[-1] in ("/dev/sda1", "/dev/sda3"):
+                    return PersistCommandResult(
+                        stdout="dddddddd-dddd-dddd-dddd-dddddddddddd",
+                        returncode=0,
+                    )
                 self._blkid_calls += 1
                 if self._blkid_calls == 1:
                     return PersistCommandResult(stdout="", returncode=1)
@@ -2226,8 +2234,6 @@ def prove_install_composition(
 
     (work / "persist-stage").mkdir(exist_ok=True)
     (work / "boot-control").mkdir(exist_ok=True)
-    (work / "backend-state").mkdir(exist_ok=True)
-    (work / "journal").mkdir(exist_ok=True)
     (work / "slot-a-mnt").mkdir(exist_ok=True)
     runner = _PartitionRunner()
 
@@ -2247,8 +2253,6 @@ def prove_install_composition(
             persist_stage_dir=work / "persist-stage",
             persist_uuid_factory=lambda: _uuid.UUID(_UUID_P_FS),
             boot_control_dir=work / "boot-control",
-            backend_state_dir=work / "backend-state",
-            journal_dir=work / "journal",
         )
 
     def _identities(target, plan):  # type: ignore[no-untyped-def]
@@ -2306,15 +2310,15 @@ def prove_install_composition(
         raise LifecycleContractError("install EXECUTE receipt is not bound")
     if not runner.commands or runner.commands[0][0] != "wipefs":
         raise LifecycleContractError("install did not drive the partition runner")
-    grub_cfg = work / "boot-control" / "grub.cfg"
+    grub_cfg = work / "boot-control" / "grub" / "grub.cfg"
     if not grub_cfg.is_file():
         raise LifecycleContractError("install produced no boot-control grub.cfg")
     from greia_platform.grub_ab import validate_grub_ab_text
 
     validate_grub_ab_text(grub_cfg.read_text(encoding="utf-8"))
-    if _Backend.attach(work / "backend-state").inspect().default_slot != "A":
+    if _Backend.attach(work / "boot-control" / "grub").inspect().default_slot != "A":
         raise LifecycleContractError("install did not default to slot A")
-    journal = _Journal.load(work / "journal")
+    journal = _Journal.load(work / "persist-stage" / "greia" / "boot-journal")
     if journal.state is not _State.FIRST_INSTALL_PENDING or not journal.first_install:
         raise LifecycleContractError("install did not open FIRST_INSTALL_PENDING")
     executed = {

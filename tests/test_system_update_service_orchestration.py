@@ -93,6 +93,7 @@ _UUID_B = "22222222-3333-4444-5555-666666666666"
 _UUID_B_FS = "bbbbbbbb-cccc-dddd-eeee-ffffffffffff"
 _UUID_P = "33333333-4444-5555-6666-777777777777"
 _UUID_P_FS = "cccccccc-dddd-eeee-ffff-000000000000"
+_UUID_BOOT_FS = "dddddddd-eeee-ffff-0000-111111111111"
 _INSTALL_SHA = "ab" * 32
 
 _INVENTORY_TOKEN = "cd" * 32
@@ -527,6 +528,10 @@ class _Harness:
             layout_id=str(getattr(record, "layout_id")),
             system_slot_bytes=int(getattr(record, "slot_bytes")),
             boot_backend=str(getattr(record, "boot_backend")),
+            persist_filesystem_uuid=str(
+                getattr(getattr(record, "persist"), "filesystem_uuid")
+            ),
+            boot_control_filesystem_uuid=_UUID_BOOT_FS,
         )
 
     def selection_factory(self, support: object, token: str) -> object | None:
@@ -735,7 +740,11 @@ class ServiceOrchestrationTests(unittest.TestCase):
             self.assertTrue(fstab_on_disk.is_file())
             self.assertEqual(
                 fstab_on_disk.read_text(encoding="ascii"),
-                render_fstab(_UUID_B_FS),
+                render_fstab(
+                    _UUID_B_FS,
+                    persist_filesystem_uuid=_UUID_P_FS,
+                    boot_control_filesystem_uuid=_UUID_BOOT_FS,
+                ),
             )
             self.assertIn(FSTAB_REL_PATH, harness.filesystem.files)
 
@@ -865,14 +874,21 @@ class StaticUnitContractTests(unittest.TestCase):
         ROOT / "build/installer-overlay/etc/systemd/system/greia-install-transaction.service"
     )
 
-    def test_update_service_capabilities_stay_minimal(self) -> None:
+    def test_update_service_has_shared_finalizer_package_capabilities(self) -> None:
         text = self.SERVICE.read_text(encoding="utf-8")
-        self.assertIn("CapabilityBoundingSet=CAP_SYS_ADMIN CAP_SYS_CHROOT", text)
-        self.assertIn("AmbientCapabilities=CAP_SYS_ADMIN CAP_SYS_CHROOT", text)
+        expected = (
+            "CAP_SYS_ADMIN CAP_SYS_CHROOT CAP_SETUID CAP_SETGID CAP_CHOWN "
+            "CAP_FOWNER CAP_FSETID CAP_DAC_OVERRIDE"
+        )
+        self.assertIn(f"CapabilityBoundingSet={expected}", text)
+        self.assertIn(f"AmbientCapabilities={expected}", text)
         self.assertIn("RestrictAddressFamilies=AF_UNIX", text)
-        self.assertIn("ReadWritePaths=/var/lib/greia-os /run/greia-os", text)
         self.assertIn(
-            "ExecStart=/usr/bin/python3 -m greia_platform.system_updates "
+            "ReadWritePaths=/var/lib/greia-os /run/greia-os /run/greia-update-authority",
+            text,
+        )
+        self.assertIn(
+            "ExecStart=/usr/bin/python3 -m greia_platform.update_privileged "
             "--socket-activated",
             text,
         )
@@ -880,12 +896,11 @@ class StaticUnitContractTests(unittest.TestCase):
         self.assertNotIn("WantedBy=", text)
         self.assertNotIn("[Install]", text)
         self.assertIn("Requires=greia-system-update.socket", text)
-        # No speculative additions: exactly the two hardware capabilities.
         bounding = [
             line.strip() for line in text.splitlines()
             if line.strip().startswith("CapabilityBoundingSet=")
         ]
-        self.assertEqual(bounding, ["CapabilityBoundingSet=CAP_SYS_ADMIN CAP_SYS_CHROOT"])
+        self.assertEqual(bounding, [f"CapabilityBoundingSet={expected}"])
 
     def test_installer_service_capabilities_stay_minimal(self) -> None:
         text = self.INSTALLER.read_text(encoding="utf-8")

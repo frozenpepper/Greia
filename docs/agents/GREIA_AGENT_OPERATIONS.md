@@ -85,6 +85,38 @@ explicit procedure.
 
 ---
 
+## System-update source and external-machine acceptance (2026-10-23)
+
+The current lifecycle work order is
+`docs/testing/2026-10-23_SYSTEM_UPDATE_LINUX_ACCEPTANCE.md`, under Session 04
+of the 2026-09-15 plan. The owner explicitly deferred image builds, QEMU,
+installation and hardware execution from the Mac to another agent/machine.
+Keep these results separate from local Python/Node source checks.
+
+Use existing `tools/greia_release.py` and `tools/build_update_index.py` for
+release/index assembly. The index supports EN/IT/ES/FR notes, retains three
+releases per exact target by default and publishes its local file atomically.
+Upload artifacts before replacing the public index. The existing shared
+`site-ftp` tool owns server publication; no new deployment script or hosted
+Actions service is required. Read its publication instructions when publishing.
+
+Parent's delivery worker owns one durable check/download/prepare job;
+HTTP reads use cached status while the privileged writer is busy. Request
+restart explicitly at the profile picker. Do not bypass its profile-session
+fence or infer boot acceptance from a successful upload/stage reply.
+Full compressed v3 bundles are the supported transfer format; Python-only
+bandwidth reduction is not implemented or measured.
+
+Fresh BIOS A/B installation now has a mandatory `FreshAbInstallSeams.bios_bootloader_installer`
+seam, supplied in production by `device_seams.build_bios_bootloader_installer`.
+It installs BIOS GRUB onto the verified shared boot-control filesystem after
+the default-A `grubenv` and `grub.cfg` are written, and rechecks target identity
+before the disk write. Extend this owner and its existing
+`efi_boot.bios_grub_install_command`; do not add a second installer command
+path. Current fake-runner/source checks are not boot proof. The Linux work
+order requires a fresh blank-disk BIOS install and a boot of the installed
+target through BIOS GRUB into Greia before A/B update acceptance.
+
 ## 2. Repository and concurrent-work discipline
 
 Repository-wide branch policy is owned by `AGENTS.md`:

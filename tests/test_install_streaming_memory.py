@@ -257,6 +257,11 @@ class FakePersistRunner(PersistCommandRunner):
     def run(self, command) -> PersistCommandResult:
         self.commands.append(list(command))
         if command[0] == "blkid":
+            if command[-1] in ("/dev/sda1", "/dev/sda3"):
+                return PersistCommandResult(
+                    stdout="dddddddd-dddd-dddd-dddd-dddddddddddd",
+                    returncode=0,
+                )
             self._blkid_calls += 1
             if self._blkid_calls == 1:
                 return PersistCommandResult(stdout="", returncode=1)
@@ -302,7 +307,7 @@ def _observed_mbr_identities(signature: str = _MBR_SIGNATURE):
         "persist": {
             "scheme": "MBR_PARTUUID",
             "partuuid": f"{signature}-04",
-            "filesystem_uuid": "dddddddd-dddd-dddd-dddd-ddddddddddd4",
+            "filesystem_uuid": "cccccccc-cccc-cccc-cccc-ccccccccccc3",
         },
     }
 
@@ -433,10 +438,9 @@ class StreamingSeamTests(unittest.TestCase):
         persist_stage = root / "persist-stage"
         persist_stage.mkdir()
         boot_control = root / "boot-control"
-        backend_state = root / "backend-state"
-        journal = root / "journal"
+        journal = persist_stage / "greia" / "boot-journal"
         mount_dir = root / "mnt"
-        for directory_path in (boot_control, backend_state, journal):
+        for directory_path in (boot_control,):
             directory_path.mkdir()
         slot_file = root / "slot-a.bin"
         storage = LoopbackSlotFile.create(slot_file, 1 * GIB)
@@ -482,10 +486,9 @@ class StreamingSeamTests(unittest.TestCase):
                 observed["persist"]["filesystem_uuid"]
             ),
             boot_control_dir=boot_control,
-            backend_state_dir=backend_state,
-            journal_dir=journal,
             payload_stream_factory=_Interrupting,
             post_layout_identity_observer=lambda target, plan: observed,
+            bios_bootloader_installer=lambda target, boot_directory: None,
         )
         request = FreshAbInstallRequest(
             bundle_path=bundle,
@@ -614,10 +617,9 @@ class StreamingMemoryTests(unittest.TestCase):
             persist_stage = case / "persist-stage"
             persist_stage.mkdir()
             boot_control = case / "boot-control"
-            backend_state = case / "backend-state"
-            journal = case / "journal"
+            journal = persist_stage / "greia" / "boot-journal"
             mount_dir = case / "mnt"
-            for directory_path in (boot_control, backend_state, journal):
+            for directory_path in (boot_control,):
                 directory_path.mkdir()
             slot_file = case / "slot-a.bin"
             storage = LoopbackSlotFile.create(slot_file, 1 * GIB)
@@ -641,9 +643,8 @@ class StreamingMemoryTests(unittest.TestCase):
                     observed["persist"]["filesystem_uuid"]
                 ),
                 boot_control_dir=boot_control,
-                backend_state_dir=backend_state,
-                journal_dir=journal,
                 post_layout_identity_observer=lambda target, plan: observed,
+                bios_bootloader_installer=lambda target, boot_directory: None,
             )
             request = FreshAbInstallRequest(
                 bundle_path=bundle,

@@ -4,9 +4,10 @@
 # (absent on every image) is removed: the service is a normal on-demand
 # product service, started only by greia-system-update.socket on the first
 # connection and never wanted by any boot target, so it stays inactive
-# during ordinary pre-intro boot. Semantic operations
-# only (STATUS/VERIFY/STAGE/ARM/CONFIRM/RECONCILE over the current inbox
-# candidate, resolved internally with no request selectors). Separate socket
+# during ordinary pre-intro boot. Semantic operations only
+# (STATUS/VERIFY/STAGE/ARM/CONFIRM/RECONCILE over the current inbox
+# candidate, plus the parent-authorized profile-picker REQUEST_RESTART
+# handoff; paths, slots and boot commands remain service-owned). Separate socket
 # from greia-install-transaction: the installer pair lives on installer media
 # only, while this pair serves the installed system. The services share the
 # common SlotWriter/SlotFinalizer/journal libraries, never a generic root
@@ -16,8 +17,9 @@
 Description=Greia OS system-update semantic service
 Requires=greia-system-update.socket
 After=greia-system-update.socket
+RequiresMountsFor=/run/greia-persist /var/lib/greia-os /boot/grub /etc/greia-os/layout
 # Never part of pre-intro boot and never a generic command runner or broad
-# system manager: this unit only serves the six semantic update operations.
+# system manager: this unit only serves the seven semantic update operations.
 # No Before= edge toward the boot chain (see the socket's ordering note):
 # the service cannot delay the first frame; it exists only after a client
 # connects, which happens post-intro.
@@ -40,8 +42,12 @@ Environment=PYTHONDONTWRITEBYTECODE=1
 # GREIA_SYSTEM_* Environment= lines are shipped here: those names remain
 # test-only composition fallbacks in code, never installed product identity.
 Environment=GREIA_UPDATE_STATE_DIR=/var/lib/greia-os
-Environment=GREIA_INSTALLED_LAYOUT_RECORD=/etc/greia-os/installed-layout.json
-ExecStart=/usr/bin/python3 -m greia_platform.system_updates --socket-activated
+Environment=GREIA_INSTALLED_LAYOUT_RECORD=/etc/greia-os/layout/installed-layout.json
+Environment=GREIA_ACTIVE_PROFILE_STATUS=/run/greia-os/active-profile.json
+Environment=GREIA_ACTIVE_PROFILE_LOCK=/run/greia-update-authority/profile-session.lock
+Environment=GREIA_UPDATE_RESTART_FENCE=/run/greia-update-authority/restart-pending.json
+Environment=GREIA_BOOT_JOURNAL_DIR=/run/greia-persist/greia/boot-journal
+ExecStart=/usr/bin/python3 -m greia_platform.update_privileged --socket-activated
 Restart=no
 TimeoutStartSec=5
 TimeoutStopSec=5
@@ -61,9 +67,10 @@ PrivateTmp=yes
 PrivateDevices=no
 ProtectHome=yes
 ProtectSystem=strict
-ReadWritePaths=/var/lib/greia-os /run/greia-os
+ReadWritePaths=/var/lib/greia-os /run/greia-os /run/greia-update-authority /run/greia-persist
 # Minimum extra writes the implementation requires: atomic installed-layout
-# advancement (/etc/greia-os), GRUB one-shot/default mutation (/boot/grub).
+# advancement on the PERSIST directory bind (/etc/greia-os/layout), GRUB
+# one-shot/default mutation (/boot/grub).
 # The temporary inactive-slot mountpoint is self-created under the granted
 # /run/greia-os tree. Everything else stays read-only.
 ReadWritePaths=/etc/greia-os /boot/grub
@@ -79,20 +86,17 @@ SystemCallFilter=~@module
 ProtectControlGroups=yes
 RestrictSUIDSGID=yes
 LockPersonality=yes
-# Minimum privilege for the real implementation: the unsigned v3 candidate
-# finalization stages the inbox candidate into the inactive slot (shared
-# SlotWriter/SlotFinalizer path) and installs the verified offline
-# hardware-support set via `chroot <slot>` package operations (update /
-# install / clean in
-# greia_installer.hardware_support_install.TargetHardwareSupportInstaller.install,
-# reached through the shared finalize path via the production argv-array
-# runner with argument arrays only), which requires CAP_SYS_CHROOT:
-# chroot(2) fails with EPERM without it. The temporary inactive-slot mount (and the block size/UUID
-# probes around it) requires CAP_SYS_ADMIN. No other capability is granted.
-# No launcher/Parent process carries this bound.
-CapabilityBoundingSet=CAP_SYS_ADMIN CAP_SYS_CHROOT
-AmbientCapabilities=CAP_SYS_ADMIN CAP_SYS_CHROOT
+# The shared SlotFinalizer stages the inactive slot, then runs the same
+# offline hardware-support APT install path used by the installer. Its chroot
+# and mount operations require SYS_CHROOT/SYS_ADMIN; APT/dpkg's privilege
+# drop, package ownership/mode restoration and apt-list replacement need the
+# same SETUID/SETGID/CHOWN/FOWNER/FSETID/DAC_OVERRIDE capabilities already
+# proven for the installer finalization workload. The updater does not unpack
+# the full installer rootfs or regenerate initramfs, so it excludes the
+# install-only MKNOD capability. No launcher/Parent process carries this set.
+CapabilityBoundingSet=CAP_SYS_ADMIN CAP_SYS_CHROOT CAP_SETUID CAP_SETGID CAP_CHOWN CAP_FOWNER CAP_FSETID CAP_DAC_OVERRIDE
+AmbientCapabilities=CAP_SYS_ADMIN CAP_SYS_CHROOT CAP_SETUID CAP_SETGID CAP_CHOWN CAP_FOWNER CAP_FSETID CAP_DAC_OVERRIDE
 RestrictAddressFamilies=AF_UNIX
 SystemCallArchitectures=native
 LimitCORE=0
-TasksMax=8
+TasksMax=32
