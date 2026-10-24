@@ -180,6 +180,34 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-24 — Lightweight package implementation committed; final local evidence
+
+Implementation source is committed at `771d52c7a9f75fb10481919d9ebef83b1d18adc9`. The exact-commit focused
+rerun passed **177/177** tests (`/tmp/greia-software-final/focused-771d52c7a.log`).
+The final integrated `make verify` run executed **5,942 tests**, with **6 failures,
+3 errors and 8 skips** (`/tmp/greia-software-final/make-verify-final.log`); it is
+NOT GREEN. The eight newly exposed integration failures were repaired and their
+142-test focused run passed. Remaining outcomes match the previously reproduced
+baseline: three Foresta audio-review expectations, two Parent Wi-Fi source
+assertions, MBR observation wording, unsupported ARM64 target composition, and two
+macOS `lsblk` installer cases. The earlier aggregate Shell memory failure did not
+recur in this run. No unrelated baseline tests were waived or changed.
+
+`make validate` separately stops at the same unsupported ARM64 profile
+(`/tmp/greia-software-final/remaining-gates.log`). Final `make shell-check footprint`
+passed (`/tmp/greia-software-final/shell-footprint-final.log`), as did staged diff
+hygiene. HTML is published/pinned at `a1da70e6c69b907b128147ac876cc3cf17053d47`.
+Mobile is committed locally at `79a61435393a34ab6d792d8c08776e92d0b0f04d`;
+its checkout has no configured remote. Mobile typecheck and 34 app tests pass;
+its shared core retains six baseline failures (96/102 pass).
+
+Source work and operator documentation are persisted; **Session 04 remains OPEN**.
+No image build, Linux installation, QEMU boot, physical-device apply/rollback or
+rendered browser/mobile acceptance ran here. The next exact action is to execute
+`docs/testing/2026-10-24_SOFTWARE_UPDATE_ACCEPTANCE.md` on the other Linux machine,
+alongside the full-system work order where applicable. Use the committed operator
+guide `docs/development/GREIA_SOFTWARE_UPDATE_PACKAGES.md` for all package recipes.
+
 ### 2026-10-24 — Relative application aliases fixed; focused gates pass, full gate pending
 
 The staged application-update source now uses root-relative `/opt/greia-os`
