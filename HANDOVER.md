@@ -180,6 +180,18 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-24 — Update implementation source freeze
+
+Implementation commit `4eaad25471fe47b72e900ea2f34777f41be5542b` includes
+online Parent delivery, the persistent A/B boot fixes and the blank-disk BIOS
+GRUB adapter. Exact-commit affected-suite run: **770 tests, OK (2 skipped)**,
+`/tmp/greia-update-completion/focused-4eaad2547.log`. Full repository verification
+is still **NOT GREEN** (the recorded 5,890-test run has 7 failures/3 errors,
+including the unresolved full-suite-only Shell memory assertion). No Linux
+build, VM/device install or release hosting occurred. Resume with
+`docs/testing/2026-10-23_SYSTEM_UPDATE_LINUX_ACCEPTANCE.md`; Session 04 is OPEN.
+
+
 ### 2026-10-24 — Frozen full-gate result recorded; one suite-only memory failure unresolved
 
 Supersedes the prior Oct 24 note that frozen `make verify` was still running.

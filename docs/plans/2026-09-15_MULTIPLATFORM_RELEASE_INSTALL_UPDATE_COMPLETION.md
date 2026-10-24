@@ -2975,3 +2975,14 @@ The two-test module passes separately on baseline and current worktrees at
 failure is unresolved/order-dependent and is not proven to be baseline. Keep
 it open. The focused 38-module run remains PASS (770 tests, 2 skipped), but
 does not waive the full gate or any Linux boot/update acceptance predicate.
+
+
+## 2026-10-24 — Update source freeze and exact-commit focused evidence
+
+Source committed as `4eaad25471fe47b72e900ea2f34777f41be5542b`. The post-commit affected-suite run
+executed 770 tests in 15.941s, OK (2 skipped), with the SHA recorded in
+`/tmp/greia-update-completion/focused-4eaad2547.log`. The full-gate failures
+recorded above remain; this focused result does not supersede them. The source
+freeze includes the reviewed BIOS boot installation adapter. Real image,
+Linux exact-unit, fresh boot/update/recovery and device proof are still owed
+through the committed external-machine work order. Session 04 remains OPEN.

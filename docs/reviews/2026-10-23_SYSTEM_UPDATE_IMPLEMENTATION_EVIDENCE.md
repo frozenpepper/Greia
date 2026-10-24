@@ -6,12 +6,12 @@ for the current host. It does not certify an image, Linux guest, VM, or device.
 
 ## Revisions and provenance
 
-- The Greia checkout's `HEAD` when this report was prepared is
-  `2fd29dffa75edc3ce5edd16431a86e6722a68830`. The source implementation is in
-  the dirty working tree on top of that base; no committed source freeze SHA
-  exists in this evidence set. Do not cite the base SHA as containing the
-  uncommitted implementation. Record the canonical source SHA after its later
-  commit; do not infer or pre-fill one.
+- Implementation source freeze: `4eaad25471fe47b72e900ea2f34777f41be5542b`. The implementation was
+  prepared on base `2fd29dffa75edc3ce5edd16431a86e6722a68830`; earlier
+  working-tree runs retain that boundary. The post-commit run against the
+  exact implementation commit executed 770 tests in 15.941s, **OK (2 skipped)**,
+  `/tmp/greia-update-completion/focused-4eaad2547.log` (SHA recorded in log).
+  Later documentation-only commits do not create new image/device evidence.
 - HTML Parent App pin: `e0116787bb324ca4685ad832cbc8d4d9e5b3461d` (pushed).
 - Mobile Parent App: `06441e56e5e38d6e4a70f6e435d9d4ea7f339273` (local commit;
   its checkout has no configured remote).

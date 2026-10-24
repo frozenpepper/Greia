@@ -2,6 +2,10 @@
 
 Date: 2026-10-23. Status: **UNPROVEN runtime work order**, under Session 04 of
 `docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md`.
+Implementation source freeze: `4eaad25471fe47b72e900ea2f34777f41be5542b` (770 affected tests
+OK, 2 skipped, after commit). Later documentation-only commits preserve that
+source boundary. The full repository gate remains NOT GREEN as detailed in
+`docs/reviews/2026-10-23_SYSTEM_UPDATE_IMPLEMENTATION_EVIDENCE.md`.
 The owner requested this committed handoff for another agent on another machine.
 Do not run image composition, mounts, QEMU or installation on the Mac.
 
