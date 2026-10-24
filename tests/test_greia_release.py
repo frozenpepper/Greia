@@ -37,6 +37,7 @@ class FakeRunner:
     def __init__(self, *, fail_label: str | None = None) -> None:
         self.commands: list[list[str]] = []
         self.interactive: list[list[str]] = []
+        self.environments: list[dict[str, str]] = []
         self.fail_label = fail_label
 
     def run(
@@ -51,6 +52,7 @@ class FakeRunner:
     ):
         argv = [str(item) for item in command]
         self.commands.append(argv)
+        self.environments.append(dict(env or {}))
         if interactive:
             self.interactive.append(argv)
         if self.fail_label and self.fail_label in " ".join(argv):
@@ -106,7 +108,7 @@ class FakeRunner:
                     "payload_uncompressed_bytes": 123456,
                     "minimum_slot_bytes": 123456 + 1024 * 1024,
                     "profile_id": PROFILE,
-                    "release_id": f"greia-{VERSION}",
+                    "release_id": argv[argv.index("--release-id") + 1],
                 }
                 receipt.write_text(
                     json.dumps(receipt_doc, sort_keys=True) + "\n",
@@ -161,7 +163,7 @@ class FakeRunner:
                     json.dumps(
                         {
                             "schema_version": 3,
-                            "release_id": f"greia-{VERSION}",
+                            "release_id": argv[argv.index("--release-id") + 1],
                             "version": VERSION,
                             "profile": PROFILE,
                             "output": str(output),
@@ -207,6 +209,26 @@ class ReleaseCliTests(unittest.TestCase):
             env = module._release_environment(paths)
             self.assertEqual(env["PIP_RELEASE_BUILD"], "1")
             self.assertEqual(env["PYTHONDONTWRITEBYTECODE"], "1")
+
+    def test_acceptance_fixture_environment_explicitly_disables_release_mode(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            paths = module.ReleasePaths.for_acceptance_fixture(Path(directory), VERSION)
+            env = module._acceptance_fixture_environment(paths)
+        self.assertEqual(env["PIP_RELEASE_BUILD"], "0")
+        self.assertEqual(env["PYTHONDONTWRITEBYTECODE"], "1")
+
+    def test_acceptance_fixture_cli_has_no_arbitrary_profile_argument(self) -> None:
+        args = module._parser().parse_args(
+            [
+                "build-acceptance-fixture",
+                "--version",
+                VERSION,
+                "--output",
+                "/tmp/greia-fixtures",
+            ]
+        )
+        self.assertEqual(args.command, "build-acceptance-fixture")
+        self.assertFalse(hasattr(args, "profile"))
 
     def test_privileged_cli_disables_bytecode_before_project_imports(self) -> None:
         source = (ROOT / "tools" / "greia_release.py").read_text(encoding="utf-8")
@@ -364,6 +386,71 @@ class ReleaseCliTests(unittest.TestCase):
             )
             work_children = list((out / ".greia-work").iterdir())
             self.assertEqual(work_children, [])
+
+    def test_acceptance_fixture_uses_validated_producers_and_cannot_look_like_release(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            out = Path(directory) / "fixtures"
+            runner = FakeRunner()
+            result = module._build_release(
+                version=VERSION,
+                output_parent=out,
+                profile_ids=(PROFILE,),
+                runner=runner,
+                doctor_result=self._doctor_green(),
+                acceptance_fixture=True,
+            )
+            fixture_root = out / f"greia-acceptance-fixture-{VERSION}"
+            report = json.loads(
+                (fixture_root / "release-report.json").read_text(encoding="utf-8")
+            )
+            bundle = fixture_root / "updates" / f"{PROFILE}.greiaupdate"
+            self.assertEqual(Path(result["output"]), fixture_root.resolve())
+            self.assertEqual(report["artifact_class"], "experimental_acceptance_fixture")
+            self.assertIs(report["release_eligible"], False)
+            self.assertEqual(report["release_id"], f"greia-acceptance-fixture-{VERSION}")
+            self.assertNotIn("public_artifacts", report)
+            self.assertTrue(bundle.is_file())
+            self.assertTrue((fixture_root / "intermediate" / PROFILE / "payload.ext4.zst").is_file())
+            self.assertTrue((fixture_root / "intermediate" / PROFILE / "payload-receipt.json").is_file())
+            self.assertTrue((fixture_root / "intermediate" / PROFILE / "hardware-support.tar.zst").is_file())
+            self.assertTrue(any("compose-release-profile.sh" in " ".join(cmd) for cmd in runner.commands))
+            self.assertTrue(any("build-payload" in cmd for cmd in runner.commands))
+            self.assertTrue(any("verify-payload" in cmd for cmd in runner.commands))
+            bundle_cmd = next(cmd for cmd in runner.commands if "greia_update.py" in " ".join(cmd) and "build" in cmd)
+            self.assertEqual(bundle_cmd[bundle_cmd.index("--release-id") + 1], report["release_id"])
+            self.assertTrue(all(env.get("PIP_RELEASE_BUILD") == "0" for env in runner.environments))
+            self.assertFalse((out / f"greia-{VERSION}").exists())
+
+    def test_acceptance_fixture_rejects_other_profiles_before_running_builder(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            runner = FakeRunner()
+            with self.assertRaisesRegex(module.ReleaseCliError, "restricted"):
+                module._build_release(
+                    version=VERSION,
+                    output_parent=Path(directory),
+                    profile_ids=("legacy-x86-i686-rc",),
+                    runner=runner,
+                    doctor_result=self._doctor_green(),
+                    acceptance_fixture=True,
+                )
+            self.assertEqual(runner.commands, [])
+
+    def test_production_build_profile_keeps_release_environment_and_report_class(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            out = Path(directory)
+            runner = FakeRunner()
+            result = module._build_release(
+                version=VERSION,
+                output_parent=out,
+                profile_ids=(PROFILE,),
+                runner=runner,
+                doctor_result=self._doctor_green(),
+            )
+            report = json.loads((Path(result["output"]) / "release-report.json").read_text())
+            self.assertEqual(report["artifact_class"], "release")
+            self.assertIs(report["release_eligible"], True)
+            self.assertEqual(report["release_id"], f"greia-{VERSION}")
+            self.assertTrue(all(env.get("PIP_RELEASE_BUILD") == "1" for env in runner.environments))
 
     def test_failed_build_never_publishes_final_release_and_preserves_work(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import os
 import shutil
+import stat
 import tempfile
 import threading
 import unittest
@@ -66,6 +68,17 @@ def snapshot_active(service: ActivityPackageService) -> dict[str, bytes]:
 
 
 class ParentActiveGenerationTests(unittest.TestCase):
+    def test_first_parent_owned_store_root_remains_child_traversable_under_umask(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            service = make_service(Path(tmp))
+            prior_umask = os.umask(0o007)
+            try:
+                service._ensure_roots()
+            finally:
+                os.umask(prior_umask)
+
+            self.assertEqual(stat.S_IMODE(service.state_root.stat().st_mode), 0o755)
+
     def test_publish_creates_versioned_index_with_active_indirection(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -340,6 +353,84 @@ class ParentActiveGenerationTests(unittest.TestCase):
             self.assertEqual(len(live), 1)
             self.assertIsNotNone(service.active_generation_id())
             self.assertTrue(service.active_index_path().is_file())  # type: ignore[union-attr]
+
+    def test_legacy_active_migration_publishes_read_only_generation(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            service = make_service(root)
+            legacy = service.active_pointer
+            legacy.mkdir(parents=True)
+            shutil.copytree(PAINTING, legacy / "org.greia.painting")
+
+            with service.software_update_lock():
+                pass
+
+            generation = service.generations_root / service.active_generation_id()
+            activity_file = generation / ACTIVITIES_DIRNAME / "org.greia.painting" / "activity.toml"
+            self.assertEqual(stat.S_IMODE(generation.stat().st_mode), 0o555)
+            self.assertEqual(stat.S_IMODE(activity_file.stat().st_mode), 0o444)
+            self.assertTrue(service.active_index_path().is_file())  # type: ignore[union-attr]
+
+    def test_concurrent_initializer_leaves_private_generation_staging_writable(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            service = make_service(Path(tmp))
+            staging_ready = threading.Event()
+            finish_first_writer = threading.Event()
+            gate_lock = threading.Lock()
+            first_staging: list[Path] = []
+            first_write_claimed = False
+            errors: list[BaseException] = []
+            write_index = ActivityIndex.write_file
+
+            def pause_first_staging_writer(index: ActivityIndex, path: Path) -> None:
+                nonlocal first_write_claimed
+                should_pause = False
+                with gate_lock:
+                    if (
+                        not first_write_claimed
+                        and path.name == ACTIVE_INDEX_FILENAME
+                        and path.parent.name.startswith(".staging-")
+                    ):
+                        first_write_claimed = True
+                        first_staging.append(path.parent)
+                        should_pause = True
+                if should_pause:
+                    staging_ready.set()
+                    if not finish_first_writer.wait(timeout=10):
+                        raise TimeoutError("concurrent staging writer was not released")
+                write_index(index, path)
+
+            def initialize_first_root() -> None:
+                try:
+                    service._ensure_roots()
+                except BaseException as exc:  # pragma: no cover - recorded below
+                    errors.append(exc)
+
+            with mock.patch.object(
+                ActivityIndex, "write_file", pause_first_staging_writer
+            ):
+                first = threading.Thread(target=initialize_first_root)
+                first.start()
+                if not staging_ready.wait(timeout=10):
+                    finish_first_writer.set()
+                    first.join(timeout=10)
+                    self.fail("first initializer did not reach its staging write")
+                staging = first_staging[0]
+                try:
+                    self.assertEqual(stat.S_IMODE(staging.stat().st_mode), 0o700)
+                    # A second initializer must not seal the first writer's
+                    # hidden directory while it is still preparing its index.
+                    service._ensure_roots()
+                    self.assertEqual(stat.S_IMODE(staging.stat().st_mode), 0o700)
+                    marker = staging / "still-writable"
+                    marker.write_text("writer owns this staging tree\n", encoding="utf-8")
+                    self.assertTrue(marker.is_file())
+                finally:
+                    finish_first_writer.set()
+                    first.join(timeout=10)
+                self.assertFalse(first.is_alive())
+            self.assertEqual(errors, [])
+            self.assertIsNotNone(service.active_generation_id())
 
     def test_active_source_binding_matches_generation_layout(self) -> None:
         """T36 read contract: generation dirs plus the active indirection."""

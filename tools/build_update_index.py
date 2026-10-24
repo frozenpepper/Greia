@@ -82,6 +82,13 @@ def release_entries(
     report = json.loads(report_path.read_text(encoding="utf-8"))
     if report.get("status") != "complete":
         raise SystemExit(f"{report_path}: release is not complete")
+    if report.get("artifact_class", "release") != "release" or report.get(
+        "release_eligible", True
+    ) is not True:
+        raise SystemExit(
+            f"{report_path}: experimental or non-release-eligible artifacts "
+            "cannot be added to a public update index"
+        )
     version = str(report["version"])
     base = base_url.rstrip("/")
     entries: list[dict[str, object]] = []

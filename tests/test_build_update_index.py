@@ -24,6 +24,34 @@ def fake_release(root: Path, version: str) -> Path:
 
 
 class BuildUpdateIndexTests(unittest.TestCase):
+    def test_experimental_acceptance_fixture_cannot_be_published(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            release = fake_release(root, "0.14.0")
+            report_path = release / "release-report.json"
+            report = json.loads(report_path.read_text())
+            report["artifact_class"] = "experimental_acceptance_fixture"
+            report["release_eligible"] = False
+            report_path.write_text(json.dumps(report))
+            index = root / "greia-updates.json"
+            with self.assertRaisesRegex(SystemExit, "experimental or non-release-eligible"):
+                tool.main(["--release", str(release), "--base-url", "https://x.test/u",
+                           "--index", str(index)])
+            self.assertFalse(index.exists())
+
+    def test_release_ineligible_marker_cannot_be_published_even_with_release_class(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            release = fake_release(root, "0.14.0")
+            report_path = release / "release-report.json"
+            report = json.loads(report_path.read_text())
+            report["artifact_class"] = "release"
+            report["release_eligible"] = False
+            report_path.write_text(json.dumps(report))
+            with self.assertRaisesRegex(SystemExit, "experimental or non-release-eligible"):
+                tool.release_entries(release, base_url="https://x.test/u", notes={},
+                                     install_help_url=None, published_at="2026-10-24")
+
     def test_creates_and_merges_releases(self):
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)

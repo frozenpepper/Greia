@@ -24,6 +24,17 @@ package implementation boundary; use the exact final committed `main` SHA and
 matching Parent pins recorded in current `HANDOVER.md`. Do not execute against
 the earlier pinned SHA and report package acceptance.
 
+## Current execution route after the Linux report (2026-10-24)
+
+For the current software-update retry, start with
+`2026-10-24_SOFTWARE_UPDATE_ACCEPTANCE.md` §§1–2. That document builds the
+explicit experimental Acer A/B fixture and defines its exported paths. Then
+use this document's §10 for next/reverse fixtures and §3 for the product
+harness. The ordinary owner-release commands in §§1–2 below remain the normal
+release procedure; they intentionally refuse the unaccepted boot cover and
+must not be used as a workaround for, or confused with, the fixture route.
+Publication in §5 applies only to accepted release artifacts, never fixtures.
+
 ## 1. Machine and source
 
 Read `SETUP.md`, `AGENTS.md`, `HANDOVER.md`, the lifecycle plan and the OS-work
@@ -124,7 +135,9 @@ base = Path(os.environ["UPDATE_BASE_BUNDLE"])
 next_bundle = Path(os.environ["UPDATE_NEXT_BUNDLE"])
 with zipfile.ZipFile(next_bundle) as archive:
     next_id = json.loads(archive.read("manifest.json"))["release_id"]
-base_id = "greia-" + os.environ["GREIA_RELEASE_VERSION"]
+with zipfile.ZipFile(base) as archive:
+    base_id = json.loads(archive.read("manifest.json"))["release_id"]
+assert next_id != base_id, (base_id, next_id)
 save("install", harness("install", official_image=Path(os.environ["UPDATE_INSTALLER"]),
     release_bundle=base).run_product())
 installed = root / "install/product/disposable-target.img"
@@ -222,7 +235,9 @@ index until actual release publication. Test both HTML and Mobile:
 
 ## 5. Owner pipeline and publication
 
-The pipeline stays small: owner release build → inspect → generate a static
+This section is for actual owner release artifacts only. The experimental
+acceptance-fixture report is rejected by `build_update_index.py` and must not
+be passed here. For owner releases, the pipeline stays small: owner release build → inspect → generate a static
 index → upload immutable artifacts → replace index last. Build EN/IT/ES/FR notes:
 
 ```bash
@@ -343,3 +358,75 @@ The failure is therefore unresolved/order-dependent; do not classify it as a
 baseline issue. The focused 38-module gate still passes 770 tests with 2
 skipped, but does not clear the full gate. Linux install/BIOS boot and device
 acceptance remain separate and unrun.
+
+## 10. Experimental A/B VM fixture route (2026-10-24)
+
+Use this route only when the production release build is correctly blocked by
+the provisional boot-cover gate and the owner has authorized disposable Linux
+VM testing. It was added to make the Acer A/B software-update harness runnable
+without changing release eligibility. It does not accept the early framebuffer
+cover, waive any profile/payload/slot/PERSIST/installer/boot-health checks, or
+authorize release publication or physical/family-device use.
+
+Start from the clean committed source SHA used by the acceptance work order.
+Build the baseline fixture and installer with §2 of
+`2026-10-24_SOFTWARE_UPDATE_ACCEPTANCE.md`; that section defines these exact
+exports: `UPDATE_FIXTURE_VERSION`, `UPDATE_FIXTURE_ID`, `UPDATE_FIXTURE`,
+`UPDATE_FIXTURE_REPORT`, `UPDATE_BASE_BUNDLE`, `UPDATE_INSTALLER`, and
+`UPDATE_BASE_RELEASE_ID`. The fixture command keeps real profile sizing and
+payload-receipt production; its separate `greia-acceptance-fixture-*`
+directory/report and release ID are experimental. The update-index builder
+rejects the experimental report.
+
+Create two disposable source copies for later and reverse candidates. Change
+only `VERSION` in each copy, record each one-line diff, and run the same
+fixture command there. Keep the base checkout untouched. For the current
+`0.13.0-phase0-dev` source these monotonically newer fixture versions are
+`0.13.1-phase0-dev` and `0.13.2-phase0-dev`; if the repository version has
+advanced, choose two newer versions and record them before running.
+
+```bash
+SOURCE_CHECKOUT="$(git rev-parse --show-toplevel)"
+UPDATE_NEXT_VERSION=0.13.1-phase0-dev
+UPDATE_REVERSE_VERSION=0.13.2-phase0-dev
+UPDATE_NEXT_SOURCE="$UPDATE_EVIDENCE/fixture-source-next"
+UPDATE_REVERSE_SOURCE="$UPDATE_EVIDENCE/fixture-source-reverse"
+git clone --shared "$SOURCE_CHECKOUT" "$UPDATE_NEXT_SOURCE"
+git clone --shared "$SOURCE_CHECKOUT" "$UPDATE_REVERSE_SOURCE"
+printf '%s\n' "$UPDATE_NEXT_VERSION" > "$UPDATE_NEXT_SOURCE/VERSION"
+printf '%s\n' "$UPDATE_REVERSE_VERSION" > "$UPDATE_REVERSE_SOURCE/VERSION"
+git -C "$UPDATE_NEXT_SOURCE" diff -- VERSION > "$UPDATE_EVIDENCE/next-version.patch"
+git -C "$UPDATE_REVERSE_SOURCE" diff -- VERSION > "$UPDATE_EVIDENCE/reverse-version.patch"
+test -s "$UPDATE_EVIDENCE/next-version.patch"
+test -s "$UPDATE_EVIDENCE/reverse-version.patch"
+(cd "$UPDATE_NEXT_SOURCE" && sudo -E unshare --mount --propagation private -- \
+  python3 tools/greia_release.py build-acceptance-fixture \
+  --version "$UPDATE_NEXT_VERSION" --output "$UPDATE_EVIDENCE/acceptance-fixtures")
+(cd "$UPDATE_REVERSE_SOURCE" && sudo -E unshare --mount --propagation private -- \
+  python3 tools/greia_release.py build-acceptance-fixture \
+  --version "$UPDATE_REVERSE_VERSION" --output "$UPDATE_EVIDENCE/acceptance-fixtures")
+UPDATE_NEXT_FIXTURE="$UPDATE_EVIDENCE/acceptance-fixtures/greia-acceptance-fixture-$UPDATE_NEXT_VERSION"
+UPDATE_REVERSE_FIXTURE="$UPDATE_EVIDENCE/acceptance-fixtures/greia-acceptance-fixture-$UPDATE_REVERSE_VERSION"
+UPDATE_NEXT_BUNDLE="$UPDATE_NEXT_FIXTURE/updates/acer-aspire-one-i386-ab.greiaupdate"
+UPDATE_REVERSE_BUNDLE="$UPDATE_REVERSE_FIXTURE/updates/acer-aspire-one-i386-ab.greiaupdate"
+UPDATE_NEXT_RELEASE_ID="greia-acceptance-fixture-$UPDATE_NEXT_VERSION"
+UPDATE_REVERSE_RELEASE_ID="greia-acceptance-fixture-$UPDATE_REVERSE_VERSION"
+export UPDATE_NEXT_VERSION UPDATE_REVERSE_VERSION UPDATE_NEXT_SOURCE UPDATE_REVERSE_SOURCE
+export UPDATE_NEXT_FIXTURE UPDATE_REVERSE_FIXTURE UPDATE_NEXT_BUNDLE UPDATE_REVERSE_BUNDLE
+export UPDATE_NEXT_RELEASE_ID UPDATE_REVERSE_RELEASE_ID
+python3 tools/greia_update.py inspect "$UPDATE_BASE_BUNDLE" > "$UPDATE_EVIDENCE/base-bundle-inspect.json"
+python3 tools/greia_update.py inspect "$UPDATE_NEXT_BUNDLE" > "$UPDATE_EVIDENCE/next-bundle-inspect.json"
+python3 tools/greia_update.py inspect "$UPDATE_REVERSE_BUNDLE" > "$UPDATE_EVIDENCE/reverse-bundle-inspect.json"
+sha256sum "$UPDATE_BASE_BUNDLE" "$UPDATE_NEXT_BUNDLE" "$UPDATE_REVERSE_BUNDLE" \
+  > "$UPDATE_EVIDENCE/ab-fixture-bundles.sha256"
+```
+
+Before running the §3 A/B harness, verify all three manifest release IDs match
+the exported fixture IDs and the reports carry
+`artifact_class=experimental_acceptance_fixture` plus
+`release_eligible=false`. Set `UPDATE_REVERSE_BUNDLE` before the §10 failure
+driver. These artifacts are only disposable VM inputs: do not pass their
+reports to `build_update_index.py`, publish them, or call their build success
+release acceptance. Preserve build roots on failure. Record each VM predicate
+as PASS/FAIL/NOT RUN; source tests and fixture construction do not prove a
+Linux boot, A/B behavior, or physical acceptance.

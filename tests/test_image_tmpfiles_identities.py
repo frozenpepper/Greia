@@ -117,6 +117,12 @@ class TmpfilesIdentitiesExistTests(unittest.TestCase):
         )
         self.assertIn("/var/lib/greia-os/activity-packages", entries)
 
+    def test_parent_package_store_has_one_writer_and_bounded_child_read(self) -> None:
+        entries = _tmpfiles_directories()
+        mode, owner, group = entries["/var/lib/greia-os/activity-packages"]
+        self.assertEqual((owner, group), ("greiapanel", "greiapanel"))
+        self.assertEqual(int(mode, 8), 0o755)
+
     def test_run_directory_is_owned_by_the_identity_that_writes_it(self) -> None:
         """Xorg runs as greiakid and must be able to write its own log there."""
 

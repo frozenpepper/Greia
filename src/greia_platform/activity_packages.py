@@ -4,6 +4,7 @@ import fcntl
 import hashlib
 import json
 import os
+import pwd
 import shutil
 import stat
 import tempfile
@@ -177,6 +178,7 @@ class ActivityPackageService:
         self.runtime = RuntimeCatalogue.load(runtime_catalogue)
         self.built_in_root = built_in_root.resolve() if built_in_root else None
         self._install_lock = threading.Lock()
+        self._store_owner: tuple[int, int] | None = None
 
     @property
     def active_root(self) -> Path:
@@ -559,6 +561,12 @@ class ActivityPackageService:
                 raise ActivityPackageError(
                     "Activity package transaction lock is not a regular file"
                 )
+            owner_uid, owner_gid = self._owner_ids()
+            if os.geteuid() == 0 and (metadata.st_uid, metadata.st_gid) != (
+                owner_uid,
+                owner_gid,
+            ):
+                os.fchown(descriptor, owner_uid, owner_gid)
             os.fchmod(descriptor, 0o600)
             fcntl.flock(descriptor, fcntl.LOCK_EX)
             try:
@@ -736,6 +744,7 @@ class ActivityPackageService:
         try:
             with open(temporary_handle, "w", encoding="utf-8") as handle:
                 handle.write(generation_id + "\n")
+            self._assign_store_owner(temporary)
             os.chmod(temporary, 0o644)
             os.replace(temporary, pointer)
             descriptor = os.open(pointer.parent, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
@@ -829,6 +838,8 @@ class ActivityPackageService:
                 parent_registrations, source=parent_source, runtime=self.runtime
             )
             index.write_file(staging / ACTIVE_INDEX_FILENAME)
+            self._assign_tree_owner(staging)
+            self._make_tree_read_only(staging)
             os.replace(staging, self._generation_dir(generation_id))
             return self._generation_dir(generation_id)
         except BaseException:
@@ -914,6 +925,8 @@ class ActivityPackageService:
                 parent_registrations, source=parent_source, runtime=self.runtime
             )
             index.write_file(staging / ACTIVE_INDEX_FILENAME)
+            self._assign_tree_owner(staging)
+            self._make_tree_read_only(staging)
             os.replace(staging, self._generation_dir(generation_id))
         except BaseException:
             self._discard_private_tree(staging)
@@ -980,6 +993,7 @@ class ActivityPackageService:
                 shutil.rmtree(package_root)
             else:
                 os.replace(package_root, immutable)
+                self._assign_tree_owner(immutable)
                 self._make_tree_read_only(immutable)
 
             # T34 atomic generation publish: the complete new active set
@@ -1112,26 +1126,46 @@ class ActivityPackageService:
         )
 
     def _ensure_roots(self) -> None:
+        state_root_existed = self.state_root.exists()
         self.state_root.mkdir(parents=True, exist_ok=True)
-        self.generations_root.mkdir(parents=True, exist_ok=True)
-        os.chmod(self.generations_root, 0o755)
+        if not state_root_existed:
+            # Parent services run with UMask=0007. The shared root must still
+            # be traversable by greiakid, while private children remain 0700.
+            os.chmod(self.state_root, 0o755)
+        self._store_owner = self._owner_ids()
+        repaired_root_entries = self._repair_root_owned_entries(self.state_root)
+        if self.state_root in repaired_root_entries:
+            os.chmod(self.state_root, 0o755)
         for path, mode in (
+            (self.generations_root, 0o755),
             (self.versions_root, 0o700),
             (self.staging_root, 0o700),
             (self.receipts_root, 0o700),
         ):
+            existed = path.exists()
             path.mkdir(parents=True, exist_ok=True)
-            os.chmod(path, mode)
-        # Published generations are read-only and traversable by the child
-        # launcher. Repair a generation created by an older/root-side caller
-        # with mkdtemp's 0700 default; such a tree makes Parent Activity
-        # discovery fail with EACCES and leaves the Shell unable to start.
+            if not existed or path in repaired_root_entries:
+                self._assign_store_owner(path)
+                os.chmod(path, mode)
+        # The Parent service owns this mutable store. A root update worker may
+        # repair legacy root-created entries above, but does not rewrite the
+        # modes or ownership of already Parent-owned paths on each invocation.
         for generation in self.generations_root.iterdir():
             if generation.is_symlink() or not generation.is_dir():
                 continue
             try:
-                mode = stat.S_IMODE(generation.stat().st_mode)
-                if mode & 0o055 != 0o055:
+                self._require_safe_generation_id(generation.name)
+            except ActivityPackageError:
+                # Hidden staging directories belong to an active writer.
+                # They are private until the atomic generation rename.
+                continue
+            if not (
+                (generation / ACTIVITIES_DIRNAME).is_dir()
+                and (generation / ACTIVE_INDEX_FILENAME).is_file()
+            ):
+                continue
+            try:
+                if stat.S_IMODE(generation.stat().st_mode) & 0o055 != 0o055:
                     os.chmod(generation, 0o555)
             except OSError:
                 continue
@@ -1162,9 +1196,8 @@ class ActivityPackageService:
                 generated_from_policy_hash=runtime_policy_fingerprint(self.runtime),
                 registrations=(),
             ).write_file(staging / ACTIVE_INDEX_FILENAME)
-            # mkdtemp creates 0700; the generation must stay traversable by
-            # greiakid after this root-owned updater publishes it.
-            os.chmod(staging, 0o555)
+            self._assign_tree_owner(staging)
+            self._make_tree_read_only(staging)
             try:
                 os.replace(staging, self._generation_dir(_INITIAL_GENERATION_ID))
             except OSError:
@@ -1191,6 +1224,107 @@ class ActivityPackageService:
         except BaseException:
             self._discard_private_tree(staging)
             raise
+
+    def _owner_ids(self) -> tuple[int, int]:
+        """Return the provisioned Parent owner and its primary group.
+
+        Installed images resolve these identities from the image's account
+        database. Local Simulator/test stores stay owned by the current user.
+        """
+        if self._store_owner is not None:
+            return self._store_owner
+        if os.geteuid() == 0:
+            try:
+                parent = pwd.getpwnam("greiapanel")
+                return parent.pw_uid, parent.pw_gid
+            except KeyError:
+                try:
+                    info = self.state_root.stat()
+                except OSError:
+                    return os.geteuid(), os.getegid()
+                if info.st_uid != 0:
+                    return info.st_uid, info.st_gid
+                # Root-run source tests and standalone local stores do not
+                # have the image's service identities. Installed images
+                # provision both names before this service can run.
+                return os.geteuid(), os.getegid()
+        try:
+            info = self.state_root.stat()
+        except OSError:
+            return os.geteuid(), os.getegid()
+        return info.st_uid, info.st_gid
+
+    def _assign_store_owner(self, path: Path) -> None:
+        """Give a newly root-created store entry back to its provisioned owner."""
+        if os.geteuid() != 0:
+            return
+        owner_uid, owner_gid = self._owner_ids()
+        info = path.lstat()
+        if (info.st_uid, info.st_gid) != (owner_uid, owner_gid):
+            os.chown(path, owner_uid, owner_gid, follow_symlinks=False)
+
+    def _assign_tree_owner(self, root: Path) -> None:
+        """Transfer a newly staged tree to the store owner before publication."""
+        if os.geteuid() != 0:
+            return
+        self._assign_store_owner(root)
+        for path in root.rglob("*"):
+            if path.is_symlink():
+                continue
+            self._assign_store_owner(path)
+
+    def _repair_root_owned_entries(self, root: Path) -> set[Path]:
+        """Repair residue from older root-side initialization without touching
+        Parent-owned entries.
+
+        Traversal never follows symlinks. Only nodes still owned by root (or
+        root-group residue) are reassigned; existing greiapanel ownership is
+        preserved verbatim.
+        """
+        if os.geteuid() != 0:
+            return set()
+        owner_uid, owner_gid = self._owner_ids()
+        repaired: set[Path] = set()
+        pending: list[Path] = [root]
+        while pending:
+            path = pending.pop()
+            try:
+                info = path.lstat()
+            except OSError:
+                continue
+            if stat.S_ISLNK(info.st_mode):
+                continue
+            root_owned = info.st_uid == 0 or info.st_gid == 0
+            legacy_store_root = path == root and (
+                info.st_uid,
+                info.st_gid,
+            ) != (owner_uid, owner_gid)
+            if root_owned or legacy_store_root:
+                os.chown(
+                    path,
+                    owner_uid if root_owned or legacy_store_root else -1,
+                    owner_gid if root_owned or legacy_store_root else -1,
+                    follow_symlinks=False,
+                )
+                if path == root or (info.st_uid == 0 and path.parent == root):
+                    repaired.add(path)
+            # Scan the store root and the four known transaction containers
+            # one level deep on every invocation. Recurse further only into a
+            # root-owned legacy subtree, so healthy published assets are not
+            # walked during ordinary Parent operations.
+            known_container = path.parent == root and path.name in {
+                GENERATIONS_DIRNAME,
+                "versions",
+                "staging",
+                "receipts",
+            }
+            if stat.S_ISDIR(info.st_mode) and (path == root or root_owned or known_container):
+                try:
+                    for child in path.iterdir():
+                        pending.append(child)
+                except OSError:
+                    continue
+        return repaired
 
     def _extract_bounded_archive(
         self,
@@ -1437,8 +1571,6 @@ class ActivityPackageService:
         for path in root.rglob("*"):
             if path.is_dir() and not os.access(path, os.W_OK):
                 os.chmod(path, 0o700)
-            elif path.is_file() and not os.access(path, os.W_OK):
-                os.chmod(path, 0o600)
         if root.is_dir() and not os.access(root, os.W_OK):
             os.chmod(root, 0o700)
         shutil.rmtree(root, ignore_errors=True)
@@ -1458,5 +1590,6 @@ class ActivityPackageService:
             + "\n",
             encoding="utf-8",
         )
+        self._assign_store_owner(temporary)
         os.chmod(temporary, 0o600)
         os.replace(temporary, destination)

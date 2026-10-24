@@ -98,6 +98,19 @@ available there. Read `docs/development/GREIA_SOFTWARE_UPDATE_PACKAGES.md`
 before building or accepting these packages. A legacy image without the
 bootstrap has no package-upload capability or manual bootstrap CLI.
 
+Linux execution evidence is in
+`docs/reviews/2026-10-24_SOFTWARE_UPDATE_LINUX_ACCEPTANCE_RESULT.md`: the first
+RC run passed application update/rollback cases only on a manually repaired
+clone. A clean fixed-source rebuild/install remains required. Parent Activity
+storage is owned by `greiapanel:greiapanel`; root update transactions must hand
+new artifacts back to that owner without granting the child write access.
+
+For disposable Acer A/B acceptance only, use the explicit
+`tools/greia_release.py build-acceptance-fixture` command in the work orders.
+Its output is experimental and rejected by the public update-index builder.
+The ordinary release build still requires an accepted release-safe boot cover.
+Do not treat fixture build/boot success as release eligibility.
+
 The old signed `.greiaupdate` v2 flow and release signing keys are
 superseded by ADR 0036 and are not the normal production route; older
 references to them are historical only.

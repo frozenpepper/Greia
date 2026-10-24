@@ -201,6 +201,16 @@ at the path passed to `--all-from-installed-root`; do not substitute host
 
 ### Parent-source Activity package
 
+The Parent Activity store at `/var/lib/greia-os/activity-packages` has one
+writer identity, `greiapanel:greiapanel`. Its root and generation container
+are `0755` so the child can read published Activities; private staging, versions
+and receipts remain owner-only. Root-side application/Activity updates preserve
+or restore that owner for directories, transaction locks, receipts and staged
+generations. Do not repair an image by granting the child write permission or
+changing the unrelated profile-group migration. The Linux cross-identity
+regression in `test_activity_packages` must run on the test image with the
+provisioned accounts; its skip on macOS is not installed permission proof.
+
 Use `source=parent` for a Parent-source Activity archive or validated source
 directory. A set uses one or more repeated `--activity ID=PATH` arguments and
 must contain at least two IDs. The existing Parent Activity service validates

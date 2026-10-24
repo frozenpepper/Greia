@@ -180,6 +180,54 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-24 — Linux acceptance blockers remediated in source
+
+Follow-up to Linux report `f5a7db98a` and its two preceding fixes. The RC
+verifier extraction fix was retained. Parent Activity storage is now
+`greiapanel:greiapanel 0755`, with private transaction containers owner-only.
+Root-side staging, locks, pointer/receipt publication and legacy repair preserve
+that owner; published generations remain read-only and child-readable. Cleanup
+no longer chmods hardlinked files. Existing profile-group identities and dated
+evidence were preserved; no profile-group migration was added.
+
+The first follow-up full gate exposed an additional real initialization race:
+permission repair sealed another caller's hidden staging directory. Repair now
+considers only complete published generations. Regressions cover concurrent
+first initialization, writable private staging, legacy active-directory
+migration, Parent UMask=0007, retained-generation file modes, and a root update
+followed by ordinary Parent install/uninstall.
+
+The explicit `greia_release.py build-acceptance-fixture` command reuses the
+existing Acer A/B composition, receipt, payload, hardware-support and bundle
+producers. It emits separate experimental paths/identity/report and cannot be
+added to the public update index. Ordinary `build`/`build-profile` still enforce
+the release-safe boot-cover gate. The two Linux work orders now select this
+fixture route for current-source VM acceptance; production release acceptance
+is not implied.
+
+Independent Luna source reviews passed both changes. The final combined focus
+executed **170 tests, OK with 1 Linux-only identity test skipped**
+(`/tmp/greia-acceptance-followup/focused-final.log`). Release/index/RC verifier
+focus separately passed 70 tests. The skipped cross-user test still requires
+Linux root with the provisioned service accounts; macOS does not prove it.
+
+`make verify` is **NOT GREEN**. The initial completed follow-up ran 5,954 tests
+with 8 failures, 3 errors and 9 skips: six previously recorded content/message
+failures, the unresolved aggregate Shell memory failure (866,748 retained
+surface bytes), and the initialization race fixed afterward; errors were ARM64
+and two macOS lsblk cases. After the race fix, the final full retry aborted with
+signal 6 in Quattro Amici's native Pygame audio warming path, without a final
+test summary (`/tmp/greia-acceptance-followup/make-verify-final.log`). No claim is
+made that this abort is baseline-proven or resolved. Separate validation stops
+at the known unsupported ARM64 profile; shell checks and footprint pass.
+
+No Linux image build, mount, QEMU or physical operation ran here. **Session 04
+remains OPEN**. Next: commit/freeze this source, build and graphically install a
+fresh RC, rerun both ownership initialization orders and the existing apply/
+idle/rollback cases without manual guest repair; then build the explicit A/B
+fixtures and execute the remaining VM cases. Preserve the original Linux
+report as repaired-clone evidence and append a new exact-source runtime report.
+
 ### 2026-10-24 — Linux software-update installed acceptance: partial pass, two fixes, two blockers
 
 The 2026-10-24 Linux acceptance was executed on Orbiter (Ubuntu 24.04,

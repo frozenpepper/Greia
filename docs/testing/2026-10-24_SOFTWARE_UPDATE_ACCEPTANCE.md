@@ -13,6 +13,31 @@ Do not use GitHub Actions. Do not build or install on the Mac running this
 task. Use another Linux machine with disposable QEMU/KVM guests. Never select
 or guess a host `/dev` target. Do not run this procedure on a family device.
 
+## Follow-up after the first Linux run (2026-10-24)
+
+Read `docs/reviews/2026-10-24_SOFTWARE_UPDATE_LINUX_ACCEPTANCE_RESULT.md`
+before this retry. Its passed application cases used a manually repaired RC
+clone, so they do not establish clean acceptance of the committed ownership
+fix. Rebuild and graphically install a fresh RC; do not manually chmod/chown the
+guest to make a test pass. On one fresh clone, apply a Python update before
+seeding any Parent Activity, then install a distinct Parent Activity through
+the ordinary Parent route (the original failing order). On another fresh clone,
+seed the Parent Activity first, apply a Parent-source update and a Python/built-in
+update, then use ordinary Parent install and uninstall again. Require success
+throughout and verify child read access without child write access. Retain the
+original failed response and the clean retry's responses.
+
+`test_activity_packages.ActivityPackageServiceTests.test_linux_root_to_greiapanel_store_handoff`
+also checks the actual root-to-service-user boundary on Linux when root and the
+provisioned accounts are available. Run it in that environment; if it skips,
+record SKIP and use the installed Parent/API sequence above for actual identity
+proof. Source-only mocks or the macOS skip do not close that predicate.
+
+A/B acceptance uses the explicitly experimental fixture command in §2 and the
+companion work order. It does not accept the boot cover for normal releases or
+authorize publication. Rebuild next/reverse fixture versions from this same
+source; do not reuse old September bundles or the manually repaired RC image.
+
 ## Execution order
 
 1. Read prerequisites and freeze source/evidence in §§1 and 8. The host/build
@@ -88,7 +113,10 @@ PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 tools/run_tests.py \
   test_software_update_package test_greia_software_update_tool \
   test_software_update_generation test_software_update_jobs \
   test_software_update_bootstrap test_parent_update_delivery \
-  test_parent_system_updates test_activity_packages -v \
+  test_parent_system_updates test_activity_packages \
+  test_greia_release test_build_update_index \
+  test_image_tmpfiles_identities test_rc_image_contract \
+  test_parent_active_index -v \
   2>&1 | tee "$UPDATE_EVIDENCE/software-update-focused.log"
 FOCUSED_PIPE_STATUS=("${PIPESTATUS[@]}")
 FOCUSED_STATUS="${FOCUSED_PIPE_STATUS[0]}"
@@ -128,6 +156,17 @@ does not block. Any new failure, increased count, or changed failure cause
 stops this run before the first image build. The known baseline is comparison
 context, not an accepted PASS or a predicate waiver.
 
+For Linux-specific comparison, also use the committed acceptance result at
+`docs/reviews/2026-10-24_SOFTWARE_UPDATE_LINUX_ACCEPTANCE_RESULT.md`: its full run
+reported 5,943 tests, 8 failures, 3 errors and 2 skips. It reproduced the
+optional voice-module errors, ARM64 error and `morbidi` timing case on a clean
+pre-update baseline. Its aggregate-only `piccola_serra` timing failure and the
+historical aggregate Shell memory failure remain unresolved watch cases, not
+proven baseline passes. Record the exact new host result and do not erase this
+uncertainty or claim full-gate/release closure from the focused update suite.
+Current follow-up source-gate counts belong in `HANDOVER.md`, not in reused
+runtime acceptance claims.
+
 ## 2. Build actual disposable images and packages
 
 Build an experimental single-root `legacy-x86-i686-rc` installer without
@@ -139,34 +178,58 @@ sudo -E unshare --mount --propagation private -- \
   legacy-x86-i686-rc "$UPDATE_EVIDENCE/single-root-installer"
 ```
 
-Build a real `acer-aspire-one-i386-ab` release and matching installer using
-the owner release tools:
+Build a disposable A/B acceptance fixture and matching installer with the
+explicit fixture-only command. The report marks this artifact experimental,
+the release ID is fixture-specific, and `build_update_index.py` refuses the
+report. This exercises current source on a Linux VM; it is not release or
+boot-cover acceptance.
 
 ```bash
-UPDATE_RELEASE_VERSION="$(cat VERSION)"
+UPDATE_FIXTURE_VERSION="$(cat VERSION)"
+UPDATE_FIXTURE_ID="greia-acceptance-fixture-$UPDATE_FIXTURE_VERSION"
 sudo -E unshare --mount --propagation private -- \
   python3 tools/greia_release.py doctor --output "$UPDATE_EVIDENCE"
 sudo -E unshare --mount --propagation private -- \
-  python3 tools/greia_release.py build \
-  --version "$UPDATE_RELEASE_VERSION" \
-  --output "$UPDATE_EVIDENCE/releases"
-UPDATE_RELEASE="$UPDATE_EVIDENCE/releases/greia-$UPDATE_RELEASE_VERSION"
-UPDATE_BASE_BUNDLE="$UPDATE_RELEASE/updates/acer-aspire-one-i386-ab.greiaupdate"
+  python3 tools/greia_release.py build-acceptance-fixture \
+  --version "$UPDATE_FIXTURE_VERSION" \
+  --output "$UPDATE_EVIDENCE/acceptance-fixtures"
+UPDATE_FIXTURE="$UPDATE_EVIDENCE/acceptance-fixtures/$UPDATE_FIXTURE_ID"
+UPDATE_FIXTURE_REPORT="$UPDATE_FIXTURE/release-report.json"
+UPDATE_BASE_BUNDLE="$UPDATE_FIXTURE/updates/acer-aspire-one-i386-ab.greiaupdate"
+python3 - "$UPDATE_FIXTURE_REPORT" "$UPDATE_FIXTURE_ID" <<'PYCODE'
+import json, sys
+from pathlib import Path
+report = json.loads(Path(sys.argv[1]).read_text())
+assert report["artifact_class"] == "experimental_acceptance_fixture", report
+assert report["release_eligible"] is False, report
+assert report["release_id"] == sys.argv[2], report
+PYCODE
+python3 tools/greia_release.py inspect "$UPDATE_FIXTURE_REPORT"
+python3 tools/greia_update.py inspect "$UPDATE_BASE_BUNDLE"
 sudo -E unshare --mount --propagation private -- \
-  bash build/build-installer-image.sh acer-aspire-one-i386-ab \
+  env PIP_RELEASE_BUILD=0 bash build/build-installer-image.sh acer-aspire-one-i386-ab \
   "$UPDATE_EVIDENCE/ab-installer" --release-bundle "$UPDATE_BASE_BUNDLE"
 UPDATE_INSTALLER="$UPDATE_EVIDENCE/ab-installer/greia-os-installer-acer-aspire-one-i386-ab.img"
-GREIA_RELEASE_VERSION="$UPDATE_RELEASE_VERSION"
-export UPDATE_RELEASE_VERSION UPDATE_RELEASE UPDATE_BASE_BUNDLE UPDATE_INSTALLER GREIA_RELEASE_VERSION
+UPDATE_BASE_RELEASE_ID="$UPDATE_FIXTURE_ID"
+export UPDATE_FIXTURE_VERSION UPDATE_FIXTURE_ID UPDATE_FIXTURE UPDATE_FIXTURE_REPORT
+export UPDATE_BASE_BUNDLE UPDATE_INSTALLER UPDATE_BASE_RELEASE_ID
+sha256sum "$UPDATE_FIXTURE_REPORT" "$UPDATE_BASE_BUNDLE" "$UPDATE_INSTALLER" \
+  > "$UPDATE_EVIDENCE/ab-fixture-artifacts.sha256"
 ```
 
-Use §§8–10 below for the exact single-root and A/B execution routes. The
-2026-10-23 work order still owns v3 bundle and BIOS A/B lifecycle acceptance;
-its older source SHA and mobile/HTML pins are historical. Pass this run's exact
-committed source SHA and current client pins. Keep the interactive single-root
-RC install and automated A/B product harness as separate evidence legs. The
-RC is a developer release candidate, not a family release. Never flash media,
-select a host block device, or guess a `/dev` target.
+Use §§8–10 below for the exact single-root route and the 2026-10-23 work
+order's A/B lifecycle route. The fixture command composes the actual profile,
+shrinks and verifies the actual ext4 payload, derives the payload receipt and
+slot minimum, validates the hardware-support archive, and creates the v3
+bundle through the existing tools. No production capacity, compatibility,
+payload, bundle, installer, layout or boot-health gate is waived. The one
+release-specific difference is intentional development composition with
+`PIP_RELEASE_BUILD=0`; the production `build` and `build-profile` commands
+always set it to `1` and keep the release-safe boot-cover check. Never publish
+fixture outputs, never use them on family/physical devices, and never call
+their completion release acceptance. Keep the interactive single-root RC
+install and automated A/B product harness as separate evidence legs. Never
+flash media, select a host block device, or guess a `/dev` target.
 
 Install both targets into separate disposable virtual disks. The single-root
 case must be a genuine fresh installed root with the software-update bootstrap
@@ -509,7 +572,44 @@ the harness evidence image or reuse it for unrelated fault legs:
 AB_ACCEPTED="$UPDATE_EVIDENCE/vm/healthy-update/product/installed-clone.img"
 AB_PACKAGE_TARGET="$UPDATE_EVIDENCE/ab-parent-package-target.img"
 cp --reflink=auto --sparse=always "$AB_ACCEPTED" "$AB_PACKAGE_TARGET"
+AB_ACCEPTED_SHA_BEFORE="$(sha256sum "$AB_ACCEPTED" | awk '{print $1}')"
 sha256sum "$AB_ACCEPTED" "$AB_PACKAGE_TARGET" > "$UPDATE_EVIDENCE/ab-parent-target.sha256"
+AB_PARENT_LOOP=
+cleanup_ab_parent_fixture() {
+  if [ -n "$AB_PARENT_LOOP" ]; then
+    sudo bash -c 'source build/lib/safe-cleanup.sh; safe_unmount_paths /mnt/greia-ab-parent-a /mnt/greia-ab-parent-b; safe_detach_loop "$1"' _ "$AB_PARENT_LOOP"
+  fi
+}
+trap cleanup_ab_parent_fixture EXIT
+LOOP="$(sudo losetup --find --show --partscan "$AB_PACKAGE_TARGET")"
+AB_PARENT_LOOP="$LOOP"
+lsblk -f "$LOOP" | tee "$UPDATE_EVIDENCE/ab-parent-partitions.txt"
+SYS_A_PART="$(sudo lsblk -lnpo NAME,LABEL "$LOOP" | awk '$2 == "GREIA_SYS_A" {print $1}')"
+SYS_B_PART="$(sudo lsblk -lnpo NAME,LABEL "$LOOP" | awk '$2 == "GREIA_SYS_B" {print $1}')"
+test "$(printf '%s\n' "$SYS_A_PART" | sed '/^$/d' | wc -l | tr -d ' ')" -eq 1
+test "$(printf '%s\n' "$SYS_B_PART" | sed '/^$/d' | wc -l | tr -d ' ')" -eq 1
+test -b "$SYS_A_PART" && test -b "$SYS_B_PART"
+sudo mkdir -p /mnt/greia-ab-parent-a /mnt/greia-ab-parent-b
+sudo mount "$SYS_A_PART" /mnt/greia-ab-parent-a
+sudo mount "$SYS_B_PART" /mnt/greia-ab-parent-b
+for SLOT_ROOT in /mnt/greia-ab-parent-a /mnt/greia-ab-parent-b; do
+  DROPIN="$SLOT_ROOT/etc/systemd/system/greia-parent.service.d/90-acceptance-activity-install.conf"
+  sudo test ! -e "$DROPIN" && sudo test ! -L "$DROPIN"
+  sudo install -d -m 0755 "$(dirname "$DROPIN")"
+  sudo tee "$DROPIN" >/dev/null <<'EOF'
+[Service]
+Environment=GREIA_PARENT_ACTIVITY_INSTALL=1
+EOF
+  sudo chmod 0644 "$DROPIN"
+  sudo grep -Fx 'Environment=GREIA_PARENT_ACTIVITY_INSTALL=1' "$DROPIN"
+done
+sudo sync
+cleanup_ab_parent_fixture
+AB_PARENT_LOOP=
+trap - EXIT
+sha256sum "$AB_ACCEPTED" "$AB_PACKAGE_TARGET" > "$UPDATE_EVIDENCE/ab-parent-target-after-fixture.sha256"
+AB_ACCEPTED_SHA_AFTER="$(sha256sum "$AB_ACCEPTED" | awk '{print $1}')"
+test "$AB_ACCEPTED_SHA_AFTER" = "$AB_ACCEPTED_SHA_BEFORE"
 "$QEMU_I386_GUEST" -machine pc,accel=kvm:tcg -cpu n270 -m 768 -smp 1 \
   -drive "file=$AB_PACKAGE_TARGET,format=raw,if=ide,index=0" \
   -device e1000,netdev=net0 \
@@ -521,13 +621,32 @@ QEMU_PID=$!
 printf '%s\n' "$QEMU_PID" > "$UPDATE_EVIDENCE/ab-parent.qemu.pid"
 ```
 
-Use the GUI profile picker and normal Parent password/pairing flow, then
-perform the A/B application-package cases in §§3–5. If this non-developer A/B
-image exposes no guest SSH or local Parent panel, the host-forwarded HTTPS
-browser route remains the expected path. Do not enable SSH or alter pairing
-privileges to collect root-owned updater records; use the online authenticated
-Parent status for job state and the offline clone evidence route in §11 for
-root-only files.
+The A/B product profile does not carry the developer-remote marker, so
+`GREIA_PARENT_ACTIVITY_INSTALL` defaults off and Parent-source seeding would
+otherwise correctly return HTTP 403. The bounded offline drop-in above enables
+the existing install/remove capability only on this disposable copy; it adds
+no SSH, sudo, API privilege, or image-wide default. Both initial slot roots
+receive the same drop-in. A later full-system update replaces a slot root and
+may remove this test-only file: run Parent-store application cases before the
+full-system cases, or prepare another disposable copy and recheck the
+capability. An expected capability-disabled HTTP 403 is not an ownership
+failure. The untouched `AB_ACCEPTED` image remains the source evidence. Record
+both hashes, the two `GREIA_SYS_*` labels, and the drop-in contents. The
+`ab-parent-target-after-fixture.sha256` row for `AB_ACCEPTED` must equal its
+before value; if it does not, stop and preserve the evidence.
+
+Use the GUI profile picker and normal Parent password/pairing flow. Before
+seeding, require the Parent Activity capability to report `activities.install`
+true; if it is absent, stop and record the observed response rather than
+proceeding to an expected 403. Then seed the disposable Parent Activity via
+the ordinary Parent Activity upload/install UI and perform the A/B
+application-package cases in §§3–5. If this non-developer A/B image exposes no
+guest SSH or local Parent panel, the host-forwarded HTTPS browser route remains
+the expected path. Do not enable SSH or alter pairing privileges to collect
+root-owned updater records; use the online authenticated Parent status for job
+state and the offline clone evidence route in §11 for root-only files. Discard
+the patched `AB_PACKAGE_TARGET` after this test; do not copy its drop-in into a
+production profile, release image, or other acceptance image.
 
 ## 9. Valid and startup-failure application canaries
 

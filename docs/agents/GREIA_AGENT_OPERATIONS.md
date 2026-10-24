@@ -112,6 +112,24 @@ new `greia-devctl` verb is permitted. Only unreachable internal journal cut
 windows and generation/PERSIST staging-space cases remain NOT RUN with their
 specific missing observation/control.
 
+### Linux acceptance follow-up (2026-10-24)
+
+The first Linux result is recorded in
+`docs/reviews/2026-10-24_SOFTWARE_UPDATE_LINUX_ACCEPTANCE_RESULT.md`; preserve its
+manual-repair evidence boundary. Rebuild/reinstall the committed fixes before
+claiming clean acceptance. Run the root-to-Parent ownership regression on the
+installed disposable image with its real `greiakid`/`greiapanel` accounts, then
+seed a Parent Activity, perform a root-side package update, and verify ordinary
+Parent install/uninstall still work. The Parent package store remains Parent-
+owned; its published generation paths are readable by the child, never writable.
+
+The work orders now use `greia_release.py build-acceptance-fixture` for the
+otherwise release-gated Acer A/B test legs. This explicit command reuses the
+same payload/bundle/layout checks with development composition and emits
+`greia-acceptance-fixture-*`, marked non-release-eligible. The index tool refuses
+these reports. Normal `build`/`build-profile` retain the boot-cover release gate.
+Keep release acceptance and experimental VM evidence separate.
+
 Use existing `tools/greia_release.py` and `tools/build_update_index.py` for
 release/index assembly. The index supports EN/IT/ES/FR notes, retains three
 releases per exact target by default and publishes its local file atomically.

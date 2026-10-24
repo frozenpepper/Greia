@@ -187,3 +187,26 @@ tree from the root updater, and the shared tree needs a deliberate
    acceptance.
 4. Run the remaining §7/§11 fault recipes on disposable clones.
 5. Keep Session 04 OPEN; no release or physical-hardware claim is made.
+
+## Source follow-up after this Linux run (2026-10-24)
+
+The subsequent source tranche addresses the shared-store ownership blocker,
+including root-written lock/receipt/generation ownership and legacy store
+repair. It also fixes a concurrent initializer chmod race found by the local
+full suite, preserves read-only hardlinked generation files during cleanup,
+and covers the legacy directory migration and Parent umask paths.
+
+A separate, explicitly experimental `build-acceptance-fixture` command now
+reuses the validated Acer A/B pipeline while retaining the production release
+boot-cover gate. Its report is non-release-eligible and the index builder
+rejects it. Use the revised work orders for the next/reverse fixture commands;
+this is a VM acceptance route, not production release or boot-cover approval.
+
+Independent source reviews and 170 focused tests (one Linux-only identity skip)
+passed on macOS. The full follow-up gate is NOT GREEN: its first run exposed
+the now-fixed initializer race plus prior failures, and the final retry aborted
+in native Pygame audio code without a summary. Exact logs and disposition are
+in the current HANDOVER entry. These source checks do not change any PASS,
+FAIL or NOT RUN from the Linux execution above. A clean committed-source RC
+rebuild/reinstall and A/B fixture run remain required, without manual guest
+permission repair. Session 04 remains OPEN.

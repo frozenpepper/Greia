@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 import os
+import pwd
+import shutil
 import stat
+import subprocess
+import sys
 import tempfile
 import threading
 import time
@@ -9,6 +13,7 @@ import unittest
 import zipfile
 from collections.abc import Callable
 from pathlib import Path
+from types import SimpleNamespace
 from unittest import mock
 
 from greia_platform.activity_packages import ActivityPackageError, ActivityPackageService
@@ -65,6 +70,201 @@ class ActivityPackageServiceTests(unittest.TestCase):
                 0o055,
                 "an older root-owned 0700 generation must be repaired",
             )
+
+    def test_root_update_transaction_leaves_parent_mutable_store_usable(self) -> None:
+        """Exercise the root transaction code path, then mutate as the owner.
+
+        On developer machines without the greiapanel account, use the current
+        filesystem identity as the provisioned owner while exercising the
+        actual mkdir/chown/replace/lock/unlink code paths.
+        """
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            archive = root / "painting.greiaactivity"
+            write_activity_archive(PAINTING, archive)
+            service = ActivityPackageService(
+                state_root=root / "packages",
+                runtime_catalogue=RUNTIME,
+                built_in_root=root / "empty-builtins",
+            )
+            parent_receipt = service.install_archive(archive)
+            activity_id = parent_receipt.activity_id
+            previous_generation_id = service.active_generation_id()
+            previous_generation = service.generations_root / previous_generation_id
+            previous_activity_file = (
+                previous_generation / "activities" / activity_id / "activity.toml"
+            )
+            previous_generation_state = (
+                previous_generation.stat().st_uid,
+                previous_generation.stat().st_gid,
+                stat.S_IMODE(previous_generation.stat().st_mode),
+            )
+            previous_file_state = (
+                previous_activity_file.stat().st_uid,
+                previous_activity_file.stat().st_gid,
+                stat.S_IMODE(previous_activity_file.stat().st_mode),
+            )
+            fake_user = SimpleNamespace(pw_uid=os.getuid(), pw_gid=os.getgid())
+            with (
+                mock.patch("greia_platform.activity_packages.os.geteuid", return_value=0),
+                mock.patch("greia_platform.activity_packages.pwd.getpwnam", return_value=fake_user),
+            ):
+                with zipfile.ZipFile(archive, "r") as update_archive:
+                    from greia_platform.activity_packages import ActivityArchiveUpdate
+
+                    with service.software_update_lock():
+                        generation = service.stage_software_update_generation(
+                            (
+                                ActivityArchiveUpdate(
+                                    activity_id,
+                                    parent_receipt.version,
+                                    update_archive,
+                                ),
+                            )
+                        )
+                        service.publish_software_update_generation(generation)
+                        service.commit_software_update_generation(generation)
+
+            owner = os.getuid()
+            active = service.active_root / activity_id
+            generation_root = service.generations_root / service.active_generation_id()
+            for path in (
+                service.state_root,
+                service.generations_root,
+                service.active_pointer,
+                generation_root,
+                service.receipts_root / f"{activity_id}.json",
+            ):
+                self.assertEqual(path.stat().st_uid, owner, f"wrong owner for {path}")
+            self.assertTrue(previous_generation.is_dir())
+            self.assertEqual(
+                (
+                    previous_generation.stat().st_uid,
+                    previous_generation.stat().st_gid,
+                    stat.S_IMODE(previous_generation.stat().st_mode),
+                ),
+                previous_generation_state,
+            )
+            self.assertEqual(
+                (
+                    previous_activity_file.stat().st_uid,
+                    previous_activity_file.stat().st_gid,
+                    stat.S_IMODE(previous_activity_file.stat().st_mode),
+                ),
+                previous_file_state,
+            )
+            self.assertEqual(stat.S_IMODE(generation_root.stat().st_mode), 0o555)
+            active_mode = stat.S_IMODE((active / "activity.toml").stat().st_mode)
+            self.assertFalse(
+                active_mode & 0o222,
+                f"{active / 'activity.toml'} mode={oct(active_mode)} pointer="
+                f"{service.active_pointer.read_text().strip()} tree="
+                f"{[(p.name, oct(stat.S_IMODE(p.stat().st_mode))) for p in active.iterdir()]}",
+            )
+
+            # A later Parent process must be able to acquire the existing
+            # lock, clean the root-published generation and perform another
+            # package-store operation under normal non-root permissions.
+            service.uninstall(activity_id)
+            self.assertFalse(
+                (service.receipts_root / f"{activity_id}.json").exists()
+            )
+            parent_receipt = service.install_archive(archive)
+            self.assertEqual(parent_receipt.activity_id, activity_id)
+
+    @unittest.skipUnless(
+        sys.platform.startswith("linux") and os.geteuid() == 0,
+        "requires a Linux root runner and the provisioned greiapanel account",
+    )
+    def test_linux_root_to_greiapanel_store_handoff(self) -> None:
+        try:
+            parent_account = pwd.getpwnam("greiapanel")
+            child_account = pwd.getpwnam("greiakid")
+            parent_uid = parent_account.pw_uid
+            parent_gid = parent_account.pw_gid
+        except KeyError:
+            self.skipTest("greiapanel/greiakid are not provisioned")
+        runuser = shutil.which("runuser")
+        if runuser is None:
+            self.skipTest("runuser is unavailable")
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            archive = root / "painting.greiaactivity"
+            write_activity_archive(PAINTING, archive)
+            archive.chmod(0o644)
+            store = root / "packages"
+            store.mkdir(mode=0o750)
+            os.chown(store, child_account.pw_uid, child_account.pw_gid)
+            os.chown(root, parent_uid, parent_gid)
+            # Reproduce the shipped legacy greiakid-owned store root, then
+            # let the root update worker normalize it and repair any old root
+            # residue without taking ownership from future Parent operations.
+            service = ActivityPackageService(
+                state_root=store,
+                runtime_catalogue=RUNTIME,
+                built_in_root=root / "empty-builtins",
+            )
+            service._ensure_roots()
+            self.assertEqual(store.stat().st_uid, parent_uid)
+
+            parent_code = (
+                "from pathlib import Path; "
+                "from greia_platform.activity_packages import ActivityPackageService; "
+                f"s=ActivityPackageService(state_root=Path({str(store)!r}), "
+                f"runtime_catalogue=Path({str(RUNTIME)!r}), "
+                f"built_in_root=Path({str(root / 'empty-builtins')!r})); "
+                f"r=s.install_archive(Path({str(archive)!r})); "
+                "print(r.activity_id + '|' + r.version)"
+            )
+            env = dict(os.environ)
+            env["PYTHONPATH"] = str(PROJECT_ROOT / "src")
+            first_parent = subprocess.run(
+                [runuser, "-u", "greiapanel", "--", sys.executable, "-c", parent_code],
+                cwd=PROJECT_ROOT,
+                env=env,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(first_parent.returncode, 0, first_parent.stderr)
+            activity_id, version = first_parent.stdout.strip().split("|", 1)
+
+            # Root stages and commits the same Activity through the exact
+            # software-update generation boundary used by the updater.
+            with zipfile.ZipFile(archive, "r") as update_archive:
+                from greia_platform.activity_packages import ActivityArchiveUpdate
+
+                with service.software_update_lock():
+                    generation = service.stage_software_update_generation(
+                        (ActivityArchiveUpdate(activity_id, version, update_archive),)
+                    )
+                    service.publish_software_update_generation(generation)
+                    service.commit_software_update_generation(generation)
+            active_file = service.active_root / activity_id / "activity.toml"
+            generation_dir = service.generations_root / service.active_generation_id()
+            self.assertEqual(stat.S_IMODE(generation_dir.stat().st_mode), 0o555)
+            self.assertFalse(stat.S_IMODE(active_file.stat().st_mode) & 0o222)
+            code = (
+                "from pathlib import Path; "
+                "from greia_platform.activity_packages import ActivityPackageService; "
+                "import os; "
+                f"s=ActivityPackageService(state_root=Path({str(store)!r}), "
+                f"runtime_catalogue=Path({str(RUNTIME)!r}), "
+                f"built_in_root=Path({str(root / 'empty-builtins')!r})); "
+                f"s.uninstall({activity_id!r}); "
+                f"s.install_archive(Path({str(archive)!r})); "
+                "assert os.geteuid() != 0"
+            )
+            completed = subprocess.run(
+                [runuser, "-u", "greiapanel", "--", sys.executable, "-c", code],
+                cwd=PROJECT_ROOT,
+                env=env,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            self.assertEqual(store.stat().st_uid, parent_uid)
 
     def test_parent_package_installs_to_separate_atomic_active_root(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -195,9 +395,9 @@ class ActivityPackageServiceTests(unittest.TestCase):
             active = service.active_root / first.activity_id
             # Simulate a safe pre-commit/crash residue by making the active path
             # absent while retaining the immutable version and audit metadata.
-            # The committed active tree is read-only, so discard it through the
-            # service's own read-only-aware cleanup rather than a raw rename
-            # (which cannot move a write-protected directory across parents).
+            # A published generation is immutable, so make its Activity
+            # collection writable for this deliberate on-disk fault injection.
+            active.parent.chmod(0o755)
             service._discard_private_tree(active)
             service._receipt_path(first.activity_id).unlink()
 

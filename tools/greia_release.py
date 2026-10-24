@@ -10,6 +10,11 @@ Normal owner flow::
 
     sudo python3 tools/greia_release.py build --version <VERSION> --output <DIR>
 
+For owner-authorized disposable Linux VM testing only, the separate
+``build-acceptance-fixture`` command emits an experimental A/B fixture under a
+distinct directory and marks its report non-release-eligible. It never changes
+the production ``build`` / ``build-profile`` release gate.
+
 Session 03 intentionally emits only the currently-real Acer update bundle.
 The final output directory/schema is already the multi-platform schema from the
 active lifecycle plan; universal Setup media and additional target profiles are
@@ -214,6 +219,23 @@ class ReleasePaths:
             release_root=release_root,
             updates_dir=release_root / "updates",
             intermediate_dir=release_root / "intermediate",
+            cache_dir=parent / ".greia-cache",
+            work_parent=parent / ".greia-work",
+        )
+
+    @classmethod
+    def for_acceptance_fixture(
+        cls, output_parent: Path, version: str
+    ) -> "ReleasePaths":
+        """Give an experimental fixture a directory no release command uses."""
+
+        parent = Path(output_parent).expanduser().resolve()
+        fixture_root = parent / f"greia-acceptance-fixture-{version}"
+        return cls(
+            output_parent=parent,
+            release_root=fixture_root,
+            updates_dir=fixture_root / "updates",
+            intermediate_dir=fixture_root / "intermediate",
             cache_dir=parent / ".greia-cache",
             work_parent=parent / ".greia-work",
         )
@@ -542,6 +564,19 @@ def _release_environment(paths: ReleasePaths) -> dict[str, str]:
     }
 
 
+def _acceptance_fixture_environment(paths: ReleasePaths) -> dict[str, str]:
+    """Return explicit development semantics for a disposable A/B fixture.
+
+    This keeps the ordinary owner build environment release-gated while
+    ensuring an inherited shell value cannot silently turn fixture composition
+    into curated release composition (or vice versa).
+    """
+
+    env = _release_environment(paths)
+    env["PIP_RELEASE_BUILD"] = "0"
+    return env
+
+
 def _build_one_profile(
     *,
     runner: ReleaseCommandRunner,
@@ -756,12 +791,21 @@ def _build_release(
     keep_work: bool = False,
     release_notes_file: Path | None = None,
     doctor_result: dict[str, object] | None = None,
+    acceptance_fixture: bool = False,
 ) -> dict[str, object]:
     version = _validate_version(version)
     if not profile_ids:
         raise ReleaseCliError("release matrix must contain at least one profile")
+    if acceptance_fixture and tuple(profile_ids) != ("acer-aspire-one-i386-ab",):
+        raise ReleaseCliError(
+            "acceptance fixtures are restricted to acer-aspire-one-i386-ab"
+        )
     active = runner if runner is not None else SubprocessReleaseCommandRunner()
-    paths = ReleasePaths.for_release(output_parent, version)
+    paths = (
+        ReleasePaths.for_acceptance_fixture(output_parent, version)
+        if acceptance_fixture
+        else ReleasePaths.for_release(output_parent, version)
+    )
     if paths.release_root.exists():
         raise ReleaseCliError(f"release output already exists: {paths.release_root}")
     paths.output_parent.mkdir(parents=True, exist_ok=True)
@@ -788,7 +832,16 @@ def _build_release(
         )
 
     plans = [_load_profile_plan(profile_id)[1] for profile_id in profile_ids]
-    env = _release_environment(paths)
+    env = (
+        _acceptance_fixture_environment(paths)
+        if acceptance_fixture
+        else _release_environment(paths)
+    )
+    release_id = (
+        f"greia-acceptance-fixture-{version}"
+        if acceptance_fixture
+        else f"greia-{version}"
+    )
     work_root = Path(
         tempfile.mkdtemp(prefix=f"greia-{version}-", dir=str(paths.work_parent))
     )
@@ -801,7 +854,7 @@ def _build_release(
                 runner=active,
                 plan=plan,
                 version=version,
-                release_id=f"greia-{version}",
+                release_id=release_id,
                 work_root=work_root,
                 publish_root=publish_root,
                 env=env,
@@ -826,14 +879,24 @@ def _build_release(
         report: dict[str, object] = {
             "schema_version": REPORT_SCHEMA_VERSION,
             "version": version,
-            "release_id": f"greia-{version}",
+            "release_id": release_id,
             "source_commit": source_commit,
             "status": "complete",
+            "artifact_class": (
+                "experimental_acceptance_fixture" if acceptance_fixture else "release"
+            ),
+            "release_eligible": not acceptance_fixture,
             "profiles": profiles,
-            "public_artifacts": [
-                str(Path("updates") / f"{plan.profile_id}.greiaupdate")
-                for plan in plans
-            ],
+            **(
+                {}
+                if acceptance_fixture
+                else {
+                    "public_artifacts": [
+                        str(Path("updates") / f"{plan.profile_id}.greiaupdate")
+                        for plan in plans
+                    ]
+                }
+            ),
             "setup_image": {
                 "status": "deferred",
                 "session": 8,
@@ -943,6 +1006,18 @@ def _parser() -> argparse.ArgumentParser:
     profile.add_argument("--keep-work", action="store_true")
     profile.add_argument("--release-notes-file", type=Path)
 
+    fixture = sub.add_parser(
+        "build-acceptance-fixture",
+        help=(
+            "build one experimental Acer A/B fixture for disposable Linux VM "
+            "acceptance; never a release artifact"
+        ),
+    )
+    fixture.add_argument("--version", required=True)
+    fixture.add_argument("--output", type=Path, required=True)
+    fixture.add_argument("--keep-work", action="store_true")
+    fixture.add_argument("--release-notes-file", type=Path)
+
     doctor = sub.add_parser("doctor", help="check the official build host")
     doctor.add_argument(
         "--output",
@@ -999,6 +1074,18 @@ def main(argv: list[str] | None = None) -> int:
                 runner=runner,
                 keep_work=args.keep_work,
                 release_notes_file=args.release_notes_file,
+            )
+            print(json.dumps(result, indent=2, sort_keys=True))
+            return 0
+        if args.command == "build-acceptance-fixture":
+            result = _build_release(
+                version=args.version,
+                output_parent=args.output,
+                profile_ids=("acer-aspire-one-i386-ab",),
+                runner=runner,
+                keep_work=args.keep_work,
+                release_notes_file=args.release_notes_file,
+                acceptance_fixture=True,
             )
             print(json.dumps(result, indent=2, sort_keys=True))
             return 0
