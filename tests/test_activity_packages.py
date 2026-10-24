@@ -39,6 +39,33 @@ def write_activity_archive(
 
 
 class ActivityPackageServiceTests(unittest.TestCase):
+    def test_initial_generation_is_traversable_by_the_child_shell(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            service = ActivityPackageService(
+                state_root=root / "packages",
+                runtime_catalogue=RUNTIME,
+                built_in_root=root / "empty-builtins",
+            )
+            service._ensure_roots()
+            generation = service.generations_root / "gen-000001"
+            self.assertTrue(generation.is_dir())
+            self.assertTrue((generation / "activities").is_dir())
+            self.assertTrue((generation / "index.json").is_file())
+            self.assertEqual(
+                stat.S_IMODE(generation.stat().st_mode) & 0o055,
+                0o055,
+                "the initial generation must remain traversable by greiakid",
+            )
+
+            generation.chmod(0o700)
+            service._ensure_roots()
+            self.assertEqual(
+                stat.S_IMODE(generation.stat().st_mode) & 0o055,
+                0o055,
+                "an older root-owned 0700 generation must be repaired",
+            )
+
     def test_parent_package_installs_to_separate_atomic_active_root(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

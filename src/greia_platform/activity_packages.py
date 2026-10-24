@@ -1122,6 +1122,19 @@ class ActivityPackageService:
         ):
             path.mkdir(parents=True, exist_ok=True)
             os.chmod(path, mode)
+        # Published generations are read-only and traversable by the child
+        # launcher. Repair a generation created by an older/root-side caller
+        # with mkdtemp's 0700 default; such a tree makes Parent Activity
+        # discovery fail with EACCES and leaves the Shell unable to start.
+        for generation in self.generations_root.iterdir():
+            if generation.is_symlink() or not generation.is_dir():
+                continue
+            try:
+                mode = stat.S_IMODE(generation.stat().st_mode)
+                if mode & 0o055 != 0o055:
+                    os.chmod(generation, 0o555)
+            except OSError:
+                continue
         # An existing legacy `active` directory is left for the locked
         # migration step; a missing pointer with no generations gets an
         # initial empty generation so readers always resolve a directory.
@@ -1149,6 +1162,9 @@ class ActivityPackageService:
                 generated_from_policy_hash=runtime_policy_fingerprint(self.runtime),
                 registrations=(),
             ).write_file(staging / ACTIVE_INDEX_FILENAME)
+            # mkdtemp creates 0700; the generation must stay traversable by
+            # greiakid after this root-owned updater publishes it.
+            os.chmod(staging, 0o555)
             try:
                 os.replace(staging, self._generation_dir(_INITIAL_GENERATION_ID))
             except OSError:
