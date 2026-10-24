@@ -97,9 +97,12 @@ release. Do not relabel an old incompatible payload. Set
 ## 3. Execute the existing product harness
 
 Use `tools.x8_qemu.product.ProductHarness` without fake callbacks. Its control
-seam drives the real graphical install transaction and shipped services on
-clones; it is not a replacement updater. Do not run the historical generic
-runner and call it product proof. Never supply a `/dev/...` path.
+seam masks the graphical installer on the disposable clone, drives the real
+shipped installer transaction over its socket, then verifies the target image
+through production disk parsers. This is automated installer/service proof,
+not rendered graphical installer evidence and not a replacement updater. Do
+not run the historical generic runner and call it product proof. Never supply
+a `/dev/...` path.
 
 ```bash
 : "${UPDATE_NEXT_BUNDLE:?set the real second release bundle path}"

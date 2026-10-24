@@ -97,6 +97,21 @@ QEMU, installation and hardware execution from the Mac to another
 agent/machine. Keep these results separate from local Python/Node source
 checks.
 
+For the typed-package Linux run, the 2026-10-24 work order supplies the
+file-backed QEMU GUI install/boot commands, guest SSH and Parent port forwards,
+and the launcher-failure canary recipe. Its interactive single-root RC proof
+is distinct from the A/B `ProductHarness` control-seam install; the latter
+masks the GUI and proves shipped services plus disk observations, not rendered
+installer screens. Statements in the 2026-10-23 work order about v3-only
+online updates and no application delta/data-only route do not supersede ADR
+0038's application-package route. Use the work order's file-backed raw-clone
+recipes for partial upload, observed `applying` power cut and Parent receive-
+reserve HTTP 507. Root-only job/apply
+records are extracted offline from the stopped clone; no guest root shell or
+new `greia-devctl` verb is permitted. Only unreachable internal journal cut
+windows and generation/PERSIST staging-space cases remain NOT RUN with their
+specific missing observation/control.
+
 Use existing `tools/greia_release.py` and `tools/build_update_index.py` for
 release/index assembly. The index supports EN/IT/ES/FR notes, retains three
 releases per exact target by default and publishes its local file atomically.

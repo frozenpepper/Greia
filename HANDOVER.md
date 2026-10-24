@@ -180,6 +180,34 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-24 — Linux software-update handoff made executable
+
+Validation: independent source/docs-command review PASS; 27 Bash blocks and
+2 Python snippets in the current work order passed syntax/parse checks, as
+did 4 Bash blocks and 1 Python snippet in the companion v3 work order.
+`git diff --check` passed. These are documentation/source checks only.
+
+Documentation-only follow-up to the committed package implementation. The
+2026-10-24 work order now includes ordered host/source gates, a separate
+file-backed single-root GUI installer and detached boot, the A/B harness
+boundary and failure fixture calls, Parent GUI/upload routes, valid and
+startup-failure canaries, and bounded partial-upload, Parent-stop, applying
+power-cut/evidence, and receive-reserve HTTP 507 recipes. It distinguishes
+source/harness evidence from rendered GUI and physical-device proof and marks
+only the still-unobserved internal/staging predicates NOT RUN. Root also built
+and inspected the startup-failure package from a disposable source/runtime
+copy: `build.json` and `inspect.json` passed at
+`/tmp/greia-handoff-canary.iSQbyj/`; this proves fixture structure only, not
+guest activation failure or rollback. The 2026-10-23 v3-only online/data-only
+statements are explicitly scoped to that route; they do not override ADR 0038
+application packages.
+
+No Linux image build, mount, QEMU execution, guest installation, or physical
+device test ran in this documentation turn. Source and lifecycle phase did not
+change; Session 04 remains OPEN. Next action: execute the current work order on
+the designated Linux host, retain per-predicate evidence, and keep the original
+untracked media/voice audit untouched.
+
 ### 2026-10-24 — Lightweight package implementation committed; final local evidence
 
 Implementation source is committed at `771d52c7a9f75fb10481919d9ebef83b1d18adc9`. The exact-commit focused
