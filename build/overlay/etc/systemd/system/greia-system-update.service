@@ -15,8 +15,8 @@
 # is never writable through this unit.
 [Unit]
 Description=Greia OS system-update semantic service
-Requires=greia-system-update.socket
-After=greia-system-update.socket
+Requires=greia-system-update.socket greia-software-update-recover.service
+After=greia-system-update.socket greia-software-update-recover.service
 RequiresMountsFor=/run/greia-persist /var/lib/greia-os /boot/grub /etc/greia-os/layout
 # Never part of pre-intro boot and never a generic command runner or broad
 # system manager: this unit only serves the seven semantic update operations.

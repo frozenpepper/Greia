@@ -1,7 +1,7 @@
 [Unit]
 Description=Greia OS child launcher
-After=local-fs.target systemd-tmpfiles-setup.service systemd-logind.service greia-first-boot.service greia-boot-health-credential.service
-Requires=greia-first-boot.service
+After=local-fs.target systemd-tmpfiles-setup.service systemd-logind.service greia-first-boot.service greia-boot-health-credential.service greia-software-update-recover.service
+Requires=greia-first-boot.service greia-software-update-recover.service
 Wants=greia-parent.service greia-boot-health-credential.service
 Conflicts=getty@tty1.service
 # Fail-closed existence gate for the volatile runtime roots (D2/P1): PID 1

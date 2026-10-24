@@ -909,82 +909,83 @@ def inspect_update_bundle(path: Path) -> InspectedUpdateBundle:
     path = Path(path)
     if path.is_symlink() or not path.is_file():
         raise UpdateBundleError("update bundle is not a regular file")
-    if path.stat().st_size <= 0 or path.stat().st_size > MAX_BUNDLE_BYTES:
+    size = path.stat().st_size
+    if size <= 0 or size > MAX_BUNDLE_BYTES:
         raise UpdateBundleError("update bundle size is outside Greia bounds")
     try:
         with zipfile.ZipFile(path, "r") as archive:
-            infos = archive.infolist()
-            names = [info.filename for info in infos]
-            if names != list(BUNDLE_MEMBERS_V3) and names != list(
-                BUNDLE_MEMBERS_V3_WITH_HW
-            ):
-                _raise_for_legacy_members(archive, names)
-                raise UpdateBundleError("update bundle members/order are invalid")
-            _reject_unsafe_members(infos)
-            by_name = {info.filename: info for info in infos}
-            manifest_info = by_name[MANIFEST_NAME]
-            payload_info = by_name[PAYLOAD_NAME]
-            hw_info = by_name.get(HARDWARE_SUPPORT_NAME)
-            if manifest_info.file_size <= 0 or manifest_info.file_size > MAX_MANIFEST_BYTES:
-                raise UpdateBundleError("manifest exceeds Greia bound")
-            if payload_info.file_size <= 0 or payload_info.file_size > MAX_PAYLOAD_BYTES:
-                raise UpdateBundleError("payload exceeds Greia bound")
-            if payload_info.compress_type != zipfile.ZIP_STORED:
-                raise UpdateBundleError("payload member must be stored without recompression")
-            if hw_info is not None:
-                if hw_info.file_size <= 0 or hw_info.file_size > MAX_HARDWARE_SUPPORT_BYTES:
-                    raise UpdateBundleError("hardware-support exceeds Greia bound")
-                if hw_info.compress_type != zipfile.ZIP_STORED:
-                    raise UpdateBundleError(
-                        "hardware-support member must be stored without recompression"
-                    )
-            manifest_raw = archive.read(MANIFEST_NAME)
-            try:
-                manifest_json = json.loads(manifest_raw.decode("utf-8"))
-            except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-                raise UpdateBundleError("manifest is not valid JSON") from exc
-            if isinstance(manifest_json, dict) and manifest_json.get(
-                "schema_version"
-            ) in (V1_SCHEMA_VERSION, V2_SCHEMA_VERSION):
-                raise UpdateBundleError(_migration_error())
-            manifest = UpdateManifest.from_json_dict(manifest_json)
-            if manifest_raw != manifest.canonical_bytes():
-                raise UpdateBundleError("manifest is not canonical JSON")
-            if payload_info.file_size != manifest.payload_size:
-                raise UpdateBundleError("payload size does not match manifest")
-            if hw_info is None:
-                if (
-                    manifest.hardware_support_sha256 is not None
-                    or manifest.hardware_support_size is not None
-                ):
-                    raise UpdateBundleError(
-                        "hardware-support manifest facts require the member"
-                    )
-            else:
-                if (
-                    manifest.hardware_support_sha256 is None
-                    or manifest.hardware_support_size is None
-                ):
-                    raise UpdateBundleError(
-                        "hardware-support member requires manifest facts"
-                    )
-                if hw_info.file_size != manifest.hardware_support_size:
-                    raise UpdateBundleError(
-                        "hardware-support size does not match manifest"
-                    )
-            _verify_member_digest(archive, PAYLOAD_NAME, manifest.payload_sha256)
-            if hw_info is not None and manifest.hardware_support_sha256 is not None:
-                _verify_member_digest(
-                    archive, HARDWARE_SUPPORT_NAME, manifest.hardware_support_sha256
-                )
-            _assert_member_zstd_magic(archive, payload_info)
-            if hw_info is not None:
-                _assert_member_zstd_magic(archive, hw_info)
+            manifest = inspect_update_bundle_archive(archive, archive_size=size)
     except (zipfile.BadZipFile, OSError) as exc:
         if isinstance(exc, UpdateBundleError):
             raise
         raise UpdateBundleError("update bundle is not a valid Greia ZIP artifact") from exc
     return InspectedUpdateBundle(path, manifest)
+
+
+def inspect_update_bundle_archive(
+    archive: zipfile.ZipFile, *, archive_size: int
+) -> UpdateManifest:
+    """Run the canonical v3 member, size, digest and zstd checks on an open ZIP.
+
+    This lets a bounded stored member inside a typed software-update package
+    use the same validator without copying a potentially multi-gigabyte image
+    bundle into a temporary file.
+    """
+
+    if isinstance(archive_size, bool) or not 0 < archive_size <= MAX_BUNDLE_BYTES:
+        raise UpdateBundleError("update bundle size is outside Greia bounds")
+    infos = archive.infolist()
+    names = [info.filename for info in infos]
+    if names != list(BUNDLE_MEMBERS_V3) and names != list(BUNDLE_MEMBERS_V3_WITH_HW):
+        _raise_for_legacy_members(archive, names)
+        raise UpdateBundleError("update bundle members/order are invalid")
+    _reject_unsafe_members(infos)
+    by_name = {info.filename: info for info in infos}
+    manifest_info = by_name[MANIFEST_NAME]
+    payload_info = by_name[PAYLOAD_NAME]
+    hw_info = by_name.get(HARDWARE_SUPPORT_NAME)
+    if manifest_info.file_size <= 0 or manifest_info.file_size > MAX_MANIFEST_BYTES:
+        raise UpdateBundleError("manifest exceeds Greia bound")
+    if payload_info.file_size <= 0 or payload_info.file_size > MAX_PAYLOAD_BYTES:
+        raise UpdateBundleError("payload exceeds Greia bound")
+    if payload_info.compress_type != zipfile.ZIP_STORED:
+        raise UpdateBundleError("payload member must be stored without recompression")
+    if hw_info is not None:
+        if hw_info.file_size <= 0 or hw_info.file_size > MAX_HARDWARE_SUPPORT_BYTES:
+            raise UpdateBundleError("hardware-support exceeds Greia bound")
+        if hw_info.compress_type != zipfile.ZIP_STORED:
+            raise UpdateBundleError(
+                "hardware-support member must be stored without recompression"
+            )
+    manifest_raw = archive.read(MANIFEST_NAME)
+    try:
+        manifest_json = json.loads(manifest_raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise UpdateBundleError("manifest is not valid JSON") from exc
+    if isinstance(manifest_json, dict) and manifest_json.get(
+        "schema_version"
+    ) in (V1_SCHEMA_VERSION, V2_SCHEMA_VERSION):
+        raise UpdateBundleError(_migration_error())
+    manifest = UpdateManifest.from_json_dict(manifest_json)
+    if manifest_raw != manifest.canonical_bytes():
+        raise UpdateBundleError("manifest is not canonical JSON")
+    if payload_info.file_size != manifest.payload_size:
+        raise UpdateBundleError("payload size does not match manifest")
+    if hw_info is None:
+        if manifest.hardware_support_sha256 is not None or manifest.hardware_support_size is not None:
+            raise UpdateBundleError("hardware-support manifest facts require the member")
+    else:
+        if manifest.hardware_support_sha256 is None or manifest.hardware_support_size is None:
+            raise UpdateBundleError("hardware-support member requires manifest facts")
+        if hw_info.file_size != manifest.hardware_support_size:
+            raise UpdateBundleError("hardware-support size does not match manifest")
+    _verify_member_digest(archive, PAYLOAD_NAME, manifest.payload_sha256)
+    if hw_info is not None and manifest.hardware_support_sha256 is not None:
+        _verify_member_digest(archive, HARDWARE_SUPPORT_NAME, manifest.hardware_support_sha256)
+    _assert_member_zstd_magic(archive, payload_info)
+    if hw_info is not None:
+        _assert_member_zstd_magic(archive, hw_info)
+    return manifest
 
 
 def _migration_error() -> str:

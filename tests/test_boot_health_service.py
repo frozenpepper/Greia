@@ -948,7 +948,8 @@ class UnitContractTests(unittest.TestCase):
             directives.get("Service.RestrictAddressFamilies"), ["AF_UNIX"]
         )
         self.assertEqual(
-            directives.get("Unit.Requires"), ["greia-boot-health.socket"]
+            set(" ".join(directives.get("Unit.Requires", [])).split()),
+            {"greia-boot-health.socket", "greia-software-update-recover.service"},
         )
         self.assertNotIn("Install.WantedBy", directives)
 

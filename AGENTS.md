@@ -28,6 +28,7 @@ Before changing implementation or architecture, read:
 8. **`docs/adr/0019-platform-owned-activity-system-navigation.md` — mandatory platform-owned Activity Home/Back chrome and protected-input architecture**;
 9. **`docs/adr/0020-runtime-neutral-input-profiles-and-controller-support.md` — mandatory runtime-neutral input profiles, controller support and physical-input authority**;
    - **`docs/adr/0037-shared-activity-control-kit.md` — shared Activity control kit (buttons/HUD/prompt/completion, focus navigation) extending ADR 0018–0020; use it instead of hand-drawn Activity controls**;
+   - **`docs/adr/0038-lightweight-application-update-packages.md` — typed `.greia_update` Python/Activity/combined packages; ADR 0036 remains the full-system A/B route**;
 10. **`docs/engineering/ENGINEERING_FOUNDATIONS.md` — mandatory OOP, polymorphism, maintainability, dependency and performance guidance**;
 11. **`docs/product/PHASE0_CORE_CREATION_ACTIVITIES.md` — mandatory first-user-ready-image writing and painting requirement**;
 12. **`docs/product/ACTIVITY_SYSTEM_NAVIGATION.md` — mandatory universal Home/Back child-navigation requirement**;

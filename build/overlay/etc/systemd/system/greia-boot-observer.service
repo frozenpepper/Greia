@@ -15,7 +15,8 @@
 # build/build-image.sh (systemctl enable), not merely copied.
 [Unit]
 Description=Greia platform-owned early-boot observation owner
-After=local-fs.target
+After=local-fs.target greia-software-update-recover.service
+Requires=greia-software-update-recover.service
 Before=greia-launcher.service
 RequiresMountsFor=/run/greia-persist /etc/greia-os/layout /boot/grub
 

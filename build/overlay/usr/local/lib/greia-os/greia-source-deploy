@@ -20,6 +20,7 @@ D=/var/lib/greia/deploy
 NEW="$D/new"
 PREV="$D/prev"
 LIVE=/opt/greia-os
+GENERATIONS=/opt/greia-software/generations
 INDEX=/usr/share/greia/activity-index-v1.json
 UNITS=/etc/systemd/system
 SERVICES="greia-launcher greia-parent"
@@ -82,15 +83,38 @@ case "${1:-}" in
   swap)
     [ -d "$NEW/opt/greia-os/src" ] || { echo "no staged bundle in $NEW; run push first" >&2; exit 2; }
     [ -f "$NEW/usr/share/greia/activity-index-v1.json" ] || { echo "staged bundle has no index" >&2; exit 2; }
+    [ -L "$LIVE" ] || { echo "application generation bootstrap is required before source deploy" >&2; exit 2; }
+    ACTIVE=$(readlink -f "$LIVE")
+    case "$ACTIVE" in
+      "$GENERATIONS"/*) ;;
+      *) echo "active application generation points outside its store" >&2; exit 1 ;;
+    esac
     systemctl stop $SERVICES
-    rm -rf "$PREV"
-    install -d -m 0755 "$PREV"
-    if [ -d "$LIVE" ]; then mv "$LIVE" "$PREV/greia-os"; fi
-    if [ -f "$INDEX" ]; then cp -p "$INDEX" "$PREV/activity-index-v1.json"; fi
-    mv "$NEW/opt/greia-os" "$LIVE"
-    install -D -m 0644 -o root -g root "$NEW/usr/share/greia/activity-index-v1.json" "$INDEX"
-    chown -R root:root "$LIVE"
-    chmod -R a-w "$LIVE"
+    install -d -m 0755 "$GENERATIONS"
+    generation_id="app-$(/usr/bin/python3 -I -B -c 'import uuid; print(uuid.uuid4().hex)')"
+    candidate="$GENERATIONS/$generation_id"
+    [ ! -e "$candidate" ] || { echo "candidate generation already exists" >&2; exit 1; }
+    mv "$NEW/opt/greia-os" "$candidate"
+    install -D -m 0644 -o root -g root \
+      "$NEW/usr/share/greia/activity-index-v1.json" "$candidate/activity-index-v1.json"
+    if [ -e "$INDEX" ] && [ ! -L "$INDEX" ]; then
+      if [ -e "$ACTIVE/activity-index-v1.json" ]; then
+        echo "legacy and generation-owned Activity indexes both exist" >&2
+        exit 1
+      fi
+      mv "$INDEX" "$ACTIVE/activity-index-v1.json"
+    fi
+    if [ ! -L "$INDEX" ]; then
+      ln -s /opt/greia-os/activity-index-v1.json "$INDEX"
+    elif [ "$(readlink "$INDEX")" != "/opt/greia-os/activity-index-v1.json" ]; then
+      echo "Activity index alias points outside the application generation" >&2
+      exit 1
+    fi
+    chown -R root:root "$candidate"
+    chmod -R a-w "$candidate"
+    next="$LIVE.next.$$"
+    ln -s "$candidate" "$next"
+    mv -Tf "$next" "$LIVE"
     changed=0
     for unit in $SERVICES; do
       src="$NEW/units/$unit.service"

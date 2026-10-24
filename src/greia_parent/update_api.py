@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import os
+from contextlib import contextmanager
 from http.server import HTTPServer
 from pathlib import Path
-from typing import cast
+from uuid import uuid4
+from typing import Iterator, cast
 from urllib.parse import parse_qs, urlparse
 
 from greia_parent.package_api import (
@@ -37,6 +39,16 @@ from greia_parent.update_catalog import (
     UpdateCatalogError,
 )
 from greia_parent.update_delivery import UpdateDeliveryError, UpdateDeliveryService
+from greia_platform.software_update_jobs import (
+    SoftwareUpdateCapacityError,
+    SoftwareUpdateJobError,
+    SoftwareUpdateJobStore,
+    software_update_bootstrap_available,
+)
+from greia_platform.software_update_package import (
+    MAX_SOFTWARE_UPDATE_BYTES,
+    SOFTWARE_UPDATE_MEDIA_TYPE,
+)
 
 
 _ALLOWED_UPDATE_TYPES = frozenset(
@@ -47,6 +59,7 @@ _ALLOWED_UPDATE_TYPES = frozenset(
     }
 )
 _UPDATE_UPLOAD_SOCKET_TIMEOUT_SECONDS = 120.0
+SOFTWARE_UPDATE_PACKAGE_MEDIA_TYPE = SOFTWARE_UPDATE_MEDIA_TYPE
 
 
 class UpdateParentApiApplication(PackageParentApiApplication):
@@ -65,6 +78,10 @@ class UpdateParentApiApplication(PackageParentApiApplication):
         )
         update_privileged_client = kwargs.pop("update_privileged_client", None)
         update_catalog_client = kwargs.pop("update_catalog_client", None)
+        software_update_enabled = kwargs.pop("software_update_enabled", None)
+        software_update_job_store = kwargs.pop("software_update_job_store", None)
+        if software_update_enabled is not None and not isinstance(software_update_enabled, bool):
+            raise TypeError("software_update_enabled must be boolean when provided")
         configured_channel = os.environ.get("GREIA_SYSTEM_UPDATE_CHANNEL", "stable").strip()
         self.system_update_channel = configured_channel if configured_channel in {"stable", "dev"} else "stable"
         self.system_update_online_enabled = configured_channel in {"stable", "dev"}
@@ -76,6 +93,15 @@ class UpdateParentApiApplication(PackageParentApiApplication):
                 self.system_update_online_enabled = False
                 update_catalog_client = UpdateCatalogClient(DEFAULT_UPDATE_INDEX_URL)
         super().__init__(*args, **kwargs)
+        self.software_update_enabled = (
+            software_update_enabled
+            if software_update_enabled is not None
+            else software_update_bootstrap_available()
+        )
+        self.software_update_jobs = cast(
+            SoftwareUpdateJobStore,
+            software_update_job_store or SoftwareUpdateJobStore(),
+        )
         self.update_inbox = SystemUpdateInbox(self.state_dir)
         self.system_update_upload_enabled = _system_update_upload_enabled()
         self.update_delivery = UpdateDeliveryService(
@@ -106,6 +132,7 @@ class UpdateParentApiApplication(PackageParentApiApplication):
             {
                 "activities.install": self.activity_install_enabled,
                 "system.update.upload": self.system_update_upload_enabled,
+                "system.update.package.install": self.software_update_enabled,
                 "system.update.check": self.system_update_online_enabled,
                 "system.update.prepare": self._system_update_prepare_available(),
                 "system.update.restart": self._system_update_restart_available(),
@@ -175,13 +202,31 @@ class UpdateParentApiApplication(PackageParentApiApplication):
         elif isinstance(public_job, dict) and payload.get("state") == "idle":
             payload["state"] = public_job.get("state", "idle")
         payload["upload_available"] = self.system_update_upload_enabled
+        software_job = self.software_update_jobs.snapshot()
+        software_restart_available = (
+            self.software_update_enabled
+            and isinstance(software_job, dict)
+            and software_job.get("restart_available") is True
+        )
+        software_reason = (
+            None
+            if self.software_update_enabled
+            else "This Greia needs the software update bootstrap before it can install package updates"
+        )
+        payload["software_update"] = {
+            "available": self.software_update_enabled,
+            "reason": software_reason,
+            "job": software_job,
+            "restart_available": software_restart_available,
+        }
         payload["activation_available"] = activation_available
         payload["activation_reason"] = (
             readiness.get("reason", "Greia update readiness is unavailable")
             if isinstance(readiness, dict)
             else "Greia update readiness is unavailable"
         )
-        payload["check_available"] = self.system_update_online_enabled
+        software_busy = self._software_update_busy()
+        payload["check_available"] = self.system_update_online_enabled and not software_busy
         payload["prepare_available"] = self._system_update_prepare_available()
         payload["restart_available"] = self._system_update_restart_available()
         payload["delivery"] = {
@@ -192,30 +237,63 @@ class UpdateParentApiApplication(PackageParentApiApplication):
         return payload
 
     def check_system_update(self) -> dict[str, object]:
+        self._refuse_online_operation_during_software_update()
         if not self.system_update_online_enabled:
             raise UpdateDeliveryError("online Greia update checks are not configured")
         return self.update_delivery.check()
 
     def prepare_system_update(self, release_id: str) -> dict[str, object]:
+        self._refuse_online_operation_during_software_update()
         if not self.system_update_online_enabled:
             raise UpdateDeliveryError("online Greia update preparation is not configured")
         return self.update_delivery.prepare(release_id)
 
     def request_system_update_restart(self) -> dict[str, object]:
+        self._refuse_online_operation_during_software_update()
         return self.update_delivery.request_restart()
+
+    @contextmanager
+    def software_update_upload_lease(self) -> Iterator[None]:
+        """Serialize package receipt and exclude the existing update inbox."""
+
+        if not self.software_update_enabled:
+            raise SoftwareUpdateJobError("software update bootstrap is unavailable")
+        with self.software_update_jobs.receive_lease():
+            if self.software_update_jobs.is_busy():
+                raise SoftwareUpdateJobError("another software update job is active")
+            with self.update_delivery.manual_upload_lease():
+                yield
+
+    def request_software_update_restart(self) -> dict[str, object]:
+        if not self.software_update_enabled:
+            raise SoftwareUpdateJobError("software update bootstrap is unavailable")
+        return self.software_update_jobs.request_restart()
+
+    def _software_update_busy(self) -> bool:
+        return self.software_update_enabled and self.software_update_jobs.is_busy()
+
+    def _refuse_online_operation_during_software_update(self) -> None:
+        if self._software_update_busy():
+            raise UpdateDeliveryError("another Greia software update operation is active")
 
     def _system_update_activation_available(self) -> bool:
         readiness = self.update_delivery.snapshot().get("readiness")
         return isinstance(readiness, dict) and readiness.get("available") is True
 
     def _system_update_prepare_available(self) -> bool:
-        if not self.system_update_online_enabled or not self._system_update_activation_available():
+        if (
+            not self.system_update_online_enabled
+            or self._software_update_busy()
+            or not self._system_update_activation_available()
+        ):
             return False
         catalog = self.update_delivery.snapshot().get("catalog")
         releases = catalog.get("releases") if isinstance(catalog, dict) else None
         return isinstance(releases, list) and bool(releases)
 
     def _system_update_restart_available(self) -> bool:
+        if self._software_update_busy():
+            return False
         snapshot = self.update_delivery.snapshot()
         job = snapshot.get("job")
         # A staged job remains explicitly retryable after an uncertain
@@ -408,6 +486,12 @@ class UpdateParentApiRequestHandler(PackageParentApiRequestHandler):
 
     def do_POST(self) -> None:  # noqa: N802
         parsed = urlparse(self.path)
+        if parsed.path == f"{API_BASE}/system/update/package":
+            self._handle_software_update_upload()
+            return
+        if parsed.path == f"{API_BASE}/system/update/package/restart":
+            self._handle_software_update_restart()
+            return
         if parsed.path == f"{API_BASE}/settings/audio/reset":
             query = parse_qs(parsed.query)
             if not self._require_api_authorization(query):
@@ -499,6 +583,103 @@ class UpdateParentApiRequestHandler(PackageParentApiRequestHandler):
                 "status": self.app.system_update_payload(),
             },
         )
+
+    def _handle_software_update_upload(self) -> None:
+        query = parse_qs(urlparse(self.path).query)
+        if not self._require_api_authorization(query):
+            return
+        if not self.app.software_update_enabled:
+            self._send_api_error(
+                403,
+                "capability_unavailable",
+                "This Greia needs the software update bootstrap before it can install package updates",
+            )
+            return
+        content_type = self.headers.get("Content-Type", "").split(";", 1)[0].strip().lower()
+        if content_type != SOFTWARE_UPDATE_PACKAGE_MEDIA_TYPE:
+            self._send_api_error(
+                415,
+                "unsupported_software_update_type",
+                "Upload a .greia_update package",
+            )
+            return
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+        except ValueError:
+            self._send_api_error(400, "invalid_content_length", "Invalid Content-Length")
+            return
+        if length <= 0 or length > MAX_SOFTWARE_UPDATE_BYTES:
+            self._send_api_error(
+                413,
+                "software_update_too_large",
+                f"Software update package must be between 1 and {MAX_SOFTWARE_UPDATE_BYTES} bytes",
+            )
+            return
+
+        staging: Path | None = None
+        try:
+            with self.app.software_update_upload_lease():
+                self.app.software_update_jobs.require_receive_capacity(length)
+                staging = self.app.software_update_jobs.directory / f".uploading.{uuid4().hex}.tmp"
+                descriptor = os.open(
+                    staging,
+                    os.O_WRONLY
+                    | os.O_CREAT
+                    | os.O_EXCL
+                    | getattr(os, "O_NOFOLLOW", 0)
+                    | getattr(os, "O_CLOEXEC", 0),
+                    0o600,
+                )
+                self.connection.settimeout(_UPDATE_UPLOAD_SOCKET_TIMEOUT_SECONDS)
+                with os.fdopen(descriptor, "wb") as handle:
+                    remaining = length
+                    while remaining:
+                        chunk = self.rfile.read(min(1024 * 1024, remaining))
+                        if not chunk:
+                            raise SoftwareUpdateJobError("software update upload ended unexpectedly")
+                        handle.write(chunk)
+                        remaining -= len(chunk)
+                    handle.flush()
+                    os.fsync(handle.fileno())
+                job = self.app.software_update_jobs.accept_received(staging, length)
+        except SoftwareUpdateCapacityError as exc:
+            self._send_api_error(507, "insufficient_storage", str(exc))
+            return
+        except (SoftwareUpdateJobError, UpdateDeliveryError) as exc:
+            self._send_api_error(409, "software_update_unavailable", str(exc))
+            return
+        except (OSError, TimeoutError) as exc:
+            self._send_api_error(400, "software_update_upload_failed", str(exc))
+            return
+        finally:
+            if staging is not None:
+                staging.unlink(missing_ok=True)
+
+        self._send_json(202, {"job": job})
+
+    def _handle_software_update_restart(self) -> None:
+        query = parse_qs(urlparse(self.path).query)
+        if not self._require_api_authorization(query):
+            return
+        if not self.app.software_update_enabled:
+            self._send_api_error(
+                403,
+                "capability_unavailable",
+                "Software update restart is unavailable on this Greia",
+            )
+            return
+        try:
+            body = self._read_json_object()
+            if body:
+                raise ValueError("software update restart request must be empty")
+            job = self.app.request_software_update_restart()
+        except SoftwareUpdateJobError as exc:
+            self._send_api_error(409, "software_update_restart_unavailable", str(exc))
+            return
+        except (OSError, ValueError) as exc:
+            self._send_api_error(400, "invalid_software_update_restart", str(exc))
+            return
+        self._send_json(202, {"job": job})
 
     def _handle_update_operation(self, operation: str) -> None:
         query = parse_qs(urlparse(self.path).query)

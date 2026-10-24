@@ -46,7 +46,9 @@ class SingleReleaseAuthorityGuardTests(unittest.TestCase):
     def test_single_unsigned_bundle_authority(self) -> None:
         source = read("src/greia_platform/system_updates.py")
         self.assertEqual(len(re.findall(r"def build_update_bundle", source)), 1)
-        self.assertEqual(len(re.findall(r"def inspect_update_bundle", source)), 1)
+        self.assertEqual(
+            len(re.findall(r"^def inspect_update_bundle\(", source, re.MULTILINE)), 1
+        )
         self.assertIn("SCHEMA_VERSION = 3", source)
 
     def test_no_signature_bypass_strings(self) -> None:

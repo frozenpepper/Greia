@@ -16,6 +16,7 @@ import subprocess
 import tempfile
 import tomllib
 import unittest
+import os
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -54,8 +55,79 @@ class RuntimeAssetInstallContractTests(unittest.TestCase):
 
     def test_target_content_delegates_to_the_allowlist_installer(self) -> None:
         function = _function_source("compose_install_target_content")
-        self.assertIn('compose_install_runtime_assets "$rootfs" "$project_root"', function)
+        self.assertIn(
+            'compose_install_runtime_assets "$rootfs" "$project_root" "$application_root"',
+            function,
+        )
         self.assertNotIn('"$project_root/assets/" "$rootfs/opt/greia-os/assets/"', function)
+
+    def test_generation_base_and_stable_bootstrap_are_composed(self) -> None:
+        function = _function_source("compose_install_target_content")
+        self.assertIn('local generations_root="$rootfs/opt/greia-software/generations"', function)
+        self.assertIn('local application_root="$generations_root/base"', function)
+        self.assertIn('ln -s greia-software/generations/base "$rootfs/opt/greia-os"', function)
+        self.assertIn(
+            'ln -s ../../../opt/greia-os/activity-index-v1.json "$image_index"',
+            function,
+        )
+        compose = COMPOSE.read_text(encoding="utf-8")
+        self.assertIn("greia-software-update-apply.timer", compose)
+        self.assertIn('"$rootfs/etc/greia-os/software-update-bootstrap.json"', compose)
+        recover = PROJECT_ROOT / "build/overlay/etc/systemd/system/greia-software-update-recover.service"
+        apply = PROJECT_ROOT / "build/overlay/etc/systemd/system/greia-software-update-apply.service"
+        timer = PROJECT_ROOT / "build/overlay/etc/systemd/system/greia-software-update-apply.timer"
+        self.assertIn("--recover", recover.read_text(encoding="utf-8"))
+        self.assertIn("--apply", apply.read_text(encoding="utf-8"))
+        self.assertIn("OnUnitActiveSec=15s", timer.read_text(encoding="utf-8"))
+
+    def test_generation_and_index_aliases_resolve_inside_a_fake_root(self) -> None:
+        function = _function_source("compose_install_target_content")
+        app_alias_command = next(
+            line.strip()
+            for line in function.splitlines()
+            if line.strip().startswith('ln -s ') and '"$rootfs/opt/greia-os"' in line
+        )
+        index_alias_command = next(
+            line.strip()
+            for line in function.splitlines()
+            if line.strip().startswith('ln -s ') and '"$image_index"' in line
+        )
+        with tempfile.TemporaryDirectory(prefix="greia-fake-root-links-") as temporary:
+            rootfs = Path(temporary) / "rootfs"
+            script = f'''\
+rootfs="$ROOTFS"
+image_index="$rootfs/usr/share/greia/activity-index-v1.json"
+mkdir -p "$rootfs/opt/greia-software/generations/base/src/greia_platform"
+mkdir -p "$rootfs/usr/share/greia"
+printf '%s\\n' 'print("inside image")' > "$rootfs/opt/greia-software/generations/base/src/greia_platform/probe.py"
+printf '%s\\n' '{{"schema_version":1,"activities":[]}}' > "$rootfs/opt/greia-software/generations/base/activity-index-v1.json"
+{app_alias_command}
+{index_alias_command}
+'''
+            environment = dict(os.environ)
+            environment["ROOTFS"] = str(rootfs)
+            subprocess.run(
+                ["bash", "-eu", "-c", script],
+                check=True,
+                shell=False,
+                env=environment,
+            )
+
+            application_alias = rootfs / "opt/greia-os"
+            index_alias = rootfs / "usr/share/greia/activity-index-v1.json"
+            resolved_root = rootfs.resolve()
+            resolved_app = application_alias.resolve(strict=True)
+            resolved_index = index_alias.resolve(strict=True)
+            self.assertTrue(resolved_app.is_relative_to(resolved_root))
+            self.assertTrue(resolved_index.is_relative_to(resolved_root))
+            self.assertEqual(
+                (application_alias / "src/greia_platform/probe.py").read_text("utf-8"),
+                'print("inside image")\n',
+            )
+            self.assertEqual(
+                index_alias.read_text("utf-8"),
+                '{"schema_version":1,"activities":[]}\n',
+            )
 
     def test_every_catalogued_runtime_file_is_installed(self) -> None:
         shared = tomllib.loads(

@@ -557,6 +557,27 @@ class SharedArtifactVerifierTests(unittest.TestCase):
                     "etc/modprobe.d/greia-audio.conf",
                     "usr/local/lib/greia-os/prepare-developer-ssh"):
             put(rel, (overlay / rel).read_text(encoding="utf-8"))
+        for rel in (
+            "etc/systemd/system/greia-software-update-recover.service",
+            "etc/systemd/system/greia-software-update-apply.service",
+            "etc/systemd/system/greia-software-update-apply.timer",
+        ):
+            put(rel, (overlay / rel).read_text(encoding="utf-8"))
+        put("usr/local/lib/greia-os/software-update-bootstrap.py",
+            (overlay / "usr/local/lib/greia-os/software-update-bootstrap.py").read_text(encoding="utf-8"))
+        os.chmod(root / "usr/local/lib/greia-os/software-update-bootstrap.py", 0o755)
+        put("etc/greia-os/software-update-bootstrap.json", '{"schema_version":1}\n')
+        put("opt/greia-software/generations/base/activity-index-v1.json", "{}\n")
+        (root / "opt/greia-os").symlink_to("greia-software/generations/base")
+        (root / "usr/share/greia/activity-index-v1.json").parent.mkdir(parents=True, exist_ok=True)
+        (root / "usr/share/greia/activity-index-v1.json").symlink_to(
+            "../../../opt/greia-os/activity-index-v1.json"
+        )
+        wants = root / "etc/systemd/system/timers.target.wants"
+        wants.mkdir(parents=True, exist_ok=True)
+        (wants / "greia-software-update-apply.timer").symlink_to(
+            "../greia-software-update-apply.timer"
+        )
         put("etc/greia-os/developer-remote", "profile=legacy-x86-i686-rc\n")
         put("etc/greia-os/boot-console-policy", policy + "\n")
         put("etc/greia-os/image-profile.json", '{"boot": {"console_policy": "quiet"}}\n')

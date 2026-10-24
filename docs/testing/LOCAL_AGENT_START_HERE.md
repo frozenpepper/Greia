@@ -45,12 +45,18 @@ and first-boot lifecycle authorization.
 
 Install/update/release work follows the ADR 0036 successor plan,
 `docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md`.
-Session 03 closed on 2026-09-23; Session 04 remains OPEN for the real A/B
-install/update/rollback lifecycle. The current external-machine work order is
-`docs/testing/2026-10-23_SYSTEM_UPDATE_LINUX_ACCEPTANCE.md`. It includes current
-Parent delivery/restart acceptance and exact evidence requirements. Run its
-Linux build/VM steps on the other machine requested by the owner; physical
-media installation still requires an identified disposable target.
+Session 03 closed on 2026-09-23; Session 04 remains OPEN. Run both external
+work orders on the other Linux machine requested by the owner:
+
+- `docs/testing/2026-10-23_SYSTEM_UPDATE_LINUX_ACCEPTANCE.md` owns BIOS
+  installation/boot, PERSIST, A/B slot transitions, v3 full-system update,
+  interruption and rollback.
+- `docs/testing/2026-10-24_SOFTWARE_UPDATE_ACCEPTANCE.md` owns typed
+  `.greia_update` Python, built-in/Parent Activities, combined generation,
+  durable Parent receipt, single-root operation and application recovery.
+
+Keep each proof separate; physical media installation still requires an
+identified disposable target.
 
 Old POSTR1-P1/Gate-P5 sequencing does not supersede Session 04. The
 architecture-remediation plan remains active for its non-lifecycle work.

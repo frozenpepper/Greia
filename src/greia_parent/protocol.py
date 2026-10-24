@@ -37,6 +37,16 @@ RESOURCES = (
         ("POST",),
     ),
     ParentApiResource(
+        "system_update_package",
+        f"{API_BASE}/system/update/package",
+        ("POST",),
+    ),
+    ParentApiResource(
+        "system_update_package_restart",
+        f"{API_BASE}/system/update/package/restart",
+        ("POST",),
+    ),
+    ParentApiResource(
         "system_update_check",
         f"{API_BASE}/system/update/check",
         ("POST",),
@@ -138,6 +148,7 @@ CAPABILITIES = {
     "paired_devices.manage": True,
     "system.update.read": True,
     "system.update.upload": False,
+    "system.update.package.install": False,
     "system.update.activate": False,
     "system.update.check": False,
     "system.update.prepare": False,

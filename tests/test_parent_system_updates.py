@@ -41,6 +41,16 @@ class ParentSystemUpdateTests(unittest.TestCase):
             "/api/v1/system/update/bundle",
         )
         self.assertEqual(by_name["system_update_bundle"].methods, ("POST",))
+        self.assertEqual(
+            by_name["system_update_package"].path,
+            "/api/v1/system/update/package",
+        )
+        self.assertEqual(by_name["system_update_package"].methods, ("POST",))
+        self.assertEqual(
+            by_name["system_update_package_restart"].path,
+            "/api/v1/system/update/package/restart",
+        )
+        self.assertEqual(by_name["system_update_package_restart"].methods, ("POST",))
 
     def test_normal_parent_api_reports_update_upload_and_activation_unavailable(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -52,10 +62,13 @@ class ParentSystemUpdateTests(unittest.TestCase):
             self.assertTrue(capabilities["system.update.read"])
             self.assertFalse(capabilities["system.update.upload"])
             self.assertFalse(capabilities["system.update.activate"])
+            self.assertFalse(capabilities["system.update.package.install"])
             status = app.system_update_payload()
             self.assertEqual(status["state"], "idle")
             self.assertFalse(status["upload_available"])
             self.assertFalse(status["activation_available"])
+            self.assertFalse(status["software_update"]["available"])
+            self.assertIsNone(status["software_update"]["job"])
 
     def test_explicit_developer_upload_does_not_enable_activation(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

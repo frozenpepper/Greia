@@ -2172,6 +2172,102 @@ export const CHROME_TRANSLATIONS = Object.freeze({
     "es": "Estado de actualización del sistema",
     "fr": "État des mises à jour du système"
   },
+  "device.update.package.title": {
+    "en": "Install a Greia software package",
+    "it": "Installa un pacchetto software Greia",
+    "es": "Instalar un paquete de software de Greia",
+    "fr": "Installer un paquet logiciel Greia"
+  },
+  "device.update.package.help": {
+    "en": "Choose a .greia_update file. Upload & install authorizes Greia to validate and install it on the device. After Greia accepts it, you can close this app. Full-system updates wait for you to choose when Greia restarts.",
+    "it": "Scegli un file .greia_update. Carica e installa autorizza Greia a verificarlo e installarlo sul dispositivo. Dopo l’accettazione puoi chiudere l’app. Gli aggiornamenti completi attendono che tu scelga quando riavviare Greia.",
+    "es": "Elige un archivo .greia_update. Subir e instalar autoriza a Greia a validarlo y aplicarlo en el dispositivo. Cuando Greia lo acepte, puedes cerrar esta app. Las actualizaciones completas esperan a que elijas cuándo reiniciar Greia.",
+    "fr": "Choisissez un fichier .greia_update. Envoyer et installer autorise Greia à le vérifier et à l’installer sur l’appareil. Après son acceptation, vous pouvez fermer cette application. Les mises à jour complètes attendent votre choix pour redémarrer Greia."
+  },
+  "device.update.package.send": {
+    "en": "Upload & install",
+    "it": "Carica e installa",
+    "es": "Subir e instalar",
+    "fr": "Envoyer et installer"
+  },
+  "device.update.package.choose": {
+    "en": "Choose a .greia_update package first.",
+    "it": "Seleziona prima un pacchetto .greia_update.",
+    "es": "Selecciona primero un paquete .greia_update.",
+    "fr": "Choisissez d’abord un paquet .greia_update."
+  },
+  "device.update.package.unavailable": {
+    "en": "This Greia needs its software update bootstrap before it can install these packages.",
+    "it": "Questa Greia richiede il bootstrap degli aggiornamenti software per installare questi pacchetti.",
+    "es": "Esta Greia necesita el sistema base de actualización para instalar estos paquetes.",
+    "fr": "Cette Greia doit disposer du système de mise à jour avant d’installer ces paquets."
+  },
+  "device.update.package.sent": {
+    "en": "Greia saved the package and will continue preparing it. You can close this app.",
+    "it": "Greia ha salvato il pacchetto e continuerà a prepararlo. Puoi chiudere l’app.",
+    "es": "Greia ha guardado el paquete y seguirá preparándolo. Puedes cerrar esta app.",
+    "fr": "Greia a enregistré le paquet et va poursuivre sa préparation. Vous pouvez fermer cette application."
+  },
+  "device.update.package.received": {
+    "en": "Received on Greia",
+    "it": "Ricevuto su Greia",
+    "es": "Recibido en Greia",
+    "fr": "Reçu sur Greia"
+  },
+  "device.update.package.queued": {
+    "en": "Update queued on Greia.",
+    "it": "Aggiornamento in coda su Greia.",
+    "es": "Actualización en cola en Greia.",
+    "fr": "Mise à jour en attente sur Greia."
+  },
+  "device.update.package.validating": {
+    "en": "Greia is validating the package…",
+    "it": "Greia sta verificando il pacchetto…",
+    "es": "Greia está validando el paquete…",
+    "fr": "Greia vérifie le paquet…"
+  },
+  "device.update.package.waiting_for_idle": {
+    "en": "Greia will install the update when the profile picker is idle…",
+    "it": "Greia installerà l’aggiornamento quando la scelta del profilo è inattiva…",
+    "es": "Greia instalará la actualización cuando la pantalla de perfiles esté inactiva…",
+    "fr": "Greia installera la mise à jour lorsque le sélecteur de profil sera inactif…"
+  },
+  "device.update.package.applying": {
+    "en": "Greia is installing the update…",
+    "it": "Greia sta installando l’aggiornamento…",
+    "es": "Greia está instalando la actualización…",
+    "fr": "Greia installe la mise à jour…"
+  },
+  "device.update.package.restarting": {
+    "en": "Greia is restarting…",
+    "it": "Greia si sta riavviando…",
+    "es": "Greia se está reiniciando…",
+    "fr": "Greia redémarre…"
+  },
+  "device.update.package.applied": {
+    "en": "Greia installed the update.",
+    "it": "Greia ha installato l’aggiornamento.",
+    "es": "Greia ha instalado la actualización.",
+    "fr": "Greia a installé la mise à jour."
+  },
+  "device.update.package.rolled_back": {
+    "en": "Greia restored the previous version.",
+    "it": "Greia ha ripristinato la versione precedente.",
+    "es": "Greia restauró la versión anterior.",
+    "fr": "Greia a restauré la version précédente."
+  },
+  "device.update.package.failed": {
+    "en": "Greia could not complete the update.",
+    "it": "Greia non è riuscita a completare l’aggiornamento.",
+    "es": "Greia no pudo completar la actualización.",
+    "fr": "Greia n’a pas pu terminer la mise à jour."
+  },
+  "device.update.package.ready_to_restart": {
+    "en": "The full-system update is ready. Choose when Greia can restart.",
+    "it": "L’aggiornamento completo è pronto. Scegli quando riavviare Greia.",
+    "es": "La actualización completa está lista. Elige cuándo reiniciar Greia.",
+    "fr": "La mise à jour complète est prête. Choisissez quand redémarrer Greia."
+  },
   "device.update.received": {
     "en": "Update {version} received.",
     "it": "Aggiornamento {version} ricevuto.",

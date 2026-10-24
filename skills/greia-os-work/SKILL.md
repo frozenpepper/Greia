@@ -76,15 +76,27 @@ remaining non-lifecycle obligations.
 
 Session 03 was closed by the Linux owner-command release build on 2026-09-23.
 Session 04 remains OPEN: fresh A/B install, first acceptance, alternating
-updates and rollback must execute using real current bundles. The current
-owner-requested external-machine work order is:
+updates and rollback must execute using real current bundles. The owner-
+requested external-machine work orders are:
 
 `docs/testing/2026-10-23_SYSTEM_UPDATE_LINUX_ACCEPTANCE.md`
+for BIOS/A-B/PERSIST/slot lifecycle acceptance, and
+`docs/testing/2026-10-24_SOFTWARE_UPDATE_ACCEPTANCE.md`
+for typed application packages, durable receipt, single-root operation and
+generation recovery.
 
 The 2026-10-23 Parent delivery, persistent mounts and restart integration are
 source work. Do not call them installed/device acceptance before that work
 order runs. `legacy-x86-i686` and its RC profile remain single-root and cannot
 activate A/B updates; do not advertise a software-only migration.
+
+ADR 0038 separately supports Python, built-in Activity, Parent Activity and
+combined `.greia_update` application packages on single-root or A/B images
+that contain the bootstrap marker/helper. This updates application code; it
+does not convert a single-root disk to A/B or make full-system updates
+available there. Read `docs/development/GREIA_SOFTWARE_UPDATE_PACKAGES.md`
+before building or accepting these packages. A legacy image without the
+bootstrap has no package-upload capability or manual bootstrap CLI.
 
 The old signed `.greiaupdate` v2 flow and release signing keys are
 superseded by ADR 0036 and are not the normal production route; older
@@ -535,11 +547,15 @@ Because these files changed after the last physically tested Home candidate, use
 
 ## System update mechanism
 
-Current lifecycle authority is ADR 0036 plus the 2026-09-15 lifecycle plan:
+Application package authority is ADR 0038. Full-system release/slot authority
+remains ADR 0036 plus the 2026-09-15 lifecycle plan:
 
 ```text
+docs/adr/0038-lightweight-application-update-packages.md
 docs/adr/0036-unified-system-slot-releases-and-platform-install-media.md
 docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md
+docs/development/GREIA_SOFTWARE_UPDATE_PACKAGES.md
+docs/testing/2026-10-24_SOFTWARE_UPDATE_ACCEPTANCE.md
 ```
 
 Historical context only (signing requirements superseded by ADR 0036; the
@@ -551,6 +567,14 @@ docs/adr/0030-platform-owned-transactional-system-updates.md
 docs/product/SYSTEM_UPDATES.md
 docs/development/GREIA_SYSTEM_UPDATE_RELEASE_WORKFLOW.md
 ```
+
+Use `tools/greia_software_update.py` for typed Python/Activity/combined
+packages and full-system wrappers. Keep Python snapshots within the curated
+source/runtime allowlist; do not ship venvs, wheels, native dependencies,
+global assets or the Parent HTML integrity-pin pair. Built-in and Parent
+Activity sources retain separate trust. Only `full_system` uses the explicit
+restart affordance, and only on an A/B-ready image. Builder/inspect tests do
+not prove installed Linux acceptance.
 
 ## Localization / language / profile presentation / child letter case
 

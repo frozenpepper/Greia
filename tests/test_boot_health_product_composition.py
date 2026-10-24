@@ -382,11 +382,17 @@ class BootHealthProductCompositionTests(unittest.TestCase):
                 probe = root / "usr/local/lib/greia-os/greia-audio-endpoint-probe"
                 probe.parent.mkdir(parents=True)
                 probe.write_text("#!/bin/sh\n", encoding="utf-8")
+                bootstrap = probe.with_name("software-update-bootstrap.py")
+                bootstrap.write_text("#!/usr/bin/python3\n", encoding="utf-8")
+                bootstrap.chmod(0o755)
                 script = f"""
 set -Eeuo pipefail
 source {shlex.quote(str(compose))}
 systemctl() {{
   printf 'SYSTEMCTL %s\\n' "$*"
+}}
+chown() {{
+  :
 }}
 STORAGE_LAYOUT_ADAPTER={layout}
 compose_configure_systemd {shlex.quote(str(root))} target
@@ -421,7 +427,8 @@ compose_configure_systemd {shlex.quote(str(root))} target
         self.assertEqual(service.get("Service.User"), ["root"])
         self.assertEqual(service.get("Service.RestrictAddressFamilies"), ["AF_UNIX"])
         self.assertEqual(
-            service.get("Unit.Requires"), ["greia-boot-health.socket"]
+            set(" ".join(service.get("Unit.Requires", [])).split()),
+            {"greia-boot-health.socket", "greia-software-update-recover.service"},
         )
         self.assertNotIn("Install.WantedBy", service)
         socket_text = _read_unit_text("greia-boot-health.socket")

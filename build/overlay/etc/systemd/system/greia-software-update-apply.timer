@@ -1,0 +1,13 @@
+[Unit]
+Description=Retry durable Greia software-update jobs
+ConditionPathExists=/etc/greia-os/software-update-bootstrap.json
+
+[Timer]
+OnBootSec=25s
+OnUnitActiveSec=15s
+AccuracySec=2s
+Persistent=true
+Unit=greia-software-update-apply.service
+
+[Install]
+WantedBy=timers.target

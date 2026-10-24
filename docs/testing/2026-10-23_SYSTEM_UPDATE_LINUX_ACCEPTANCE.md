@@ -14,6 +14,16 @@ explicit restart at the profile picker, healthy acceptance or rollback, and
 surviving child data. No release signing, anti-tampering system, penetration
 exercise or new deployment framework belongs in this acceptance.
 
+**Scope update (2026-10-24):** This work order still owns blank-disk BIOS
+installation, A/B slot, PERSIST, v3 bundle health and rollback acceptance.
+Typed `.greia_update` Python/Activity/combined application packages and their
+single-root/bootstrap requirements are a separate acceptance in
+`2026-10-24_SOFTWARE_UPDATE_ACCEPTANCE.md`. The source SHA and older mobile or
+HTML pins in the historical command example below are not the current
+package implementation boundary; use the exact final committed `main` SHA and
+matching Parent pins recorded in current `HANDOVER.md`. Do not execute against
+the earlier pinned SHA and report package acceptance.
+
 ## 1. Machine and source
 
 Read `SETUP.md`, `AGENTS.md`, `HANDOVER.md`, the lifecycle plan and the OS-work

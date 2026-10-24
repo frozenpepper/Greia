@@ -1,8 +1,8 @@
 # Greia System Updates — Product and Operator Requirements
 
 **Status:** accepted product direction; implementation incremental
-**Reviewed:** 2026-10-23
-**Architecture owner:** ADR 0036 (supersedes ADR 0030's release-signing requirements where they conflict)  
+**Reviewed:** 2026-10-24
+**Architecture owner:** ADR 0038 for typed application packages; ADR 0036 for full-system A/B releases (both supersede ADR 0030's signing requirements where they conflict)
 **Current lifecycle owner:** 2026-09-15 completion plan, Session 04 (OPEN)
 
 ## 1. Parent-facing goal
@@ -28,6 +28,12 @@ Update ready
 
 The child is never interrupted automatically in the middle of an Activity merely because an update exists.
 
+Application-code packages use one authenticated **Upload & install** action.
+Greia may apply a Python, Activity or combined application generation after
+the complete upload is durably accepted; the Parent app and phone may then
+close. Only a full-system A/B package waits for the parent to request a
+separate restart.
+
 After reboot:
 
 ```text
@@ -51,7 +57,8 @@ The Parents client may:
 - display current OS release and update state;
 - ask Greia to check for an update;
 - authorize download/preparation;
-- upload a `.greiaupdate` file;
+- upload a typed `.greia_update` application package or a `.greiaupdate`
+  full-system bundle;
 - show progress/status/error classifications;
 - request restart once Greia reports the candidate ready;
 - show success/rollback after reconnection.
@@ -68,7 +75,7 @@ The same API is used by the built-in responsive HTML client and future native cl
 
 ## 3. Update sources
 
-### Online
+### Online full-system update
 
 The preferred normal path is device-to-server:
 
@@ -78,29 +85,41 @@ Parent authorizes -> Greia downloads -> Greia verifies/stages
 
 The phone/browser does not need to relay the full release and may disconnect after authorization.
 
-The current source implements this online path. Manual file upload remains a
-receive-only developer path: preparing that candidate currently still needs
-an online catalog selection. Fully offline Parent staging and USB discovery
-remain open work; do not describe upload success as installed success.
+The online catalog/check/prepare path downloads and stages full-system v3
+bundles. It remains separate from the local `.greia_update` package upload.
+The legacy manual `.greiaupdate` bundle endpoint remains receive-only and
+preparing that candidate still needs an online catalog selection. Do not
+describe that legacy upload as installed success.
 
 ### Parent-uploaded file
 
-For development, offline distribution or manual recovery:
+For offline package distribution or manual recovery:
 
 ```text
-parent computer has release.greiaupdate
--> upload through Greia Parents or tooling
--> Greia receives the same artifact
--> privileged updater re-checks machine/profile/board compatibility and PERSIST schema readability before any system write
+parent has release.greia_update
+-> upload through Greia Parents or its package endpoint
+-> Greia durably acknowledges receipt and queues installation
+-> installed root bootstrap validates and applies without the phone, Parent process, catalog or internet
 ```
+
+The package types are `python_platform`, `activities`, `combined` and
+`full_system`. Python and Activity packages use the image's curated runtime;
+they do not install Linux packages or private Python environments. A
+`full_system` type wraps the existing v3 `.greiaupdate` and keeps its A/B
+compatibility, explicit restart and boot-health/rollback route. See
+`docs/development/GREIA_SOFTWARE_UPDATE_PACKAGES.md` for the exact manifest,
+CLI and status contract.
 
 ### USB/SD
 
 The same `.greiaupdate` file may later be discovered from removable media. Removable media is untrusted and never autorun; Greia offers the update only after bounded discovery and Parent authorization.
 
-## 4. One artifact
+## 4. Full-system A/B bundle
 
-All sources use exactly the same unsigned `.greiaupdate` v3 bundle. There is no separate “online update format” and “offline installer patch format.”
+The typed `.greia_update` package is the Parent-uploadable application
+container. Its `full_system` type wraps the same unsigned `.greiaupdate` v3
+bundle used by the existing online/full-system route. There is no second OS
+image writer.
 
 Current bundle contract is source-owned by:
 
@@ -278,38 +297,48 @@ The upload endpoint receives bytes only. It does not grant slot-write authority 
 ## 6. Current implementation boundary
 
 The owner release CLI has produced real Acer bundles (Session 03 closed
-2026-09-23). The 2026-10-23 integration adds the device-owned online job,
-Parent controls, mounted PERSIST/boot-control composition and idle-picker
-restart. These changes are **SOURCE** work; the current Linux/VM/device
-acceptance is `docs/testing/2026-10-23_SYSTEM_UPDATE_LINUX_ACCEPTANCE.md`.
-Session 04 remains OPEN.
+2026-09-23). ADR 0038 adds source for typed `.greia_update` packages and a
+stable root apply/recovery bootstrap. Python, built-in Activity, Parent
+Activity and combined application packages are designed to run on a
+single-root image when that image contains the bootstrap marker/helper. They
+do not convert single-root storage into A/B. Full-system activation remains
+limited to the A/B route.
 
-`legacy-x86-i686` and `legacy-x86-i686-rc` still use single-root storage and
-omit the update package set. They cannot activate transactional updates;
-there is no automatic single-root-to-A/B conversion. The A/B candidate is
-`acer-aspire-one-i386-ab`, with two 1536 MiB slots and shared PERSIST.
-Runtime readiness must prove actual mounted state and accepted first boot;
-profile names or the existence of slot B are insufficient.
+The package builder and focused package-format tests are SOURCE evidence.
+Linux build/install/runtime acceptance is
+`docs/testing/2026-10-24_SOFTWARE_UPDATE_ACCEPTANCE.md`; the existing A/B,
+blank-disk BIOS and slot rollback predicates remain in
+`docs/testing/2026-10-23_SYSTEM_UPDATE_LINUX_ACCEPTANCE.md`. Session 04 stays
+OPEN until those external predicates pass. An older installed image without
+the stable bootstrap does not advertise `.greia_update`; there is no manual
+bootstrap CLI. Use a current installer/reimage or a supported A/B full-system
+route to an image carrying the helper.
 
 ```text
-owner release CLI / v3 bundle        implemented; prior Linux build evidence
-Parent status / bounded file inbox  implemented
-online check/download/prepare job   source implemented; runtime UNPROVEN
-explicit idle-picker restart        source implemented; runtime UNPROVEN
-A/B writer / health / rollback      source integrated; current lifecycle OPEN
-single-root activation             unavailable
-USB/SD automatic update discovery   DEFERRED
-Python-only delta transport         DEFERRED, unmeasured
+v3 full-system release builder       implemented; prior Linux build evidence
+typed .greia_update format/builder   SOURCE reviewed; final gate pending
+Parent durable package receipt      SOURCE reviewed; final gate pending
+stable application apply/recovery   SOURCE reviewed; Linux proof OPEN
+built-in and Parent Activity updates SOURCE reviewed; Linux proof OPEN
+full-system A/B writer/health       existing route; Session 04 OPEN
+USB/SD automatic package discovery DEFERRED
+Python-only delta transport        not implemented or measured
 ```
 
-The Parent inbox validates archive structure and the manifest's declared
-payload hash/size before publishing exact bytes under one fixed
-Greia-owned candidate name, but intentionally performs no signature
-check: there is no signature in v3. The privileged
-`SystemUpdateService` re-checks exact machine/profile/board compatibility
-and PERSIST schema readability before any inactive-slot write.
+The legacy Parent inbox validates `.greiaupdate` archive facts before
+publishing the fixed candidate, and the privileged `SystemUpdateService`
+re-checks exact machine/profile/board compatibility and PERSIST schema
+readability before any inactive-slot write. The `.greia_update` endpoint
+streams the typed outer package into one durable job; the stable root
+bootstrap then validates member sizes/digests, canonical Activity packages,
+runtime syntax and declared target selectors before staging. Both formats
+use ordinary checksums for corruption detection and contain no signature
+authority.
 
-The inbox is content-addressed, keeps only the current untrusted candidate, cleans stale receive temporaries and preserves a free-space reserve. A newly received candidate cannot overwrite the bytes of an existing content-addressed artifact.
+The bounded stores keep one current accepted job/candidate, clean stale
+receive temporaries and preserve free-space reserves. A second upload cannot
+race an active job. Application generation staging keeps the prior complete
+generation and publishes one pointer only after validation.
 
 No code may silently convert “backend unavailable” into in-place system mutation.
 
@@ -324,13 +353,20 @@ system.update.check
 system.update.prepare
 system.update.restart
 system.update.activate
+system.update.package.install
 ```
 
 `system.update.read` is available so all clients can explain system-update status honestly.
 
-`system.update.upload` is false by default while the Parent transport is provisional plaintext HTTP. It may be explicitly enabled on the developer/owner lane to exercise the bounded inbox.
+`system.update.upload` controls the legacy full-system bundle receive route.
+`system.update.package.install` is advertised only when the new bootstrap
+marker and stable helper are present. The typed package endpoint uses the
+authenticated Parent API and is not inferred merely from file selection.
 
-`system.update.activate` remains false on current single-root images regardless of upload availability.
+`system.update.activate` describes full-system slot activation and remains
+unavailable where no A/B backend is ready. It does not gate application-code
+packages, which have a separate typed apply path and still require the
+profile-picker idle fence.
 
 The installed Parent daemon remains the unprivileged `greiapanel` service with `NoNewPrivileges=yes`, `ProtectSystem=strict` and an empty capability bounding set. Slot writing/reboot/boot selection live in the privileged typed update service, not in the network-facing HTTP daemon.
 
@@ -346,10 +382,12 @@ The API is source-owned by `greia_parent.update_api` and `protocol`:
 
 | Request | Body | Result |
 | --- | --- | --- |
-| GET `/api/v1/system/update` | none | cached inbox/job/readiness/catalog status |
+| GET `/api/v1/system/update` | none | cached inbox/job/readiness/catalog plus `software_update` job/status |
 | POST `/api/v1/system/update/check` | `{}` | 202 with durable `job` |
 | POST `/api/v1/system/update/prepare` | `{"release_id":"..."}` | 202 with durable `job` |
 | POST `/api/v1/system/update/restart` | `{}` | 202 with durable `job` |
+| POST `/api/v1/system/update/package` | binary `.greia_update`, typed media type | 202 after complete bytes and job are durable |
+| POST `/api/v1/system/update/package/restart` | `{}` | 202 only for a full-system job in `ready_to_restart` |
 
 GET retains `state`, `release`, `upload_available`, `activation_available`
 and adds `activation_reason`, `check_available`, `prepare_available`,
@@ -357,13 +395,15 @@ and adds `activation_reason`, `check_available`, `prepare_available`,
 capabilities as readiness changes. The catalog contains compatible release
 facts, never a caller-selected download URL or filesystem path.
 
-`UpdateDeliveryService` owns one bounded durable background operation;
-`UpdateJobStore`, `UpdateCatalogClient` and `UpdateBundleReceiver` own storage,
-metadata/network and streaming respectively. The existing fixed inbox and
-`SystemUpdateService` remain the verification/slot-writing owners. Status
-reads never wait for root's serial staging operation. Closing the Parent app
-does not cancel an accepted job. A Parent-process restart reconciles staging
-before retrying; a reconnect never automatically authorizes reboot.
+`UpdateDeliveryService` owns the online check/download/prepare operation;
+`UpdateJobStore`, `UpdateCatalogClient` and `UpdateBundleReceiver` own its
+storage, metadata/network and streaming. `SoftwareUpdateJobStore` owns one
+durable `.greia_update` receipt and public status; the stable root bootstrap
+and typed apply service own package inspection, application generation,
+child-idle activation and recovery. The existing `SystemUpdateService` remains
+the full-system slot-writing owner. Status reads never wait for root's serial
+staging operation. Closing the Parent app does not cancel an accepted job. A
+reconnect never automatically authorizes full-system reboot.
 
 The root broker accepts only semantic Parent operations. Restart holds the
 shared profile-session lock, requires explicit picker-idle evidence, rechecks
@@ -371,11 +411,15 @@ the staged transaction and records a volatile fence before systemd handoff.
 New profile selection uses the same lock/fence. Missing/corrupt state refuses
 restart. Successful staging is not healthy boot acceptance.
 
-Source implementation states: `checking`, `checked`, `queued`, `downloading`,
+Online full-system delivery states: `checking`, `checked`, `queued`, `downloading`,
 `receiving`, `verifying`, `staging`, `ready_to_restart`, `restart_pending`,
 `updated`, `rolled_back`, `failed`. Exact public fields and capability gates
-remain source-owned. Runtime acceptance must exercise lost responses,
-reconnection, first boot and rollback through both Parent clients.
+remain source-owned. The separate typed package job has finite states
+`queued`, `validating`, `waiting_for_idle`, `applying`, `restarting`,
+`applied`, `rolled_back`, `failed` and `ready_to_restart`; only full-system
+packages can reach the last state. Runtime acceptance must exercise durable
+acknowledgement, Parent/phone disconnection, fresh application readiness,
+rollback and full-system first boot through the Parent clients.
 
 ### 8.1 Selected first channel format: `greia-updates/1` (2026-10-16)
 

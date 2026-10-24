@@ -81,6 +81,23 @@ def _parse_unit(path: Path) -> configparser.ConfigParser:
     return parser
 
 
+def _directive_values(path: Path, section: str, directive: str) -> set[str]:
+    """Collect repeated systemd directives, which systemd treats cumulatively."""
+    current = ""
+    values: set[str] = set()
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith(("#", ";")):
+            continue
+        if line.startswith("[") and line.endswith("]"):
+            current = line[1:-1].strip()
+            continue
+        key, separator, value = line.partition("=")
+        if separator and current == section and key.strip() == directive:
+            values.update(value.split())
+    return values
+
+
 def _installed_enable_tokens() -> set[str]:
     """Units the engine enables for the installed (target) role.
 
@@ -122,8 +139,8 @@ class NativeFdStoreTests(unittest.TestCase):
         for service_rel, socket_name, _, label in CONTRACTS:
             with self.subTest(service=label):
                 parser = _parse_unit(ROOT / service_rel)
-                self.assertIn(socket_name, parser.get("Unit", "Requires"))
-                self.assertIn(socket_name, parser.get("Unit", "After"))
+                self.assertIn(socket_name, _directive_values(ROOT / service_rel, "Unit", "Requires"))
+                self.assertIn(socket_name, _directive_values(ROOT / service_rel, "Unit", "After"))
                 self.assertNotIn("Install", parser.sections())
 
     def test_all_entries_consume_listen_fds_fd3(self) -> None:

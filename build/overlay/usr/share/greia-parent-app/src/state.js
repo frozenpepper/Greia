@@ -23,6 +23,9 @@ export class ParentAppState {
     this.listeners = new Set();
     this.systemUpdatePollTimer = null;
     this.systemUpdatePollInFlight = false;
+    this.softwareUpdateReconcilePending = false;
+    this.softwareUpdateReconcileAttempts = 0;
+    this.softwareUpdateReconcileTarget = null;
     this.disposed = false;
     this.snapshot = Object.freeze({
       phase: "booting",
@@ -258,6 +261,23 @@ export class ParentAppState {
         delete featureErrors.systemUpdateIndex;
       }
     }
+    if (this.softwareUpdateReconcilePending) {
+      this.softwareUpdateReconcileAttempts += 1;
+      if (
+        !result.error
+        && this.#softwareUpdateOperationAccepted(
+          result.value?.software_update,
+          this.softwareUpdateReconcileTarget,
+        )
+      ) {
+        this.softwareUpdateReconcilePending = false;
+        this.softwareUpdateReconcileAttempts = 0;
+        this.softwareUpdateReconcileTarget = null;
+      } else if (this.softwareUpdateReconcileAttempts >= 12) {
+        this.softwareUpdateReconcilePending = false;
+        this.softwareUpdateReconcileTarget = null;
+      }
+    }
     this.publish({
       systemUpdate: result.error ? this.snapshot.systemUpdate : result.value,
       index,
@@ -290,6 +310,22 @@ export class ParentAppState {
     return this.#startSystemUpdateOperation(() => this.api.restartSystemUpdate());
   }
 
+  async uploadSoftwareUpdatePackage(file) {
+    const status = this.snapshot.systemUpdate?.software_update;
+    if (!this.capability("system.update.package.install") || status?.available !== true || status.job && !["applied", "rolled_back", "failed"].includes(status.job.state)) {
+      throw new Error(status?.reason || "This Greia cannot install a software update package");
+    }
+    return this.#startSoftwareUpdateOperation(() => this.api.uploadSoftwareUpdatePackage(file));
+  }
+
+  async restartSoftwareUpdatePackage() {
+    const status = this.snapshot.systemUpdate?.software_update;
+    if (!this.capability("system.update.package.install") || status?.available !== true || status?.restart_available !== true || status?.job?.state !== "ready_to_restart") {
+      throw new Error("This Greia cannot restart into the prepared software update");
+    }
+    return this.#startSoftwareUpdateOperation(() => this.api.restartSoftwareUpdatePackage(), { restart: true });
+  }
+
   async #startSystemUpdateOperation(start) {
     let operationError = null;
     try {
@@ -308,10 +344,119 @@ export class ParentAppState {
     return this.snapshot.systemUpdate;
   }
 
+  async #startSoftwareUpdateOperation(start, { restart = false } = {}) {
+    const previous = this.snapshot.systemUpdate?.software_update || {};
+    let accepted = null;
+    let operationError = null;
+    try {
+      accepted = await start();
+    } catch (error) {
+      operationError = error;
+    }
+    if (!operationError && !this.#hasSoftwareUpdateReceipt(accepted)) {
+      operationError = Object.assign(
+        new Error("Greia did not return a valid software update job receipt"),
+        { code: "invalid_update_receipt", status: 0 },
+      );
+    }
+    const reconciliationTarget = {
+      restart,
+      previousJobId: previous.job?.job_id ?? null,
+      previousRestartAvailable: previous.restart_available === true,
+    };
+    const acceptedJob = !operationError && accepted?.job;
+    if (this.#isSoftwareUpdateJob(acceptedJob)) {
+      const current = this.snapshot.systemUpdate || {};
+      const softwareUpdate = current.software_update || {};
+      this.publish({
+        systemUpdate: {
+          ...current,
+          software_update: {
+            ...softwareUpdate,
+            job: acceptedJob,
+            restart_available: acceptedJob.restart_available === true,
+          },
+        },
+      });
+    }
+    // A lost POST reply is ambiguous: the device may already have durably
+    // accepted the request. Reconcile its status before showing a failure.
+    // If that GET is also lost, retry a bounded number of times in the
+    // background while retaining the prior status.
+    if (operationError) {
+      const statusCode = operationError?.status;
+      const ambiguousReply = operationError?.code === "invalid_update_receipt"
+        || operationError?.code === "network_error"
+        || operationError?.name === "AbortError"
+        || statusCode === 0
+        || (Number.isInteger(statusCode) && statusCode >= 500);
+      if (ambiguousReply) {
+        this.softwareUpdateReconcilePending = true;
+        this.softwareUpdateReconcileAttempts = 0;
+        this.softwareUpdateReconcileTarget = reconciliationTarget;
+      }
+      try {
+        await this.refreshSystemUpdate({ refreshIndex: true });
+      } catch (_) {
+        // The bounded reconciliation poll remains armed after an ambiguous
+        // POST and a failed status read.
+      }
+      const current = this.snapshot.systemUpdate?.software_update || {};
+      if (ambiguousReply && this.#softwareUpdateOperationAccepted(current, reconciliationTarget)) {
+        this.softwareUpdateReconcilePending = false;
+        this.softwareUpdateReconcileAttempts = 0;
+        this.softwareUpdateReconcileTarget = null;
+        this.#syncSystemUpdatePolling();
+        return { job: current.job };
+      }
+      if (ambiguousReply) this.#syncSystemUpdatePolling();
+      throw operationError;
+    }
+    // A reboot or network loss can make the immediate GET fail after the
+    // 202 acknowledgement; the accepted receipt above remains in the snapshot
+    // and active-job polling will reconnect later.
+    await this.refreshSystemUpdate({ refreshIndex: true }).catch(() => undefined);
+    return accepted;
+  }
+
+  #softwareUpdateOperationAccepted(status, target) {
+    if (!target || !status || typeof status !== "object") return false;
+    const job = status.job;
+    if (!this.#isSoftwareUpdateJob(job)) return false;
+    if (target.restart) {
+      return target.previousRestartAvailable === true
+        && job.job_id === target.previousJobId
+        && (job.state !== "ready_to_restart" || status.restart_available !== true);
+    }
+    return job.job_id !== target.previousJobId;
+  }
+
+  #hasSoftwareUpdateReceipt(receipt) {
+    const job = receipt?.job;
+    return this.#isSoftwareUpdateJob(job);
+  }
+
+  #isSoftwareUpdateJob(job) {
+    return Boolean(
+      job
+      && typeof job === "object"
+      && !Array.isArray(job)
+      && typeof job.job_id === "string"
+      && /^[0-9a-f]{32}$/.test(job.job_id)
+      && ["queued", "validating", "waiting_for_idle", "applying", "restarting", "ready_to_restart", "applied", "rolled_back", "failed"].includes(job.state),
+    );
+  }
+
   #syncSystemUpdatePolling() {
     if (this.disposed) return;
     const job = this.snapshot.systemUpdate?.delivery?.job;
-    const active = ["checking", "queued", "downloading", "receiving", "verifying", "staging", "restart_pending"].includes(job?.state);
+    const softwareJob = this.snapshot.systemUpdate?.software_update?.job;
+    const softwareRestartPending = softwareJob?.state === "ready_to_restart"
+      && this.snapshot.systemUpdate?.software_update?.restart_available !== true;
+    const active = ["checking", "queued", "downloading", "receiving", "verifying", "staging", "restart_pending"].includes(job?.state)
+      || ["queued", "validating", "waiting_for_idle", "applying", "restarting"].includes(softwareJob?.state)
+      || softwareRestartPending
+      || (this.softwareUpdateReconcilePending && this.softwareUpdateReconcileAttempts < 12);
     if (!active) {
       if (this.systemUpdatePollTimer !== null) clearTimeout(this.systemUpdatePollTimer);
       this.systemUpdatePollTimer = null;

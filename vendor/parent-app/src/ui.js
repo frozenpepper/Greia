@@ -1,4 +1,6 @@
 import { tr } from "./localization.js";
+import { MAX_SOFTWARE_UPDATE_BYTES } from "./api.js";
+export { MAX_SOFTWARE_UPDATE_BYTES };
 export const NAV_ITEMS = [
   { id: "home", labelKey: "nav.home", icon: "home", subtitleKey: "nav.home.subtitle" },
   { id: "children", labelKey: "nav.children", icon: "children", subtitleKey: "nav.children.subtitle" },

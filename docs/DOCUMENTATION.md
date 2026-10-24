@@ -1,7 +1,7 @@
 # Greia Documentation Map and Authority Model
 
 **Status:** LIVING repository-wide documentation contract  
-**Reviewed:** 2026-10-22
+**Reviewed:** 2026-10-24
 **Audience:** contributors, coding agents, reviewers, test operators and Activity authors
 
 ## 1. Purpose
@@ -41,7 +41,7 @@ AWARDS_BADGES_AND_CELEBRATIONS.md
 
 ### 2.3 Normative architecture — accepted ADRs
 
-Accepted ADRs own architectural decisions. Current cross-cutting accepted decisions include ADR 0012 through ADR 0037 where present, especially:
+Accepted ADRs own architectural decisions. Current cross-cutting accepted decisions include ADR 0012 through ADR 0038 where present, especially:
 
 ```text
 0012 platform architecture constitution
@@ -62,6 +62,7 @@ Accepted ADRs own architectural decisions. Current cross-cutting accepted decisi
 0033 fail-soft Activity cross-bindings/dev-noise scrub
 0034 child text letter-case policy
 0037 shared Activity control kit (buttons/HUD/prompt/completion + focus navigation)
+0038 lightweight application update packages and single-generation publication
 ```
 
 `docs/architecture/GREIA_ARCHITECTURE.md` is a living synthesis, not a second ADR system.
@@ -255,6 +256,11 @@ This is a navigation map, not a substitute for reading source.
 | Session/history/events/progression | current owners under `src/greia_platform/` + `src/greia_launcher/event_broker.py`; policies under `runtime/` |
 | System update format/state | `src/greia_platform/system_updates.py` |
 | System update operator CLI | `tools/greia_update.py` |
+| Typed application update format/inspection | `src/greia_platform/software_update_package.py`, `src/greia_platform/software_update_package_builder.py` |
+| Typed application update build/inspect CLI | `tools/greia_software_update.py` |
+| Durable application update job and root apply/recovery | `src/greia_platform/software_update_jobs.py`, `src/greia_platform/software_update_apply.py`, `src/greia_platform/software_update_generation.py`, `build/overlay/usr/local/lib/greia-os/software-update-bootstrap.py` |
+| Application update operator guide | `docs/development/GREIA_SOFTWARE_UPDATE_PACKAGES.md` |
+| Application package Linux acceptance | `docs/testing/2026-10-24_SOFTWARE_UPDATE_ACCEPTANCE.md` |
 | Simulator device/workspace/runtime composition | `src/greia_simulator/` |
 | Simulator entry point | `tools/greia_simulator.py` |
 | Voice Production Engine | `tools/greia_voice.py`, `tools/greia_voice_core/` |

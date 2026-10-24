@@ -2,7 +2,8 @@
 Description=Greia OS microphone input level service
 Documentation=file:///opt/greia-os/src/greia_platform/microphone_level_service.py
 Requires=greia-microphone-level.socket
-After=greia-microphone-level.socket
+Requires=greia-software-update-recover.service
+After=greia-microphone-level.socket greia-software-update-recover.service
 
 [Service]
 Type=simple

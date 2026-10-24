@@ -153,6 +153,43 @@ for asset_id in ("bg.meadow_day.home", "character.leo"):
     return 0
   fi
 
+  # The installed application is one atomically switched generation. The
+  # index alias follows that same pointer, and the stable recovery driver
+  # remains outside the replaceable application tree.
+  [[ -L "$root/opt/greia-os" ]] || \
+    _greia_root_fail "$label" "installed /opt/greia-os is not the application-generation symlink"
+  [[ "$(readlink "$root/opt/greia-os")" == "greia-software/generations/base" ]] || \
+    _greia_root_fail "$label" "base application-generation pointer has the wrong target"
+  [[ -s "$root/opt/greia-software/generations/base/activity-index-v1.json" ]] || \
+    _greia_root_fail "$label" "base application generation has no built-in Activity index"
+  [[ -L "$root/usr/share/greia/activity-index-v1.json" ]] && \
+    [[ "$(readlink "$root/usr/share/greia/activity-index-v1.json")" == "../../../opt/greia-os/activity-index-v1.json" ]] || \
+    _greia_root_fail "$label" "built-in Activity index alias does not follow the app generation"
+  [[ -x "$root/usr/local/lib/greia-os/software-update-bootstrap.py" ]] || \
+    _greia_root_fail "$label" "stable software-update bootstrap helper is missing"
+  python3 -I - "$root/etc/greia-os/software-update-bootstrap.json" <<'PY' || \
+    _greia_root_fail "$label" "software-update bootstrap marker is invalid"
+import json, sys
+with open(sys.argv[1], encoding="utf-8") as handle:
+    if json.load(handle) != {"schema_version": 1}:
+        raise SystemExit(1)
+PY
+  local recover_unit="$root/etc/systemd/system/greia-software-update-recover.service"
+  local apply_unit="$root/etc/systemd/system/greia-software-update-apply.service"
+  local timer_unit="$root/etc/systemd/system/greia-software-update-apply.timer"
+  grep -Fq 'ConditionPathExists=/etc/greia-os/software-update-bootstrap.json' "$recover_unit" || \
+    _greia_root_fail "$label" "software-update recovery service lacks its bootstrap condition"
+  grep -Fq -- '--recover' "$recover_unit" || \
+    _greia_root_fail "$label" "software-update recovery service does not run the stable recovery path"
+  grep -Fq 'ConditionPathExists=/var/lib/greia-os/software-updates/pending' "$apply_unit" || \
+    _greia_root_fail "$label" "software-update service is not conditional on the durable pending marker"
+  grep -Fq -- '--apply' "$apply_unit" || \
+    _greia_root_fail "$label" "software-update service does not run the stable apply path"
+  grep -Fq 'OnUnitActiveSec=15s' "$timer_unit" || \
+    _greia_root_fail "$label" "software-update retry timer is not bounded to 15-second intervals"
+  [[ -L "$root/etc/systemd/system/timers.target.wants/greia-software-update-apply.timer" ]] || \
+    _greia_root_fail "$label" "software-update retry timer is not enabled"
+
   # Wi-Fi: iwd's bus policy admits root and netdev only.
   grep -Eq '^SupplementaryGroups=(.*[[:space:]])?netdev([[:space:]]|$)' \
     "$root/etc/systemd/system/greia-launcher.service" || \

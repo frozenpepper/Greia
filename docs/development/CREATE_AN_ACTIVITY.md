@@ -127,7 +127,17 @@ The archive is only **a candidate**. Verify it with the Simulator's **Install Ac
 
 When the installed Greia device **advertises Activity installation as available** through its management capabilities, a parent can use the browser **Greia Parents → Activities → Install Activity**, select a `.greiaactivity` file and follow the confirmation. The device validates the contents and activates an accepted new package. Installed Activities appear through the normal child experience according to each child's visibility rules.
 
-**Current limitation:** ordinary/release builds currently disable network Activity install while Parent transport is provisional. If Install Activity is not offered, it is not a hidden UI bug to bypass. Use the **Simulator** for normal development, or an expressly authorized developer-only deployment procedure from [agent operations](../agents/GREIA_AGENT_OPERATIONS.md) for hardware testing. Never copy arbitrary code into built-in Activity folders on a child's machine.
+If ordinary **Install Activity** is unavailable, use the **Simulator** for
+normal development or an expressly authorized developer-only deployment
+procedure from [agent operations](../agents/GREIA_AGENT_OPERATIONS.md) for
+hardware testing. A device that advertises `system.update.package.install`
+also supports typed `.greia_update` packages for selected Parent-source
+Activity packages through **Greia Parents → System → Updates → Upload &
+install**. That path retains Parent-source trust and requires the installed
+software-update bootstrap; it does not promote an Activity to built-in. See
+the [software-update package guide](GREIA_SOFTWARE_UPDATE_PACKAGES.md) for the
+builder commands and offline/reconnect behavior. Never copy arbitrary code
+into built-in Activity folders on a child's machine.
 
 ## Useful references
 

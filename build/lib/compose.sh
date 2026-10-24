@@ -475,7 +475,8 @@ compose_install_greia_content() {
 compose_install_runtime_assets() {
   local rootfs="$1"
   local project_root="$2"
-  install -d -m 0755 "$rootfs/opt/greia-os/assets"
+  local application_root="${3:-$rootfs/opt/greia-os}"
+  install -d -m 0755 "$application_root/assets"
   # Hide canonical references on the sender only: --delete must also remove
   # references leaked into a reused staging root by older composition rules.
   rsync -a --delete \
@@ -492,22 +493,35 @@ compose_install_runtime_assets() {
     --include '/visual/' \
     --include '/visual/runtime/***' \
     --exclude '*' \
-    "$project_root/assets/" "$rootfs/opt/greia-os/assets/"
+    "$project_root/assets/" "$application_root/assets/"
 }
 
 compose_install_target_content() {
   local rootfs="$1"
   local project_root="$2"
-  local installed_activity_root="$rootfs/opt/greia-os/activities"
+  local generations_root="$rootfs/opt/greia-software/generations"
+  local application_root="$generations_root/base"
+  local installed_activity_root="$application_root/activities"
 
-  install -d -m 0755 "$rootfs/opt/greia-os"
+  install -d -m 0755 "$generations_root"
+  if [[ -e "$rootfs/opt/greia-os" && ! -L "$rootfs/opt/greia-os" ]]; then
+    if [[ -n "$(find "$rootfs/opt/greia-os" -mindepth 1 -maxdepth 1 -print -quit)" ]]; then
+      echo "Refusing to replace a non-empty target /opt/greia-os during generation composition." >&2
+      return 1
+    fi
+    rmdir "$rootfs/opt/greia-os"
+  elif [[ -L "$rootfs/opt/greia-os" ]]; then
+    echo "Refusing to compose over an existing /opt/greia-os generation pointer." >&2
+    return 1
+  fi
+  install -d -m 0755 "$application_root"
 
   # Source/runtime are common to development and release target images.
   # Activities are deliberately composed separately below so an official
   # release can never fall back to "whatever happens to be in activities/".
   rsync -a --delete --exclude '__pycache__' \
     "$project_root/src" "$project_root/runtime" \
-    "$rootfs/opt/greia-os/"
+    "$application_root/"
 
   if [[ "${PIP_RELEASE_BUILD:-0}" == "1" ]]; then
     # P6 release authority: official release composition must come from the
@@ -589,18 +603,14 @@ except ActivityValidationError as exc:
     sys.exit(1)
 GREIA_BUILTIN_GATE_EOF
 
-  compose_install_runtime_assets "$rootfs" "$project_root"
-
-  install -d -m 0755 "$rootfs/usr/lib/python3/dist-packages"
-  printf '%s\n' '/opt/greia-os/src' > "$rootfs/usr/lib/python3/dist-packages/pip_os.pth"
-  chown -R root:root "$rootfs/opt/greia-os"
-  chmod -R a-w "$rootfs/opt/greia-os"
+  compose_install_runtime_assets "$rootfs" "$project_root" "$application_root"
 
   # T33 built-in index: generate from the exact installed Activity directory.
   # In a release build this is the approved staged subset; in ordinary
   # development/test images it is the full source tree copied above.
   local index_staging
   index_staging="$(mktemp "${TMPDIR:-/tmp}/activity-index.XXXXXX")"
+  local generation_index="$application_root/activity-index-v1.json"
   local image_index="$rootfs/usr/share/greia/activity-index-v1.json"
   if ! PYTHONPATH="$project_root/src" python3 "$project_root/tools/build_activity_index.py" \
     --activities "$installed_activity_root" \
@@ -610,8 +620,17 @@ GREIA_BUILTIN_GATE_EOF
     rm -f "$index_staging" "$index_staging.tmp" "$image_index"
     return 1
   fi
-  install -D -m 0644 "$index_staging" "$image_index"
+  install -D -m 0644 "$index_staging" "$generation_index"
   rm -f "$index_staging" "$index_staging.tmp"
+
+  install -d -m 0755 "$rootfs/usr/lib/python3/dist-packages" \
+    "$rootfs/usr/share/greia"
+  printf '%s\n' '/opt/greia-os/src' > "$rootfs/usr/lib/python3/dist-packages/pip_os.pth"
+  ln -s greia-software/generations/base "$rootfs/opt/greia-os"
+  ln -s ../../../opt/greia-os/activity-index-v1.json "$image_index"
+  chown -R root:root "$generations_root"
+  chmod -R a-w "$application_root"
+  chmod 0755 "$generations_root"
 }
 
 compose_install_live_content() {
@@ -831,8 +850,15 @@ compose_configure_systemd() {
     # ships the probe and enables greia-audio-endpoints.service; the installer
     # overlay has no such file, so this must stay inside the target branch.
     chmod 0755 "$rootfs/usr/local/lib/greia-os/greia-audio-endpoint-probe"
+    chmod 0755 "$rootfs/usr/local/lib/greia-os/software-update-bootstrap.py"
+    install -d -m 0755 "$rootfs/etc/greia-os"
+    printf '%s\n' '{"schema_version":1}' \
+      > "$rootfs/etc/greia-os/software-update-bootstrap.json"
+    chmod 0644 "$rootfs/etc/greia-os/software-update-bootstrap.json"
+    chown root:root "$rootfs/etc/greia-os/software-update-bootstrap.json"
     local target_services=(
       greia-first-boot.service
+      greia-software-update-apply.timer
       greia-launcher.service
       greia-parent.service
       greia-boot-health.socket

@@ -42,11 +42,23 @@ For the current physical Acer recovery/build+flash boundary, the dated 2026-08-2
 
 Historical Acer root-mount/service failures remain documented in `docs/INSTALLED_OS_BOOT_POSTMORTEM.md`.
 
+### Lightweight application update packages
+
+`GREIA_SOFTWARE_UPDATE_PACKAGES.md`
+
+Read this for typed `.greia_update` Python, Activity, combined and full-system
+packages, the exact source builder commands, Parent `Upload & install`,
+durable status and the bootstrap boundary. Device acceptance is separate and
+owned by `../testing/2026-10-24_SOFTWARE_UPDATE_ACCEPTANCE.md`.
+
 ### System update release workflow
 
 `GREIA_SYSTEM_UPDATE_RELEASE_WORKFLOW.md`
 
-Read this when creating, inspecting or pushing a `.greiaupdate` release candidate. It gives the concise operator path for:
+Read this when creating or inspecting an unsigned v3 `.greiaupdate` full-system
+candidate for the existing A/B writer. For Python/Activity package types and
+Parent upload, use `GREIA_SOFTWARE_UPDATE_PACKAGES.md`. It gives the concise
+operator path for:
 
 - deriving target identity from a canonical Greia build profile;
 - building the real ext4 slot payload from the composed target root;

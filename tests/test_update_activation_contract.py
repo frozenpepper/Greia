@@ -220,7 +220,8 @@ class ActivationDeclarationTests(unittest.TestCase):
         self.assertIn("greia-system-update.socket", parser.get("Unit", "Requires"))
         self.assertIn("greia-system-update.socket", parser.get("Unit", "After"))
         self.assertEqual(
-            _directive_values(SERVICE_PATH, "After"), {"greia-system-update.socket"}
+            _directive_values(SERVICE_PATH, "After"),
+            {"greia-system-update.socket", "greia-software-update-recover.service"},
         )
         # The service is never wanted directly: no [Install] section at all.
         self.assertNotIn("Install", parser.sections())
@@ -277,10 +278,15 @@ class PreIntroOrderingTests(unittest.TestCase):
                 "greia-system-update.socket",
             ):
                 continue
-            raw = unit_file.read_text(encoding="utf-8")
-            self.assertNotIn(
-                "greia-system-update", raw, msg=unit_file.name
-            )
+            parser = _parse_unit(unit_file)
+            # Ordering references do not pull a unit into the boot transaction.
+            # Guard the systemd dependency directives that actually start it.
+            for directive in ("Requires", "Wants", "Requisite", "BindsTo", "PartOf", "Also"):
+                self.assertNotIn(
+                    "greia-system-update",
+                    parser.get("Unit", directive, fallback=""),
+                    msg=f"{unit_file.name}:{directive}",
+                )
 
     def test_pre_intro_chain_untouched_by_update(self) -> None:
         for name in _PRE_INTRO_UNITS:

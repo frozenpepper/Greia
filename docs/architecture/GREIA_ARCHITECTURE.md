@@ -1,7 +1,7 @@
 # Greia Architecture — Living Overview
 
 **Status:** Living architecture synthesis  
-**Last reviewed:** 2026-08-17  
+**Last reviewed:** 2026-10-24
 **Authority:** accepted ADRs are normative; implemented APIs/schemas are owned by source/runtime declarations; this document synthesizes the cross-cutting architecture.  
 **Scope:** Product philosophy, platform boundaries, Activity model, runtimes, profiles, storage, progression, Awards/badges/celebrations, package/update model, backup/restore, parent controls, hardware abstraction, ARM/i386 strategy, graphics/input direction, security boundaries, and open questions.
 
@@ -152,6 +152,16 @@ The following must be common to all Activities regardless of runtime:
 - runtime-neutral interaction profiles and input semantics;
 - uninstall behavior;
 - compatibility/capability checks.
+
+For update ownership, ADR 0038 adds typed application packages over the same
+platform-owned Activity/package boundary. Python snapshots, built-in
+Activities and combined updates publish through one application generation;
+Parent-source Activity changes retain their Parent trust and PERSIST owner.
+The stable bootstrap and recovery helper remain outside replaceable
+application code. Full Linux/system-slot releases remain the ADR 0036 A/B
+path, wrapped as the `full_system` package type where Parent upload is used.
+Exact format, source roots and status fields live in the package source and
+`docs/development/GREIA_SOFTWARE_UPDATE_PACKAGES.md`.
 
 ## P-03 — Global progression belongs to Greia
 

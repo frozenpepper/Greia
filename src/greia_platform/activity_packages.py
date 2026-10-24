@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import fcntl
+import hashlib
 import json
 import os
 import shutil
@@ -8,7 +9,7 @@ import stat
 import tempfile
 import threading
 import zipfile
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
@@ -40,6 +41,7 @@ MAX_ARCHIVE_BYTES = 32 * 1024 * 1024
 EXTRACTION_SAFETY_CEILING_BYTES = 512 * 1024 * 1024
 MAX_PATH_CHARACTERS = 220
 MAX_COMPRESSION_RATIO = 200
+SOFTWARE_UPDATE_PERSIST_RESERVE_BYTES = 256 * 1024 * 1024
 _INSTALL_LOCK_NAME = ".install.lock"
 
 # T34 active-set generation layout (consumed by T36 launcher composition).
@@ -123,14 +125,33 @@ class ActivityUninstallReceipt:
         }
 
 
+@dataclass(frozen=True, slots=True)
+class ActivityArchiveUpdate:
+    """One manifest-bound Parent-source Activity archive update."""
+
+    activity_id: str
+    version: str
+    archive: zipfile.ZipFile
+
+
+@dataclass(frozen=True, slots=True)
+class ActivityUpdateGeneration:
+    """Prepared PERSIST generation awaiting one explicit pointer publication."""
+
+    previous_generation: str
+    candidate_generation: str
+    receipts: tuple[ActivityInstallReceipt, ...]
+
+
 class ActivityPackageService:
     """Bounded authority for parent-approved local Activity packages.
 
     The service owns installation and removal of the *parent package source*.
     Built-in Activities remain outside this state tree and cannot be removed by
     this service. Uninstall removes package code while deliberately preserving
-    all profile-scoped Activity data. In-place package update/replacement and
-    rollback remain separate R10 work.
+    all profile-scoped Activity data. Parent package updates use this same
+    generation pointer and retain the previous complete set until startup
+    acceptance.
 
     Package mutations are serialized twice: a small in-process lock avoids
     redundant contenders inside one service object, while a private ``flock``
@@ -234,6 +255,294 @@ class ActivityPackageService:
             raise ActivityPackageError(
                 f"could not establish Activity package transaction lock: {exc}"
             ) from exc
+
+    @contextmanager
+    def software_update_lock(self) -> Iterator[None]:
+        """Hold the existing cross-process package lock for one update commit."""
+
+        try:
+            self._ensure_roots()
+            with self._install_lock:
+                with self._process_install_lock():
+                    self._migrate_legacy_active_dir_locked()
+                    yield
+        except ActivityPackageError:
+            raise
+        except OSError as exc:
+            raise ActivityPackageError(
+                f"could not establish Activity package transaction lock: {exc}"
+            ) from exc
+
+    def stage_software_update_generation(
+        self,
+        updates: Sequence[ActivityArchiveUpdate],
+        *,
+        max_entries: int = MAX_ARCHIVE_ENTRIES,
+    ) -> ActivityUpdateGeneration:
+        """Stage a validated batch; call while ``software_update_lock`` is held.
+
+        The method replaces only the listed Parent-source IDs in one complete
+        PERSIST generation. Unlisted packages remain hard-linked from the old
+        generation. It never touches built-in packages or profile data.
+        """
+
+        if not updates:
+            raise ActivityPackageError("Activity update batch is empty")
+        ids = [item.activity_id for item in updates]
+        if len(ids) != len(set(ids)):
+            raise ActivityPackageError("Activity update batch contains duplicate IDs")
+        for item in updates:
+            if (
+                not isinstance(item.activity_id, str)
+                or not item.activity_id
+                or len(item.activity_id) > 96
+                or any(char not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-" for char in item.activity_id)
+                or not isinstance(item.version, str)
+                or not item.version
+                or len(item.version) > 64
+            ):
+                raise ActivityPackageError("Activity update identity is invalid")
+        current_generation = self.active_generation_id() or _INITIAL_GENERATION_ID
+        current_activities = self._generation_activities_path(current_generation)
+        if not current_activities.is_dir():
+            raise ActivityPackageError("current Parent Activity generation is unavailable")
+
+        required_bytes = sum(
+            self._estimate_update_archive_bytes(item, current_activities / item.activity_id)
+            for item in updates
+        )
+        if shutil.disk_usage(self.state_root).free < (
+            required_bytes + SOFTWARE_UPDATE_PERSIST_RESERVE_BYTES
+        ):
+            raise ActivityPackageError(
+                "not enough PERSIST space to stage this Activity update and keep the Greia reserve"
+            )
+
+        temp_root = Path(
+            tempfile.mkdtemp(prefix="software-update-", dir=str(self.staging_root))
+        )
+        staged_trees: dict[str, Path] = {}
+        receipts: list[ActivityInstallReceipt] = []
+        try:
+            for index, item in enumerate(updates):
+                if (
+                    not isinstance(item.activity_id, str)
+                    or not item.activity_id
+                    or len(item.activity_id) > 96
+                    or any(char not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-" for char in item.activity_id)
+                    or not isinstance(item.version, str)
+                    or not item.version
+                    or len(item.version) > 64
+                ):
+                    raise ActivityPackageError("Activity update identity is invalid")
+                package_parent = temp_root / f"package-{index:03d}"
+                package_parent.mkdir(mode=0o700)
+                package_root = package_parent / item.activity_id
+                package_root.mkdir(mode=0o700)
+                previous = current_activities / item.activity_id
+                reuse_root = previous if previous.is_dir() else None
+                self.extract_bounded_archive_contents(
+                    item.archive,
+                    package_root,
+                    reuse_root=reuse_root,
+                    max_entries=max_entries,
+                )
+                scrubbed = scrub_activity_tree(package_root)
+                if scrubbed.failed_removals:
+                    raise ActivityPackageError(
+                        "updated Activity package could not be sanitized"
+                    )
+                registrations = ActivityRegistry(
+                    (
+                        ActivitySource(
+                            package_parent,
+                            PackageTrust.PARENT_TRUSTED_UNSIGNED,
+                            self.SOURCE_ID,
+                        ),
+                    ),
+                    self.runtime,
+                ).discover_registrations()
+                if len(registrations) != 1:
+                    raise ActivityPackageError(
+                        "updated archive must contain exactly one Activity"
+                    )
+                registration = registrations[0]
+                manifest = registration.manifest
+                if manifest.activity_id != item.activity_id or manifest.version != item.version:
+                    raise ActivityPackageError(
+                        "updated Activity identity/version differs from its package record"
+                    )
+                self._make_tree_read_only(package_root)
+                staged_trees[item.activity_id] = package_root
+                receipts.append(
+                    ActivityInstallReceipt(
+                        activity_id=manifest.activity_id,
+                        version=manifest.version,
+                        package_digest=registration.package_digest,
+                        package_trust=PackageTrust.PARENT_TRUSTED_UNSIGNED,
+                        source_id=self.SOURCE_ID,
+                        size_bytes=registration.size_bytes,
+                        size_guideline_bytes=self.runtime.maximum_activity_bytes,
+                    )
+                )
+
+            carry_ids = self._list_generation_package_ids(current_activities)
+            candidate = self._next_generation_id()
+            self._stage_generation(
+                candidate,
+                carry_ids=carry_ids,
+                extra_trees=staged_trees,
+            )
+            return ActivityUpdateGeneration(
+                current_generation,
+                candidate,
+                tuple(receipts),
+            )
+        except ActivityPackageError:
+            raise
+        except (ActivityValidationError, OSError, zipfile.BadZipFile, zipfile.LargeZipFile) as exc:
+            raise ActivityPackageError(str(exc)) from exc
+        finally:
+            self._discard_private_tree(temp_root)
+
+    def _estimate_update_archive_bytes(
+        self, update: ActivityArchiveUpdate, previous_root: Path
+    ) -> int:
+        entries = update.archive.infolist()
+        if not entries or len(entries) > MAX_ARCHIVE_ENTRIES * 8:
+            raise ActivityPackageError("Activity update archive entry count exceeds Greia bounds")
+        seen: set[str] = set()
+        total_uncompressed = 0
+        required = 0
+        for info in entries:
+            relative = self._safe_archive_path(info)
+            canonical = relative.as_posix().casefold()
+            if canonical in seen:
+                raise ActivityPackageError("Activity update contains duplicate portable paths")
+            seen.add(canonical)
+            if info.flag_bits & 0x1:
+                raise ActivityPackageError("encrypted Activity package entries are not supported")
+            mode = (info.external_attr >> 16) & 0xFFFF
+            file_type = stat.S_IFMT(mode)
+            if file_type and not (stat.S_ISREG(mode) or stat.S_ISDIR(mode)):
+                raise ActivityPackageError("Activity package contains a special filesystem entry")
+            if info.is_dir():
+                continue
+            total_uncompressed += info.file_size
+            if total_uncompressed > EXTRACTION_SAFETY_CEILING_BYTES:
+                raise ActivityPackageError("Activity package exceeds the extraction safety ceiling")
+            if (
+                info.file_size > 1024 * 1024
+                and info.compress_size > 0
+                and info.file_size > info.compress_size * MAX_COMPRESSION_RATIO
+            ):
+                raise ActivityPackageError("Activity package has an unsafe compression ratio")
+            previous = self._reusable_activity_file(
+                previous_root, relative, info.file_size
+            )
+            if previous is None or self._archive_member_sha256(update.archive, info) != self._file_sha256(previous):
+                required += info.file_size
+        return required
+
+    def publish_software_update_generation(
+        self, generation: ActivityUpdateGeneration
+    ) -> None:
+        """Publish a prepared generation while holding the shared update lock."""
+
+        current = self.active_generation_id()
+        if current is None:
+            current = _INITIAL_GENERATION_ID
+        if current != generation.previous_generation:
+            raise ActivityPackageError(
+                "Parent Activity generation changed while the update was staged"
+            )
+        self._publish_generation(generation.candidate_generation)
+
+    def restore_software_update_generation(self, generation_id: str) -> None:
+        """Restore one prior complete generation after failed startup health."""
+
+        self._require_safe_generation_id(generation_id)
+        if not (self._generation_activities_path(generation_id).is_dir() and
+                self._generation_index_path(generation_id).is_file()):
+            raise ActivityPackageError("prior Parent Activity generation is unavailable")
+        self._write_active_pointer(generation_id)
+        self._discard_old_generations({generation_id})
+
+    def commit_software_update_generation(
+        self, generation: ActivityUpdateGeneration
+    ) -> None:
+        """Record accepted package facts and retain only current plus rollback."""
+
+        self.commit_software_update_generation_receipts(
+            generation.previous_generation,
+            generation.candidate_generation,
+            tuple(receipt.as_json_dict() for receipt in generation.receipts),
+        )
+
+    def commit_software_update_generation_receipts(
+        self,
+        previous_generation: str,
+        candidate_generation: str,
+        receipts: Sequence[Mapping[str, object]],
+    ) -> None:
+        """Finish a durable generation after stable-worker recovery.
+
+        The small receipt facts are written into the root-owned apply journal
+        before the active pointer changes, so a process or power loss after
+        launcher readiness can finish this existing package-service transaction
+        without importing code from a different generation.
+        """
+
+        if self.active_generation_id() != candidate_generation:
+            raise ActivityPackageError("Parent Activity candidate is not active")
+        self._require_safe_generation_id(previous_generation)
+        self._require_safe_generation_id(candidate_generation)
+        if not isinstance(receipts, Sequence) or len(receipts) > 64:
+            raise ActivityPackageError("Parent Activity update receipts are invalid")
+        seen: set[str] = set()
+        for raw in receipts:
+            if not isinstance(raw, Mapping):
+                raise ActivityPackageError("Parent Activity update receipt is invalid")
+            activity_id = raw.get("activity_id")
+            version = raw.get("version")
+            digest = raw.get("package_digest")
+            size_bytes = raw.get("size_bytes")
+            size_guideline_bytes = raw.get("size_guideline_bytes")
+            if (
+                not isinstance(activity_id, str)
+                or not activity_id
+                or len(activity_id) > 96
+                or any(char not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-" for char in activity_id)
+                or activity_id in seen
+                or not isinstance(version, str)
+                or not version
+                or len(version) > 64
+                or not isinstance(digest, str)
+                or len(digest) != 64
+                or any(char not in "0123456789abcdef" for char in digest)
+                or isinstance(size_bytes, bool)
+                or not isinstance(size_bytes, int)
+                or size_bytes < 0
+                or isinstance(size_guideline_bytes, bool)
+                or not isinstance(size_guideline_bytes, int)
+                or size_guideline_bytes < 0
+            ):
+                raise ActivityPackageError("Parent Activity update receipt is invalid")
+            seen.add(activity_id)
+            self._write_receipt(
+                ActivityInstallReceipt(
+                    activity_id=activity_id,
+                    version=version,
+                    package_digest=digest,
+                    package_trust=PackageTrust.PARENT_TRUSTED_UNSIGNED,
+                    source_id=self.SOURCE_ID,
+                    size_bytes=size_bytes,
+                    size_guideline_bytes=size_guideline_bytes,
+                )
+            )
+        self._discard_old_generations(
+            {previous_generation, candidate_generation}
+        )
 
     @contextmanager
     def _process_install_lock(self) -> Iterator[None]:
@@ -429,6 +738,11 @@ class ActivityPackageService:
                 handle.write(generation_id + "\n")
             os.chmod(temporary, 0o644)
             os.replace(temporary, pointer)
+            descriptor = os.open(pointer.parent, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
+            try:
+                os.fsync(descriptor)
+            finally:
+                os.close(descriptor)
         except BaseException:
             temporary.unlink(missing_ok=True)
             raise
@@ -546,13 +860,14 @@ class ActivityPackageService:
         except ActivityValidationError as exc:
             raise ActivityPackageError(str(exc)) from exc
 
-    def _discard_old_generations(self, keep_id: str) -> None:
+    def _discard_old_generations(self, keep_ids: str | set[str]) -> None:
+        keep = {keep_ids} if isinstance(keep_ids, str) else set(keep_ids)
         if not self.generations_root.is_dir():
             return
         for entry in list(self.generations_root.iterdir()):
             if entry.name.startswith("."):
                 continue
-            if entry.name == keep_id or not entry.is_dir():
+            if entry.name in keep or not entry.is_dir():
                 continue
             try:
                 self._require_safe_generation_id(entry.name)
@@ -861,70 +1176,151 @@ class ActivityPackageService:
             self._discard_private_tree(staging)
             raise
 
-    def _extract_bounded_archive(self, archive_path: Path, destination: Path) -> None:
+    def _extract_bounded_archive(
+        self,
+        archive_path: Path,
+        destination: Path,
+        *,
+        reuse_root: Path | None = None,
+        max_entries: int = MAX_ARCHIVE_ENTRIES,
+        max_archive_bytes: int = MAX_ARCHIVE_BYTES,
+    ) -> None:
+        """Extract an Activity ZIP using the canonical bounded checks.
+
+        Update generations may pass ``reuse_root`` and higher archive limits
+        from the software-update format. Equal files are hard-linked from the
+        prior generation after streaming hash comparison, avoiding a second
+        copy of unchanged voice/art assets. Ordinary Parent installation keeps
+        its existing 512-entry / 32 MiB limits.
+        """
+        if archive_path.stat().st_size > max_archive_bytes:
+            raise ActivityPackageError("Activity package archive exceeds Greia bounds")
+        with zipfile.ZipFile(archive_path, "r", allowZip64=False) as archive:
+            self.extract_bounded_archive_contents(
+                archive,
+                destination,
+                reuse_root=reuse_root,
+                max_entries=max_entries,
+            )
+
+    def extract_bounded_archive_contents(
+        self,
+        archive: zipfile.ZipFile,
+        destination: Path,
+        *,
+        reuse_root: Path | None = None,
+        max_entries: int = MAX_ARCHIVE_ENTRIES,
+    ) -> None:
+        """Extract an open ZIP member without materializing it as a file."""
         seen: set[str] = set()
         total = 0
-        with zipfile.ZipFile(archive_path, "r", allowZip64=False) as archive:
-            entries = archive.infolist()
-            if not entries or len(entries) > MAX_ARCHIVE_ENTRIES:
+        entries = archive.infolist()
+        if not entries or len(entries) > max_entries:
+            raise ActivityPackageError(
+                f"Activity package must contain 1..{max_entries} archive entries"
+            )
+        for info in entries:
+            relative = self._safe_archive_path(info)
+            canonical = relative.as_posix().casefold()
+            if canonical in seen:
                 raise ActivityPackageError(
-                    f"Activity package must contain 1..{MAX_ARCHIVE_ENTRIES} archive entries"
+                    f"Activity package contains a duplicate portable path: {relative.as_posix()}"
                 )
-            for info in entries:
-                relative = self._safe_archive_path(info)
-                canonical = relative.as_posix().casefold()
-                if canonical in seen:
-                    raise ActivityPackageError(
-                        f"Activity package contains a duplicate portable path: {relative.as_posix()}"
-                    )
-                seen.add(canonical)
-                if info.flag_bits & 0x1:
-                    raise ActivityPackageError(
-                        "encrypted Activity package entries are not supported"
-                    )
-                mode = (info.external_attr >> 16) & 0xFFFF
-                file_type = stat.S_IFMT(mode)
-                if file_type and stat.S_ISLNK(mode):
-                    raise ActivityPackageError("Activity package symlinks are forbidden")
-                if file_type and not (stat.S_ISREG(mode) or stat.S_ISDIR(mode)):
-                    raise ActivityPackageError(
-                        "Activity package contains a special filesystem entry"
-                    )
-                if info.is_dir():
-                    target = destination.joinpath(*relative.parts)
-                    target.mkdir(parents=True, exist_ok=True)
-                    os.chmod(target, 0o755)
-                    continue
-                total += info.file_size
-                if total > EXTRACTION_SAFETY_CEILING_BYTES:
-                    raise ActivityPackageError(
-                        "Activity package exceeds the extraction safety ceiling"
-                    )
-                if (
-                    info.file_size > 1024 * 1024
-                    and info.compress_size > 0
-                    and info.file_size > info.compress_size * MAX_COMPRESSION_RATIO
-                ):
-                    raise ActivityPackageError(
-                        "Activity package has an unsafe compression ratio"
-                    )
+            seen.add(canonical)
+            if info.flag_bits & 0x1:
+                raise ActivityPackageError(
+                    "encrypted Activity package entries are not supported"
+                )
+            mode = (info.external_attr >> 16) & 0xFFFF
+            file_type = stat.S_IFMT(mode)
+            if file_type and stat.S_ISLNK(mode):
+                raise ActivityPackageError("Activity package symlinks are forbidden")
+            if file_type and not (stat.S_ISREG(mode) or stat.S_ISDIR(mode)):
+                raise ActivityPackageError(
+                    "Activity package contains a special filesystem entry"
+                )
+            if info.is_dir():
                 target = destination.joinpath(*relative.parts)
-                target.parent.mkdir(parents=True, exist_ok=True)
-                with archive.open(info, "r") as source, target.open("xb") as sink:
-                    remaining = info.file_size
-                    while remaining:
-                        chunk = source.read(min(1024 * 1024, remaining))
-                        if not chunk:
-                            raise ActivityPackageError(
-                                "Activity package entry ended unexpectedly"
-                            )
-                        sink.write(chunk)
-                        remaining -= len(chunk)
-                    if source.read(1):
+                target.mkdir(parents=True, exist_ok=True)
+                os.chmod(target, 0o755)
+                continue
+            total += info.file_size
+            if total > EXTRACTION_SAFETY_CEILING_BYTES:
+                raise ActivityPackageError(
+                    "Activity package exceeds the extraction safety ceiling"
+                )
+            if (
+                info.file_size > 1024 * 1024
+                and info.compress_size > 0
+                and info.file_size > info.compress_size * MAX_COMPRESSION_RATIO
+            ):
+                raise ActivityPackageError(
+                    "Activity package has an unsafe compression ratio"
+                )
+            target = destination.joinpath(*relative.parts)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            previous = self._reusable_activity_file(reuse_root, relative, info.file_size)
+            if previous is not None and self._archive_member_sha256(archive, info) == self._file_sha256(previous):
+                os.link(previous, target)
+                os.chmod(target, 0o444)
+                continue
+            with archive.open(info, "r") as source, target.open("xb") as sink:
+                remaining = info.file_size
+                while remaining:
+                    chunk = source.read(min(1024 * 1024, remaining))
+                    if not chunk:
                         raise ActivityPackageError(
-                            "Activity package entry exceeds declared size"
+                            "Activity package entry ended unexpectedly"
                         )
-                os.chmod(target, 0o644)
+                    sink.write(chunk)
+                    remaining -= len(chunk)
+                if source.read(1):
+                    raise ActivityPackageError(
+                        "Activity package entry exceeds declared size"
+                    )
+            os.chmod(target, 0o644)
+
+    @staticmethod
+    def _reusable_activity_file(
+        reuse_root: Path | None, relative: PurePosixPath, expected_size: int
+    ) -> Path | None:
+        if reuse_root is None:
+            return None
+        candidate = Path(reuse_root).joinpath(*relative.parts)
+        try:
+            info = candidate.lstat()
+        except OSError:
+            return None
+        if not stat.S_ISREG(info.st_mode) or info.st_size != expected_size:
+            return None
+        return candidate
+
+    @staticmethod
+    def _archive_member_sha256(archive: zipfile.ZipFile, info: zipfile.ZipInfo) -> str:
+        digest = hashlib.sha256()
+        total = 0
+        with archive.open(info, "r") as source:
+            while True:
+                chunk = source.read(1024 * 1024)
+                if not chunk:
+                    break
+                total += len(chunk)
+                if total > info.file_size:
+                    raise ActivityPackageError(
+                        "Activity package entry exceeds declared size"
+                    )
+                digest.update(chunk)
+        if total != info.file_size:
+            raise ActivityPackageError("Activity package entry ended unexpectedly")
+        return digest.hexdigest()
+
+    @staticmethod
+    def _file_sha256(path: Path) -> str:
+        digest = hashlib.sha256()
+        with path.open("rb") as handle:
+            for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                digest.update(chunk)
+        return digest.hexdigest()
 
     @staticmethod
     def _safe_archive_path(info: zipfile.ZipInfo) -> PurePosixPath:

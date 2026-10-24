@@ -4,6 +4,8 @@ export class ParentApiError extends Error {
   }
   get authenticationRequired() { return this.status === 401 || this.code === "pairing_required"; }
 }
+export const MAX_SOFTWARE_UPDATE_BYTES = 2 * 1024 * 1024 * 1024 + 1024 * 1024;
+export const SOFTWARE_UPDATE_MEDIA_TYPE = "application/vnd.greia.software-update+zip";
 export class ParentApiClient {
   constructor({ origin = globalThis.location?.origin ?? "https://127.0.0.1:8766", apiBase = "/api/v1", credentialStore = null, fetchImpl = globalThis.fetch?.bind(globalThis) } = {}) {
     if (!fetchImpl) throw new TypeError("fetch implementation is required");
@@ -19,6 +21,7 @@ export class ParentApiClient {
     return this.#request("/system/update/prepare", { method: "POST", body: { release_id: releaseId } });
   }
   restartSystemUpdate() { return this.#request("/system/update/restart", { method: "POST", body: {} }); }
+  restartSoftwareUpdatePackage() { return this.#request("/system/update/package/restart", { method: "POST", body: {} }); }
   async profiles() { return this.#request("/profiles"); }
   async activities() { return this.#request("/activities"); }
   async hardware() { return this.#request("/settings/hardware"); }
@@ -72,6 +75,12 @@ export class ParentApiClient {
   installActivity(file) { if (!file || typeof file.arrayBuffer !== "function") throw new TypeError("Activity package file is required"); if (typeof file.name === "string" && !file.name.toLowerCase().endsWith(".greiaactivity")) throw new TypeError("Choose a .greiaactivity file"); return this.#request("/activities/install", { method: "POST", rawBody: file, contentType: "application/vnd.greia.activity+zip" }); }
   removeActivity(activityId) { if (typeof activityId !== "string" || !activityId.trim()) throw new TypeError("Activity id is required"); return this.#request(`/activities/${encodeURIComponent(activityId.trim())}`, { method: "DELETE" }); }
   uploadSystemUpdate(file) { if (!file || typeof file.arrayBuffer !== "function") throw new TypeError("System update file is required"); return this.#request("/system/update/bundle", { method: "POST", rawBody: file, contentType: "application/vnd.greia.system-update+zip" }); }
+  uploadSoftwareUpdatePackage(file) {
+    if (!file || typeof file.arrayBuffer !== "function") throw new TypeError("Software update package file is required");
+    if (typeof file.name !== "string" || !file.name.toLowerCase().endsWith(".greia_update")) throw new TypeError("Choose a .greia_update package");
+    if (!Number.isFinite(file.size) || file.size <= 0 || file.size > MAX_SOFTWARE_UPDATE_BYTES) throw new TypeError("Software update package size is outside Greia's allowed range");
+    return this.#request("/system/update/package", { method: "POST", rawBody: file, contentType: SOFTWARE_UPDATE_MEDIA_TYPE });
+  }
   buildUrl(path = "") { const normalized = path && !path.startsWith("/") ? `/${path}` : path; return `${this.origin}${this.apiBase}${normalized}`; }
   async #request(path, { method = "GET", body = undefined, rawBody = undefined, contentType = null, authenticated = true } = {}) {
     if (body !== undefined && rawBody !== undefined) throw new TypeError("request cannot contain both JSON and raw body data");

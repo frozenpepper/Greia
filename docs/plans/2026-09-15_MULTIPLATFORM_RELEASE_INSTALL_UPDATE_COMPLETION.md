@@ -2986,3 +2986,47 @@ recorded above remain; this focused result does not supersede them. The source
 freeze includes the reviewed BIOS boot installation adapter. Real image,
 Linux exact-unit, fresh boot/update/recovery and device proof are still owed
 through the committed external-machine work order. Session 04 remains OPEN.
+
+
+## 2026-10-24 — Owner correction: lightweight Python/Activity updates are primary
+
+The owner explicitly corrected the full-image focus and authorized completion
+of `.greia_update` ZIP packages with a main type manifest: Python platform,
+one/set/all Activities, combined Python plus Activities, and full-system.
+ADR 0038 records this accepted scope. Application updates must work on
+single-root installs with the new bootstrap; only Linux replacement retains
+the A/B requirement. Upload carries installation authorization, and the OS
+must continue after durable acknowledgement without the phone/app/catalog.
+No implementation or runtime acceptance is claimed by this direction entry;
+append actual source/tests and the operator/Linux handoff when implemented.
+
+## 2026-10-24 — Typed application package guide and external acceptance handoff
+
+ADR 0038's owner-authorized package format and build/inspection slice is now
+documented in `docs/development/GREIA_SOFTWARE_UPDATE_PACKAGES.md`; the exact
+installed acceptance procedures for all package types, durable Parent upload,
+single-root activation, recovery, idle fencing and full-system A/B restart are
+in `docs/testing/2026-10-24_SOFTWARE_UPDATE_ACCEPTANCE.md`. “All current”
+built-in packages use the validated current registry or an exact installed
+Activity index, not a draft future roster. The guide records the actual
+commands, type/trust boundaries, limits and stable bootstrap path/helper; no
+manual bootstrap installation command is supported.
+
+The local source/build evidence directory is
+`/tmp/greia-software-update-review-20261024/`. Inspection succeeded for a
+268-file, 1,309,073-byte `python_platform` package (SHA-256
+`da62fcb61ff63716c7ad7fd725308e57e7dcf62e17e85dcd733c45cc20eb5c90`) and a
+45-Activity, 214,690,711-byte `activities` package (SHA-256
+`0fe18e3899dd8f33e0ff11ba39bebcaea260ffe72eb93e4340821127bc1c20cf`). Their
+JSON inspect reports and hashes are listed in HANDOVER. Package format/builder
+review reported 18 focused tests PASS. The artifacts were generated before a
+committed source freeze, so treat them as local source/build evidence only.
+
+The Parent durable-receipt and installed apply/recovery integration is not
+yet source-frozen. The previously recorded 5,890-test full gate remains
+NOT GREEN (7 failures, 3 errors, 8 skips); the aggregate-only Shell memory
+failure remains unresolved/order-dependent. No Linux image build, VM/guest,
+installed acceptance or physical-device evidence has been produced. Keep
+Session 04 OPEN. Next: finish/review/commit the integrated source; run exact
+focused and repository gates; then execute both dated Linux acceptance orders
+from a clean committed checkout on the authorized external Linux host.

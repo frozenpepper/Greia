@@ -1,4 +1,4 @@
-import { el, button, humanBytes, humanUptime, percent, MAX_UPDATE_BYTES } from "./ui.js";
+import { el, button, humanBytes, humanUptime, percent, MAX_UPDATE_BYTES, MAX_SOFTWARE_UPDATE_BYTES } from "./ui.js";
 import { tr, getChromeLocale } from "./localization.js";
 
 export function installDeviceViews(proto) {
@@ -476,8 +476,12 @@ export function installDeviceViews(proto) {
     const status = snapshot.systemUpdate || {};
     const delivery = status.delivery || {};
     const job = delivery.job;
+    const softwareUpdate = status.software_update || {};
+    const softwareJob = softwareUpdate.job;
     const capabilities = snapshot.index?.capabilities || {};
     const jobState = typeof job?.state === "string" ? job.state : "";
+    const softwareJobState = typeof softwareJob?.state === "string" ? softwareJob.state : "";
+    const softwareBusy = Boolean(softwareJob && !["applied", "rolled_back", "failed"].includes(softwareJobState));
     const text = jobState
       ? tr(`device.update.job.${jobState}`)
       : status.state === "received" && status.release?.version
@@ -501,7 +505,30 @@ export function installDeviceViews(proto) {
       card.append(el("p", "muted", status.activation_reason));
     }
 
-    const activeJob = ["checking", "queued", "downloading", "receiving", "verifying", "staging", "restart_pending"].includes(jobState);
+    if (softwareJobState) {
+      const softwareLabel = tr(`device.update.package.${softwareJobState}`);
+      const versionLabel = typeof softwareJob.version === "string" && softwareJob.version ? ` · ${softwareJob.version}` : "";
+      card.append(this._statusRow("upload", tr("device.update.package.title"), `${softwareLabel}${versionLabel}`));
+      const total = Number(softwareJob.package_bytes);
+      const received = Math.max(0, Math.min(total, Number(softwareJob.received_bytes) || 0));
+      if (total > 0) {
+        const progress = document.createElement("progress");
+        progress.className = "system-update-progress";
+        progress.max = 100;
+        progress.value = Math.round((received / total) * 100);
+        progress.setAttribute("aria-label", tr("device.update.package.received"));
+        card.append(progress, el("p", "muted", tr("device.update.bytes", { downloaded: humanBytes(received), total: humanBytes(total) })));
+      }
+      if (softwareJob.error_message) card.append(el("p", "form-error", softwareJob.error_message));
+      if (softwareBusy) {
+        card.append(el("p", "muted", tr("device.update.package.help")));
+      }
+    }
+    if (softwareUpdate.available === false && softwareUpdate.reason) {
+      card.append(el("p", "muted", softwareUpdate.reason));
+    }
+
+    const activeJob = ["checking", "queued", "downloading", "receiving", "verifying", "staging", "restart_pending"].includes(jobState) || softwareBusy;
     const updateActions = el("div", "actions system-update-actions");
     if (capabilities["system.update.check"] && status.check_available === true) {
       const check = button(tr("device.update.check"), { iconName: "refresh", className: "button secondary" });
@@ -526,6 +553,14 @@ export function installDeviceViews(proto) {
         await this._runSystemUpdateAction(restart, () => this.state.restartSystemUpdate());
       });
       updateActions.append(restart);
+    }
+    if (capabilities["system.update.package.install"] && softwareUpdate.available === true && softwareUpdate.restart_available === true && softwareJobState === "ready_to_restart") {
+      const restartPackage = button(tr("device.update.restart"), { iconName: "refresh" });
+      restartPackage.addEventListener("click", async () => {
+        if (!await this.confirm(tr("device.update.restart_confirm_title"), tr("device.update.restart_confirm_body"))) return;
+        await this._runSystemUpdateAction(restartPackage, () => this.state.restartSoftwareUpdatePackage());
+      });
+      updateActions.append(restartPackage);
     }
     if (updateActions.childElementCount) card.append(updateActions);
 
@@ -556,6 +591,38 @@ export function installDeviceViews(proto) {
         }
       });
       card.append(form);
+    }
+    if (capabilities["system.update.package.install"] && softwareUpdate.available === true) {
+      const packageSection = el("div", "install-section");
+      packageSection.append(el("h3", "", tr("device.update.package.title")), el("p", "muted", tr("device.update.package.help")));
+      const form = el("form", "install-row");
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".greia_update,application/vnd.greia.software-update+zip";
+      const submit = button(tr("device.update.package.send"), { iconName: "upload", type: "submit" });
+      submit.disabled = activeJob;
+      form.append(input, submit);
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const file = input.files?.[0];
+        if (!file) return this.showFlash(tr("device.update.package.choose"), "error");
+        if (!file.name.toLowerCase().endsWith(".greia_update") || file.size <= 0 || file.size > MAX_SOFTWARE_UPDATE_BYTES) {
+          return this.showFlash(tr("device.update.size"), "error");
+        }
+        if (activeJob) return this.showFlash(tr("device.update.failed"), "error");
+        submit.disabled = true;
+        try {
+          await this.state.uploadSoftwareUpdatePackage(file);
+          form.reset();
+          this.showFlash(tr("device.update.package.sent"));
+        } catch (error) {
+          this.showFlash(error?.message || tr("device.update.failed"), "error");
+        } finally {
+          submit.disabled = false;
+        }
+      });
+      packageSection.append(form);
+      card.append(packageSection);
     }
     return card;
   };

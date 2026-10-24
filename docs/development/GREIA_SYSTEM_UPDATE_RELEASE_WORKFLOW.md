@@ -1,7 +1,7 @@
 # Greia System Update Release Workflow
 
-**Status:** developer/release-operator runbook for the ADR 0036 v3 flow
-**Reviewed:** 2026-10-23
+**Status:** developer/release-operator runbook for ADR 0036 full-system v3 releases
+**Reviewed:** 2026-10-24
 **Architecture:** ADR 0036 (supersedes the old signed-bundle requirements of ADR 0030 where they conflict)
 **Product requirements:** `docs/product/SYSTEM_UPDATES.md`
 **Normal owner tool:** `tools/greia_release.py`
@@ -12,7 +12,10 @@ persistent state and explicit restart; execute
 `docs/testing/2026-10-23_SYSTEM_UPDATE_LINUX_ACCEPTANCE.md` on the other machine
 requested by the owner before claiming current installed acceptance.
 
-This is the short practical procedure for **building, checking and sending a Greia `.greiaupdate` v3 package**.
+This is the short practical procedure for **building and checking a Greia
+`.greiaupdate` v3 full-system bundle**. For the light `.greia_update` Python,
+Activity and combined package types and the Parent upload path, use
+[`GREIA_SOFTWARE_UPDATE_PACKAGES.md`](GREIA_SOFTWARE_UPDATE_PACKAGES.md).
 
 For normal release operation, Session 03 makes the owner-facing entry point:
 

@@ -163,6 +163,8 @@ class ProductionParentApiRequestHandler(UpdateParentApiRequestHandler):
             f"{API_BASE}/system/update/check",
             f"{API_BASE}/system/update/prepare",
             f"{API_BASE}/system/update/restart",
+            f"{API_BASE}/system/update/package",
+            f"{API_BASE}/system/update/package/restart",
         }
     )
 

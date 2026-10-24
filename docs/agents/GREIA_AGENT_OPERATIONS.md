@@ -85,13 +85,17 @@ explicit procedure.
 
 ---
 
-## System-update source and external-machine acceptance (2026-10-23)
+## System-update source and external-machine acceptance (2026-10-24)
 
-The current lifecycle work order is
-`docs/testing/2026-10-23_SYSTEM_UPDATE_LINUX_ACCEPTANCE.md`, under Session 04
-of the 2026-09-15 plan. The owner explicitly deferred image builds, QEMU,
-installation and hardware execution from the Mac to another agent/machine.
-Keep these results separate from local Python/Node source checks.
+The lifecycle work orders are
+`docs/testing/2026-10-23_SYSTEM_UPDATE_LINUX_ACCEPTANCE.md` for BIOS/A-B/PERSIST
+and slot lifecycle acceptance, and
+`docs/testing/2026-10-24_SOFTWARE_UPDATE_ACCEPTANCE.md` for typed Python,
+Activity, combined and full-system `.greia_update` packages. Both remain under
+Session 04 of the 2026-09-15 plan. The owner explicitly deferred image builds,
+QEMU, installation and hardware execution from the Mac to another
+agent/machine. Keep these results separate from local Python/Node source
+checks.
 
 Use existing `tools/greia_release.py` and `tools/build_update_index.py` for
 release/index assembly. The index supports EN/IT/ES/FR notes, retains three
@@ -100,12 +104,23 @@ Upload artifacts before replacing the public index. The existing shared
 `site-ftp` tool owns server publication; no new deployment script or hosted
 Actions service is required. Read its publication instructions when publishing.
 
-Parent's delivery worker owns one durable check/download/prepare job;
-HTTP reads use cached status while the privileged writer is busy. Request
-restart explicitly at the profile picker. Do not bypass its profile-session
+The existing full-system route uses `tools/greia_release.py`,
+`tools/greia_update.py`, and the static index to build/check unsigned v3
+bundles. It still requires the A/B writer, explicit restart at the profile
+picker and actual boot-health evidence. Do not bypass the profile-session
 fence or infer boot acceptance from a successful upload/stage reply.
-Full compressed v3 bundles are the supported transfer format; Python-only
-bandwidth reduction is not implemented or measured.
+
+ADR 0038 adds `tools/greia_software_update.py` for source-built typed
+`.greia_update` packages. Its Python type is a complete production source
+snapshot and fixed runtime-config allowlist; Activity packages reuse existing
+`.greiaactivity` validation and preserve built-in vs Parent trust. Application
+packages use one durable upload acknowledgement and continue on the device
+after the phone closes. A full-system wrapper retains the existing v3/A-B
+route. Read `docs/development/GREIA_SOFTWARE_UPDATE_PACKAGES.md` before
+building or sending one. An image must contain
+`/etc/greia-os/software-update-bootstrap.json` and the stable
+`/usr/local/lib/greia-os/software-update-bootstrap.py`; no manual bootstrap
+CLI exists. Builder/source tests are not installed Linux acceptance.
 
 Fresh BIOS A/B installation now has a mandatory `FreshAbInstallSeams.bios_bootloader_installer`
 seam, supplied in production by `device_seams.build_bios_bootloader_installer`.

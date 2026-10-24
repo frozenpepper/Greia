@@ -180,6 +180,120 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-24 — Relative application aliases fixed; focused gates pass, full gate pending
+
+The staged application-update source now uses root-relative `/opt/greia-os`
+and Activity-index aliases. The mounted-root inventory recipe in the operator
+guide resolves within the supplied root; source review added a fake-root
+containment regression and updated the composed-root verifier/RC fixture.
+Focused package/update tests passed **177/177** at
+`/tmp/greia-software-final/focused-update-final.log`; the separate new
+integration set passed **142** at reviewer report. The final root
+`make verify` run is still in progress. Do not claim a full-suite result until
+`/tmp/greia-software-final/make-verify-final.log` has a terminal summary.
+The earlier integrated run at `/tmp/greia-software-final/make-verify.log`
+ended at 5,940 tests with 14 failures, 3 errors and 8 skips. A clean baseline
+reproduced 6 failures and 3 errors; eight new contract failures were under
+repair, and the Shell memory failure did not recur. That earlier run is not a
+final gate result.
+
+Post-fix build/inspect artifacts are in `/tmp/greia-software-final/`:
+
+- `python-final.greia_update`: 1,311,555 bytes, SHA-256
+  `15c0d4b5a8045a039968388d55c7ec3d1addcb4089d346d37c284042c6aac30c`
+  (268 Python files).
+- `writing.greia_update`: 230,222 bytes, SHA-256
+  `c4d4a80cacb0f3ee4a3ab08f310dc3895037c94ef874c7eac8c8f8d6e54196eb`
+  (one built-in Activity).
+- `combined.greia_update`: 1,541,553 bytes, SHA-256
+  `97091732d8c526370ac9a44c047e7c5c417996dba2553f0e9e690987aacbdc28`
+  (268 Python files and one built-in Activity).
+
+Each artifact has a matching `*-inspect.json` PASS. These are package
+build/format checks only: they were built before the final whitespace-only
+normalization and final source commit, and do not prove a release image,
+installed Linux apply, recovery or device acceptance. `make validate` still
+fails on the inherited unsupported ARM64 target at
+`tools/build_profile.py:584`; `make shell-check footprint` passed. Mobile
+typecheck and 34 app tests passed; shared core is 96/102 with six baseline
+failures in `/tmp/greia-software-final/mobile-verify.log`. The HTML client has
+27 focused tests PASS at pin `a1da70e6c69b907b128147ac876cc3cf17053d47`.
+Mobile source is local commit `79a61435393a34ab6d792d8c08776e92d0b0f04d`
+with no remote configured. Keep Session 04 OPEN; append final full-gate
+results and the committed source SHA after the root finishes.
+
+### 2026-10-24 — Package/apply source frozen for final checks; results pending
+
+Correction to the preceding documentation entry: the package/apply source is
+now frozen for final root verification, and the independent source review
+passed. Reported focused buckets include 43 software-update, 5 Parent-update
+and 15 delivery tests; separate owner runs report 16 bootstrap, 5 generation,
+8 jobs, 14 package, 14 Activity-package, 15 delivery, 5 composer and 5 index
+tests passing. The current root runs are still in progress at
+`/tmp/greia-software-final/focused.log`,
+`/tmp/greia-software-final/make-verify.log` and
+`/tmp/greia-software-final/mobile-verify.log`; record their actual summaries
+before claiming results. The final source commit/hash has not yet been
+recorded.
+
+HTML Parent is pinned at `a1da70e6c69b907b128147ac876cc3cf17053d47` and is
+synced with Greia/Mobile. The operator guide now records the exact recovery
+boundary: application-generation journal phases carry the installed root
+filesystem UUID and current `job_id`; same-boot pre-trial recovery uses the
+matching job/fence, and boot recovery runs before launcher/Parent. Candidate
+health requires a post-switch monotonic `launcher_interactive_ready` event and
+Parent loopback `/healthz` success. The timer checks for an idle profile picker
+before expensive package work and rechecks before switching. A legacy
+directory migrates through the normal boot recovery unit; do not invoke
+`--recover` while child/application services are live.
+
+Bootstrap availability is image-owned. An old A/B install may reach a
+bootstrap-capable image through its ordinary full-system route; an older
+single-root install without the engine requires logical backup and graphical
+reinstallation/data restore to a current build. A `.greia_update` package
+cannot install its own receiver, and routine Python/Activity packages need
+neither the full-system catalog nor a full disk image. These are source and
+documentation facts only: Linux/image/VM/device acceptance remains UNPROVEN.
+Keep Session 04 OPEN and append the pending verification summaries and final
+source SHA after the root finishes and commits.
+
+### 2026-10-24 — Typed application package guide and Linux handoff prepared
+
+ADR 0038 now has a source-aligned operator guide at
+`docs/development/GREIA_SOFTWARE_UPDATE_PACKAGES.md` and an external installed-
+Linux work order at `docs/testing/2026-10-24_SOFTWARE_UPDATE_ACCEPTANCE.md`.
+The guide covers `python_platform`, `activities`, `combined` and `full_system`,
+the one/set/all-current built-in and Parent-source CLI paths, nested v3
+wrapping, inspection, durable Parent `Upload & install`, status/reconnect,
+explicit full-system restart, and the bootstrap boundary. “All current” is
+derived from the validated current registry or exact installed image index;
+it does not promote a draft future roster.
+
+Local format/build evidence is available outside Git at
+`/tmp/greia-software-update-review-20261024/`: the inspected Python snapshot
+contains 268 source files, is 1,309,073 bytes, SHA-256
+`da62fcb61ff63716c7ad7fd725308e57e7dcf62e17e85dcd733c45cc20eb5c90`; the
+all-current built-in package contains 45 Activities, is 214,690,711 bytes,
+SHA-256 `0fe18e3899dd8f33e0ff11ba39bebcaea260ffe72eb93e4340821127bc1c20cf`.
+Their inspect reports are `python-inspect.json` (SHA-256
+`27e4dc0cd348a9a58cc47700dd0935f1e535352d6f7c9cad81716afbef4a4e6c`) and
+`activities-all-inspect.json` (SHA-256
+`6019b985b7e716399496681a8197687b27a33ff8bfd80758d8e2b54fccaf2409`). The
+format/builder review reported 18 focused tests passing. These artifacts were
+built from a dirty local source checkout without a frozen source SHA; they
+prove package creation/inspection only, not application, recovery or device
+acceptance. Source integration remains in progress on base HEAD
+`ff1cff43af0f6d68fe4ec93f8c4c234ac63f12ed` and is not frozen.
+
+The earlier frozen full gate remains NOT GREEN: 5,890 tests, 7 failures,
+3 errors and 8 skips. Nine outcomes match clean-baseline issues; the aggregate
+Shell retained-surface memory failure is unresolved/order-dependent despite
+the standalone module passing on baseline and current trees. No Linux image,
+QEMU guest, physical-device install, or browser/mobile device acceptance ran.
+Session 04 remains OPEN. Next: complete and freeze the package/apply/Parent
+source integration, rerun its focused and full gates, then execute both
+2026-10-23 and 2026-10-24 Linux work orders on the authorized external host.
+
 ### 2026-10-24 — Update implementation source freeze
 
 Implementation commit `4eaad25471fe47b72e900ea2f34777f41be5542b` includes

@@ -4,8 +4,8 @@ Description=Greia OS parent management service
 # Type=notify (ready at the real first flip), so this After= edge defers the
 # Parent browser/backend until after that readiness without pulling Parent
 # into the launcher's own requirements (launcher keeps Wants= only).
-After=network.target systemd-tmpfiles-setup.service greia-first-boot.service greia-launcher.service
-Requires=greia-first-boot.service
+After=network.target systemd-tmpfiles-setup.service greia-first-boot.service greia-launcher.service greia-software-update-recover.service
+Requires=greia-first-boot.service greia-software-update-recover.service
 Wants=network.target
 
 [Service]

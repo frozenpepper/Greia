@@ -14,6 +14,7 @@ import time
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from greia_parent.production_api import (
@@ -29,7 +30,8 @@ from greia_parent.update_catalog import (
 )
 from greia_parent.update_delivery import UpdateDeliveryError, UpdateDeliveryService
 from greia_parent.update_job_store import UpdateJobStore
-from greia_platform.system_updates import SystemUpdateInbox, build_update_bundle
+from greia_platform.system_updates import MIN_INBOX_FREE_BYTES, SystemUpdateInbox, build_update_bundle
+from greia_platform.software_update_jobs import SoftwareUpdateJobStore
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -281,6 +283,8 @@ def _make_app(
     privileged: _FakePrivilegedClient,
     *,
     production: bool = False,
+    software_update_enabled: bool = False,
+    software_update_job_store: SoftwareUpdateJobStore | None = None,
 ):
     app_type = ProductionParentApiApplication if production else UpdateParentApiApplication
     kwargs: dict[str, object] = {}
@@ -302,6 +306,8 @@ def _make_app(
             active_profile_status_path=root / "active-profile.json",
             update_catalog_client=catalog,
             update_privileged_client=privileged,
+            software_update_enabled=software_update_enabled,
+            software_update_job_store=software_update_job_store,
             **kwargs,
         )
 
@@ -319,6 +325,145 @@ def _wait_for_state(app, expected: str, timeout: float = 5.0) -> dict[str, objec
 
 
 class ParentUpdateDeliveryTests(unittest.TestCase):
+    def test_software_package_upload_is_durable_before_ack_and_restart_is_separate(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            bundle = _build_bundle(root)
+            catalog = _FakeCatalog(_release(bundle), bundle.read_bytes())
+            store = SoftwareUpdateJobStore(root / "software-updates")
+            store.directory.mkdir()
+            app = _make_app(
+                root,
+                catalog,
+                _FakePrivilegedClient(),
+                production=True,
+                software_update_enabled=True,
+                software_update_job_store=store,
+            )
+            token = app.device_credentials.issue("software package test").token
+            server = ProductionParentApiHTTPServer(("127.0.0.1", 0), app)
+            server_thread = threading.Thread(target=server.serve_forever, daemon=True)
+            server_thread.start()
+
+            def request(path: str, method: str, body: bytes, content_type: str):
+                connection = http.client.HTTPConnection("127.0.0.1", server.server_address[1], timeout=15)
+                try:
+                    connection.request(
+                        method,
+                        path,
+                        body=body,
+                        headers={
+                            "Authorization": f"Bearer {token}",
+                            "Content-Type": content_type,
+                        },
+                    )
+                    response = connection.getresponse()
+                    raw = response.read()
+                    return response.status, json.loads(raw.decode()) if raw else {}
+                finally:
+                    connection.close()
+
+            try:
+                status, accepted = request(
+                    f"{API_BASE}/system/update/package",
+                    "POST",
+                    b"deferred manifest inspection",
+                    "application/vnd.greia.software-update+zip",
+                )
+                self.assertEqual(status, 202)
+                self.assertEqual(accepted["job"]["state"], "queued")
+                self.assertTrue(store.candidate_path.is_file())
+                self.assertTrue(store.job_path.is_file())
+                self.assertTrue(store.pending_path.is_file())
+                self.assertEqual(store.candidate_path.read_bytes(), b"deferred manifest inspection")
+
+                status, current = request(
+                    f"{API_BASE}/system/update",
+                    "GET",
+                    b"",
+                    "application/json",
+                )
+                self.assertEqual(status, 200)
+                public_job = current["software_update"]["job"]
+                self.assertEqual(public_job["job_id"], accepted["job"]["job_id"])
+                self.assertNotIn("candidate_generation", public_job)
+                self.assertFalse(public_job["restart_available"])
+                store.update(str(public_job["job_id"]), "validating", package_type="full_system")
+                store.update(str(public_job["job_id"]), "ready_to_restart")
+                status, ready_status = request(
+                    f"{API_BASE}/system/update",
+                    "GET",
+                    b"",
+                    "application/json",
+                )
+                self.assertEqual(status, 200)
+                self.assertTrue(ready_status["software_update"]["restart_available"])
+
+                status, restarted = request(
+                    f"{API_BASE}/system/update/package/restart",
+                    "POST",
+                    b"{}",
+                    "application/json",
+                )
+                self.assertEqual(status, 202)
+                self.assertEqual(restarted["job"]["state"], "ready_to_restart")
+                self.assertFalse(restarted["job"]["restart_available"])
+                self.assertTrue(store.read_internal()["restart_requested"])
+                self.assertTrue(store.pending_path.is_file())
+            finally:
+                server.shutdown()
+                server.server_close()
+                server_thread.join(timeout=2)
+
+    def test_software_package_upload_rejects_insufficient_reserved_space_before_staging(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            bundle = _build_bundle(root)
+            catalog = _FakeCatalog(_release(bundle), bundle.read_bytes())
+            store = SoftwareUpdateJobStore(root / "software-updates")
+            store.directory.mkdir()
+            app = _make_app(
+                root,
+                catalog,
+                _FakePrivilegedClient(),
+                production=True,
+                software_update_enabled=True,
+                software_update_job_store=store,
+            )
+            token = app.device_credentials.issue("software package capacity test").token
+            server = ProductionParentApiHTTPServer(("127.0.0.1", 0), app)
+            server_thread = threading.Thread(target=server.serve_forever, daemon=True)
+            server_thread.start()
+            body = b"must not be staged without the Parent/data reserve"
+            connection = http.client.HTTPConnection("127.0.0.1", server.server_address[1], timeout=15)
+            try:
+                with patch(
+                    "greia_platform.software_update_jobs.shutil.disk_usage",
+                    return_value=SimpleNamespace(free=len(body) + MIN_INBOX_FREE_BYTES - 1),
+                ):
+                    connection.request(
+                        "POST",
+                        f"{API_BASE}/system/update/package",
+                        body=body,
+                        headers={
+                            "Authorization": f"Bearer {token}",
+                            "Content-Type": "application/vnd.greia.software-update+zip",
+                        },
+                    )
+                    response = connection.getresponse()
+                    payload = json.loads(response.read().decode())
+                self.assertEqual(response.status, 507)
+                self.assertEqual(payload["error"]["code"], "insufficient_storage")
+                self.assertFalse(store.candidate_path.exists())
+                self.assertFalse(store.job_path.exists())
+                self.assertFalse(store.pending_path.exists())
+                self.assertEqual(list(store.directory.glob(".uploading.*.tmp")), [])
+            finally:
+                connection.close()
+                server.shutdown()
+                server.server_close()
+                server_thread.join(timeout=2)
+
     def test_protocol_advertises_check_prepare_restart_routes(self) -> None:
         resources = {item.name: item for item in RESOURCES}
         for name, path in (

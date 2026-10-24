@@ -12,8 +12,8 @@
 # never a generic root daemon.
 [Unit]
 Description=Greia OS boot-health semantic service
-Requires=greia-boot-health.socket
-After=greia-boot-health.socket
+Requires=greia-boot-health.socket greia-software-update-recover.service
+After=greia-boot-health.socket greia-software-update-recover.service
 RequiresMountsFor=/run/greia-persist /var/lib/greia-os /boot/grub /etc/greia-os/layout
 # Never part of pre-intro boot and never a generic command runner or broad
 # system manager: this unit only serves the single semantic health-confirm
