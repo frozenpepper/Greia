@@ -3059,3 +3059,43 @@ rendered browser/mobile acceptance ran here. The next exact action is to execute
 `docs/testing/2026-10-24_SOFTWARE_UPDATE_ACCEPTANCE.md` on the other Linux machine,
 alongside the full-system work order where applicable. Use the committed operator
 guide `docs/development/GREIA_SOFTWARE_UPDATE_PACKAGES.md` for all package recipes.
+
+## 2026-10-24 — Linux installed software-update acceptance: partial pass
+
+Append-only result entry. Full evidence and per-predicate disposition are in
+`docs/reviews/2026-10-24_SOFTWARE_UPDATE_LINUX_ACCEPTANCE_RESULT.md`; evidence
+root is
+`/var/tmp/greia-software-update-e8fed0ec494763834114e49863cc64aa66e70f2e-20261024T155314Z/`.
+The run found and fixed two source defects on `main`:
+
+- `e8fed0ec4` corrected the RC verifier's target extraction so the
+  `opt/greia-os` generation symlink and index alias are inspected rather than
+  lost; the corrected verifier passed the already-built RC image.
+- `0bf1e15e6` keeps the initial Parent Activity generation traversable
+  (`0555`, with repair of older non-traversable generations); a root-side
+  update had created `root:root 0700`, blocking `greiakid` and causing a
+  post-switch launcher loop.
+
+Focused package/update coverage passed 125/125 at `e8fed0ec4`. The full gate
+executed 5,943 tests with 8 failures, 3 errors and 2 skips and remains NOT
+GREEN for the documented baseline/environment outcomes; it was not waived.
+On a disposable repaired clone, real GUI installation, guest bootstrap facts,
+Parent HTTPS pairing/durable 202, two sequential Python applies, the
+child-active idle fence, built-in one/set/source-all/installed-root-all,
+combined Python+Activity, startup-failure rollback and a subsequent valid apply
+all passed. The observed `trial` power cut recovered to `base`/`rolled_back` on
+cold boot.
+
+The Acer A/B/full-system route is **BLOCKED** by the release-safe boot-cover
+gate (`greia-early-framebuffer-v1` is not registered release-safe); no current
+A/B bundle, installer or harness leg ran. Parent-source Activity seeding is
+**BLOCKED** by the root-owned
+`/var/lib/greia-os/activity-packages/generations` state tree, which the
+`greiapanel` Parent service cannot chmod/write (HTTP 400
+`activity_install_rejected`). NOT RUN: clean fixed-source rebuild/install,
+partial-upload negative, 507 reserve, Parent-stop-after-202, observed
+`applying` cut, full-system/A/B, seeded-creation hashes and Mobile upload. The
+USB key was not modified. Session 04 remains OPEN. Next: correct the Parent
+Activity state-tree ownership boundary, rebuild/reinstall the closed source,
+repeat the clean core cases, then obtain an owner decision on the release-safe
+cover before A/B acceptance.

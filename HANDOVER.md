@@ -180,6 +180,59 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-24 — Linux software-update installed acceptance: partial pass, two fixes, two blockers
+
+The 2026-10-24 Linux acceptance was executed on Orbiter (Ubuntu 24.04,
+QEMU 8.2.2/KVM). Evidence:
+`/var/tmp/greia-software-update-e8fed0ec494763834114e49863cc64aa66e70f2e-20261024T155314Z/`
+and the dated result review
+`docs/reviews/2026-10-24_SOFTWARE_UPDATE_LINUX_ACCEPTANCE_RESULT.md`.
+Two real defects were fixed on `main`:
+
+- `e8fed0ec4` — the RC verifier lost the target `opt/greia-os` generation
+  symlink and Activity-index alias during partial squashfs extraction, so every
+  correct RC image failed verification. The corrected verifier passed the
+  already-built image.
+- `0bf1e15e6` — the initial Parent Activity generation was published with
+  `mkdtemp`'s `0700`; a root-side update created `root:root 0700`, so
+  `greiakid` could not traverse it and the child launcher looped after the
+  pointer switch. Creation now publishes `0555` and repairs existing
+  non-traversable generations.
+
+The focused package/update gate passed **125/125** at `e8fed0ec4`; the full
+gate executed **5,943 tests, 8 failures, 3 errors, 2 skips** and remains NOT
+GREEN for the documented baseline/environment issues (Foresta, Parent Wi-Fi,
+MBR wording, ARM64, missing optional Linux voice modules, plus `morbidi` and
+one aggregate-only `piccola_serra` timing flake). The full gate is not waived.
+
+On a disposable clone of the `e8fed0ec4` RC image with the initial generation
+manually repaired to `0755`, installed acceptance passed for: real GUI install
+and guest facts; real child profile and profile-picker survival; HTTPS Parent
+pairing and durable `202`; two sequential Python applies; child-active
+`waiting_for_idle` with an unchanged pointer; built-in `one`, `set`, source
+`all` and exact installed-root `all`; combined Python+Activity; startup-failure
+`rolled_back` with `launcher_not_ready`; and a subsequent valid apply. The
+observed `trial` power-cut recovered to `base` and `rolled_back` on cold boot.
+
+Two routes remain blocked, not passed:
+
+- **A/B release/product harness:** `greia_release.py build` refuses because
+  `greia-early-framebuffer-v1` is not registered release-safe. No current v3
+  bundle, A/B installer, full-system wrapper or A/B harness leg ran; old
+  September artifacts were not used.
+- **Parent-source Activity seeding:** the developer-enabled
+  `/api/v1/activities/install` returns 400 because the root updater created
+  `/var/lib/greia-os/activity-packages/{generations,versions,receipts,staging}`
+  as `root:root`; the `greiapanel` Parent service cannot chmod/write it.
+
+NOT RUN: clean `0bf1e15e6` rebuild/install, partial-upload negative, 507
+receive reserve, Parent-stop-after-202, observed `applying` cut, full-system/
+A/B, seeded-creation hash preservation, and Mobile upload. The authorized
+8 GB LaCie USB was not modified; the work order forbids flashing host media.
+Session 04 remains OPEN. Next: fix the Parent Activity state-tree ownership,
+rebuild/reinstall the fixed source, rerun the clean core cases, then resolve
+the release-safe cover gate before A/B acceptance.
+
 ### 2026-10-24 — Linux software-update handoff made executable
 
 Validation: independent source/docs-command review PASS; 27 Bash blocks and
