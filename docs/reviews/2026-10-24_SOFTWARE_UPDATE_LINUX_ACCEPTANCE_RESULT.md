@@ -190,6 +190,11 @@ tree from the root updater, and the shared tree needs a deliberate
 
 ## Source follow-up after this Linux run (2026-10-24)
 
+Source freeze: `ab02b9ec6fc7108e7b873b2b2c8c68eefd47ff18`. The post-commit rerun executed
+170 tests in 17.955 seconds, **OK with 1 Linux-only skip**; exact log:
+`/tmp/greia-acceptance-followup/focused-ab02b9ec6.log`. The later evidence
+commit changes documentation only; the full gate remains NOT GREEN as below.
+
 The subsequent source tranche addresses the shared-store ownership blocker,
 including root-written lock/receipt/generation ownership and legacy store
 repair. It also fixes a concurrent initializer chmod race found by the local

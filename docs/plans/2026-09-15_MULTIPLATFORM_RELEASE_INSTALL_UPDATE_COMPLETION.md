@@ -3102,6 +3102,11 @@ cover before A/B acceptance.
 
 ### 2026-10-24 — Linux acceptance blockers remediated in source
 
+Source freeze: `ab02b9ec6fc7108e7b873b2b2c8c68eefd47ff18`. The post-commit rerun executed
+170 tests in 17.955 seconds, **OK with 1 Linux-only skip**; exact log:
+`/tmp/greia-acceptance-followup/focused-ab02b9ec6.log`. The later evidence
+commit changes documentation only; the full gate remains NOT GREEN as below.
+
 Follow-up to Linux report `f5a7db98a` and its two preceding fixes. The RC
 verifier extraction fix was retained. Parent Activity storage is now
 `greiapanel:greiapanel 0755`, with private transaction containers owner-only.
