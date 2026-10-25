@@ -26,8 +26,8 @@ layout = "bios-single-ext4"
 # is ~985 MiB accounted (official Acer target-root footprint incl. the
 # system-update set); 2048 MiB matches the proven single-root Acer profiles
 # and leaves ~1 GiB filesystem/headroom above it. The installed-device
-# minimum (4161 MiB = 1 MiB label/GRUB reservation + 64 MiB boot-control +
-# 2x1536 MiB slots + 1024 MiB PERSIST) is enforced separately at install time
+# minimum (4417 MiB = 1 MiB label/GRUB reservation + 64 MiB boot-control +
+# 2x1664 MiB slots + 1024 MiB PERSIST) is enforced separately at install time
 # by the real layout planner (ProfileSizing/plan_for_profile); PERSIST grows
 # to fill the remainder on larger targets.
 size_mib = 2048
@@ -74,11 +74,13 @@ architecture_review_mib = 1500
 # profile never silently routes to the legacy single-partition engine.
 [storage]
 layout_adapter = "legacy-bios-ab-v1"
-# Lifecycle plan A21 product default: 1536 MiB A/B system slots
-# (1610612736 bytes). PERSIST takes the remainder (minimum 1024 MiB
-# on device; the profile floor below is the product PERSIST minimum
-# enforced by the real layout planner, not an installer-image scratch value).
-system_slot_bytes = 1610612736
+# Owner decision 2026-10-25: 1664 MiB A/B system slots (1744830464 bytes).
+# 1500 MiB is the installed-core build gate; the extra 164 MiB is measured
+# headroom for hardware-support package application and initramfs
+# regeneration inside the slot. PERSIST takes the remainder (minimum 1024 MiB
+# on device; the profile floor below is the product PERSIST minimum enforced
+# by the real layout planner, not an installer-image scratch value).
+system_slot_bytes = 1744830464
 persistent_minimum_bytes = 1073741824
 
 [installer]

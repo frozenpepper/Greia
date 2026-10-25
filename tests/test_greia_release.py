@@ -261,7 +261,7 @@ class ReleaseCliTests(unittest.TestCase):
         self.assertTrue(checks["profiles"]["ok"])
         self.assertEqual(report["profiles"][0]["profile_id"], PROFILE)
         self.assertEqual(
-            report["profiles"][0]["system_slot_bytes"], 1536 * 1024 * 1024
+            report["profiles"][0]["system_slot_bytes"], 1664 * 1024 * 1024
         )
         self.assertEqual(
             report["profiles"][0]["persistent_minimum_bytes"], 1024 * 1024 * 1024
@@ -367,7 +367,7 @@ class ReleaseCliTests(unittest.TestCase):
             self.assertIn("--filesystem-bytes", payload_cmd)
             self.assertEqual(
                 payload_cmd[payload_cmd.index("--filesystem-bytes") + 1],
-                str(1536 * 1024 * 1024),
+                str(1664 * 1024 * 1024),
             )
             self.assertNotIn("--minimum-slot-bytes", payload_cmd)
             bundle_cmd = next(

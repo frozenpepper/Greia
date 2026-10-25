@@ -33,8 +33,8 @@ spec.loader.exec_module(module)
 ACER_PROFILE = PROJECT_ROOT / "build" / "profiles" / "acer-aspire-one-i386-ab.toml"
 GENERIC_PROFILE = PROJECT_ROOT / "build" / "profiles" / "legacy-x86-i686.toml"
 
-#: Lifecycle plan A21 product default: 1536 MiB A/B system slots.
-ACER_SLOT_BYTES = 1610612736
+#: Owner decision 2026-10-25: 1664 MiB A/B system slots.
+ACER_SLOT_BYTES = 1744830464
 #: Generic single-root slot bound (1 GiB).
 GENERIC_SLOT_BYTES = 1073741824
 

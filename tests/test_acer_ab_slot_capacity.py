@@ -1,7 +1,7 @@
-"""T01: Acer A/B 1536 MiB slot sizing capacity regression (Repair A).
+"""T01: Acer A/B 1664 MiB slot sizing capacity regression (Repair A).
 
 Loads the real ``build/profiles/acer-aspire-one-i386-ab.toml`` and proves,
-through the real production owners, that 1536 MiB system slots validate
+through the real production owners, that 1664 MiB system slots validate
 everywhere and that the real capacity formula both fits a normal candidate
 (with finalization reserve + a representative hardware-support installed
 bound) and refuses an over-capacity candidate before destination mutation.
@@ -47,8 +47,9 @@ from greia_platform.slot_writer import (  # noqa: E402
 
 ACER_AB_PROFILE = PROJECT_ROOT / "build/profiles/acer-aspire-one-i386-ab.toml"
 
-#: Lifecycle plan A21 product default: 1536 MiB A/B system slots.
-SLOT_1536_MIB = 1536 * 1024 * 1024
+#: Owner decision 2026-10-25: 1664 MiB A/B system slots
+#: (1500 MiB installed-core gate + 164 MiB hardware-support/initramfs headroom).
+SLOT_1664_MIB = 1664 * 1024 * 1024
 
 MIB = 1024 * 1024
 
@@ -115,10 +116,10 @@ def _layout_record(*, slot_bytes: int) -> InstalledLayoutRecord:
 
 
 class AcerAbSlotCapacityTests(unittest.TestCase):
-    def test_real_profile_declares_1536_mib_slots(self) -> None:
+    def test_real_profile_declares_1664_mib_slots(self) -> None:
         profile = BuildProfile.load(ACER_AB_PROFILE)
-        self.assertEqual(profile.storage.system_slot_bytes, SLOT_1536_MIB)
-        self.assertEqual(profile.storage.system_slot_bytes, 1610612736)
+        self.assertEqual(profile.storage.system_slot_bytes, SLOT_1664_MIB)
+        self.assertEqual(profile.storage.system_slot_bytes, 1744830464)
         self.assertEqual(profile.storage.layout_adapter, "legacy-bios-ab-v1")
         self.assertEqual(profile.updates.boot_backend, "grub-ab-v1")
 
@@ -154,7 +155,7 @@ class AcerAbSlotCapacityTests(unittest.TestCase):
         self.assertGreaterEqual(plan.remainder_bytes(), 1024 * MIB)
         self.assertEqual(plan.remainder_bytes(), 1024 * MIB)
 
-    def test_1536_mib_validates_across_profile_and_layout_owners(self) -> None:
+    def test_1664_mib_validates_across_profile_and_layout_owners(self) -> None:
         profile = BuildProfile.load(ACER_AB_PROFILE)
         # Profile loader already validated on load; the installer layout seam
         # must accept the same profile-owned sizing on a real-size target
@@ -170,10 +171,10 @@ class AcerAbSlotCapacityTests(unittest.TestCase):
             partition = plan.by_role(role)
             self.assertIsNotNone(partition)
             assert partition is not None
-            self.assertEqual(partition.size_bytes, SLOT_1536_MIB)
+            self.assertEqual(partition.size_bytes, SLOT_1664_MIB)
         # Persistent-layout record owner accepts the same slot size.
         record = _layout_record(slot_bytes=profile.storage.system_slot_bytes)
-        self.assertEqual(record.slot_bytes, SLOT_1536_MIB)
+        self.assertEqual(record.slot_bytes, SLOT_1664_MIB)
 
     def test_valid_candidate_fits_with_reserve_and_support_bound(self) -> None:
         profile = BuildProfile.load(ACER_AB_PROFILE)

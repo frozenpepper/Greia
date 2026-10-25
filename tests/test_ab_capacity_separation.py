@@ -1,6 +1,6 @@
 """R4-B-CAPACITY: installed-target capacity is layout-owned, not image-owned.
 
-Proves the separation through the production owners: the Acer 4161 MiB
+Proves the separation through the production owners: the Acer 4417 MiB
 installed-disk minimum comes from the real layout adapter via the single
 canonical owner (greia_installer.layout.minimum_device_bytes_for_profile),
 a small image.size_mib keeps an otherwise valid A/B storage profile valid,
@@ -34,8 +34,8 @@ MIB = 1024 * 1024
 
 #: A21 product facts, stated literally (never derived from the owner under
 #: test, so drift fails loudly).
-MINIMUM_DEVICE_4161_MIB = 4161 * MIB
-MINIMUM_DEVICE_4161_BYTES = 4363124736
+MINIMUM_DEVICE_4417_MIB = 4417 * MIB
+MINIMUM_DEVICE_4417_BYTES = 4631560192
 
 
 def _acer_sizing() -> ProfileSizing:
@@ -51,16 +51,16 @@ def _acer_sizing() -> ProfileSizing:
 class TargetCapacitySeparationTests(unittest.TestCase):
     def test_acer_minimum_comes_from_the_real_adapter_owner(self) -> None:
         sizing = _acer_sizing()
-        self.assertEqual(sizing.slot_bytes, 1536 * MIB)
+        self.assertEqual(sizing.slot_bytes, 1664 * MIB)
         self.assertEqual(sizing.persist_minimum_bytes, 1024 * MIB)
         minimum = minimum_device_bytes_for_profile(sizing)
-        self.assertEqual(minimum, MINIMUM_DEVICE_4161_MIB)
-        self.assertEqual(minimum, MINIMUM_DEVICE_4161_BYTES)
+        self.assertEqual(minimum, MINIMUM_DEVICE_4417_MIB)
+        self.assertEqual(minimum, MINIMUM_DEVICE_4417_BYTES)
 
     def test_small_image_size_mib_keeps_ab_profile_valid(self) -> None:
         profile = BuildProfile.load(ACER_AB_PROFILE)
         # The corrected artifact size sits far below the installed minimum.
-        self.assertLess(profile.image.size_mib, 4161)
+        self.assertLess(profile.image.size_mib, 4417)
         # Shrinking further (still above the resource floor) stays valid:
         # image.size_mib is never validated against installed capacity.
         small_size = profile.resources.required_core_mib + 1
@@ -87,8 +87,8 @@ class TargetCapacitySeparationTests(unittest.TestCase):
     def test_undersized_device_still_refused_via_plan_for_profile(self) -> None:
         sizing = _acer_sizing()
         with self.assertRaisesRegex(LayoutError, "does not fit"):
-            plan_for_profile(sizing, device_size_bytes=MINIMUM_DEVICE_4161_MIB - 1)
-        plan = plan_for_profile(sizing, device_size_bytes=MINIMUM_DEVICE_4161_MIB)
+            plan_for_profile(sizing, device_size_bytes=MINIMUM_DEVICE_4417_MIB - 1)
+        plan = plan_for_profile(sizing, device_size_bytes=MINIMUM_DEVICE_4417_MIB)
         self.assertEqual(plan.remainder_bytes(), 1024 * MIB)
 
     def test_no_duplicate_target_capacity_table_in_build_profile(self) -> None:
