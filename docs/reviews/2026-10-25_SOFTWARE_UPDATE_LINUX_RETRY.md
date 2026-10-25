@@ -133,3 +133,49 @@ acceptance now needs an owner capacity decision (new A/B build limit with the
    disposable clones.
 4. Keep Session 04 OPEN; no release, A/B, physical or family-readiness claim is
    made here.
+
+## A/B retry after owner size decisions (2026-10-25)
+
+Owner decisions raised the Acer A/B acceptance-build accounting gate to
+**1,500 MiB** and, after the measured hardware-support/initramfs failure, the
+A/B system slot to **1,664 MiB** (1,500 MiB installed core plus 164 MiB
+headroom; the 7 GB Acer reference target still fits). Source commits:
+`9078fcd3b` (1500 build gate), `1ea67ab7b` (1664 slot and capacity tests),
+`6d56a31ad` (harness live-partition selection), `6c6e64a82` (publish finalized
+kernel/initramfs aliases), `8263462e0` (same-filesystem hardlink alias seam;
+the 25 MiB initramfs exceeds the 8 MiB metadata write bound).
+
+The explicit experimental fixture bundle built and inspected
+(`greia-acceptance-fixture-0.13.0-phase0-dev`, bundle SHA-256
+`6f1e85eac0c6f0f81498e429c8c6f17ca46f45f8ed8552bc9f8c7cd4947592e3`). A
+disposable A/B installer was built from the 1664 MiB profile; the final
+8263462e0 link change was injected into a disposable copy of its live root
+(`ab-installer-patched.img`, SHA-256
+`179ff31e8e54e8f175eae454d822d3d704abe05e40e2f36340137b211547c40a`) so the
+18-minute-plus install/first-boot cycle could be observed. A clean full
+installer build from 8263462e0 remains required for final evidence.
+
+Observed with the patched disposable installer:
+
+- **PASS — A/B install leg.** The installer transaction completed the fresh
+  A/B layout, streamed slot A, applied the real hardware-support package set
+  (including `intel-microcode`), and finalized the slot on the 1664 MiB slot
+  without the earlier `ENOSPC`/initramfs failure. The finalizer now publishes
+  `boot/vmlinuz-greia` and `boot/initramfs-greia.img` as hardlinks; the
+  production GRUB config's kernel/initrd paths exist.
+- **PASS — BIOS boot begins.** The installed first-boot clone boots from its
+  BIOS GRUB entries into the Greia userspace; the control service reports the
+  shipped boot-health socket present and powers off cleanly.
+- **BLOCKED — first-boot health acceptance.** The PERSIST boot journal remains
+  `first_install_pending` instead of ACCEPTED. The control `wait-health-poweroff`
+  phase reached its socket but `greia_launcher.boot_health.maybe_load_production_token()`
+  returned `None`, so it skipped the CONFIRM and powered off. The root
+  credential/launcher token path is the next owner to debug; this is not a
+  size/capacity failure. No healthy B update or rollback leg ran after this
+  boundary.
+
+Session 04 remains OPEN. Next exact steps: determine why the first-install
+boot-health token is absent/failed on the A/B installed image (credential
+service, finalization receipt, and launcher post-intro CONFIRM), repeat the
+first boot after the fix, then build the clean 8263462e0 installer and run the
+healthy-update and failure/rollback legs.
