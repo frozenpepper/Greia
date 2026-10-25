@@ -3185,3 +3185,25 @@ decision (raise the A/B build limit with finalizer-reserve evidence, or reduce
 payload). The 507, Parent-stop, observed `applying` cut, Mobile, seeded-creation
 hash and physical legs also remain NOT RUN; the USB key was not modified.
 Session 04 remains OPEN. No release, A/B or physical claim is made.
+
+## 2026-10-25 — A/B first-boot health accepted; slot isolation needs an owner decision
+
+Append-only result entry. On the 1664 MiB A/B target the first boot now
+issues and consumes the one-use boot-health capability, commits the
+first-install journal, remains default A, and powers off; the harness's
+post-boot health observation passes. Fixes in this boundary: the credential
+generator and socket service now have launcher/runtime group access instead
+of an empty-capability `root:root` context, and boot history is persisted to
+`/run/greia-persist/greia/diagnostics` rather than the active slot. The
+test-only X8 control now pulls the real credential/recovery units, starts
+before the launcher and waits for the token.
+
+The next harness guard, **active-slot isolation**, fails because slot A's raw
+digest changes during its own acceptance boot. The A/B root is remounted
+writable; moving history to PERSIST did not make the active slot
+byte-identical. This is an A/B writable-state architecture decision (read-only
+active slot with PERSIST binds versus a declared bounded active-slot
+exception), not a capacity or health-token failure. The healthy B update,
+rollback/failure legs and the clean A/B installer/fixture rebuild remain NOT
+RUN. Session 04 remains OPEN; details are in
+`docs/reviews/2026-10-25_SOFTWARE_UPDATE_LINUX_RETRY.md`.

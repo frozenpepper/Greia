@@ -179,3 +179,55 @@ boot-health token is absent/failed on the A/B installed image (credential
 service, finalization receipt, and launcher post-intro CONFIRM), repeat the
 first boot after the fix, then build the clean 8263462e0 installer and run the
 healthy-update and failure/rollback legs.
+
+## A/B first-boot health accepted; active-slot isolation boundary (2026-10-25 late)
+
+The **first-boot health path now works end-to-end** on the installed A/B
+target. The test control starts the real credential/recovery units, the
+generator issues the one-use capability, the socket service consumes it,
+commits the first-install journal, and the control powers off cleanly. The
+ProductHarness post-boot observation (default A, accepted release, pending
+cleared, valid PERSIST) passed before the next guard refused the run.
+
+Product defects fixed and verified in this boundary:
+
+- `greia-boot-health-credential.service` and `greia-boot-health.service`
+  could not create/consume the delivery token under `/run/greia-os`, whose
+  tmpfiles ownership is `0770 greiakid:pipprofiles`, because both ran
+  `root:root` with `CapabilityBoundingSet=` empty. Both now run with
+  `Group=greiakid` and `SupplementaryGroups=pipprofiles`; the token is
+  issued and consumed without DAC override.
+- Boot history was written to `/var/lib/greia-os/diagnostics` on the active
+  slot. The shipped service now writes it to
+  `/run/greia-persist/greia/diagnostics` (PERSIST), so accepting a slot does
+  not write that diagnostic into the slot.
+- The test-only X8 control unit now `Wants` the credential/recovery units,
+  is ordered `Before=greia-launcher.service`, waits for the token or an
+  already-accepted journal, and streams the credential/recovery/service
+  failure state to serial. This is harness-only under `tools/x8_qemu`.
+
+Remaining **BLOCKED** boundary: `run_first_boot_product` then failed its
+active-slot isolation guard:
+
+```
+LifecycleHarnessError: first-boot slot isolation violated: slot A changed
+across its own acceptance boot
+```
+
+The first-install journal is accepted and the PERSIST boot history is no
+longer on slot A, so this is not a health-commit failure. The active A/B
+root is mounted/remounted writable during boot (the GRUB `ro` is re-mounted
+read-write from the installed fstab/readiness path), and ordinary boot state
+writes make the raw slot-A partition digest differ. Moving boot history to
+PERSIST alone did not satisfy the harness's byte-identical active-slot
+contract. This needs an explicit A/B writable-state decision: make the
+active slot genuinely read-only and bind/persist writable state (including
+`/var/lib/greia-os`), or define and enforce a bounded active-slot exception
+in the acceptance contract. Do not silently relax the isolation guard.
+
+No healthy B update, failure/rollback leg, 507, Parent-stop, applying-cut,
+Mobile or physical leg ran after this boundary. The current `next.greiaupdate`
+payload predates these unit fixes; it was not rebuilt, so the update-health
+slot B would still carry the old credential/service units. The clean full
+A/B installer from the fixed source was also not rebuilt; the tested target
+was patched in place as a disposable fixture. Session 04 remains OPEN.

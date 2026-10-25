@@ -72,6 +72,37 @@ installer/first-boot/lifecycle test gates or the Creations/Activity
 audit programme. Do not invent a second language registry or silently
 promote unvoiced locales.
 
+## 2026-10-25 — A/B first-boot health ACCEPTED; active-slot isolation blocker
+
+The Acer A/B acceptance first boot now works through the shipped health path:
+the test control starts the real credential/recovery units, the one-use
+capability is issued and consumed, the first-install journal commits, the
+default remains A, and the control powers off. Product fixes: the
+credential generator and socket service run with `Group=greiakid` and
+`SupplementaryGroups=pipprofiles` so they can create/consume the token under
+`/run/greia-os` without DAC override; boot history moved from
+`/var/lib/greia-os/diagnostics` to
+`/run/greia-persist/greia/diagnostics` (PERSIST); the test-only X8 control
+now pulls the credential/recovery units, orders before the launcher, waits
+for the token, and reports service failures on serial.
+
+Remaining blocker: `run_first_boot_product` fails the **active-slot
+isolation** guard ("slot A changed across its own acceptance boot") after
+the health observation passes. The A/B root is remounted writable, so raw
+slot A changes even with boot history on PERSIST. This needs an owner/
+architecture decision: make the active slot genuinely read-only and persist
+writable state (including `/var/lib/greia-os`), or define a bounded
+active-slot exception in the isolation contract. Do not weaken the guard
+silently.
+
+No healthy B update/rollback, 507, Parent-stop, applying-cut, Mobile or
+physical leg ran. The next bundle and clean A/B installer were not rebuilt
+from the fixed source; the tested target was a patched disposable fixture.
+Details/evidence: `docs/reviews/2026-10-25_SOFTWARE_UPDATE_LINUX_RETRY.md`;
+evidence under
+`/var/tmp/greia-ab-1500-9078fcd3b7babd391249b60e77153d8ab8c38106-20261025T022134Z/`.
+Session 04 remains OPEN.
+
 ## 2026-10-22 — Owner resumed priority completion with Base
 
 The owner explicitly requested finishing the problematic Greia recordings,

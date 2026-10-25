@@ -24,7 +24,14 @@ RequiresMountsFor=/run/greia-persist /var/lib/greia-os /boot/grub /etc/greia-os/
 [Service]
 Type=simple
 User=root
-Group=root
+# /run/greia-os is the launcher runtime root (0770 greiakid:pipprofiles).
+# The socket service must reach and consume/unlink the one-use delivery
+# token without CAP_DAC_OVERRIDE: greiakid grants read on the 0750
+# delivery directory / 0640 token, and pipprofiles grants traversal and
+# the parent-directory write needed to invalidate it. The authority
+# record remains root-owned 0700 and is reached as its owner.
+Group=greiakid
+SupplementaryGroups=pipprofiles
 WorkingDirectory=/opt/greia-os
 Environment=PYTHONPATH=/opt/greia-os/src
 Environment=PYTHONNOUSERSITE=1
@@ -39,7 +46,9 @@ Environment=GREIA_UPDATE_STATE_DIR=/var/lib/greia-os
 Environment=GREIA_BOOT_JOURNAL_DIR=/run/greia-persist/greia/boot-journal
 Environment=GREIA_GRUBENV_DIR=/boot/grub
 Environment=GREIA_INSTALLED_LAYOUT_RECORD=/etc/greia-os/layout/installed-layout.json
-Environment=GREIA_BOOT_HISTORY_DIR=/var/lib/greia-os/diagnostics
+# Boot history is diagnostic state shared across A/B slots. Keep it on
+# the PERSIST bind so accepting a slot never mutates that active slot.
+Environment=GREIA_BOOT_HISTORY_DIR=/run/greia-persist/greia/diagnostics
 Environment=GREIA_FINALIZATION_RECEIPT_PATH=/etc/greia-os/finalization-receipt.json
 # P4 socket-access: image-owned provisioning of the unprivileged launcher
 # into the peer allowlist. The service resolves this name to a UID at

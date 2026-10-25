@@ -103,6 +103,27 @@ class TargetImageCarriesFirstBootFixesTests(unittest.TestCase):
         self.assertIn("RuntimeDirectoryMode=0700", text)
         self.assertIn("RuntimeDirectoryPreserve=yes", text)
 
+    def test_boot_health_credential_can_create_launcher_delivery_dir(self) -> None:
+        """The generator may not run with CAP_DAC_OVERRIDE.
+
+        /run/greia-os is 0770 greiakid:pipprofiles, so the generator needs
+        the parent group to create /run/greia-os/boot-health and the
+        launcher primary group so the delivery directory/token are readable
+        by greiakid rather than only by root.
+        """
+
+        text = _read(
+            TARGET_OVERLAY / "etc/systemd/system/greia-boot-health-credential.service"
+        )
+        self.assertIn("Group=greiakid", text)
+        self.assertIn("SupplementaryGroups=pipprofiles", text)
+        service = _read(TARGET_OVERLAY / "etc/systemd/system/greia-boot-health.service")
+        self.assertIn("Group=greiakid", service)
+        self.assertIn("SupplementaryGroups=pipprofiles", service)
+        self.assertIn(
+            "GREIA_BOOT_HISTORY_DIR=/run/greia-persist/greia/diagnostics", service
+        )
+
     def test_launcher_does_not_wait_on_a_signal_it_cannot_receive(self) -> None:
         """The unit must not kill a working Shell waiting for READY=1.
 
