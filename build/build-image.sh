@@ -218,8 +218,10 @@ accounted_mib="$(( accounted_bytes / 1024 / 1024 ))"
 # Hard installed-size gate. The limit is profile data (resources.
 # required_core_mib): 1,500 MiB for single-root profiles since the owner
 # raised the accepted ceiling on 2026-10-21 (AGENTS.md contract 6) to keep the
-# four-language @2x art and EFI boot payloads in one image; the A/B profile
-# stays at 1,000 MiB because its system slot is 1 GiB.
+# four-language @2x art and EFI boot payloads in one image. The owner approved
+# the same 1,500 MiB accounting limit for the Acer A/B acceptance build on
+# 2026-10-25; its 1,536 MiB system slot and finalizer capacity gate remain
+# authoritative.
 required_limit_bytes=$((REQUIRED_LIMIT_MIB * 1024 * 1024))
 preferred_limit_bytes=$((PREFERRED_LIMIT_MIB * 1024 * 1024))
 if (( accounted_bytes >= required_limit_bytes )); then

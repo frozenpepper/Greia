@@ -63,12 +63,13 @@ class TargetCapacitySeparationTests(unittest.TestCase):
         self.assertLess(profile.image.size_mib, 4161)
         # Shrinking further (still above the resource floor) stays valid:
         # image.size_mib is never validated against installed capacity.
+        small_size = profile.resources.required_core_mib + 1
         smaller = dataclasses.replace(
             profile,
-            image=dataclasses.replace(profile.image, size_mib=1500),
+            image=dataclasses.replace(profile.image, size_mib=small_size),
         )
         smaller.validate()
-        self.assertEqual(smaller.image.size_mib, 1500)
+        self.assertEqual(smaller.image.size_mib, small_size)
 
     def test_image_at_resource_floor_still_fails_closed(self) -> None:
         profile = BuildProfile.load(ACER_AB_PROFILE)

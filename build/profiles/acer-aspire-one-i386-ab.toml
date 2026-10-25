@@ -59,12 +59,14 @@ installer_sets = ["installer-base", "system-update"]
 extra_packages = ["xserver-xorg-legacy"]
 
 [resources]
-# Kept at 1,000 MiB although the owner accepts 1,500 MiB single-root images
-# (2026-10-21): each A/B system slot is 1 GiB (storage.system_slot_bytes), so
-# a larger root cannot fit a slot. Raise both together, never one alone.
+# Owner decision 2026-10-25: the Acer A/B VM acceptance build limit is
+# 1,500 MiB. The actual system slot remains 1,536 MiB
+# (storage.system_slot_bytes) and the finalizer capacity check remains
+# authoritative; this raises only the installed-root accounting gate used by
+# the acceptance fixture build.
 preferred_core_mib = 800
-required_core_mib = 1000
-architecture_review_mib = 1250
+required_core_mib = 1500
+architecture_review_mib = 1500
 
 # A/B product target: legacy BIOS A/B layout (SYSTEM_A/SYSTEM_B/PERSIST) with
 # the GRUB A/B boot backend. The legacy single-root recovery path stays
