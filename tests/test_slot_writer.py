@@ -219,6 +219,17 @@ class FakeSlotFilesystem:
         self.ops.append(f"write:{relative_path}")
         self.files[relative_path] = bytes(data)
 
+    def link_file(
+        self, source_relative_path: str, target_relative_path: str
+    ) -> None:
+        if not self.mounted:
+            raise SlotFinalizeError("slot links require a mounted destination")
+        source = self.mount_dir / source_relative_path
+        if source.is_symlink() or not source.is_file():
+            raise SlotFinalizeError("slot link source is missing")
+        self.ops.append(f"link:{source_relative_path}:{target_relative_path}")
+        self.files[target_relative_path] = source.read_bytes()
+
     def missing_files(self, required: tuple[str, ...]) -> tuple[str, ...]:
         return tuple(name for name in required if name not in self.files)
 

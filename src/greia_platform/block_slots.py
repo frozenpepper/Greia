@@ -610,6 +610,34 @@ class BlockSlotFilesystem:
         except OSError as exc:
             raise BlockSlotError(f"slot file write failed: {exc}") from exc
 
+    def link_file(
+        self, source_relative_path: str, target_relative_path: str
+    ) -> None:
+        """Publish a same-filesystem hardlink for a large boot artifact.
+
+        Boot kernels/initramfs images exceed the metadata ``write_file``
+        bound; linking them keeps the slot capacity cost at zero while the
+        GRUB-owned stable alias exists.  Both paths stay slot-relative and
+        never follow a symlink.
+        """
+
+        mountpoint = self._require_mounted()
+        source_rel = _require_relative_path(source_relative_path)
+        target_rel = _require_relative_path(target_relative_path)
+        source = mountpoint / source_rel
+        target = mountpoint / target_rel
+        if os.path.islink(source) or not source.is_file():
+            raise BlockSlotError("slot link source must be a regular file")
+        if os.path.islink(target) or target.exists():
+            raise BlockSlotError("slot link target already exists")
+        try:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            if os.path.islink(target.parent):
+                raise BlockSlotError("slot link parent may not be a symbolic link")
+            os.link(source, target, follow_symlinks=False)
+        except OSError as exc:
+            raise BlockSlotError(f"slot file link failed: {exc}") from exc
+
     def missing_files(self, required: tuple[str, ...]) -> tuple[str, ...]:
         mountpoint = self._require_mounted()
         missing: list[str] = []

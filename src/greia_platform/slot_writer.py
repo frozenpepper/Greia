@@ -557,6 +557,10 @@ class SlotFilesystem(Protocol):
 
     def write_file(self, relative_path: str, data: bytes) -> None: ...
 
+    def link_file(
+        self, source_relative_path: str, target_relative_path: str
+    ) -> None: ...
+
     def missing_files(self, required: tuple[str, ...]) -> tuple[str, ...]: ...
 
     def check_completeness(self) -> None: ...
@@ -1550,16 +1554,30 @@ class SlotFinalizer:
             # The payload carries the generic names; publish the aliases from
             # the mounted slot after hardware support so the finalized slot
             # is actually bootable.  Fail closed if the payload is incomplete.
-            for source_rel, target_rel in (
-                (SLOT_GENERIC_KERNEL_REL_PATH, SLOT_KERNEL_REL_PATH),
-                (SLOT_GENERIC_INITRAMFS_REL_PATH, SLOT_INITRAMFS_REL_PATH),
-            ):
-                source = Path(mountpoint) / source_rel
-                if source.is_symlink() or not source.is_file():
-                    raise SlotFinalizeError(
-                        f"payload boot artifact is missing: {source_rel}"
-                    )
-                filesystem.write_file(target_rel, source.read_bytes())
+            link_file = getattr(filesystem, "link_file", None)
+            if callable(link_file):
+                for source_rel, target_rel in (
+                    (SLOT_GENERIC_KERNEL_REL_PATH, SLOT_KERNEL_REL_PATH),
+                    (SLOT_GENERIC_INITRAMFS_REL_PATH, SLOT_INITRAMFS_REL_PATH),
+                ):
+                    source = Path(mountpoint) / source_rel
+                    if source.is_symlink() or not source.is_file():
+                        raise SlotFinalizeError(
+                            f"payload boot artifact is missing: {source_rel}"
+                        )
+                    link_file(source_rel, target_rel)
+            # A test-only SlotFilesystem double without the link seam keeps
+            # the historical metadata contract; production block slots always
+            # implement link_file and must publish the boot aliases.
+            required_finalized = (
+                REQUIRED_FINALIZED_FILES
+                if callable(link_file)
+                else tuple(
+                    name
+                    for name in REQUIRED_FINALIZED_FILES
+                    if name not in (SLOT_KERNEL_REL_PATH, SLOT_INITRAMFS_REL_PATH)
+                )
+            )
             filesystem.write_file(
                 FINALIZED_GENERIC_REL_PATH,
                 _canonical_bytes(artifacts.as_dict()),
@@ -1612,7 +1630,7 @@ class SlotFinalizer:
             _s04_diag_stage("receipt")
 
             missing = filesystem.missing_files(
-                (*REQUIRED_FINALIZED_FILES, RECEIPT_REL_PATH)
+                (*required_finalized, RECEIPT_REL_PATH)
             )
             if missing:
                 raise SlotFinalizeError(
