@@ -76,8 +76,10 @@ def _green_digests() -> dict[str, object]:
 def _green_isolation() -> dict[str, object]:
     return {
         "active_slot": "A",
-        "active_unchanged": True,
-        "inactive_changed": True,
+        "active_unchanged": None,
+        "inactive_changed": None,
+        "scope": "raw_hashes_observational_across_boots",
+        "booted_slots": ["A", "B"],
     }
 
 
@@ -162,7 +164,8 @@ class BootIdentityGreenTests(unittest.TestCase):
             self.assertEqual(
                 record["slot_digests"]["active_before"], "aa" * 32  # type: ignore[index]
             )
-            self.assertTrue(record["slot_isolation"]["active_unchanged"])  # type: ignore[index]
+            self.assertIsNone(record["slot_isolation"]["active_unchanged"])  # type: ignore[index]
+            self.assertIsNone(record["slot_isolation"]["inactive_changed"])  # type: ignore[index]
             self.assertEqual(
                 record["boot_observation"]["default_slot"], "B"  # type: ignore[index]
             )
@@ -379,6 +382,66 @@ class BootIdentityNegativeTests(unittest.TestCase):
                     slot_isolation=None,
                     boot_observation=_green_observation(),
                 )
+
+    def test_missing_hash_scope_is_red(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            installed = _write_installed(base)
+            bundle = _write_bundle(base)
+            proof = _green_isolation()
+            del proof["scope"]
+            with self.assertRaisesRegex(LifecycleHarnessError, "scope"):
+                build_product_identity_record(
+                    installed_image=installed,
+                    release_bundles=[bundle],
+                    slot_a_mutation=_slot_mutation(),
+                    slot_b_mutation=_slot_mutation(),
+                    slot_digests=_green_digests(),
+                    slot_isolation=proof,
+                    boot_observation=_green_observation(),
+                )
+
+    def test_observational_hash_scope_requires_known_ab_boot_roles(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            installed = _write_installed(base)
+            bundle = _write_bundle(base)
+            digests = _green_digests()
+            digests["active_after"] = "dd" * 32
+            digests["inactive_after"] = digests["inactive_before"]
+            proof = {
+                "active_slot": "A",
+                "active_unchanged": None,
+                "inactive_changed": None,
+                "scope": "raw_hashes_observational_across_boots",
+                "booted_slots": ["A", "B"],
+            }
+            record = build_product_identity_record(
+                installed_image=installed,
+                release_bundles=[bundle],
+                slot_a_mutation=_slot_mutation(),
+                slot_b_mutation=_slot_mutation(),
+                slot_digests=digests,
+                slot_isolation=proof,
+                boot_observation=_green_observation(),
+            )
+            self.assertIsNone(record["slot_isolation"]["active_unchanged"])
+
+            for forged in (
+                {**proof, "active_slot": "B"},
+                {**proof, "booted_slots": ["A"]},
+                {**proof, "active_unchanged": True},
+            ):
+                with self.subTest(forged=forged), self.assertRaises(LifecycleHarnessError):
+                    build_product_identity_record(
+                        installed_image=installed,
+                        release_bundles=[bundle],
+                        slot_a_mutation=_slot_mutation(),
+                        slot_b_mutation=_slot_mutation(),
+                        slot_digests=digests,
+                        slot_isolation=forged,
+                        boot_observation=_green_observation(),
+                    )
 
     def test_missing_observed_disk_identities_is_red(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

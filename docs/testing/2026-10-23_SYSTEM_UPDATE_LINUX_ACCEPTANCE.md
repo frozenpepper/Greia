@@ -24,16 +24,26 @@ package implementation boundary; use the exact final committed `main` SHA and
 matching Parent pins recorded in current `HANDOVER.md`. Do not execute against
 the earlier pinned SHA and report package acceptance.
 
-## Current execution route after the Linux report (2026-10-24)
+## Current execution route after the Linux report (2026-10-25)
 
-For the current software-update retry, start with
-`2026-10-24_SOFTWARE_UPDATE_ACCEPTANCE.md` §§1–2. That document builds the
-explicit experimental Acer A/B fixture and defines its exported paths. Then
-use this document's §10 for next/reverse fixtures and §3 for the product
-harness. The ordinary owner-release commands in §§1–2 below remain the normal
-release procedure; they intentionally refuse the unaccepted boot cover and
-must not be used as a workaround for, or confused with, the fixture route.
-Publication in §5 applies only to accepted release artifacts, never fixtures.
+For the initial clean-source A/B smoke only, use the short, current route in
+[`2026-10-25_AB_SMOKE_RETRY.md`](2026-10-25_AB_SMOKE_RETRY.md). It rebuilds
+both experimental bundles and a clean matching installer from one committed
+`main` SHA, then runs install → first boot → healthy A-to-B with the existing
+`ProductHarness`. Its role-aware hash interpretation supersedes the older
+active-slot raw-hash stop wording in this document for a slot booted during
+observation. This does not waive wrong-slot, release-identity, health, PERSIST,
+or unbooted-inactive-slot checks.
+
+This document remains the authority for later A/B rollback, reverse-update,
+Parent and full-system fault legs; the 2026-10-24 work order owns package
+acceptance and its later fault recipes. Sections below are historical context
+where they conflict with the short retry route; do not use their prior pinned
+source, old bundles, patched installer, or old active-slot raw-hash predicate
+as execution authority. The older v3 online-only statements about uploads and
+data-only/delta packages apply only to that v3 route, not ADR 0038 `.greia_update`
+application packages. Ordinary owner-release commands below remain the
+release procedure and are not a workaround for experimental fixture gates.
 
 ## 1. Machine and source
 

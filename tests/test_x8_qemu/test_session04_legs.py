@@ -391,6 +391,14 @@ class LegOrderingTests(unittest.TestCase):
                 "default_slot": "A",
                 "accepted_release_id": "greia-0.13.0-s04",
             }
+            digest_calls: list[str] = []
+
+            def digest_with_boot_mutation(_image: Path, slot: str) -> str:
+                digest_calls.append(slot)
+                if slot == "B":
+                    return _hex("slot-B-stable")
+                return _hex("slot-A-before" if digest_calls.count("A") == 1 else "slot-A-after")
+
             with mock.patch.object(
                 ProductHarness,
                 "_observe_boot_health_target",
@@ -413,11 +421,50 @@ class LegOrderingTests(unittest.TestCase):
                     },
                     materialize_fn=materialize_fn,
                     boot_fn=boot_fn,
-                    slot_digest_fn=lambda s, w: _hex(f"slot-{s}-stable"),
+                    slot_digest_fn=digest_with_boot_mutation,
                 )
             boots = [c for c in calls if c.startswith("boot:")]
             self.assertEqual(["boot:wait-health-poweroff"], boots)
             self.assertTrue(result["ok"])
+            self.assertEqual(
+                result["slot_hash_evidence"],
+                {
+                    "scope": "raw_hashes_observational_across_boots",
+                    "booted_slots": ["A"],
+                    "active_unchanged": None,
+                    "inactive_unchanged": True,
+                },
+            )
+
+    def test_first_boot_refuses_untouched_slot_mutation(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            image = Path(tmp) / "installed.img"
+            image.write_bytes(b"installed")
+            bundle = Path(tmp) / "release.greiaupdate"
+            bundle.write_bytes(b"bundle")
+            digest_count = 0
+
+            def changed_b(_image: Path, slot: str) -> str:
+                nonlocal digest_count
+                digest_count += 1
+                return _hex(f"B-{digest_count}" if slot == "B" else "A-stable")
+
+            with mock.patch.object(
+                ProductHarness,
+                "_observe_boot_health_target",
+                return_value={"default_slot": "A", "accepted_release_id": "r1"},
+            ):
+                with self.assertRaisesRegex(Exception, "untouched slot B changed"):
+                    _harness(tmp).run_first_boot_product(
+                        installed_image=image,
+                        release_bundle=bundle,
+                        expected_release_id="r1",
+                        clone_fn=lambda s, d: {"clone": str(d)},
+                        inject_fn=lambda c, s: {"injected_files": []},
+                        materialize_fn=lambda d, i: None,
+                        boot_fn=lambda *args: None,
+                        slot_digest_fn=changed_b,
+                    )
 
     def test_userspace_failure_orders_update_then_health_waits(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -435,6 +482,7 @@ class LegOrderingTests(unittest.TestCase):
                 "recovery-boot-accepted": {
                     "default_slot": "B",
                     "journal_state": "failed",
+                    "accepted_release_id": "greia-0.13.0-s04-b",
                 },
             }
 

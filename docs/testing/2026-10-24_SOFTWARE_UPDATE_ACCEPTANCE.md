@@ -44,13 +44,15 @@ source; do not reuse old September bundles or the manually repaired RC image.
    requirements in §8 apply before any image command.
 2. Run the focused and full source gates, build/inspect images and package
    fixtures using §§1–2 and 9.
-3. Execute the single-root GUI install/detached boot in §8 and the A/B
-   install/first-boot/healthy-update runner in
-   `2026-10-23_SYSTEM_UPDATE_LINUX_ACCEPTANCE.md` §3. Keep their artifacts and
-   evidence separate.
-4. Pair the fresh disposable Parent target; then run upload, continuation,
-   activation, health and restart predicates in §§3–7. Use §9 canaries,
-   §10 A/B harness legs and §11 fault recipes only on disposable clones.
+3. For the next A/B attempt, first execute the clean-source install → first
+   boot → healthy A-to-B smoke in
+   [`2026-10-25_AB_SMOKE_RETRY.md`](2026-10-25_AB_SMOKE_RETRY.md). It rebuilds
+   both fixtures and a clean installer from one SHA. Keep this evidence
+   separate from the single-root GUI install/detached boot in §8.
+4. After that initial A/B smoke, pair the fresh disposable Parent target; run
+   upload, continuation, activation, health and restart predicates in §§3–7.
+   Use §9 canaries, §10 A/B harness legs and §11 fault recipes only on
+   disposable clones; these remain later gates, not a precondition to the smoke.
 5. Record PASS/FAIL/NOT RUN per predicate, with exact artifacts and reason.
    Session 04 remains OPEN until all owned lifecycle gates have evidence.
 

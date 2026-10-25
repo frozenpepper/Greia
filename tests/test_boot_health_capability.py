@@ -504,7 +504,19 @@ class ReadOnlyDeliveryTests(unittest.TestCase):
 
         gen = directives(generator)
         self.assertEqual(gen.get("Service.User"), ["root"])
-        self.assertEqual(gen.get("Service.Group"), ["root"])
+        runtime_root = next(
+            line.split()
+            for line in (
+                _repo_root()
+                / "build/overlay/etc/tmpfiles.d/greia-runtime.conf"
+            )
+            .read_text(encoding="utf-8")
+            .splitlines()
+            if line.split()[:2] == ["d", "/run/greia-os"]
+        )
+        self.assertEqual(gen.get("Service.Group"), [runtime_root[3]])
+        self.assertEqual(gen.get("Service.SupplementaryGroups"), [runtime_root[4]])
+        self.assertEqual(gen.get("Service.CapabilityBoundingSet"), [""])
         self.assertIn("greia-launcher.service", gen.get("Unit.Before", [""])[0])
         self.assertTrue(
             any("--issue-for-pending" in value for value in gen.get("Service.ExecStart", []))

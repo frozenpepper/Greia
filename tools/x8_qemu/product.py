@@ -2337,10 +2337,9 @@ def _require_boot_isolation_evidence(
 ) -> tuple[dict[str, object], dict[str, object]]:
     """Validate the slot-isolation digests + proof (RED on any gap).
 
-    Re-proves through the single :func:`verify_update_slot_isolation`
-    owner so the identity record cannot bless a bypassed isolation
-    check. A missing digest/proof field or a failed isolation re-proof
-    raises RED, never a partial green.
+    Re-proves strict offline isolation when the accepted slot was not
+    booted. Across booted roots, validates the raw hashes but records them
+    as observational; it does not claim byte immutability.
     """
     import re as _re
 
@@ -2380,28 +2379,56 @@ def _require_boot_isolation_evidence(
             "(active_slot/active_unchanged/inactive_changed); "
             "got no slot isolation record"
         )
-    for field in ("active_slot", "active_unchanged", "inactive_changed"):
+    for field in (
+        "active_slot",
+        "active_unchanged",
+        "inactive_changed",
+        "scope",
+        "booted_slots",
+    ):
         if field not in slot_isolation:
             raise LifecycleHarnessError(
                 "unit identity record requires the slot-isolation proof; "
                 f"missing isolation field {field!r} (never a partial green)"
             )
-    proof = verify_update_slot_isolation(
+    scope = slot_isolation.get("scope")
+    booted_slots_raw = slot_isolation.get("booted_slots")
+    if not isinstance(booted_slots_raw, (list, tuple)) or any(
+        slot not in ("A", "B") for slot in booted_slots_raw
+    ):
+        raise LifecycleHarnessError(
+            "unit identity record slot-isolation evidence has invalid booted_slots"
+        )
+    identity_active_slot = slot_isolation["active_slot"]
+    if identity_active_slot != "A":
+        raise LifecycleHarnessError(
+            "boot-health identity must bind accepted slot A"
+        )
+    if tuple(booted_slots_raw) != ("A", "B"):
+        raise LifecycleHarnessError(
+            "boot-health identity must bind the known A-then-B product leg"
+        )
+    proof = observe_slot_hashes_across_boots(
         active_slot=str(slot_isolation["active_slot"]),
         active_before_digest=str(slot_digests["active_before"]),
         active_after_digest=str(slot_digests["active_after"]),
         inactive_before_digest=str(slot_digests["inactive_before"]),
         inactive_after_digest=str(slot_digests["inactive_after"]),
+        booted_slots=tuple(booted_slots_raw),
     )
-    if slot_isolation.get("active_slot") != proof.get("active_slot"):
+    if slot_isolation.get("active_slot") != proof.get("active_slot") or scope != proof.get("scope"):
         raise LifecycleHarnessError(
-            "unit identity record slot-isolation proof does not bind "
-            "the observed digests"
+            "unit identity record slot-hash evidence does not bind "
+            "the observed digests and boot scope"
         )
-    if not proof.get("active_unchanged") or not proof.get("inactive_changed"):
+    if proof.get("inactive_changed") is not None or slot_isolation.get("inactive_changed") is not None:
         raise LifecycleHarnessError(
-            "unit identity record slot-isolation proof is not GREEN"
+            "unit identity record falsely classifies boot-spanning raw hashes"
         )
+    if proof.get("active_unchanged") is True and slot_isolation.get("active_unchanged") is not True:
+        raise LifecycleHarnessError("unit identity record omits strict active-slot proof")
+    if proof.get("active_unchanged") is None and slot_isolation.get("active_unchanged") is not None:
+        raise LifecycleHarnessError("unit identity record falsely claims active byte immutability")
     return (dict(slot_digests), dict(proof))
 
 
@@ -2528,7 +2555,8 @@ def build_product_identity_record(
     Install leg: ``installer_image`` + ``squashfs_mutation`` (unchanged).
     Boot-health leg: ``installed_image`` + per-slot injection mutations
     (via :func:`record_slot_injection_mutation`) + ``slot_digests`` /
-    ``slot_isolation`` (via :func:`verify_update_slot_isolation`) + the
+    ``slot_isolation`` (strict only where the accepted slot was not booted;
+    otherwise raw hashes are explicitly observational) + the
     observed ``boot_observation`` facts from
     :func:`gather_boot_health_observation` (MBR/PARTUUID/filesystem/
     journal/release/layout). Exactly one image leg must be selected;
@@ -3327,8 +3355,9 @@ def hash_slot_partition(
     ``BLOCKED`` naming it. The leg hashes the inactive slot right after
     cloning (its updater baseline), the active slot right after its
     control-seam injection (its seam baseline), and both again after the
-    final boot, proving through :func:`verify_update_slot_isolation` that
-    only the inactive slot moved.
+    final boot. Hashes across booted phases are diagnostic; they do not
+    establish byte isolation. Use :func:`verify_update_slot_isolation`
+    only for an offline/unbooted write window.
     """
     from greia_installer.disk import partition_number_path
 
@@ -3512,6 +3541,64 @@ def verify_update_slot_isolation(
         "active_slot": active_slot,
         "active_unchanged": True,
         "inactive_changed": True,
+        "scope": "offline_or_unbooted_write_window",
+    }
+
+
+def observe_slot_hashes_across_boots(
+    *,
+    active_slot: str,
+    active_before_digest: str,
+    active_after_digest: str,
+    inactive_before_digest: str,
+    inactive_after_digest: str,
+    booted_slots: tuple[str, ...],
+) -> dict[str, object]:
+    """Record raw slot hashes without mistaking normal boot writes for staging.
+
+    A writable ext4 root can change during its own boot. When the accepted
+    slot was booted during this observation window, raw digest equality is
+    diagnostic only; the production slot writer and authoritative boot
+    observations own wrong-target and release acceptance checks. For a
+    window in which the accepted slot was not booted, retain the strict
+    isolation predicate.
+    """
+    if active_slot not in ("A", "B"):
+        raise LifecycleHarnessError(
+            f"slot observation refused: unknown active slot {active_slot!r}"
+        )
+    if any(slot not in ("A", "B") for slot in booted_slots):
+        raise LifecycleHarnessError(
+            f"slot observation refused: unknown booted slot in {booted_slots!r}"
+        )
+    digests = {
+        "active_before": active_before_digest,
+        "active_after": active_after_digest,
+        "inactive_before": inactive_before_digest,
+        "inactive_after": inactive_after_digest,
+    }
+    import re as _re
+
+    if any(not isinstance(value, str) or not _re.fullmatch(r"[0-9a-f]{64}", value)
+           for value in digests.values()):
+        raise LifecycleHarnessError(
+            "slot observation refused: raw partition hash is not an observed SHA-256"
+        )
+    if active_slot not in booted_slots:
+        proof = verify_update_slot_isolation(
+            active_slot=active_slot,
+            active_before_digest=active_before_digest,
+            active_after_digest=active_after_digest,
+            inactive_before_digest=inactive_before_digest,
+            inactive_after_digest=inactive_after_digest,
+        )
+        return {**proof, "booted_slots": list(booted_slots)}
+    return {
+        "active_slot": active_slot,
+        "active_unchanged": None,
+        "inactive_changed": None,
+        "scope": "raw_hashes_observational_across_boots",
+        "booted_slots": list(booted_slots),
     }
 
 
@@ -3841,9 +3928,7 @@ def run_boot_health_leg(
     through the real update socket with the unsigned v3 ``.greiaupdate`` →
     re-inject slot B (the real updater rewrote it) → boot B
     ``wait-health-poweroff`` (health-commits B, accepted release
-    advances) → hash both slots again and prove through
-    :func:`verify_update_slot_isolation` that the active slot stayed
-    byte-identical while the staged inactive slot moved → host-side
+    advances) → hash both slots again as boot-spanning diagnostics → host-side
     observation → ``assert_lifecycle_transitions`` closure. Injectable
     ``clone_fn``/``inject_fn``/``boot_fn``/``observe_fn``/
     ``slot_digest_fn`` let unit tests prove ordering, isolation and that
@@ -3895,12 +3980,13 @@ def run_boot_health_leg(
             f"boot-health leg observed default {observed.get('default_slot')!r}, "
             "expected 'B'"
         )
-    isolation = verify_update_slot_isolation(
+    isolation = observe_slot_hashes_across_boots(
         active_slot="A",
         active_before_digest=active_before,
         active_after_digest=active_after,
         inactive_before_digest=inactive_before,
         inactive_after_digest=inactive_after,
+        booted_slots=("A", "B"),
     )
     report = build_boot_health_lifecycle_report(observed_default="B")
     return {
@@ -4278,9 +4364,7 @@ class ProductHarness:
         rewrites it and before its boot, then boot-B
     ``wait-health-poweroff``) under QEMU with the virtual VGA device
     the real Xorg launcher needs (R1) on the i386-capable KVM-or-TCG
-    machine (G1) → hash both slots again and prove through
-        :func:`verify_update_slot_isolation` that the active slot stayed
-        byte-identical while the staged inactive slot moved → host-side
+    machine (G1) → hash both slots again as boot-spanning diagnostics → host-side
         observation through production parsers
         (:func:`gather_boot_health_observation` /
         :func:`inspect_boot_health_roots`, returning the observed default
@@ -4402,14 +4486,21 @@ class ProductHarness:
                 expected_slot="B",
                 expected_release_id=expected_release_id_b,
             )
+        if observed.get("accepted_release_id") != expected_release_id_b:
+            raise LifecycleHarnessError(
+                "boot-health accepted release is "
+                f"{observed.get('accepted_release_id')!r}, expected "
+                f"{expected_release_id_b!r}"
+            )
         active_after = str(digest_fn(clone_path, "A"))
         inactive_after = str(digest_fn(clone_path, "B"))
-        isolation = verify_update_slot_isolation(
+        isolation = observe_slot_hashes_across_boots(
             active_slot="A",
             active_before_digest=active_before,
             active_after_digest=active_after,
             inactive_before_digest=inactive_before,
             inactive_after_digest=inactive_after,
+            booted_slots=("A", "B"),
         )
         report = build_boot_health_lifecycle_report(
             observed_default=str(observed.get("default_slot", ""))
@@ -4771,8 +4862,9 @@ class ProductHarness:
         ``wait-health-poweroff`` boot through the shipped boot-health
         socket (the first-install CONFIRM path), then proves host-side
         that A booted and accepted: default A, accepted release,
-        first-install pending cleared, PERSIST valid, both slots
-        byte-identical to their pre-boot digests. The clone feeds the
+        first-install pending cleared and PERSIST valid. B must remain
+        byte-identical because it was not booted; A's writable-root hash
+        is observational. The clone feeds the
         healthy-update leg; the install-leg origin is never booted.
         """
         from .lifecycle import assert_lifecycle_transitions
@@ -4869,13 +4961,19 @@ class ProductHarness:
                 expected_slot="A",
                 expected_release_id=expected_release_id,
             )
+        if observed.get("default_slot") != "A":
+            raise LifecycleHarnessError(
+                "first-boot observed default "
+                f"{observed.get('default_slot')!r}, expected 'A'"
+            )
+        if observed.get("accepted_release_id") != expected_release_id:
+            raise LifecycleHarnessError(
+                "first-boot accepted release is "
+                f"{observed.get('accepted_release_id')!r}, expected "
+                f"{expected_release_id!r}"
+            )
         active_after = str(digest_fn(clone_path, "A"))
         inactive_after = str(digest_fn(clone_path, "B"))
-        if active_before != active_after:
-            raise LifecycleHarnessError(
-                "first-boot slot isolation violated: slot A changed across "
-                "its own acceptance boot"
-            )
         if inactive_before != inactive_after:
             raise LifecycleHarnessError(
                 "first-boot slot isolation violated: untouched slot B changed"
@@ -4901,6 +4999,12 @@ class ProductHarness:
                 "active_after": active_after,
                 "inactive_before": inactive_before,
                 "inactive_after": inactive_after,
+            },
+            "slot_hash_evidence": {
+                "scope": "raw_hashes_observational_across_boots",
+                "booted_slots": ["A"],
+                "active_unchanged": None,
+                "inactive_unchanged": True,
             },
             "observed": observed,
             "lifecycle_report": report,
@@ -4931,8 +5035,9 @@ class ProductHarness:
         candidate-recovery deadline marks FAILED and reboots to the
         accepted slot, which stays accepted and default throughout. Host
         attestation comes from the production stage inspectors; the
-        accepted slot must stay byte-identical while the candidate slot
-        moves.
+        accepted and candidate roots are booted during this leg, so their
+        raw hashes are observational. SlotWriter retains the active/
+        accepted destination refusal.
         """
         from .lifecycle import assert_lifecycle_transitions
 
@@ -5046,6 +5151,7 @@ class ProductHarness:
                 work_dir=observe_work,
                 accepted_slot=accepted_slot,
                 candidate_slot=candidate_slot,
+                accepted_release_id=accepted_release_id,
                 expected_release_id=candidate_release_id,
             )
 
@@ -5054,14 +5160,21 @@ class ProductHarness:
             stages[stage] = _observe_stage(stage)
         active_after = str(digest_fn(accepted_slot, "after"))
         inactive_after = str(digest_fn(candidate_slot, "after"))
-        isolation = verify_update_slot_isolation(
+        isolation = observe_slot_hashes_across_boots(
             active_slot=accepted_slot,
             active_before_digest=active_before,
             active_after_digest=active_after,
             inactive_before_digest=inactive_before,
             inactive_after_digest=inactive_after,
+            booted_slots=(accepted_slot, candidate_slot),
         )
         recovered = dict(stages.get("recovery-boot-accepted", {}))
+        if recovered.get("accepted_release_id") != accepted_release_id:
+            raise LifecycleHarnessError(
+                "userspace-failure recovery accepted release is "
+                f"{recovered.get('accepted_release_id')!r}, expected "
+                f"{accepted_release_id!r}"
+            )
         report = build_userspace_failure_lifecycle_report(
             observed_default=str(recovered.get("default_slot", ""))
         )
@@ -5349,15 +5462,22 @@ class ProductHarness:
             )
         boots.append("reset-boot")
         reset = _observe_nonboot("reset-boot-accepted")
+        if reset.get("accepted_release_id") != accepted_release_id:
+            raise LifecycleHarnessError(
+                "nonboot reset accepted release is "
+                f"{reset.get('accepted_release_id')!r}, expected "
+                f"{accepted_release_id!r}"
+            )
 
         active_after = str(digest_fn(accepted_slot, "after"))
         inactive_after = str(digest_fn(candidate_slot, "after"))
-        isolation = verify_update_slot_isolation(
+        isolation = observe_slot_hashes_across_boots(
             active_slot=accepted_slot,
             active_before_digest=active_before,
             active_after_digest=active_after,
             inactive_before_digest=inactive_before,
             inactive_after_digest=inactive_after,
+            booted_slots=(accepted_slot, candidate_slot),
         )
         report = build_nonboot_failure_lifecycle_report(
             observed_default=str(reset.get("default_slot", ""))
@@ -5635,7 +5755,7 @@ class ProductHarness:
         a missing facility stays BLOCKED and a missing evidence file
         fails closed.
         """
-        del accepted_release_id, candidate_release_id
+        del candidate_release_id
         return gather_recovery_stage_observation(
             target_path,
             stage,
@@ -5644,6 +5764,7 @@ class ProductHarness:
             which=which,
             accepted_slot=accepted_slot,
             candidate_slot=candidate_slot,
+            accepted_release_id=accepted_release_id,
             expected_release_id=reverse_release_id,
         )
 
@@ -7210,8 +7331,8 @@ def run_recovery_d31_reverse_leg(
     observation via ``observe_fn(stage)`` (grubenv/journal/release
     facts from on-image state, never the control channel) -> prove D31
     survival via ``d31_fn()`` (semantic before/after through the store
-    parse paths plus byte snapshots) -> prove slot isolation (accepted
-    slot byte-identical across failure/recovery, inactive moved) ->
+    parse paths plus byte snapshots) -> record raw slot hashes as
+    observational because both slots boot during the leg ->
     close through ``assert_lifecycle_transitions``.
 
     The sequenced A→B→A update coverage is carried by three distinct
@@ -7326,6 +7447,12 @@ def run_recovery_d31_reverse_leg(
             "recovery leg is RED: accepted default is not "
             f"{accepted_slot!r} after recovery"
         )
+    if postrecovery.get("accepted_release_id") != accepted_release_id:
+        raise LifecycleHarnessError(
+            "recovery leg is RED: accepted release after recovery is "
+            f"{postrecovery.get('accepted_release_id')!r}, expected "
+            f"{accepted_release_id!r}"
+        )
 
     if d31_fn is None:
         raise LifecycleHarnessError(
@@ -7386,12 +7513,13 @@ def run_recovery_d31_reverse_leg(
         inactive_before = pre_digests[(candidate_slot, "before")]
         active_after = str(slot_digest_fn(accepted_slot, "after"))
         inactive_after = str(slot_digest_fn(candidate_slot, "after"))
-        isolation = verify_update_slot_isolation(
+        isolation = observe_slot_hashes_across_boots(
             active_slot=accepted_slot,
             active_before_digest=active_before,
             active_after_digest=active_after,
             inactive_before_digest=inactive_before,
             inactive_after_digest=inactive_after,
+            booted_slots=(accepted_slot, candidate_slot),
         )
     report = build_recovery_d31_reverse_lifecycle_report(
         observed_default=reverse_slot
@@ -7489,6 +7617,8 @@ def inspect_recovery_postrecovery_roots(
     journal_dir: Path,
     accepted_slot: str,
     candidate_slot: str,
+    layout_record_path: Path | None = None,
+    accepted_release_id: str | None = None,
 ) -> dict[str, object]:
     """Verify the deadline recovery after the failure decision.
 
@@ -7496,7 +7626,9 @@ def inspect_recovery_postrecovery_roots(
     only: the journal is terminal FAILED with the structured trigger
     note binding health-service-failure/automatic-reboot, and the
     machine is back on the accepted slot (last_booted and persistent
-    default). Any deviation is RED naming the fact.
+    default). When supplied by the capable-host observer, the PERSIST
+    layout record must also retain the expected accepted slot/release
+    identity; this binds the layout/journal identity, not root-file bytes.
     """
     from greia_platform.boot_transaction import (
         BootTransactionJournal,
@@ -7532,6 +7664,40 @@ def inspect_recovery_postrecovery_roots(
         raise LifecycleHarnessError(
             "recovery postrecovery journal does not bind the failed candidate"
         )
+    if (layout_record_path is None) != (accepted_release_id is None):
+        raise LifecycleHarnessError(
+            "recovery postrecovery release check requires both layout record "
+            "path and expected accepted release_id"
+        )
+    observed_release_id: str | None = None
+    if layout_record_path is not None and accepted_release_id is not None:
+        from greia_platform.system_updates import (
+            UpdateLayoutError,
+            load_installed_layout_record,
+        )
+
+        try:
+            layout_record = load_installed_layout_record(Path(layout_record_path))
+        except UpdateLayoutError as exc:
+            raise LifecycleHarnessError(
+                f"recovery postrecovery layout record is not authoritative ({exc})"
+            ) from exc
+        if layout_record is None:
+            raise LifecycleHarnessError(
+                "recovery postrecovery layout record is missing"
+            )
+        if layout_record.accepted_slot != accepted_slot:
+            raise LifecycleHarnessError(
+                "recovery postrecovery layout accepts "
+                f"{layout_record.accepted_slot!r}, expected {accepted_slot!r}"
+            )
+        if layout_record.accepted_release_id != accepted_release_id:
+            raise LifecycleHarnessError(
+                "recovery postrecovery accepted release is "
+                f"{layout_record.accepted_release_id!r}, expected "
+                f"{accepted_release_id!r}"
+            )
+        observed_release_id = layout_record.accepted_release_id
     if state.last_booted_slot != accepted_slot:
         raise LifecycleHarnessError(
             f"recovery postrecovery last_booted is {state.last_booted_slot!r}, "
@@ -7550,6 +7716,7 @@ def inspect_recovery_postrecovery_roots(
         "journal_note": note,
         "candidate_slot": journal.candidate_slot,
         "accepted_slot": journal.accepted_slot,
+        "accepted_release_id": observed_release_id,
     }
 
 
@@ -7562,6 +7729,7 @@ def gather_recovery_stage_observation(
     which=None,
     accepted_slot: str,
     candidate_slot: str,
+    accepted_release_id: str,
     expected_release_id: str,
 ) -> dict[str, object]:
     """Observe one recovery stage from disposable target bytes (capable host).
@@ -7674,6 +7842,8 @@ def gather_recovery_stage_observation(
                 journal_dir=resolved["journal_dir"],
                 accepted_slot=accepted_slot,
                 candidate_slot=candidate_slot,
+                layout_record_path=resolved["layout_record_path"],
+                accepted_release_id=accepted_release_id,
             )
             observed = dict(post)
         else:

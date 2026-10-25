@@ -233,3 +233,29 @@ payload predates these unit fixes; it was not rebuilt, so the update-health
 slot B would still carry the old credential/service units. The clean full
 A/B installer from the fixed source was also not rebuilt; the tested target
 was patched in place as a disposable fixture. Session 04 remains OPEN.
+
+## Harness correction and short next retry (2026-10-25; source-only)
+
+The follow-up resolves the testing-contract wall without changing the current
+writable-root architecture. Hashes spanning a slot's own boot are diagnostic;
+they are not runtime proof that the updater left every byte unchanged. The
+first-A boot still requires untouched B to be identical. Production wrong-slot
+refusals, authoritative boot/default/release/journal/PERSIST checks and recovery
+accepted-release binding remain in force. This does not assert old-root file
+inventory equality or mark any unexecuted Linux case passed.
+
+Use `docs/testing/2026-10-25_AB_SMOKE_RETRY.md` next, rather than starting the
+entire fault matrix. Rebuild baseline, next bundle and installer from the same
+new source; do not reuse the patched installer or stale next payload described
+above. Run install, first-A health and healthy A-to-B; preserve per-leg error
+JSON/traceback/logs on failure. Remaining rollback/reverse, interruption,
+Parent/device and data-survival gates stay open. Current source verification
+and its full-gate result are recorded in HANDOVER. This addendum does not alter
+the Linux observations or PASS/NOT RUN boundaries above.
+
+The source follow-up passed 335 focused tests and the short guide's exact
+66-test command. Its final macOS full run completed 5,958 tests with 6 failures,
+3 errors and 9 skips, all matching recorded content/message/ARM64/macOS
+outcomes; the full gate remains NOT GREEN. No Linux image/VM step was run in
+this follow-up. Use the exact committed source and new smoke work order for
+the next actual Linux result.

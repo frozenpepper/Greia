@@ -115,6 +115,15 @@ The old signed `.greiaupdate` v2 flow and release signing keys are
 superseded by ADR 0036 and are not the normal production route; older
 references to them are historical only.
 
+For the next A/B Linux attempt, start with
+`docs/testing/2026-10-25_AB_SMOKE_RETRY.md`: clean baseline/next fixtures,
+clean installer, first-A acceptance and healthy A-to-B only. Keep the larger
+fault matrix for after this smoke step passes. ADR 0036 clarifies that a booted
+writable root's raw hash is observational; preserve inactive-destination
+refusal and semantic root/release/journal/health checks. A never-booted,
+untargeted slot still has a strict unchanged-bytes check. Routine application
+packages do not require rebuilding A/B images for each Python change.
+
 Session 04 owns the real legacy-i386 fresh-install/update/rollback lifecycle. The
 `POSTR1-P1-INSTALLER-RED` / Gate-P5/V12G/D6 routing below is historical and
 superseded for lifecycle sequencing. Source composition primitives (T3-S) are

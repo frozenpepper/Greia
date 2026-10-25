@@ -163,6 +163,32 @@ Before candidate acceptance, migrations must remain backward compatible or trans
 
 Fresh install writes only A as a valid system. B is formatted but empty/unavailable until the first later update. Fresh A begins as `first_boot_pending`; the first healthy Greia boot marks it accepted.
 
+### Writable roots and A/B test scope — clarification 2026-10-25
+
+The current active root remains writable, including the application-generation
+updates selected by ADR 0038. This work does not require a read-only root,
+overlay filesystem, or migration of every Linux writable path to PERSIST.
+Existing process permissions and durable child/Parent storage boundaries remain
+in force.
+
+The full-system writer must still reject the active and accepted slots as
+its destination. That is the updater's write-isolation contract. It does not
+mean a running ext4 root stays byte-identical through boot, health acceptance
+or recovery: normal filesystem metadata and runtime writes can change it.
+Across such boots, raw partition hashes are diagnostics, not acceptance gates
+or proof that the updater avoided a slot. Acceptance uses the real mounted-root
+and release identity, boot default/one-shot, journal, layout/PERSIST schema,
+health, rollback and scoped durable-data checks. The production destination
+and readback checks remain mandatory.
+
+A slot that a test interval neither boots nor targets must remain unchanged;
+first-install acceptance still protects the untouched B slot. Strict raw-hash
+checks may also be used for a genuinely unbooted staging interval. A combined
+boot/update test must describe its hashes as observational and must not claim
+runtime byte-isolation proof from them. More restrictive root-filesystem
+architecture needs its own accepted design and evidence, not a harness checksum
+workaround.
+
 ## 7. Shared writer/finalizer and bounded staging
 
 Fresh install and update share the same `SlotWriter` / `SlotFinalizer` direction:

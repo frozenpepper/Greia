@@ -926,8 +926,9 @@ class UnitContractTests(unittest.TestCase):
         self.assertIn("RuntimeDirectoryPreserve=yes", text)
 
     def test_service_is_root_owned_on_demand_with_no_boot_enable(self) -> None:
+        root = _repo_root()
         text = (
-            _repo_root()
+            root
             / "build"
             / "overlay"
             / "etc"
@@ -937,7 +938,16 @@ class UnitContractTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         directives = _parse_unit_directives(text)
         self.assertEqual(directives.get("Service.User"), ["root"])
-        self.assertEqual(directives.get("Service.Group"), ["root"])
+        runtime_root = next(
+            line.split()
+            for line in (root / "build/overlay/etc/tmpfiles.d/greia-runtime.conf")
+            .read_text(encoding="utf-8")
+            .splitlines()
+            if line.split()[:2] == ["d", "/run/greia-os"]
+        )
+        self.assertEqual(directives.get("Service.Group"), [runtime_root[3]])
+        self.assertEqual(directives.get("Service.SupplementaryGroups"), [runtime_root[4]])
+        self.assertEqual(directives.get("Service.CapabilityBoundingSet"), [""])
         self.assertTrue(
             any(
                 "greia_platform.boot_health_service" in value
@@ -946,6 +956,12 @@ class UnitContractTests(unittest.TestCase):
         )
         self.assertEqual(
             directives.get("Service.RestrictAddressFamilies"), ["AF_UNIX"]
+        )
+        self.assertTrue(
+            any(
+                "GREIA_BOOT_HISTORY_DIR=/run/greia-persist/greia/diagnostics" in value
+                for value in directives.get("Service.Environment", [])
+            )
         )
         self.assertEqual(
             set(" ".join(directives.get("Unit.Requires", [])).split()),

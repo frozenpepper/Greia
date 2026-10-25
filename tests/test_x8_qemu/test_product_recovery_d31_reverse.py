@@ -193,6 +193,7 @@ def _good_observations() -> dict[str, dict[str, object]]:
             "journal_note": "recovery:health-service-failure:automatic-reboot:t",
             "last_booted": "B",
             "default_slot": "B",
+            "accepted_release_id": "greia-0.21.0",
         },
         "reverse-update-accepted": {
             "journal_state": "accepted",
@@ -649,6 +650,32 @@ class NoopSensitivityTests(unittest.TestCase):
 
 
 class StageInspectorTests(unittest.TestCase):
+    def _layout_record(self, path: Path, *, release_id: str = "greia-0.21.0") -> Path:
+        import json
+
+        from greia_platform.persistent_layout import InstalledLayoutRecord
+
+        record = InstalledLayoutRecord.from_dict(
+            {
+                "accepted_release_id": release_id,
+                "accepted_slot": "B",
+                "boot_backend": "grub-ab-v1",
+                "boot_control": {"active_slot": "B", "kind": "grub-env-v1"},
+                "install_profile": "acer-aspire-one-i386-ab",
+                "install_target_sha256": "ab" * 32,
+                "installed_at_unix": 1757000000,
+                "layout_id": "legacy-bios-ab-v1",
+                "persist": {"filesystem_uuid": "cccccccc-dddd-eeee-ffff-000000000000", "partuuid": "1a2b3c4d-04"},
+                "platform_family": "legacy-x86",
+                "schema_version": 1,
+                "slot_bytes": 1664 * 1024 * 1024,
+                "system_a": {"filesystem_uuid": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee", "partuuid": "1a2b3c4d-02"},
+                "system_b": {"filesystem_uuid": "bbbbbbbb-cccc-dddd-eeee-ffffffffffff", "partuuid": "1a2b3c4d-03"},
+            }
+        )
+        path.write_text(json.dumps(record.as_dict()), encoding="utf-8")
+        return path
+
     def _coordinator(self, work: Path, name: str):
         from greia_platform.grub_ab import GrubEnvBackend
 
@@ -692,16 +719,30 @@ class StageInspectorTests(unittest.TestCase):
                 coordinator, recovery_class="health-service-failure", detail="t"
             )
             backend.reconcile("B")
+            layout = self._layout_record(work / "installed-layout.json")
             post = inspect_recovery_postrecovery_roots(
                 backend_state_dir=work / "boot",
                 journal_dir=journal_dir,
                 accepted_slot="B",
                 candidate_slot="A",
+                layout_record_path=layout,
+                accepted_release_id="greia-0.21.0",
             )
             self.assertEqual(post["journal_state"], "failed")
+            self.assertEqual(post["accepted_release_id"], "greia-0.21.0")
             self.assertIn("health-service-failure", post["journal_note"])  # type: ignore[operator]
             self.assertIn("automatic-reboot", post["journal_note"])  # type: ignore[operator]
             self.assertEqual(post["last_booted"], "B")
+
+            with self.assertRaisesRegex(LifecycleHarnessError, "accepted release"):
+                inspect_recovery_postrecovery_roots(
+                    backend_state_dir=work / "boot",
+                    journal_dir=journal_dir,
+                    accepted_slot="B",
+                    candidate_slot="A",
+                    layout_record_path=layout,
+                    accepted_release_id="greia-0.20.0",
+                )
 
     def test_prefailure_red_when_default_moved(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -746,8 +787,12 @@ class LegDriverTests(unittest.TestCase):
         self.assertEqual(phases.count("update-stage"), 2)
         self.assertTrue(result["d31_semantic_preserved"])
         self.assertTrue(result["d31_byte_identical"])
-        self.assertTrue(result["slot_isolation"]["active_unchanged"])  # type: ignore[index]
-        self.assertTrue(result["slot_isolation"]["inactive_changed"])  # type: ignore[index]
+        self.assertIsNone(result["slot_isolation"]["active_unchanged"])  # type: ignore[index]
+        self.assertIsNone(result["slot_isolation"]["inactive_changed"])  # type: ignore[index]
+        self.assertEqual(
+            result["slot_isolation"]["scope"],  # type: ignore[index]
+            "raw_hashes_observational_across_boots",
+        )
         assert_lifecycle_transitions(result["lifecycle_report"])
         self.assertEqual(
             result["lifecycle_report"]["observed_steps"],
@@ -810,6 +855,17 @@ class LegDriverTests(unittest.TestCase):
         with self.assertRaises(LifecycleHarnessError) as caught:
             _run_leg(observe_fn=lambda stage: dict(observations[stage]))
         self.assertIn("did not accept", str(caught.exception))
+
+    def test_leg_red_when_recovery_changes_previous_release(self) -> None:
+        observations = _good_observations()
+        observations["recovery-boot-accepted"] = dict(
+            observations["recovery-boot-accepted"],
+            accepted_release_id="unexpected-release",
+        )
+        with self.assertRaisesRegex(
+            LifecycleHarnessError, "accepted release after recovery"
+        ):
+            _run_leg(observe_fn=lambda stage: dict(observations[stage]))
 
     def test_leg_red_then_green_on_d31_restore(self) -> None:
         # Positive control: break the D31 byte snapshot -> RED; the

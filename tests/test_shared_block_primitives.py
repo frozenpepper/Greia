@@ -10,6 +10,7 @@ import hashlib
 import io
 import json
 import os
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
@@ -47,6 +48,8 @@ _UUID_P = "33333333-4444-5555-6666-777777777777"
 _UUID_P_FS = "cccccccc-dddd-eeee-ffff-000000000000"
 _UUID_EVIL = "eeeeeeee-ffff-0000-1111-222222222222"
 _SLOT_BYTES = 1024 * 1024 * 1024
+_VERSIONED_KERNEL = b"versioned kernel fixture 6.1.0-greia-amd64\n"
+_VERSIONED_INITRAMFS = b"versioned initramfs fixture 6.1.0-greia-amd64\n"
 
 
 def _record_dict(**overrides: object) -> dict[str, object]:
@@ -143,6 +146,17 @@ class _FakeFsRunner:
                     candidate.chmod(0o755)
                 except OSError:
                     pass
+        # Match the real release payload shape: the builder selects one
+        # versioned pair and materializes the generic inputs the finalizer
+        # consumes before it publishes stable GRUB aliases.
+        boot = mountpoint / "boot"
+        boot.mkdir(parents=True, exist_ok=True)
+        versioned_kernel = boot / "vmlinuz-6.1.0-greia-amd64"
+        versioned_initramfs = boot / "initrd.img-6.1.0-greia-amd64"
+        versioned_kernel.write_bytes(_VERSIONED_KERNEL)
+        versioned_initramfs.write_bytes(_VERSIONED_INITRAMFS)
+        shutil.copyfile(versioned_kernel, boot / "vmlinuz-generic")
+        shutil.copyfile(versioned_initramfs, boot / "initrd-generic")
 
     def unmount(self, mountpoint: Path) -> None:
         self.ops.append(f"unmount:{mountpoint.name}")
@@ -645,6 +659,16 @@ class FinalizerIntegrationTests(unittest.TestCase):
                 self.assertEqual(receipt.slot, "B")
                 # The role UUID was restored, never cloned from a template.
                 self.assertNotEqual(receipt.filesystem_uuid, _UUID_A_FS)
+                mountpoint = harness.mount_root / f"slot-b-{os.getpid()}"
+                for source_name, alias_name, expected in (
+                    ("vmlinuz-generic", "vmlinuz-greia", _VERSIONED_KERNEL),
+                    ("initrd-generic", "initramfs-greia.img", _VERSIONED_INITRAMFS),
+                ):
+                    source = mountpoint / "boot" / source_name
+                    alias = mountpoint / "boot" / alias_name
+                    self.assertEqual(source.read_bytes(), expected)
+                    self.assertEqual(alias.read_bytes(), expected)
+                    self.assertEqual(os.stat(source).st_ino, os.stat(alias).st_ino)
             finally:
                 store.close()
 

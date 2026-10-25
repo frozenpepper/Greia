@@ -12,6 +12,7 @@ from __future__ import annotations
 import hashlib
 import io
 import os
+import shutil
 import stat
 import subprocess
 import tempfile
@@ -63,6 +64,8 @@ _UC_PAYLOAD = b"microcode-bytes"
 
 EXPECTED_TMPFS_TMP = "tmpfs /tmp tmpfs nosuid,nodev,noexec,mode=1777,size=64M 0 0"
 EXPECTED_TMPFS_VAR = "tmpfs /var/tmp tmpfs nosuid,nodev,noexec,mode=1777,size=32M 0 0"
+_VERSIONED_KERNEL = b"versioned kernel fixture 6.1.0-greia-amd64\n"
+_VERSIONED_INITRAMFS = b"versioned initramfs fixture 6.1.0-greia-amd64\n"
 
 
 def _record(**overrides: object) -> InstalledLayoutRecord:
@@ -151,6 +154,16 @@ def _populate_slot_completeness(mount_dir: Path) -> None:
                 candidate.chmod(0o755)
             except OSError:
                 pass
+    # Match the real release payload shape: one versioned kernel/initramfs
+    # pair is copied to the stable generic inputs consumed by SlotFinalizer.
+    boot_dir = mount_dir / "boot"
+    boot_dir.mkdir(parents=True, exist_ok=True)
+    versioned_kernel = boot_dir / "vmlinuz-6.1.0-greia-amd64"
+    versioned_initramfs = boot_dir / "initrd.img-6.1.0-greia-amd64"
+    versioned_kernel.write_bytes(_VERSIONED_KERNEL)
+    versioned_initramfs.write_bytes(_VERSIONED_INITRAMFS)
+    shutil.copyfile(versioned_kernel, boot_dir / "vmlinuz-generic")
+    shutil.copyfile(versioned_initramfs, boot_dir / "initrd-generic")
 
 
 class DirBackedSlotFilesystem:
@@ -677,6 +690,15 @@ class FstabFileModeTests(unittest.TestCase):
             self.assertEqual(stat.S_IMODE(os.stat(fstab_path).st_mode), 0o644)
             self.assertIn(EXPECTED_TMPFS_TMP.encode("ascii"), persisted)
             self.assertNotIn(_TEMPLATE_UUID.encode("ascii"), persisted)
+            for source_name, alias_name, expected in (
+                ("vmlinuz-generic", "vmlinuz-greia", _VERSIONED_KERNEL),
+                ("initrd-generic", "initramfs-greia.img", _VERSIONED_INITRAMFS),
+            ):
+                source = mounts[0] / "boot" / source_name
+                alias = mounts[0] / "boot" / alias_name
+                self.assertEqual(source.read_bytes(), expected)
+                self.assertEqual(alias.read_bytes(), expected)
+                self.assertEqual(os.stat(source).st_ino, os.stat(alias).st_ino)
             # The shared block seam keeps its 0o600 default for non-fstab
             # finalized files.
             for rel in (

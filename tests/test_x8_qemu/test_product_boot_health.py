@@ -587,6 +587,14 @@ class InspectBootHealthTests(unittest.TestCase):
             self.assertEqual(observed["accepted_release_id"], "greia-0.21.0")
             self.assertEqual(observed["last_booted"], "B")
             self.assertEqual(observed["journal_state"], "accepted")
+            with self.assertRaisesRegex(LifecycleHarnessError, "release"):
+                inspect_boot_health_roots(
+                    backend_state_dir=roots["backend_state"],
+                    journal_dir=roots["journal"],
+                    layout_record_path=roots["layout"],
+                    expected_slot="B",
+                    expected_release_id="greia-0.22.0",
+                )
 
     def test_inspect_red_then_green_positive_control(self) -> None:
         # Break: reconcile the wrong slot -> last_booted mismatch RED.
@@ -617,6 +625,17 @@ class InspectBootHealthTests(unittest.TestCase):
 
 
 class SlotIsolationTests(unittest.TestCase):
+    def test_unbooted_slot_window_keeps_strict_active_digest_guard(self) -> None:
+        with self.assertRaisesRegex(LifecycleHarnessError, "active/accepted slot"):
+            _product.observe_slot_hashes_across_boots(
+                active_slot="A",
+                active_before_digest="aa" * 32,
+                active_after_digest="dd" * 32,
+                inactive_before_digest="bb" * 32,
+                inactive_after_digest="cc" * 32,
+                booted_slots=(),
+            )
+
     def test_green_only_inactive_changed(self) -> None:
         proof = verify_update_slot_isolation(
             active_slot="A",
@@ -700,8 +719,7 @@ class LegOrderingTests(unittest.TestCase):
             arm_index = boots.index("update-arm")
             self.assertGreater(b_index, arm_index)
             self.assertEqual(result["phases"], list(BOOT_HEALTH_LEG_PHASES))
-            # Isolation is wired: digests captured B-pre/A-pre/A-post/B-post
-            # and the active slot proved byte-identical while B moved.
+            # Both raw hashes span boots; retain them as diagnostics only.
             self.assertEqual(digests.seen, ["B", "A", "A", "B"])
             self.assertEqual(
                 result["slot_digests"],
@@ -713,8 +731,10 @@ class LegOrderingTests(unittest.TestCase):
                 },
             )
             isolation = result["slot_isolation"]
-            self.assertTrue(isolation["active_unchanged"])
-            self.assertTrue(isolation["inactive_changed"])
+            self.assertIsNone(isolation["active_unchanged"])
+            self.assertIsNone(isolation["inactive_changed"])
+            self.assertEqual(isolation["scope"], "raw_hashes_observational_across_boots")
+            self.assertEqual(isolation["booted_slots"], ["A", "B"])
 
     def test_missing_bundle_blocked_before_mutation(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -757,15 +777,14 @@ class LegOrderingTests(unittest.TestCase):
                 )
             self.assertIn("observation", str(caught.exception))
 
-    def test_active_slot_mutation_refuses_before_closure(self) -> None:
-        # Wiring proof: the leg hashes both slots, so an active-slot move
-        # (aa->dd) refuses even when observation reports B.
+    def test_booted_active_slot_hash_change_is_diagnostic(self) -> None:
+        # A writable ext4 slot may change during its own boots; the raw
+        # hash is retained, but does not claim staging isolation.
         with tempfile.TemporaryDirectory() as tmp:
             base = Path(tmp)
             bundle = self._fixtures(base)
             digests = _scripted_digest_fn(["bb" * 32, "aa" * 32, "dd" * 32, "cc" * 32])
-            with self.assertRaises(LifecycleHarnessError) as caught:
-                run_boot_health_leg(
+            result = run_boot_health_leg(
                     product_root=base / "product",
                     installed_clone=base / "clone.img",
                     control_dir=base / "ctl",
@@ -776,16 +795,22 @@ class LegOrderingTests(unittest.TestCase):
                     observe_fn=lambda: {"default_slot": "B"},
                     slot_digest_fn=digests,
                 )
-            self.assertIn("active/accepted slot", str(caught.exception))
+            self.assertEqual(digests.seen, ["B", "A", "A", "B"])
+            self.assertIsNone(result["slot_isolation"]["active_unchanged"])
+            self.assertIsNone(result["slot_isolation"]["inactive_changed"])
+            self.assertEqual(
+                result["slot_isolation"]["scope"],
+                "raw_hashes_observational_across_boots",
+            )
 
-    def test_inactive_unchanged_refuses_before_closure(self) -> None:
-        # Wiring proof: a staged slot that never moved (bb->bb) refuses.
+    def test_booted_candidate_raw_hash_equality_is_diagnostic(self) -> None:
+        # Raw hashes across a boot are diagnostic; semantic boot identity
+        # and production writer checks own update acceptance.
         with tempfile.TemporaryDirectory() as tmp:
             base = Path(tmp)
             bundle = self._fixtures(base)
             digests = _scripted_digest_fn(["bb" * 32, "aa" * 32, "aa" * 32, "bb" * 32])
-            with self.assertRaises(LifecycleHarnessError):
-                run_boot_health_leg(
+            result = run_boot_health_leg(
                     product_root=base / "product",
                     installed_clone=base / "clone.img",
                     control_dir=base / "ctl",
@@ -796,6 +821,8 @@ class LegOrderingTests(unittest.TestCase):
                     observe_fn=lambda: {"default_slot": "B"},
                     slot_digest_fn=digests,
                 )
+            self.assertEqual(digests.seen, ["B", "A", "A", "B"])
+            self.assertIsNone(result["slot_isolation"]["inactive_changed"])
 
     def test_non_b_observation_refuses_before_closure(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -826,7 +853,7 @@ class RunProductWiringTests(unittest.TestCase):
             "product_boot_qemu_argv",
             "materialize_control_disk",
             "_observe_boot_health_target",
-            "verify_update_slot_isolation",
+            "observe_slot_hashes_across_boots",
             "hash_slot_partition",
             "expected_slot",
             "build_boot_health_lifecycle_report",
@@ -889,8 +916,8 @@ class RunProductWiringTests(unittest.TestCase):
             self.assertEqual(result["leg"], "boot-health-product")
             self.assertEqual(result["phases"], list(BOOT_HEALTH_LEG_PHASES))
             self.assertEqual(injections, ["A", "B"])
-            self.assertTrue(result["slot_isolation"]["active_unchanged"])
-            self.assertTrue(result["slot_isolation"]["inactive_changed"])
+            self.assertIsNone(result["slot_isolation"]["active_unchanged"])
+            self.assertIsNone(result["slot_isolation"]["inactive_changed"])
             self.assertEqual(
                 result["slot_digests"]["active_before"], "aa" * 32
             )
@@ -911,9 +938,9 @@ class RunProductWiringTests(unittest.TestCase):
             self.assertEqual(identity["boot_observation"]["default_slot"], "B")
             self.assertEqual(identity["boot_observation"]["accepted_release_id"], "greia-0.21.0")
 
-    def test_run_boot_health_product_active_mutation_refuses(self) -> None:
-        # Entry-point wiring proof: scripted digests showing an active-slot
-        # move refuse before closure even with B observed throughout.
+    def test_run_boot_health_product_wrong_boot_identity_stays_red(self) -> None:
+        # Normal writable-root hash changes do not refuse, but authoritative
+        # boot identity must still name accepted slot B.
         with tempfile.TemporaryDirectory() as tmp:
             base = Path(tmp)
             bundle = base / "greia-0.21.0.greiaupdate"
@@ -945,10 +972,12 @@ class RunProductWiringTests(unittest.TestCase):
                         },
                         materialize_fn=lambda d, i: None,
                         boot_fn=lambda phase, argv, serial_log, host_log: None,
-                        observe_fn=lambda t: dict(_full_boot_observation()),
+                        observe_fn=lambda t: dict(
+                            _full_boot_observation(), default_slot="A"
+                        ),
                         slot_digest_fn=moving,
                     )
-            self.assertIn("active/accepted slot", str(caught.exception))
+            self.assertIn("expected 'B'", str(caught.exception))
 
     def test_launcher_performs_no_privileged_boot_state_write(self) -> None:
         from tools.x8_qemu.lifecycle import PROJECT_ROOT

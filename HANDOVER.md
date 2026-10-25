@@ -216,6 +216,52 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-25 — Simpler A/B smoke; writable-root hash gate corrected
+
+The latest Linux report reached successful first-install health acceptance on
+a patched disposable A/B target, then failed a harness raw-partition equality
+check across A's own boot. The next bundle predates the credential-unit fixes
+and the installer was patched; neither is a clean current-source artifact.
+The report remains historical runtime evidence, not clean A/B acceptance.
+
+ADR 0036 now explicitly clarifies the existing writable-root model. Full-system
+SlotWriter still refuses active/accepted destinations; ordinary boot writes
+are not updater writes. First-boot B remains strictly unchanged, and valid
+unbooted write-window checks retain the strict helper. Across combined boot/
+update/recovery legs, hashes have an explicit observational scope and no
+byte-isolation PASS claim. Expected boot roles, release identity, mounted-root/
+default/journal/PERSIST and health/recovery checks remain; recovery additionally
+binds the previous accepted release to its PERSIST layout record. That binding
+is semantic evidence, not an inventory of the old root's file contents.
+
+The new primary retry is `docs/testing/2026-10-25_AB_SMOKE_RETRY.md`: clean
+same-source baseline and next fixtures, clean installer, then install → first A
+acceptance → healthy A-to-B. It writes per-leg result/error/traceback logs with
+bounded 2400-second leg timeouts. Larger fault/reverse/data-survival tests come
+after this initial smoke; Session 04 is not closed or waived. No read-only root,
+new overlay, profile capacity change, or production updater bypass was added.
+
+Independent Luna source review passed. The combined focused run passed
+**335/335** (`/tmp/greia-ab-simplification/focused-final.log`); the short guide's
+exact 66-test source command also passed. Four stale expectations/fixtures
+from the preceding unit-group and boot-alias commits were corrected without
+changing those production fixes: root User/empty capabilities and runtime-group
+access remain asserted; temporary finalizer fixtures now supply the actual
+kernel/initramfs inputs and prove hardlink aliases while retaining fstab mode.
+
+The initial full `make verify` ran 5,958 tests: 8 failures, 5 errors and 9 skips,
+including those four now-corrected test cases. The final full rerun completed
+5,958 tests in 271.197 seconds: **6 failures, 3 errors, 9 skips; NOT GREEN**
+(`/tmp/greia-ab-simplification/make-verify-final.log`). The remaining outcomes
+are the recorded Foresta content (3), Parent Wi-Fi assertions (2), MBR message
+wording (1), ARM64 profile error and two macOS lsblk errors. No new failure
+remains in that run. Separate validation stops at the unsupported ARM64 profile;
+shell/footprint checks and the short guide's Bash/Python syntax checks pass.
+No Linux image build, mount, QEMU or physical operation ran here. Next: freeze
+this source and give the Linux agent only the short smoke guide for its first
+retry; retain first failure and clean artifacts, then continue the larger
+matrix after all three legs pass. **Session 04 remains OPEN.**
+
 ### 2026-10-25 — Clean Linux retry: ownership/order PASS; A/B fixture capacity blocked
 
 Exact-source retry from `9161af3b30e3b96da314b24f4aba0e507eb46e7c` (code

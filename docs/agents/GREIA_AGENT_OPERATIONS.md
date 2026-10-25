@@ -112,6 +112,21 @@ new `greia-devctl` verb is permitted. Only unreachable internal journal cut
 windows and generation/PERSIST staging-space cases remain NOT RUN with their
 specific missing observation/control.
 
+### A/B smoke retry (2026-10-25)
+
+Use `docs/testing/2026-10-25_AB_SMOKE_RETRY.md` as the short next run. Rebuild
+both baseline and next fixture plus the clean installer from the recorded
+source; the previous Linux target was patched and its next bundle predates the
+credential-unit fixes. Run install, first-A health and healthy A-to-B before
+returning to the full interruption/recovery/data-survival matrix.
+
+The active root stays writable. Hashes spanning its boot are retained for
+diagnosis, not checked for equality. First-boot B remains untouched and must
+match. Production SlotWriter active/accepted-slot refusal, expected release,
+root/default/journal/PERSIST and health checks are still required. This is a
+correction to the harness evidence scope, not proof of runtime byte isolation
+or completed rollback/hardware acceptance.
+
 ### Linux acceptance follow-up (2026-10-24)
 
 The first Linux result is recorded in
