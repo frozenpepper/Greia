@@ -223,7 +223,9 @@ PERSIST alone did not satisfy the harness's byte-identical active-slot
 contract. This needs an explicit A/B writable-state decision: make the
 active slot genuinely read-only and bind/persist writable state (including
 `/var/lib/greia-os`), or define and enforce a bounded active-slot exception
-in the acceptance contract. Do not silently relax the isolation guard.
+in the acceptance contract. Do not silently relax the isolation guard. **Owner decision 2026-10-25:**
+hand off this evidence; the architecture choice is deferred to the next
+implementation owner.
 
 No healthy B update, failure/rollback leg, 507, Parent-stop, applying-cut,
 Mobile or physical leg ran after this boundary. The current `next.greiaupdate`

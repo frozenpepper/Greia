@@ -103,6 +103,11 @@ evidence under
 `/var/tmp/greia-ab-1500-9078fcd3b7babd391249b60e77153d8ab8c38106-20261025T022134Z/`.
 Session 04 remains OPEN.
 
+**Owner decision 2026-10-25:** hand off the current evidence rather than
+choose the read-only/PERSIST or bounded-exception route in this session. The
+next implementation owner must settle that architecture before rerunning the
+A/B harness; a pass is not expected against the current target.
+
 ## 2026-10-22 — Owner resumed priority completion with Base
 
 The owner explicitly requested finishing the problematic Greia recordings,
