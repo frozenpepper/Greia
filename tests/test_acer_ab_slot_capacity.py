@@ -37,6 +37,7 @@ from greia_installer.layout import (  # noqa: E402
     require_finalized_slot_capacity,
 )
 from greia_platform.persistent_layout import InstalledLayoutRecord  # noqa: E402
+from greia_platform.system_updates import MAX_PAYLOAD_BYTES  # noqa: E402
 from greia_platform.slot_writer import (  # noqa: E402
     DestinationSlot,
     LoopbackSlotFile,
@@ -122,6 +123,13 @@ class AcerAbSlotCapacityTests(unittest.TestCase):
         self.assertEqual(profile.storage.system_slot_bytes, 1744830464)
         self.assertEqual(profile.storage.layout_adapter, "legacy-bios-ab-v1")
         self.assertEqual(profile.updates.boot_backend, "grub-ab-v1")
+
+    def test_payload_bound_covers_the_1664_mib_system_slot(self) -> None:
+        """The fixture builder uses the destination slot as its ceiling."""
+
+        self.assertEqual(MAX_PAYLOAD_BYTES, SLOT_1664_MIB)
+        profile = BuildProfile.load(ACER_AB_PROFILE)
+        self.assertLessEqual(profile.storage.system_slot_bytes, MAX_PAYLOAD_BYTES)
 
     def test_real_profile_declares_1024_mib_persist_minimum(self) -> None:
         profile = BuildProfile.load(ACER_AB_PROFILE)

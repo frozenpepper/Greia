@@ -33,7 +33,12 @@ SCHEMA_VERSION = 3
 V1_SCHEMA_VERSION = 1
 V2_SCHEMA_VERSION = 2
 MAX_MANIFEST_BYTES = 64 * 1024
-MAX_PAYLOAD_BYTES = 1536 * 1024 * 1024
+# Owner decision 2026-10-25: the Acer A/B system slot is 1664 MiB
+# (1500 MiB installed-core gate plus hardware-support/initramfs headroom).
+# The payload builder uses the destination slot as its populate ceiling,
+# so the payload bound must cover that slot even though the finalized
+# payload itself stays below the installed-core gate.
+MAX_PAYLOAD_BYTES = 1664 * 1024 * 1024
 #: Single production compressed member bound. Canonical owner is the shared
 #: archive module (mirrors ``candidate_support`` precedent); kept here as a
 #: literal alias so a future second literal fails sync tests.

@@ -78,10 +78,10 @@ _ZSTD_MAGIC = b"\x28\xb5\x2f\xfd"
 # - DEFAULT_COMMAND_TIMEOUT_SECONDS (600 s) covers populate/check/shrink and
 #   the smaller hardware-support compression step;
 # - PAYLOAD_COMPRESSION_TIMEOUT_SECONDS (1800 s = 30 min) covers `zstd -19`
-#   over the largest supported payload (MAX_PAYLOAD_BYTES = 1536 MiB):
-#   linear extrapolation of the measured 1 GiB / ~811 s wall gives ~1220 s
-#   at 1.5 GiB, so 1800 s leaves ~1.5x margin there and ~2.2x margin over the
-#   measured Acer ~1 GiB case. Both bounds stay finite and fail-closed: an
+#   over the largest supported payload (MAX_PAYLOAD_BYTES = 1664 MiB):
+#   linear extrapolation of the measured 1 GiB / ~811 s wall gives ~1320 s
+#   at 1.625 GiB, so 1800 s leaves ~1.35x margin there and ~2.2x margin over
+#   the measured Acer ~1 GiB case. Both bounds stay finite and fail-closed: an
 #   expired or failing command still raises ReleaseBuildError.
 DEFAULT_COMMAND_TIMEOUT_SECONDS = 600.0
 PAYLOAD_COMPRESSION_TIMEOUT_SECONDS = 1800.0
