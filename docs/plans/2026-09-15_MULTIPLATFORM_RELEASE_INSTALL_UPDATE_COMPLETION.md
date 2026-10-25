@@ -3152,3 +3152,36 @@ fresh RC, rerun both ownership initialization orders and the existing apply/
 idle/rollback cases without manual guest repair; then build the explicit A/B
 fixtures and execute the remaining VM cases. Preserve the original Linux
 report as repaired-clone evidence and append a new exact-source runtime report.
+
+## 2026-10-25 — Exact-source Linux retry: ownership/order PASS, A/B capacity blocked
+
+Append-only result entry. Full evidence is in
+`docs/reviews/2026-10-25_SOFTWARE_UPDATE_LINUX_RETRY.md`; evidence root is
+`/var/tmp/greia-software-update-9161af3b30e3b96da314b24f4aba0e507eb46e7c-20261024T220454Z/`.
+Focused coverage passed **170 tests, OK with 1 Linux-only skip**; the full gate
+ran **5,957 tests, 7 failures, 3 errors, 3 skips** and remains NOT GREEN for the
+documented baseline/environment outcomes.
+
+A clean RC (`de75a782f786304235d89a631444c99a4ec04407567d34873b2d8119f040b0a2`)
+was installed into two fresh 16 GiB targets. Clone A applied Python before any
+Parent Activity seed and then installed a Parent Activity through the ordinary
+route (HTTP 201); the store stayed `greiapanel:greiapanel`, with private
+transaction directories and child-readable/non-writable `0555` generations.
+Clone B seeded two Parent Activities first, applied Parent-source one and set
+updates, then a built-in update, preserving both Parents and all 45 built-ins;
+ordinary Parent install/uninstall returned 201/200 with data preserved. The
+real-account root-to-`greiapanel` handoff test passed inside the guest. A capped
+partial upload produced no 202, pending, candidate or new job.
+
+The explicit A/B fixture bundle built and inspected
+(`greia-acceptance-fixture-0.13.0-phase0-dev`, bundle SHA-256
+`6f1e85eac0c6f0f81498e429c8c6f17ca46f45f8ed8552bc9f8c7cd4947592e3`), but the
+matching installer build refused the profile capacity gate: **1287 MiB**
+accounted installed use against `required_core_mib=1000` and
+`architecture_review_mib=1250` with a 1536 MiB slot. The fixture did not waive
+the production capacity gate. The A/B installer, ProductHarness, full-system
+wrapper and A/B update/rollback legs remain NOT RUN pending an owner capacity
+decision (raise the A/B build limit with finalizer-reserve evidence, or reduce
+payload). The 507, Parent-stop, observed `applying` cut, Mobile, seeded-creation
+hash and physical legs also remain NOT RUN; the USB key was not modified.
+Session 04 remains OPEN. No release, A/B or physical claim is made.

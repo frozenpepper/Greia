@@ -180,6 +180,44 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-25 — Clean Linux retry: ownership/order PASS; A/B fixture capacity blocked
+
+Exact-source retry from `9161af3b30e3b96da314b24f4aba0e507eb46e7c` (code
+freeze `ab02b9ec6`) is recorded in
+`docs/reviews/2026-10-25_SOFTWARE_UPDATE_LINUX_RETRY.md`; evidence root is
+`/var/tmp/greia-software-update-9161af3b30e3b96da314b24f4aba0e507eb46e7c-20261024T220454Z/`.
+The focused gate passed **170 tests, OK with 1 Linux-only skip**; the full gate
+ran **5,957 tests, 7 failures, 3 errors, 3 skips** and remains NOT GREEN for
+the documented baseline/environment outcomes only.
+
+A clean RC was built (`de75a782f786304235d89a631444c99a4ec04407567d34873b2d8119f040b0a2`)
+and installed into two fresh 16 GiB disposable targets without guest repair.
+Clone A applied a Python update **before** seeding any Parent Activity, then
+installed `org.example.acceptance-painting` through the ordinary Parent route
+(HTTP 201); the store stayed `greiapanel:greiapanel`, with private transaction
+directories and child-readable `0555` generations; a child write probe was
+refused. Clone B seeded two Parent Activities first, applied Parent-source
+`one` (`0.2.0-retry`, job `b4cc58599f994f5ea494651e29bf7111`) and `set`
+(`0.3.0-retry`, job `48297eb63b5340e3acdcccd7742e42b5`) updates, then a
+built-in update (job `0b83ee6ca6d149dead02b6ecaa87fd8a`) with all Parents and
+45 built-ins preserved; ordinary Parent install returned 201 and uninstall
+returned 200 with `profile_data_preserved=true`. The real-account
+root-to-`greiapanel` handoff test passed inside the guest. A capped partial
+upload produced no 202, no pending/candidate and no new job.
+
+The A/B acceptance fixture bundle built and inspected
+(`greia-acceptance-fixture-0.13.0-phase0-dev`, bundle SHA-256
+`6f1e85eac0c6f0f81498e429c8c6f17ca46f45f8ed8552bc9f8c7cd4947592e3`), but the
+matching installer build refused the Acer A/B profile capacity gate: accounted
+installed use **1287 MiB** against `required_core_mib=1000` and
+`architecture_review_mib=1250` with a 1536 MiB slot. The fixture route did not
+waive the gate. The A/B installer, ProductHarness, full-system wrapper and A/B
+update/rollback legs are therefore **NOT RUN** pending an owner capacity
+decision (raise the A/B build limit with finalizer-reserve evidence, or reduce
+payload). The 507, Parent-stop, observed `applying` cut, Mobile and physical
+legs also remain NOT RUN; the 8 GB LaCie was not modified. Session 04 remains
+OPEN; no release/A/B/physical claim is made.
+
 ### 2026-10-24 — Linux acceptance blockers remediated in source
 
 Source freeze: `ab02b9ec6fc7108e7b873b2b2c8c68eefd47ff18`. The post-commit rerun executed

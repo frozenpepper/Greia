@@ -1,0 +1,135 @@
+# Software update Linux retry — exact-source runtime result
+
+Date: 2026-10-25
+Status: **CLEAN SOURCE RETRY PASSES SINGLE-ROOT OWNERSHIP/ORDER CASES; A/B FIXTURE BLOCKED BY CAPACITY; Session 04 OPEN**
+Work order: `docs/testing/2026-10-24_SOFTWARE_UPDATE_ACCEPTANCE.md`
+Source: `9161af3b30e3b96da314b24f4aba0e507eb46e7c` (code fix `ab02b9ec6`)
+Host: Ubuntu 24.04 x86_64, KVM, QEMU 8.2.2, Python 3.12.3
+Evidence root: `/var/tmp/greia-software-update-9161af3b30e3b96da314b24f4aba0e507eb46e7c-20261024T220454Z/`
+Prior repaired-clone report: `docs/reviews/2026-10-24_SOFTWARE_UPDATE_LINUX_ACCEPTANCE_RESULT.md`
+
+This retry rebuilt the RC installer and both fresh installed targets from the
+committed ownership fix. No guest chmod/chown repair was used.
+
+## Source gates
+
+- Focused package/update/ownership/release fixture suite: **170 tests, OK with
+  1 Linux-only skip** (`software-update-focused.log`). The skipped test was the
+  real-account root-to-Parent handoff, which was then run successfully inside
+  the installed guest (below).
+- Full `make verify`: **5,957 tests, 7 failures, 3 errors, 3 skips; NOT GREEN**
+  (`make-verify.log`). Failures were the documented Foresta content (3), Parent
+  Wi-Fi source assertions (2), MBR message wording (1), and `morbidi`
+  first-frame timing (1); errors were ARM64 plus the two missing optional Linux
+  voice modules. No new failure appeared.
+
+## Single-root clean retry
+
+- RC installer built and verified: SHA-256
+  `de75a782f786304235d89a631444c99a4ec04407567d34873b2d8119f040b0a2`.
+- Real GUI install into fresh 16 GiB QEMU disks, detached boot, guest bootstrap
+  facts PASS: marker exact, helper executable, apply timer enabled, recovery
+  active, `/opt/greia-os` generation symlink and Activity-index alias correct.
+- Clean image baseline: `/var/lib/greia-os/activity-packages` is
+  `greiapanel:greiapanel 0755` and empty.
+
+### Fresh clone A — Python before Parent seed
+
+1. Child profile `TEST` created; Parent HTTPS pairing succeeded.
+2. Python update uploaded and applied **before any Parent Activity seed**:
+   job `88fb947b4eca4cab8d4441bd1821acb1`, version `0.13.1-retry`,
+   `queued -> validating -> waiting_for_idle -> applied`; pointer
+   `app-88fb947b4eca4cab8d4441bd1821acb1`.
+3. Root update created the Parent store as `greiapanel:greiapanel` with
+   private `0700` staging/versions/receipts and child-readable `0555`
+   `gen-000001`.
+4. Ordinary Parent install of `org.example.acceptance-painting` returned HTTP
+   `201`; `/api/v1/activities` listed it as
+   `parent_trusted_unsigned`; the child could traverse/read the generation and
+   a child write probe was refused.
+
+### Fresh clone B — Parent seed before updates
+
+1. Two Parent Activities seeded through the ordinary Parent route first:
+   `org.example.acceptance-painting` and `org.example.acceptance-writing`
+   (`0.1.0-retry`), both HTTP `201`, active `gen-000003`.
+2. Parent-source `one` update for painting (`0.2.0-retry`) applied:
+   job `b4cc58599f994f5ea494651e29bf7111`.
+3. Parent-source `set` update for painting + writing (`0.3.0-retry`) applied:
+   job `48297eb63b5340e3acdcccd7742e42b5`; active `gen-000005`; both listed
+   Parents retained `parent_trusted_unsigned`; built-in count stayed 45.
+4. Built-in `writing` update applied after the Parent Activities:
+   job `0b83ee6ca6d149dead02b6ecaa87fd8a`; both Parent Activities and all 45
+   built-ins remained.
+5. Ordinary Parent install of `org.example.acceptance-again` returned `201`;
+   ordinary uninstall of `org.example.acceptance-writing` returned `200` with
+   `profile_data_preserved=true`. Active Parent generation `gen-000007`
+   contained the remaining two test Activities; built-ins remained 45.
+
+### Real-account Linux regression
+
+`test_activity_packages.ActivityPackageServiceTests.test_linux_root_to_greiapanel_store_handoff`
+was run inside the installed guest as root with the real `greiakid`/
+`greiapanel` accounts: **PASS**. `/tmp` and `/var/tmp` are too small for the
+staging reserve, so the test used `TMPDIR=/var/lib/greia-os`; that is a test
+environment adjustment, not a guest repair.
+
+### Partial upload negative
+
+A capped partial POST of the Python package returned curl exit `28` and **no
+HTTP 202**. The authenticated status kept the same terminal job
+(`0b83ee6ca6d149dead02b6ecaa87fd8a`, `applied`); offline inspection of the
+stopped clone showed `NO_PENDING`, `NO_CANDIDATE`, and no queued job.
+
+## A/B acceptance fixture — BLOCKED by profile capacity
+
+The explicit `build-acceptance-fixture` command built and inspected the
+experimental base bundle:
+
+- fixture `greia-acceptance-fixture-0.13.0-phase0-dev`
+- bundle SHA-256 `6f1e85eac0c6f0f81498e429c8c6f17ca46f45f8ed8552bc9f8c7cd4947592e3`
+- payload 1,427,955,712 uncompressed bytes; minimum slot 1,429,004,288
+- `artifact_class=experimental_acceptance_fixture`; `release_eligible=false`
+
+The matching A/B installer build refused before publication:
+
+```text
+FAIL: accounted installed filesystem use is 1287 MiB (file data 1287 MiB,
+filesystem used 1287 MiB); profile acer-aspire-one-i386-ab requires <1000 MiB.
+```
+
+The A/B profile declares `required_core_mib = 1000`,
+`architecture_review_mib = 1250`, and `system_slot_bytes = 1536 MiB`. The
+1287 MiB payload fits neither the 1000 MiB build gate nor the 1250 MiB
+architecture-review threshold, so the fixture installer, ProductHarness,
+full-system wrapper and A/B update/rollback legs were **NOT RUN**. This work
+order's fixture route correctly did not waive the capacity gate. A/B
+acceptance now needs an owner capacity decision (new A/B build limit with the
+1536 MiB slot/finalizer reserve, or payload reduction), not a source waiver.
+
+## Not run
+
+- Receive-reserve HTTP `507` and retry.
+- Parent-stop-after-durable-202 helper leg.
+- Observed `applying` power-cut (the earlier repaired-clone `trial` cut is
+  retained as historical evidence, not as this clean-source predicate).
+- Full-system `.greia_update` and all A/B first-boot/update/rollback/PERSIST
+  acceptance (blocked by the capacity gate above).
+- Mobile-client upload and rendered HTML Parent UI (host streaming Parent API
+  was used).
+- Seeded child creations/saves hash comparison; profile survival was checked,
+  but no creations were seeded in this retry.
+- Physical hardware and USB media acceptance. The 8 GB LaCie remained
+  unmodified.
+
+## Next exact steps
+
+1. Owner decision on the Acer A/B capacity: raise the A/B build/architecture
+   limits with evidence that the 1536 MiB slot plus finalizer reserve still
+   fits, or reduce the A/B payload.
+2. Rebuild the A/B fixture installer and run ProductHarness §3/§10 once the
+   capacity gate is accepted.
+3. Run the remaining 507/Parent-stop/observed-applying-cut recipes on
+   disposable clones.
+4. Keep Session 04 OPEN; no release, A/B, physical or family-readiness claim is
+   made here.
