@@ -1875,13 +1875,36 @@ def inject_live_clone(
     loopdev = ""
     try:
         loopdev = _loop_attach_partscan(clone_path, runner=runner, which=which)
-        try:
-            part1 = str(partition_number_path(Path(loopdev), 1))
-        except Exception as exc:
+        # Current EFI media is p1 = ESP, p2 = ext4 live root; historical
+        # single-partition media keeps the live root on p1. Select the
+        # partition that actually carries the live squashfs instead of
+        # assuming a partition number.
+        mounted = False
+        last_mount_error = None
+        for number in (2, 1):
+            try:
+                candidate = str(partition_number_path(Path(loopdev), number))
+            except Exception:
+                continue
+            try:
+                _mount_fs(
+                    candidate, mountpoint, read_only=False,
+                    runner=runner, which=which,
+                )
+            except Exception as exc:
+                last_mount_error = exc
+                continue
+            squashfs = mountpoint / LIVE_SQUASHFS_IN_PARTITION
+            if squashfs.is_file() and not squashfs.is_symlink():
+                mounted = True
+                break
+            _umount_fs(mountpoint, runner=runner)
+        if not mounted:
             raise LifecycleHarnessError(
-                f"live-clone rebuild refused: no first partition on {loopdev} ({exc})"
-            ) from exc
-        _mount_fs(part1, mountpoint, read_only=False, runner=runner, which=which)
+                "live-clone rebuild refused: no mounted live partition carries "
+                f"{LIVE_SQUASHFS_IN_PARTITION}"
+                + (f" ({last_mount_error})" if last_mount_error else "")
+            )
         rebuilt = _rebuild_live_squashfs(
             mountpoint,
             work_dir,
