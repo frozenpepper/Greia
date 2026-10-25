@@ -236,6 +236,12 @@ was patched in place as a disposable fixture. Session 04 remains OPEN.
 
 ## Harness correction and short next retry (2026-10-25; source-only)
 
+Implementation checkpoint: `0ede382f853bb0770e5b44b6fb741dd1d83cba4c`.
+A post-commit rerun passed **335/335** in 3.180 seconds; log:
+`/tmp/greia-ab-simplification/focused-0ede382f8.log`. The full gate above was
+run on the same frozen implementation before the checkpoint; later changes
+only record documentation evidence. Linux smoke execution remains pending.
+
 The follow-up resolves the testing-contract wall without changing the current
 writable-root architecture. Hashes spanning a slot's own boot are diagnostic;
 they are not runtime proof that the updater left every byte unchanged. The

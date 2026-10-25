@@ -3210,6 +3210,12 @@ RUN. Session 04 remains OPEN; details are in
 
 ### 2026-10-25 — Simpler A/B smoke; writable-root hash gate corrected
 
+Implementation checkpoint: `0ede382f853bb0770e5b44b6fb741dd1d83cba4c`.
+A post-commit rerun passed **335/335** in 3.180 seconds; log:
+`/tmp/greia-ab-simplification/focused-0ede382f8.log`. The full gate above was
+run on the same frozen implementation before the checkpoint; later changes
+only record documentation evidence. Linux smoke execution remains pending.
+
 The latest Linux report reached successful first-install health acceptance on
 a patched disposable A/B target, then failed a harness raw-partition equality
 check across A's own boot. The next bundle predates the credential-unit fixes
