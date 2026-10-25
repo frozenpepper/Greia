@@ -146,6 +146,10 @@ def _populate_slot_completeness(mount_dir: Path) -> None:
 
     for rel_path in REQUIRED_SLOT_COMPLETENESS_DIRS:
         (mount_dir / rel_path).mkdir(parents=True, exist_ok=True)
+    boot_dir = mount_dir / "boot"
+    boot_dir.mkdir(parents=True, exist_ok=True)
+    (boot_dir / "vmlinuz-generic").write_bytes(b"generic-kernel")
+    (boot_dir / "initrd-generic").write_bytes(b"generic-initramfs")
     for rel_path in REQUIRED_SLOT_COMPLETENESS_FILES:
         candidate = mount_dir / rel_path
         candidate.parent.mkdir(parents=True, exist_ok=True)
@@ -1350,6 +1354,16 @@ class SlotFinalizerReleaseTests(unittest.TestCase):
                     inventory_token=inventory.token,
                     packages_digest=receipt.packages_digest,
                 ).as_dict(),
+            )
+            # The GRUB A/B entries boot these adapter-owned aliases; a
+            # finalized slot that only carried the generic payload names
+            # would install successfully and then fail to boot.
+            self.assertEqual(
+                filesystem.files["boot/vmlinuz-greia"], b"generic-kernel"
+            )
+            self.assertEqual(
+                filesystem.files["boot/initramfs-greia.img"],
+                b"generic-initramfs",
             )
 
     def test_package_set_drift_from_selection_is_refused(self) -> None:

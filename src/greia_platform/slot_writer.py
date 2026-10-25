@@ -116,11 +116,21 @@ SLOT_PROFILE_REL_PATH = "etc/greia-os/slot-profile.json"
 #: Candidate-local generic/host artifact manifest inside the finalized slot.
 FINALIZED_GENERIC_REL_PATH = "boot/finalized-generic.json"
 
+#: Payload-carried generic boot files and the adapter-owned slot aliases the
+#: installed GRUB A/B entries boot.  The finalizer publishes the aliases so a
+#: finalized slot never references a kernel/initramfs name that does not exist.
+SLOT_GENERIC_KERNEL_REL_PATH = "boot/vmlinuz-generic"
+SLOT_GENERIC_INITRAMFS_REL_PATH = "boot/initrd-generic"
+SLOT_KERNEL_REL_PATH = "boot/vmlinuz-greia"
+SLOT_INITRAMFS_REL_PATH = "boot/initramfs-greia.img"
+
 #: Files the finalizer must prove present before writing the receipt.
 #: ``etc/fstab`` carries the single-owner canonical policy specialized to
 #: the destination role UUID (same renderer as fresh target assembly).
 REQUIRED_FINALIZED_FILES = (
     FINALIZED_GENERIC_REL_PATH,
+    SLOT_KERNEL_REL_PATH,
+    SLOT_INITRAMFS_REL_PATH,
     RELEASE_IDENTITY_REL_PATH,
     SLOT_PROFILE_REL_PATH,
     FSTAB_REL_PATH,
@@ -1536,6 +1546,20 @@ class SlotFinalizer:
                     "boot artifact builder returned an invalid result"
                 )
             _s04_diag_stage("artifacts")
+            # The installed GRUB A/B entries use adapter-owned stable names.
+            # The payload carries the generic names; publish the aliases from
+            # the mounted slot after hardware support so the finalized slot
+            # is actually bootable.  Fail closed if the payload is incomplete.
+            for source_rel, target_rel in (
+                (SLOT_GENERIC_KERNEL_REL_PATH, SLOT_KERNEL_REL_PATH),
+                (SLOT_GENERIC_INITRAMFS_REL_PATH, SLOT_INITRAMFS_REL_PATH),
+            ):
+                source = Path(mountpoint) / source_rel
+                if source.is_symlink() or not source.is_file():
+                    raise SlotFinalizeError(
+                        f"payload boot artifact is missing: {source_rel}"
+                    )
+                filesystem.write_file(target_rel, source.read_bytes())
             filesystem.write_file(
                 FINALIZED_GENERIC_REL_PATH,
                 _canonical_bytes(artifacts.as_dict()),
