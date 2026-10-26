@@ -67,7 +67,7 @@ On some computers Secure Boot, firmware age or unsupported hardware can prevent 
 
 The current graphical installer is designed to guide you through:
 
-1. **Language:** choose English, Italian, Spanish or French.
+1. **Language:** choose from the languages shown by the installer. The current development release includes English, Italian, Spanish and French; future releases may offer more languages when their translations and spoken guidance are ready.
 2. **Welcome and keyboard:** read the short introduction and choose your keyboard layout.
 3. **Computer's disk:** select the internal disk Greia should use. The installer offers only disks it considers eligible; **check the displayed model and size**.
 4. **Pointer and display:** check the mouse/touchpad and the display.
