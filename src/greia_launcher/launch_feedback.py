@@ -31,7 +31,7 @@ def launch_feedback(locale: str | None) -> LaunchFeedback:
     """Resolve typed feedback for an effective UI locale, never process LANG."""
     base = str(locale or "en").strip().replace("_", "-").split("-", 1)[0].lower()
     source = _COPY.get(base, _COPY["en"])
-    translated = language_ui(base, "launcher_feedback")
+    translated = language_ui(str(locale or "en").strip().replace("_", "-"), "launcher_feedback")
     return LaunchFeedback(
         translated.get("overlay", source.overlay),
         translated.get("badge", source.badge),
