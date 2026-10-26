@@ -1,15 +1,20 @@
 # Greia Developer Manuals
 
 **Status:** living navigation index  
-**Date:** 2026-08-20
+**Reviewed:** 2026-10-26
 
 This directory contains practical developer/operator manuals below Greia's accepted architecture and source-owned implementation contracts.
 
 For documentation authority and precedence, read `docs/DOCUMENTATION.md` first.
 
-## Current Acer recovery note
+## Historical Acer recovery lesson (not the current release gate)
 
-A 2026-08-20 boot-polish tranche regressed the physically working reference Acer installer into a grey-screen/reboot loop. Before changing any reference-hardware bootloader, kernel-console, initramfs artwork, GRUB presentation or USB-writer behavior, read:
+A 2026-08-20 boot-polish change regressed a then-working Acer installer into
+a grey-screen/reboot loop. The reviews below preserve useful hardware
+lessons. **Do not treat this old incident as the current Acer/A-B test order**:
+read `HANDOVER.md` and `docs/testing/LOCAL_AGENT_START_HERE.md` for the
+present candidate, exact source state and accepted procedure before touching
+bootloaders, boot artwork or USB writers. Historical reading:
 
 ```text
 docs/archive/reviews/2026-08-20_ACER_INSTALLER_BOOT_REGRESSION.md
@@ -38,7 +43,9 @@ Read this when a development Greia image reaches the installed root filesystem b
 - the current provisional launcher/Xorg chain;
 - how to reason about older images that predate the hardened SSH bootstrap.
 
-For the current physical Acer recovery/build+flash boundary, the dated 2026-08-20 regression review above takes precedence over stale implementation wording in this living manual until the next physical pass is recorded.
+For present physical Acer/update acceptance, the **current** handover and
+release/install lifecycle plan own the execution boundary. The August review
+remains a cautionary case study, not a standing instruction to flash its image.
 
 Historical Acer root-mount/service failures remain documented in `docs/INSTALLED_OS_BOOT_POSTMORTEM.md`.
 
