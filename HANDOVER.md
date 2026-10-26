@@ -312,6 +312,35 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-26 — Manifest-driven language offering and data-only new-language authoring (SOURCE-WIP)
+
+The owner requested that additional Greia languages no longer require editing Python
+registries/chooser logic. `src/greia_platform/system_language.py` now loads
+`src/greia_platform/languages/<locale>/manifest.json` at startup;
+the four shipped locales (en/it/es/fr) are represented as package resources.
+Installer, Parent on-device chooser, Parent API and device settings share that
+registry. Installer/Parent choice screens paginate for additional languages.
+Optional `ui.json` sections provide new translations for installer, Parent
+panel, launcher/collections, achievements, Creations, first boot and limits
+without modifying their legacy English/four-language baseline logic.
+`tools/scaffold_greia_language.py` creates untranslated English-reference
+UI/Activity JSON **without** enabling the locale; the contributor adds a
+manifest only after acceptance. `tools/check_greia_language.py` checks resource
+coverage and interpolation; release tests now derive the promised locale set.
+Canonical guide/agent route: `docs/development/ADD_A_GREIA_LANGUAGE.md`,
+`skills/greia-language-expansion/SKILL.md`. Character audio/master/Parakeet
+flow is unchanged.
+
+**Evidence:** GitHub source inspection and commits only. Provider-free tests,
+simulator, text layout, voice generation, image composition and hardware have
+**NOT** been executed against this change. This source is newer than the current
+A/B candidate and cannot inherit its previous test/boot evidence or prior
+reuse exceptions. Run focused tests and render 4+1 language chooser in a local
+simulator/build before treating this as release-ready. Do not silently enable
+a fifth language before translation, audio/font and actual screen acceptance.
+
+
+
 ### 2026-10-26 — Single-stage diagnostic blocked by new runtime language files
 
 The corrected preflight passes: 80 tests OK with parent
