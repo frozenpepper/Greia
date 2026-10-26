@@ -67,7 +67,7 @@ Accepted ADRs own architectural decisions. Current cross-cutting accepted decisi
 
 `docs/architecture/GREIA_ARCHITECTURE.md` is a living synthesis, not a second ADR system.
 
-The parent-facing website's page content, interactions, copied preview assets and release-link state live in `website/`; `website/README.md` records their provenance and publishing boundary. It summarizes the product for visitors and does not override product requirements, ADRs, source contracts or release evidence. The older `docs/design/website_mocks_2026-09-23/` pages are historical design studies.
+The parent-facing website's page content, interactions, copied preview assets and release-link state live in `website/`; `website/README.md` records their provenance and publishing boundary. It summarizes the product for visitors and does not override product requirements, ADRs, source contracts or release evidence. The September website concept prototypes were retired from the active tree during release cleanup. Their design decision is recorded in `docs/archive/reviews/2026-09-23_WEBSITE_DESIGN_STUDIES.md`; the original HTML and preview assets remain recoverable through Git history.
 
 ### 2.4 Exact implemented contracts — source/runtime declarations
 
