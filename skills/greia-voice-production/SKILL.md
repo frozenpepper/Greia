@@ -40,6 +40,8 @@ Only engine maintainers/troubleshooters should normally read:
 docs/agents/GREIA_CHATTERBOX_PRODUCTION_FIELD_GUIDE.md
 ```
 
+For a **new language** rather than routine speech production, begin with `skills/greia-language-expansion/SKILL.md` and `docs/development/ADD_A_GREIA_LANGUAGE.md`. It separates translation staging, selected-language promotion, script/phonics work, model/ASR language suitability and voice recording. The available VoxStage worker and cached Parakeet weights on the owner's workstation are not a reproducible installation on another contributor's machine.
+
 ## 2026-10-14 owner-approved four-language all-Activity recording task
 
 The owner approved **all currently authored EN/IT/ES/FR text
