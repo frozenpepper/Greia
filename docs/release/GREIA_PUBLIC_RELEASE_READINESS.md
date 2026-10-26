@@ -2,7 +2,8 @@
 
 **Status:** RELEASE READINESS GATE / AUDIT CHECKLIST — **not** a competing implementation plan  
 **Created:** 2026-08-29  
-**Audit baseline:** `08fe71b077d47b511c105bde5c2e8fdb88be7b92` (`main`)  
+**Audit baseline:** `08fe71b077d47b511c105bde5c2e8fdb88be7b92` (`main`) — historical, not current HEAD  
+**Current use (2026-10-26):** This file is the release *requirements checklist*, not a claim that the present tree is release-certified. Historic test counts, hardware status and incomplete features below describe their stated audit date only; check `HANDOVER.md`, the current lifecycle plan and exact source/image evidence for present readiness. New documentation and language-manifest source changes have not inherited older physical tests.  
 **Primary audience:** Greia maintainers, release operators, reviewers, test operators  
 **Target:** a public Greia release that an ordinary parent/family can install, use, administer, recover and keep updated without Linux or developer knowledge
 
