@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Any, Iterable
 
 from greia_platform.activities import ActivityManifest
+from greia_platform.system_language import language_ui
 from greia_platform.activity_discovery import AdaptiveCollectionPlanner
 from greia_platform.ui_core import Collection
 
@@ -413,7 +414,7 @@ def _category_title(
 ) -> str:
     if compact and value == MY_CREATIONS_PORTAL_ID:
         language = locale.split("-")[0].lower() if locale else "it"
-        return _COMPACT_CREATIONS_TITLES.get(language, "Creations")
+        return language_ui(language, "collections").get("my_creations_compact", _COMPACT_CREATIONS_TITLES.get(language, "Creations"))
     return _localized_title(_CATEGORY_TRANSLATIONS, value, locale)
 
 
@@ -425,6 +426,10 @@ def _localized_title(
     translations: dict[str, dict[str, str]], value: str, locale: str
 ) -> str:
     lang = locale.split("-")[0].lower() if locale else "it"
+    section = "collections" if translations is _CATEGORY_TRANSLATIONS else "discoveries"
+    configured = language_ui(lang, section).get(value)
+    if configured:
+        return configured
     trans = translations.get(value)
     if trans:
         if lang in trans:
