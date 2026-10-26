@@ -174,8 +174,10 @@ The prepared interpreter is
 `~/Library/Application Support/Greia/voice-production/venv/bin/python`.
 Use it explicitly for `regenerate_voice_corpus.py review`; do not use the global
 Anaconda Python, whose installed NumPy/Numba combination fails Whisper import.
-The prepared environment has working mlx-whisper and cached Base weights (current
-default as of 2026-10-22); Tiny remains cached for historical comparisons.
+The prepared environment has working mlx-whisper and cached Base weights for
+**historical corpus review** (that lane's default as of 2026-10-22);
+Tiny remains cached for historical comparisons. New VoiceEngine synthesis
+verification instead uses the pinned Parakeet-TDT v3 stack.
 No packages or weights need installing. Follow the exact pilot/full commands in
 `docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md`. Availability in one interpreter
 does not describe other environments on the machine.
