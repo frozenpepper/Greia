@@ -3,11 +3,11 @@
 **Date:** 2026-08-24
 **Status:** proposed future Activity workstream; sole executable implementation authority for the ten packages named here; subordinate to the active architecture-remediation plan and accepted ADRs
 **Source baseline:** `5850061c2f26ef7a3c9009b941f878b8095e73c3` on `main`
-**Research/evidence:** [current handover](../../../HANDOVER.md), [Activity authoring contract](../../../.agents/skills/greia-activity-authoring/SKILL.md), [visual authoring contract](../../../.agents/skills/greia-visual-authoring/SKILL.md)
+**Research/evidence:** [current handover](https://github.com/frozenpepper/Greia/blob/0f560c2e5139b713ba550b6f04cf6861b1dd11fb/HANDOVER.md), [Activity authoring contract](https://github.com/frozenpepper/Greia/blob/0f560c2e5139b713ba550b6f04cf6861b1dd11fb/skills/greia-activity-authoring/SKILL.md), [visual authoring contract](https://github.com/frozenpepper/Greia/blob/0f560c2e5139b713ba550b6f04cf6861b1dd11fb/skills/greia-visual-authoring/SKILL.md)
 
 ## Authority
 
-This folder is the sole executable implementation authority for the ten new Activity packages listed below. It does not supersede [the blocking architecture-remediation plan](../2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md), accepted ADRs, exact source/runtime declarations, or the visual-foundation workstream. R7 remains the first blocking platform phase. These Activities may advance only through established Python Activity, storage, event, localization, input, viewport, typography, visual, and Simulator seams; they must not select a display backend, deepen X11 coupling, widen Activity authority, or create a parallel platform service.
+This folder is the sole executable implementation authority for the ten new Activity packages listed below. It does not supersede [the blocking architecture-remediation plan](https://github.com/frozenpepper/Greia/blob/0f560c2e5139b713ba550b6f04cf6861b1dd11fb/docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md), accepted ADRs, exact source/runtime declarations, or the visual-foundation workstream. R7 remains the first blocking platform phase. These Activities may advance only through established Python Activity, storage, event, localization, input, viewport, typography, visual, and Simulator seams; they must not select a display backend, deepen X11 coupling, widen Activity authority, or create a parallel platform service.
 
 No earlier document was found that specifies this portfolio. Existing product, design, and Activity documents remain authoritative for their owned facts. If this plan conflicts with current source or an accepted authority, stop, record the conflict, and amend this plan before implementation.
 
@@ -237,20 +237,20 @@ Give one numbered session file to one implementation agent. The agent receives t
 
 | Session | Result |
 |---:|---|
-| [00](00-baseline-content-lock.md) | revalidated source baseline plus accepted bilingual pedagogical corpus |
-| [01](01-luci-di-momo.md) | `Luci di Momo` source package and focused tests |
-| [02](02-casa-del-dieci.md) | `Casa del Dieci` source package and focused tests |
-| [03](03-bottega-delle-misure.md) | `Bottega delle Misure` source package and focused tests |
-| [04](04-specchi-magici.md) | `Specchi Magici` source package and focused tests |
-| [05](05-festa-delle-rime.md) | `Festa delle Rime` source package, reviewed audio, and focused tests |
-| [06](06-officina-dei-suoni.md) | `Officina dei Suoni` source package, reviewed audio, and focused tests |
-| [07](07-posta-di-leo.md) | `Posta di Leo` source package and focused tests |
-| [08](08-tre-carte-una-storia.md) | `Tre Carte, Una Storia` source package and focused tests |
-| [09](09-nanna-delle-nuvolette.md) | `Nanna delle Nuvolette` source package and focused tests |
-| [10](10-morbidi-mostriciattoli.md) | `Morbidi Mostriciattoli` source package and focused tests |
-| [11](11-catalogue-cumulative-gate.md) | all ten packages validated together at source level |
-| [12](12-simulator-acceptance.md) | real-runtime Simulator interaction and visual evidence |
-| [13](13-physical-acceptance.md) | Acer resource/input acceptance and honest closure status |
+| [00](https://github.com/frozenpepper/Greia/blob/0f560c2e5139b713ba550b6f04cf6861b1dd11fb/docs/plans/2026-08-24_EARLY_LEARNING_ACTIVITY_EXPANSION/00-baseline-content-lock.md) | revalidated source baseline plus accepted bilingual pedagogical corpus |
+| [01](https://github.com/frozenpepper/Greia/blob/0f560c2e5139b713ba550b6f04cf6861b1dd11fb/docs/plans/2026-08-24_EARLY_LEARNING_ACTIVITY_EXPANSION/01-luci-di-momo.md) | `Luci di Momo` source package and focused tests |
+| [02](https://github.com/frozenpepper/Greia/blob/0f560c2e5139b713ba550b6f04cf6861b1dd11fb/docs/plans/2026-08-24_EARLY_LEARNING_ACTIVITY_EXPANSION/02-casa-del-dieci.md) | `Casa del Dieci` source package and focused tests |
+| [03](https://github.com/frozenpepper/Greia/blob/0f560c2e5139b713ba550b6f04cf6861b1dd11fb/docs/plans/2026-08-24_EARLY_LEARNING_ACTIVITY_EXPANSION/03-bottega-delle-misure.md) | `Bottega delle Misure` source package and focused tests |
+| [04](https://github.com/frozenpepper/Greia/blob/0f560c2e5139b713ba550b6f04cf6861b1dd11fb/docs/plans/2026-08-24_EARLY_LEARNING_ACTIVITY_EXPANSION/04-specchi-magici.md) | `Specchi Magici` source package and focused tests |
+| [05](https://github.com/frozenpepper/Greia/blob/0f560c2e5139b713ba550b6f04cf6861b1dd11fb/docs/plans/2026-08-24_EARLY_LEARNING_ACTIVITY_EXPANSION/05-festa-delle-rime.md) | `Festa delle Rime` source package, reviewed audio, and focused tests |
+| [06](https://github.com/frozenpepper/Greia/blob/0f560c2e5139b713ba550b6f04cf6861b1dd11fb/docs/plans/2026-08-24_EARLY_LEARNING_ACTIVITY_EXPANSION/06-officina-dei-suoni.md) | `Officina dei Suoni` source package, reviewed audio, and focused tests |
+| [07](https://github.com/frozenpepper/Greia/blob/0f560c2e5139b713ba550b6f04cf6861b1dd11fb/docs/plans/2026-08-24_EARLY_LEARNING_ACTIVITY_EXPANSION/07-posta-di-leo.md) | `Posta di Leo` source package and focused tests |
+| [08](https://github.com/frozenpepper/Greia/blob/0f560c2e5139b713ba550b6f04cf6861b1dd11fb/docs/plans/2026-08-24_EARLY_LEARNING_ACTIVITY_EXPANSION/08-tre-carte-una-storia.md) | `Tre Carte, Una Storia` source package and focused tests |
+| [09](https://github.com/frozenpepper/Greia/blob/0f560c2e5139b713ba550b6f04cf6861b1dd11fb/docs/plans/2026-08-24_EARLY_LEARNING_ACTIVITY_EXPANSION/09-nanna-delle-nuvolette.md) | `Nanna delle Nuvolette` source package and focused tests |
+| [10](https://github.com/frozenpepper/Greia/blob/0f560c2e5139b713ba550b6f04cf6861b1dd11fb/docs/plans/2026-08-24_EARLY_LEARNING_ACTIVITY_EXPANSION/10-morbidi-mostriciattoli.md) | `Morbidi Mostriciattoli` source package and focused tests |
+| [11](https://github.com/frozenpepper/Greia/blob/0f560c2e5139b713ba550b6f04cf6861b1dd11fb/docs/plans/2026-08-24_EARLY_LEARNING_ACTIVITY_EXPANSION/11-catalogue-cumulative-gate.md) | all ten packages validated together at source level |
+| [12](https://github.com/frozenpepper/Greia/blob/0f560c2e5139b713ba550b6f04cf6861b1dd11fb/docs/plans/2026-08-24_EARLY_LEARNING_ACTIVITY_EXPANSION/12-simulator-acceptance.md) | real-runtime Simulator interaction and visual evidence |
+| [13](https://github.com/frozenpepper/Greia/blob/0f560c2e5139b713ba550b6f04cf6861b1dd11fb/docs/plans/2026-08-24_EARLY_LEARNING_ACTIVITY_EXPANSION/13-physical-acceptance.md) | Acer resource/input acceptance and honest closure status |
 
 ## Global rules
 
