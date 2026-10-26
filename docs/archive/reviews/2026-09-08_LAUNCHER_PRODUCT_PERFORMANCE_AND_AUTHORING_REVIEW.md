@@ -49,7 +49,7 @@ The active implementation plan explicitly records **R7 COMPLETE on 2026-09-05** 
 
 The September 7 handover also describes ongoing boot/composition work and a deployment boundary. That work should be reconciled through its existing authority, not displaced by this report. Earlier notes saying R7 remained open are historical for phase status.
 
-Historical performance evidence is useful context: the [performance manual](../engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md) records the August 23 Acer hover improvement from approximately 190 ms full-scene work to 26.6 ms hover frames, steady cached frames around 3.34 ms, and launcher RSS around 153 MB. **These are dated measurements, not measurements of the reviewed September 7 source.**
+Historical performance evidence is useful context: the [performance manual](https://github.com/frozenpepper/Greia/blob/225102f022147261cee209529ff442ca7a3070c5/docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md) records the August 23 Acer hover improvement from approximately 190 ms full-scene work to 26.6 ms hover frames, steady cached frames around 3.34 ms, and launcher RSS around 153 MB. **These are dated measurements, not measurements of the reviewed September 7 source.**
 
 ## 3. What is already good and should be preserved
 
@@ -80,13 +80,13 @@ The title audit reports missing Italian and English mappings for `bosco_numeri`.
 
 **Suggestion:** produce/review the two title clips through the existing voice engine, map the existing semantic cue, and repeat the catalogue audit and spoken-label interaction checks. Do not change the audit to tolerate a missing first-party title. A pre-reader should not encounter an inexplicably silent tile among speaking peers.
 
-Owners: [spoken-label audit](../../tools/audit_launcher_spoken_labels.py), [Italian bundle](../../activities/bosco_numeri/locales/it.json), [English bundle](../../activities/bosco_numeri/locales/en.json), [voice authoring router](../../skills/greia-voice-production/SKILL.md).
+Owners: [spoken-label audit](https://github.com/frozenpepper/Greia/blob/225102f022147261cee209529ff442ca7a3070c5/tools/audit_launcher_spoken_labels.py), [Italian bundle](https://github.com/frozenpepper/Greia/blob/225102f022147261cee209529ff442ca7a3070c5/activities/bosco_numeri/locales/it.json), [English bundle](https://github.com/frozenpepper/Greia/blob/225102f022147261cee209529ff442ca7a3070c5/activities/bosco_numeri/locales/en.json), [voice authoring router](https://github.com/frozenpepper/Greia/blob/225102f022147261cee209529ff442ca7a3070c5/skills/greia-voice-production/SKILL.md).
 
 ### F2 — Spoken-title resolution can retain stale content
 
 **Priority: medium. Evidence: reproduced resolver behavior; playback impact inferred from source.**
 
-In [spoken_labels.py](../../src/greia_launcher/spoken_labels.py), `_TITLE_AUDIO_CACHE` is keyed by resolved Activity root and locale and caches missing results too. The player caches decoded sounds by resolved file path. The catalogue rescan clears pointer state and visual caches but does not visibly invalidate these audio caches.
+In [spoken_labels.py](https://github.com/frozenpepper/Greia/blob/225102f022147261cee209529ff442ca7a3070c5/src/greia_launcher/spoken_labels.py), `_TITLE_AUDIO_CACHE` is keyed by resolved Activity root and locale and caches missing results too. The player caches decoded sounds by resolved file path. The catalogue rescan clears pointer state and visual caches but does not visibly invalidate these audio caches.
 
 The isolated probe confirms that adding a missing mapping under an already-cached root does not repair resolution until eviction, process restart or explicit clearing. Similarly, if an update replaces audio bytes at the same resolved path, the player's key alone cannot distinguish the revision. That second scenario was not exercised with a real mixer or package installation. Versioned roots may naturally avoid it; the update layout must be checked before deciding its production reach.
 
@@ -100,13 +100,13 @@ Acceptance examples: missing→available label at a reused root, same-path chang
 
 The launcher contains approximately **18,000 lines across 46 Python files**. `main.py` has 2,010 lines, `presentation.py` 2,185 and `parent_panel.py` 1,579 at this snapshot. Size alone does not prove poor design, but the central `GreiaChildShell` inherits nine mixins plus `GreiaLauncherPresentation`. Rendering, navigation, policy, achievements and profile behavior rely on inherited state and cooperative overrides.
 
-There are also separate base/rich event loops. This increases the chance that resize, input cleanup, narration, pacing or failure handling is repaired in one path and missed in another. The [engineering foundations](../engineering/ENGINEERING_FOUNDATIONS.md) explicitly prefer composition and discourage mixin webs; this is a real tension with that goal.
+There are also separate base/rich event loops. This increases the chance that resize, input cleanup, narration, pacing or failure handling is repaired in one path and missed in another. The [engineering foundations](https://github.com/frozenpepper/Greia/blob/225102f022147261cee209529ff442ca7a3070c5/docs/engineering/ENGINEERING_FOUNDATIONS.md) explicitly prefer composition and discourage mixin webs; this is a real tension with that goal.
 
 **Suggestion:** extract collaborators only when touching a responsibility: navigation state, catalogue snapshot application, speech policy and screen rendering are useful candidates. Retain the existing service owners and trusted supervisor. Move one responsibility at a time behind a narrow typed seam and test both normal and emergency compositions. Do not introduce a universal UI framework or rewrite the launcher wholesale.
 
 A successful refactor should make “who owns selected Activity, page, focus and launch origin?” answerable from one small object, and reduce the number of classes requiring simultaneous changes for a new screen behavior.
 
-Owners: [child_shell.py](../../src/greia_launcher/child_shell.py), [presentation.py](../../src/greia_launcher/presentation.py), [main.py](../../src/greia_launcher/main.py), [trusted_presentation.py](../../src/greia_launcher/trusted_presentation.py).
+Owners: [child_shell.py](https://github.com/frozenpepper/Greia/blob/225102f022147261cee209529ff442ca7a3070c5/src/greia_launcher/child_shell.py), [presentation.py](https://github.com/frozenpepper/Greia/blob/225102f022147261cee209529ff442ca7a3070c5/src/greia_launcher/presentation.py), [main.py](https://github.com/frozenpepper/Greia/blob/225102f022147261cee209529ff442ca7a3070c5/src/greia_launcher/main.py), [trusted_presentation.py](https://github.com/frozenpepper/Greia/blob/225102f022147261cee209529ff442ca7a3070c5/src/greia_launcher/trusted_presentation.py).
 
 ### F4 — Catalogue changes can perform substantial work on the interactive thread
 
@@ -120,7 +120,7 @@ This correctly preserves authority before exposing new tiles, but a large packag
 
 Avoid a new persistent daemon or recursive polling watcher by default. Parent/package transaction notifications plus a bounded reconciliation path may be enough. Do not “speed up” discovery by trusting arbitrary mutable package bytes.
 
-Owners: [registry](../../src/greia_platform/activities.py), [bootstrap](../../src/greia_launcher/bootstrap.py), [presentation rescan](../../src/greia_launcher/presentation.py), [policy projection](../../src/greia_launcher/activity_policy_presentation.py).
+Owners: [registry](https://github.com/frozenpepper/Greia/blob/225102f022147261cee209529ff442ca7a3070c5/src/greia_platform/activities.py), [bootstrap](https://github.com/frozenpepper/Greia/blob/225102f022147261cee209529ff442ca7a3070c5/src/greia_launcher/bootstrap.py), [presentation rescan](https://github.com/frozenpepper/Greia/blob/225102f022147261cee209529ff442ca7a3070c5/src/greia_launcher/presentation.py), [policy projection](https://github.com/frozenpepper/Greia/blob/225102f022147261cee209529ff442ca7a3070c5/src/greia_launcher/activity_policy_presentation.py).
 
 ### F5 — Bounded entry counts should become an aggregate memory budget
 
@@ -136,7 +136,7 @@ Do not reduce cache capacity blindly: the existing performance history shows und
 
 **Priority: high for contributor/agent efficiency. Evidence: conflicting current documents.**
 
-The [launcher interaction guide](../design/GREIA_LAUNCHER_INTERACTION_AND_ACTIVITY_CATALOGUE.md) still lists adaptive sub-Collections, age fields and Parent visibility policy as unimplemented, while current source and `HANDOVER.md` describe their implementation. The [local testing router](../testing/LOCAL_AGENT_START_HERE.md) still names R7 as the primary blocking phase, while the active plan and handover advance to R8. The canonical cast document's older pending runtime statements also need reconciliation with later visual progress and existing renditions.
+The [launcher interaction guide](https://github.com/frozenpepper/Greia/blob/225102f022147261cee209529ff442ca7a3070c5/docs/design/GREIA_LAUNCHER_INTERACTION_AND_ACTIVITY_CATALOGUE.md) still lists adaptive sub-Collections, age fields and Parent visibility policy as unimplemented, while current source and `HANDOVER.md` describe their implementation. The [local testing router](https://github.com/frozenpepper/Greia/blob/225102f022147261cee209529ff442ca7a3070c5/docs/testing/LOCAL_AGENT_START_HERE.md) still names R7 as the primary blocking phase, while the active plan and handover advance to R8. The canonical cast document's older pending runtime statements also need reconciliation with later visual progress and existing renditions.
 
 **Suggestion:** correct derived current-status sections from their owning source/plan evidence, preserve dated history, and keep the handover genuinely short. Do not erase unresolved per-feature acceptance gates merely because the overall phase advanced. The report records these inconsistencies; it does not silently edit other workstreams' authority.
 
@@ -200,7 +200,7 @@ The authoring guidance already recognizes the final-item collision: collection s
 
 Use specificity sparingly: “You found three” may be useful when it describes the actual learning action; generic applause on every click becomes noise. Never make continued play depend on watching a celebration. A quiet, static terminal state also costs less CPU.
 
-Owners: [presenter guidance](../../skills/greia-activity-authoring/PRESENTERS_AND_CURIOSITY.md), [feedback orchestration](../../skills/greia-activity-authoring/FEEDBACK_ORCHESTRATION.md), [shared utterances](../design/GREIA_SHARED_CHARACTER_UTTERANCES.md), [cast](../design/GREIA_CANONICAL_CAST_SYSTEM.md).
+Owners: [presenter guidance](https://github.com/frozenpepper/Greia/blob/225102f022147261cee209529ff442ca7a3070c5/skills/greia-activity-authoring/PRESENTERS_AND_CURIOSITY.md), [feedback orchestration](https://github.com/frozenpepper/Greia/blob/225102f022147261cee209529ff442ca7a3070c5/skills/greia-activity-authoring/FEEDBACK_ORCHESTRATION.md), [shared utterances](https://github.com/frozenpepper/Greia/blob/225102f022147261cee209529ff442ca7a3070c5/docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md), [cast](https://github.com/frozenpepper/Greia/blob/225102f022147261cee209529ff442ca7a3070c5/docs/design/GREIA_CANONICAL_CAST_SYSTEM.md).
 
 ## 7. Making Activity creation simple for parents
 
@@ -261,7 +261,7 @@ Keep prepared opaque backdrops, converted image surfaces, bounded transforms and
 | Repeated Activity/Home cycles | Total memory trend, leaked processes/handles, return latency | Whether daily use remains stable. |
 | Profile/theme/locale changes | Retained cache bytes, stale pixels and speech | Whether bounds and invalidation work together. |
 
-Use the existing [draw profiler](../../tools/profile_launcher_draw.py) for diagnostic phases and the current physical procedure for acceptance. Add counters to existing owners instead of a new monitoring service. Record device facts and exact deployed source identity; include enough repetitions to distinguish noise from a regression.
+Use the existing [draw profiler](https://github.com/frozenpepper/Greia/blob/225102f022147261cee209529ff442ca7a3070c5/tools/profile_launcher_draw.py) for diagnostic phases and the current physical procedure for acceptance. Add counters to existing owners instead of a new monitoring service. Record device facts and exact deployed source identity; include enough repetitions to distinguish noise from a regression.
 
 The existing approximate 30 fps animation and ≤50 ms added input-latency guidance are useful goals. Near-zero static redraw is a desirable property. Do not declare a newly invented universal boot/launch/RSS target without baseline measurement. Establish separate budgets for Shell residency, Activity peak and whole-system pressure, including compositor/chrome, services, filesystem cache and swap behavior.
 
