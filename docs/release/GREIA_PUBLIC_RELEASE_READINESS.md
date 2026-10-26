@@ -862,7 +862,17 @@ Review:
 
 **Blocking for ordinary-family release: YES**
 
-The current repository documentation is strong for engineering, but a public user needs a much smaller, task-oriented path.
+A short family entry point now exists at `docs/user/README.md` with
+Windows/macOS USB preparation (`INSTALL_FROM_USB.md`) and an accessible
+Greia Parents guide (`GREIA_PARENTS.md`, including S+T at child selection
+and the network HTTPS route). Developer entry points also exist for image
+builds, Activity creation and adding/managing a language. These remain
+**pre-release drafts** until reconciled with the exact approved image and
+supported hardware; backup/restore, recovery, release download links and
+the actual end-to-end new-user journey still need final acceptance.
+
+The original target documentation inventory below is retained as a
+release checklist, **not** a statement that every named guide is missing.
 
 ## Parent/user documentation
 
@@ -909,7 +919,11 @@ Before RC sign-off:
 - fix stale voice, hardware, Activity, Parent and update status claims;
 - ensure README does not advertise finished capabilities whose acceptance is still open;
 - ensure historical docs are clearly historical;
-- run link/path validation;
+- run `PYTHONPATH=src python3 tools/audit_repository_docs.py --scope maintained`
+  to check all tracked living Markdown relative links (and
+  `--scope all` to inventory broken historical links separately);
+- run `python3 -m unittest discover -s tests -p 'test_repository_docs_audit.py' -v`
+  and keep its result attached to the exact RC source state;
 - verify commands from a clean checkout where they are meant to be executable.
 
 Documentation dates alone are not proof of freshness.
