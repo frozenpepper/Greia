@@ -179,11 +179,20 @@ work order requires an explicit review decision before reuse. Read-only
 hashes/holder/loop checks passed. Report:
 `docs/reviews/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC_SOURCE_GATE_FAILURE.md`.
 
-Record an explicit reuse exception or rebuild the next bundle/image; do not
-boot the stage diagnostic until then. Do not rebuild the OS automatically,
-repeat the old offline read or resume the full healthy-update retry. The actual
-stage cause and healthy B remain UNPROVEN; Session 04 remains OPEN. No
-production updater source changed in this follow-up.
+**Current review decision (2026-10-27):** the explicit old-release-only reuse
+exception is recorded in `docs/testing/2026-10-27_UPDATE_AGENT_HANDOFF.md`.
+Use that new handoff, not the old blanket `1275..HEAD` source gate. It pins
+reviewed host source separately from guest artifact source, permits one stage
+only on a fresh clone and collects the saved response/cause. No current-
+language image acceptance, rebuild/install/arm/B boot or larger matrix.
+The actual stage cause and healthy B remain UNPROVEN; Session 04 remains OPEN.
+
+There is also a source compatibility blocker before application-package trials:
+Python/combined package builder/inspector omit and reject the new language JSON
+paths, while new registry code requires those files at import. Do not trial
+current registry code on a pre-manifest base or hand-copy files to evade the
+package validator. The new handoff names the required data/compatibility source
+work; no production correction or image rebuild is performed here.
 
 The PSmisc 23.7 holder check must use `fuser -v <absolute-file>` without `--`.
 Accept no-holder status 1 only with empty output: usage errors also return 1.

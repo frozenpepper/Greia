@@ -92,3 +92,26 @@ failed and is broader than the initial two-manifest stop. The write-only
 because the source gate already blocks the stage boot. No VM, install, arm,
 B boot, update replay or collector ran. The same review/rebuild decision in §4
 is required before any reuse.
+
+## 6. 2026-10-27 review decision
+
+The next-action decision requested above is now explicitly recorded in
+[`2026-10-27_UPDATE_AGENT_HANDOFF.md`](../testing/2026-10-27_UPDATE_AGENT_HANDOFF.md).
+At reviewed host source `78f07861c0ddfad6ed51fb2e1c564d3f95e70115`, the 19 changed
+production source paths since `1275e0be1` are localization/UI. The updater/slot/
+boot owners and image composition inputs are unchanged. The existing verified
+old payloads may be used for one **old-release** stage diagnostic with current
+host control/error collection. They do not test new localization or establish
+current-release acceptance. The new handoff supplies a reviewed-snapshot source
+gate, records host and guest versions separately, and does not authorize builds.
+
+Current source verification at the reviewed SHA: 80 update-preflight tests PASS
+in 14.121 s; 59 language tests PASS and EN/IT/ES/FR audits each zero issues.
+No Linux boot or artifact inspection was executed on this Mac. The decision
+assumes fresh hash/holder/loop checks on the Linux host before the one boot.
+
+Cross-seam source review also found that current Python/combined packages omit
+and reject the new language JSON while the new registry requires it. Do not
+send that code to pre-manifest bases as a test; the handoff records the package-
+data/compatibility correction needed first. This is separate from the old-
+release full-system diagnostic, and no production fix is claimed here.

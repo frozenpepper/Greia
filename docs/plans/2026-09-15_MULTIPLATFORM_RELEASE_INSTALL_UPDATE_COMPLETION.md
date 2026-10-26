@@ -3541,3 +3541,24 @@ loops. Report:
 Next: record an explicit reuse exception or rebuild the next bundle/image; do
 not boot until that decision is recorded. Actual stage cause and healthy B
 remain UNPROVEN; Session 04 OPEN.
+
+## 2026-10-27 — Reviewed old-release diagnostic exception and package/data blocker
+
+The latest agent stopped before VM work at the blanket old-source reuse gate.
+Review of `1275e0be1..78f07861c` finds 19 localization/UI production source
+changes but unchanged updater/slot/boot and build/runtime/Activity/asset inputs.
+The new `docs/testing/2026-10-27_UPDATE_AGENT_HANDOFF.md` explicitly permits one
+old-release stage diagnostic on the frozen existing payloads, with reviewed-
+host and actual-host source identities separate. It does not waive current-
+release or current-language image acceptance. One stage, collect, report, stop;
+no rebuild/install/arm/B boot/matrix. Current source gates passed: 80 update
+preflight tests; 59 language tests and four zero-issue locale checks.
+
+The same review identifies a source compatibility blocker for application
+updates: Python/combined package inventories and inspector paths exclude new
+language manifest/UI JSON, while the new registry imports require them.
+Do not trial current registry code on a pre-manifest base through that package
+route. A bounded package-data/validation fix or compatible-base contract is
+needed before those trials; do not infer that a full image rebuild is the
+normal solution for lightweight updates. This is documentation/source review
+only; no implementation or Linux acceptance is added. Session 04 remains OPEN.

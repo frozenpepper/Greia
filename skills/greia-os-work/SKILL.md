@@ -149,9 +149,19 @@ manifests, so the gate is unchanged and broader. The language files are
 selector metadata and absent from the accepted-A image/next bundle, but the
 work order requires an explicit review decision before reuse. Report:
 `docs/reviews/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC_SOURCE_GATE_FAILURE.md`.
-Record a reuse exception or rebuild the next bundle/image; do not boot until
-then. Do not rebuild the OS automatically for this gate, and do not treat the
-test fixture fix as stage evidence.
+The 2026-10-27 review records the old-release-only reuse exception in
+`docs/testing/2026-10-27_UPDATE_AGENT_HANDOFF.md`. That is the current next
+work order; it supersedes the old blanket source gate for one diagnostic only,
+not current-release/current-language image acceptance. Keep reviewed host source,
+actual host HEAD and old guest source separate. No rebuild/install/arm/B boot.
+
+Current language source checks pass, but current Python/combined packages cannot
+carry the newly required language manifest/UI JSON to a pre-manifest base.
+Builder inventory and inspector paths exclude it. Block that known-bad app
+update combination until bounded data delivery/compatibility is addressed; do
+not learn it through a startup-failure trial or manually bypass the package
+validator. The new handoff records exact owners. No source correction is made
+here, and source/GUI/audio/image acceptance remain separate.
 
 Use sudo reads for root-owned 0600 inputs, never chmod. PSmisc holder checks
 must use its supported syntax and reject status-1 usage output. The old

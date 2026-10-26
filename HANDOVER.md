@@ -3,6 +3,13 @@
 **Purpose:** the short current state for contributors and agents: active workstreams, recent results, blockers and next steps. It is not an archive.
 **Public-source readiness:** IN PROGRESS. Root entry points exist (`LICENSE`, `NOTICE.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`); the licensing/provenance audit is open (see `NOTICE.md`).
 **Ordinary-family release:** NOT READY (`docs/release/GREIA_PUBLIC_RELEASE_READINESS.md`).
+**Current update-agent handoff (2026-10-27):**
+`docs/testing/2026-10-27_UPDATE_AGENT_HANDOFF.md` records the explicit reuse
+decision for one **old-release** stage diagnostic using the verified 1275-era
+images. It replaces the prior blanket source gate for that diagnostic only;
+no current-language image acceptance is claimed. Current Python/combined
+packages cannot deliver the newly required language JSON to pre-manifest bases;
+do not trial that incompatible combination. No automatic image rebuild.
 **Last recorded A/B diagnostic checkpoint (2026-10-26; not a current HEAD claim):**
 the corrected 80-test preflight passed for the earlier candidate, but main
 subsequently gained production installer/launcher/platform localization changes
@@ -37,9 +44,10 @@ Those links were subsequently redirected to their verified historical Git
 snapshots (18 early-learning links, 22 launcher-review links); the archived
 findings were not changed and no retired test evidence was restored. Updated
 `docs/archive/README.md` and `docs/DOCUMENTATION.md` to explain the exception.
-A full all-scope rerun on the new head is still pending and can be combined
-with the next appropriate normal verification session; no device test is
-required for these Markdown changes.
+Follow-up in this update-agent handoff review: the all-scope auditor inspected
+426 Markdown documents (including the new handoff) with zero unresolved
+repository links, and its four tests passed. This is source/documentation
+verification only; no device test is required for these Markdown changes.
 
 ## Active workstreams
 
@@ -337,6 +345,36 @@ PRESERVED; the 4 first-run DONE, all 16 earlier retakes, and all 143 evidence-ga
 rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
+
+### 2026-10-27 — Update-agent handoff after language and documentation changes
+
+Reviewed current `78f07861c0ddfad6ed51fb2e1c564d3f95e70115` and the last source-
+gate report. No stage diagnostic boot ran. The 19 production source changes
+since the old image source are localization/UI; updater/slot/boot owners and
+build/runtime/Activity/assets inputs are unchanged. New handoff
+`docs/testing/2026-10-27_UPDATE_AGENT_HANDOFF.md` explicitly permits one captured
+old-release stage diagnostic using the existing verified images and a fresh
+clone. It pins old guest source, reviewed host source and actual executed HEAD
+separately, compares critical owners, checks post-review changes and records
+response/cause and cleanup. No build/install/arm/B boot or larger matrix; report
+and stop. This is not current-source/current-language image acceptance.
+
+Current language verification: 59 focused tests PASS (13/9/7/19/11), and
+EN/IT/ES/FR checks each report zero problems. UI schema and recursive placeholder
+regressions cover the earlier checker gaps. Root update preflight: 80 tests PASS
+in 14.121 s. All-scope documentation audit (including this handoff):
+426 Markdown documents, zero unresolved repository links; four audit tests PASS. These are Mac/source-only results at the reviewed HEAD; no Linux
+boot/voice/browser/physical acceptance is claimed. Existing full-gate red
+findings remain; no broad full gate was rerun for this documentation-only work.
+
+A source compatibility review also found a blocker that must precede current
+application-package trials: builder `_collect_python_snapshot` and inspector
+`_package_path` allow Python plus fixed runtime files, not the new language
+JSON; new `system_language` imports require those files. Old pre-manifest bases
+cannot receive them through the present Python/combined package. The handoff
+forbids trying that known-bad combination and identifies the required package-
+data/compatibility correction as separate source work. No production code was
+modified here. Session 04/current-language image acceptance remain OPEN.
 
 ### 2026-10-27 — Documentation semantics and test-hygiene refinement (SOURCE REVIEW)
 

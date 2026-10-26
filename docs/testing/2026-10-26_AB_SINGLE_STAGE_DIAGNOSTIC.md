@@ -1,5 +1,11 @@
 # One captured stage operation on a fresh clone
 
+**Current next-action handoff:**
+[`2026-10-27_UPDATE_AGENT_HANDOFF.md`](2026-10-27_UPDATE_AGENT_HANDOFF.md)
+records the reviewed old-release-only reuse decision after language changes.
+Use that document; the older procedure below preserves its executed history.
+Do not apply its blanket source gate as an extra step after the new handoff.
+
 Date: 2026-10-26. The [offline result](../reviews/2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS_RESULT.md)
 is complete: the original error was not saved and cannot be recovered from
 that image. Do not repeat collection from that old clone.
