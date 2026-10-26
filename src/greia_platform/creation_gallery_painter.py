@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import io
 from dataclasses import dataclass
+from greia_platform.system_language import SUPPORTED_SYSTEM_LOCALES, language_ui
 from typing import Any, Callable
 
 from .creation_gallery import CreationFamily, CreationsGalleryController, GalleryMode
@@ -120,8 +121,10 @@ class CreationsPygamePainter:
     ) -> None:
         self.controller = controller
         self.typography = typography
-        language = (locale or "en").split("-", 1)[0].lower()
-        self.locale = language if language in _GALLERY_TEXT["title.library"] else "en"
+        language = (locale or "en").strip().replace("_", "-")
+        if language not in SUPPORTED_SYSTEM_LOCALES:
+            language = language.split("-", 1)[0].lower()
+        self.locale = language if language in SUPPORTED_SYSTEM_LOCALES else "en"
         self._visual_cache = visual_cache
         self._backdrop = backdrop
         self._greeter = greeter
@@ -150,7 +153,8 @@ class CreationsPygamePainter:
 
     def _label(self, key: str) -> str:
         options = _GALLERY_TEXT[key]
-        return self._text_transform(options.get(self.locale, options["en"]))
+        translated = language_ui(self.locale, "gallery").get(key)
+        return self._text_transform(translated or options.get(self.locale, options["en"]))
 
     def _text(self, target: Any, label: str, x: int, y: int, size: int, *, center: bool = False) -> None:
         font = self.typography.font(FontRole.TITLE if size >= 27 else FontRole.CONTROL, size)
