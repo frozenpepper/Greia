@@ -1790,3 +1790,28 @@ inspection of 136 maintained Markdown docs found zero unresolved relative
 links. **New scanner tests and full local checkout audit have not executed**,
 and neither this nor the previous 59/59 source-localization PASS constitutes
 actual fifth-language GUI/image/device/voice or browser-chrome acceptance.
+
+### 2026-10-26 — Release-documentation continuation and duplicate-auditor consolidation
+
+Consolidated the owner's documentation and test-artifact cleanup after
+manifest-language source verification. The maintained guide already explains
+how to add, stage, enable, change, fall back, and retire a Greia language;
+the first-party device lists follow shipped manifests, and the separate
+browser Parents chrome still needs its own locale resources. The frozen
+corpus Whisper review guide now explicitly distinguishes its historical
+workflow from the current pinned Parakeet-TDT v3 default for new VoiceEngine
+speech. Contributor/developer indexes point to the existing read-only
+`tools/audit_repository_docs.py --scope maintained|all` audit. A duplicate
+auditor/test introduced during this review was removed, preserving a single
+doc-audit tool. The release-readiness checklist's 2026-08 audit PASS count
+was explicitly labelled historical, not a certification of current main.
+
+Previous GitHub cleanup removed 21 website prototype files and nine older
+visual-review PNGs, and condensed living handover history with Git recovery
+notes. Remaining dated A/B evidence, Encyclopedia visual golden masters,
+approved voice recordings and provenance remain intact by design.
+**Verification:** GitHub source review only for this continuation; previous
+59/59 focused language tests were executed at an earlier HEAD. The existing
+three-unit-test documentation auditor and both maintained/all link inventory
+modes still need one read-only run in a full checkout. No runtime, generation,
+image-build, device, cloud or hosted testing was performed.
