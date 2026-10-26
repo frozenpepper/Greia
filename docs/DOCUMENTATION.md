@@ -1,7 +1,7 @@
 # Greia Documentation Map and Authority Model
 
 **Status:** LIVING repository-wide documentation contract  
-**Reviewed:** 2026-10-24
+**Reviewed:** 2026-10-26
 **Audience:** contributors, coding agents, reviewers, test operators and Activity authors
 
 ## 1. Purpose
@@ -327,6 +327,17 @@ Owner decision (2026-10-16, open-source cleanup): once work is finished and no l
 
 Bulky evidence belongs outside Git unless a specific evidence authority requires otherwise.
 
+**2026-10-26 release cleanup:** the superseded language-tier proposal moved
+from `docs/product/` to `docs/archive/plans/`. Twenty-one obsolete website
+study HTML/CSS/JS/image files (about 3.5 MB) were retired from
+`docs/design/website_mocks_2026-09-23/`; current `website/` is unchanged.
+Their decision and exact Git recovery revision are in
+`docs/archive/reviews/2026-09-23_WEBSITE_DESIGN_STUDIES.md`.
+The living `HANDOVER.md` was condensed from about 290 KB to about 44 KB,
+with historical entries recoverable through the SHA recorded inside it.
+No test suites, actively referenced A/B results, approved character audio,
+production images or asset provenance receipts were deleted.
+
 ## 8. Documentation freshness rules
 
 A living document is stale when it materially disagrees with an accepted ADR, current source contract or current evidence owner—even if its review date is recent.
@@ -340,7 +351,15 @@ Before public-source/RC sign-off:
 5. verify executable commands from a clean checkout where practical;
 6. keep old evidence scoped to its exact SHA/environment.
 
-A provider-free documentation path/link audit should be added before public source publication.
+A read-only tracked-Markdown path/link audit now exists:
+`python3 tools/audit_repository_docs.py --scope maintained` scans current guides,
+agent skills and public entry points; `--scope all` inventories dated
+reviews, plans and the archive too. Unlike the earlier entry-only link test,
+this reports the source file/line and missing relative target, and never
+deletes data. Historical documents may legitimately link to evidence removed
+from the working tree during cleanup, but these findings must not be confused
+with broken links in a living guide. The audit has not yet been executed in
+a full local checkout at the new cleanup head.
 
 ## 9. Maintenance
 
