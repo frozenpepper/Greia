@@ -312,6 +312,36 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-26 — Fifth-language checker verified baseline and repaired (SOURCE-WIP)
+
+The owner's local agent ran five manifest/system/installer/Parent/release
+suites against exact `7bb1995146ea917da6a3d33004b2c40d48c535ce`,
+Python 3.12.7: **56/56 PASS** (10+9+7+19+11); language source
+checks EN/IT/ES/FR had zero problems. No tracked edits, existing unrelated
+untracked work preserved. This establishes a source-only baseline for the
+manifest-backed languages and staged-new-language tooling, **not** UI/image/
+hardware/voice acceptance.
+
+The agent spotted two valid omissions: `tools/check_greia_language.py`
+didn't validate the UI catalog schema/section types, and inspected only top-
+level Python format placeholders. Follow-up GitHub commits added those
+checks, recursive fields in nested specifications (e.g. `{count:{width}}`),
+and regression cases in `tests/test_language_manifests.py`. The add-language
+guide, agent/OS skills and language rollout progress were updated.
+**New tests have NOT been run in a complete checkout**; the 56-pass
+count applies only to the earlier commit.
+
+Browser Parents language buttons already derive offered devices' locale list
+from the Parent API; its separate browser chrome has EN/IT/ES/FR strings
+in `frozenpepper/Greia-Parent-App-Html/src/localization.js`. Extending
+that browser chrome via only data/config is still open and should not be
+confused with the implemented OS/installer manifest discovery. That separate
+repo is pinned/vendor-synchronized in Greia; review and repin together,
+not via an isolated browser edit. No additional locale was offered and no
+approved voice data was modified. Next: rerun focused suites at new exact
+head, then only a simulated 4+1 chooser UI test; avoid concurrent A/B smoke
+contamination.
+
 ### 2026-10-26 — Manifest-language contributor audit refinement (SOURCE-WIP)
 
 The manifest-backed source from the preceding entry remains the implementation
