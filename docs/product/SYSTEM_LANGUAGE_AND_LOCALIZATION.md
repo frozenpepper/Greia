@@ -202,12 +202,15 @@ Selecting Italian does **not** make an English-only Activity invalid. The Activi
 
 ## 10. Selectable languages and truthful completeness
 
-The selectable languages are **English, Italian, Spanish and French**
-(owner decision 2026-10-17), not the former twelve. Text keys have
-four-way parity across installer, Shell, Parent panel and all 45
-built-in Activities, and the shared spoken banks exist in all four
-(`tests/test_four_language_release_contract.py`). Rendered, installed
-and hardware evidence remain separate from that source contract.
+As of 2026-10-26 the **currently shipped** selectable manifests are English,
+Italian, Spanish and French (owner decision 2026-10-17). This is not a hard
+four-language ceiling: the release contract derives required locales from
+the manifest set. The existing four have source text/placeholder parity
+and shared spoken-bank coverage (`tests/test_four_language_release_contract.py`);
+focused source verification passed 59/59 at `bd3aa0a` on 2026-10-26.
+The installer/Parent rendering, voice listening and actual image/device
+acceptance of a **fifth** language are still unverified. A future locale
+is offered only after its source, audio, font, UI and owner acceptance.
 
 Complete acceptance for each promised language requires:
 
@@ -255,14 +258,27 @@ External HTML client source:
 ```text
 frozenpepper/Greia-Parent-App-Html
 src/api.js
-src/language_ui.js
+src/localization.js
+src/views_device.js  # language choices from API, independent browser-chrome catalogs
 ```
 
 ## 13. Evidence status
 
 The language-selection/persistence source and focused regression tests are committed.
 
-A current-head PASS is **not** established merely by those commits. Owner-controlled verification must execute the focused Greia tests, complete source gate, external Parent-app tests and installer/physical acceptance before this slice is described as verified on hardware.
+Source-level evidence: owner/local agent ran 59/59 focused language tests at
+`bd3aa0a25fdd58220ad1b361ebf7ce2715a3ba47` with Python 3.12.7 and
+zero source/placeholder findings for EN/IT/ES/FR. Subsequent documentation
+and repository-cleanup changes do not imply a new hardware run.
+The separate browser Parents client pulls **device-language choices** from
+the API, but its own English/Italian/Spanish/French browser-chrome translation
+strings remain in `frozenpepper/Greia-Parent-App-Html/src/localization.js`.
+For a new fully localized browser language, that independent client needs
+its own catalog and repo/pin integration; an OS manifest does not magically
+translate browser navigation.
+
+Installer, physical viewport, font, child spoken language and fifth-locale
+end-to-end acceptance are **not** established by the source tests.
 
 Physical installer acceptance should prove at minimum:
 
@@ -273,16 +289,23 @@ Physical installer acceptance should prove at minimum:
 5. change again from hidden Parent Settings and confirm the same API/store sees it;
 6. Activities without profile overrides inherit the current device locale;
 7. an Activity that lacks the selected translation follows its declared fallback rather than failing;
-8. selecting/storing Arabic/Chinese/Hindi/Bengali does not crash the Shell even before complete translation/font acceptance exists.
+8. a legacy saved unsupported locale safely falls back to English; newly unsupported locales cannot be selected or stored through the typed service.
 
-## 14. 2026-10-12 accepted rollout correction
+## 14. Language-maintenance workflow
 
-The former `LANGUAGE_SUPPORT_TIERS_PROPOSAL.md` (2026-09-27)
-is a historical proposal; the owner now approved a more specific
-four-language program. Source changes narrow
-`SUPPORTED_SYSTEM_LANGUAGES` to en/it and stage es/fr
-installer translations while local recording tools and authoring
-agents fill the true coverage gaps.
+For translating, introducing, promoting or retiring languages, use the single
+contributor runbook `docs/development/ADD_A_GREIA_LANGUAGE.md` and agent skill
+`skills/greia-language-expansion/SKILL.md`. An incomplete `ui.json` folder
+does **not** make a language selectable. An accepted `manifest.json` does.
+Language selection is loaded at process start; adding files to a running device
+does not update its current chooser in real time. Removal requires owner
+approval and checking the saved-language fallback, Activity declarations,
+audio and Parents browser presentation before rebuilding/releasing.
+
+The superseded September language-tier proposal has been moved to
+`docs/archive/plans/LANGUAGE_SUPPORT_TIERS_PROPOSAL_2026-09-27.md` as
+historical evidence only. The four-language rollout is also dated history;
+the live selector authority is now the per-language manifest set.
 
 **Superseded 2026-10-17:** the owner released es and fr; current visible
 device choices are en, it, es, fr. All other language tags are retired from device selection
