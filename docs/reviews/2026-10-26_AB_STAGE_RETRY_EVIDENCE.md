@@ -100,3 +100,78 @@ Operational note: the previous run's failed healthy-update clone and control
 image were pruned to keep host disk use at the 80% threshold; its result and
 serial logs were preserved. This retry's failed clone remains under the new
 evidence root.
+
+## 6. Source correction — preserve the failure and diagnose the existing clone
+
+The exact reported login-prefixed CRLF marker is now a regression fixture.
+The host detects it and a zero-exit fake QEMU stage failure stops orchestration
+before arm. The control also repeats its failure marker after its bounded
+service snapshot, so later diagnostic text cannot bury it outside the tail.
+
+A subprocess positive control reproduces Python exit 120 when buffered stderr
+flushes to a closed pipe. The revised generated failure path saves valid bounded
+JSON (at most 8 KiB, including oversized Unicode payload cases) and exits 1
+without that flush. It retains the raw response/refusal payload or exception
+cause/traceback, and synchronously saves a bounded service snapshot on PERSIST.
+This demonstrates a loss mechanism and its source fix, **not the original
+installed stage's actual error**. That cause is still unknown.
+
+The new immediate work order is
+[`2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS.md`](../testing/2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS.md).
+Read only the existing failed clone using the source collector. It attaches
+read-only and mounts A/B/PERSIST with `ro,noload`, reads fixed bounded metadata
+and any available control logs, then tears down its owned resources. It neither
+boots nor repairs the image. Old volatile journals cannot be recovered if they
+were never persisted; missing new log files in the old clone are expected.
+Report the facts and stop, without another update replay or image build.
+
+The holder preflight now uses the PSmisc-supported form without `--`, and
+requires both status 1 and empty output. A usage error returning 1 is rejected.
+Root-owned artifacts are read via sudo without chmod. The diagnostic runbook
+preserves the collector's nonzero result after displaying/saving its output.
+
+Separate state-flow audit: `BootTransactionJournal.reconcile(A)` leaves a
+completed `UPDATE_STAGED` transaction pending while on accepted A; the separate
+stage/poweroff/arm test boots are valid against that state machine. No source
+owner normally discards staged state between those phases. No production
+source or image-build input changed in this follow-up.
+
+Source evidence (Mac worktree based on `c387489b5`):
+
+- Final focused run: **339 tests PASS in 12.539 s**, including product control,
+  diagnostics, executable runbook guards, install/boot-health/identity/session
+  legs, update service/Parent/bridge/slot writer, and shared cleanup contracts.
+- Fresh Luna review: **no remaining blocker** after correcting false capture
+  success, current documentation routing and collector exit propagation.
+- Executable regression cases include the exact reported prompt-prefixed CRLF
+  marker, stop-before-arm with QEMU exit 0, closed-stderr exit-120 positive
+  control, valid ≤8 KiB Unicode failure records, capture persistence failures,
+  and PSmisc usage-error/no-holder/holder/timeout cases. Collector tests mock
+  host resources and verify read-only attach/mount and teardown.
+- `make verify` completed **5,961 tests in 277.699 s: 7 failures, 3 errors,
+  9 skips; NOT GREEN**. It began before the last shell capture-status correction;
+  that final source is covered by the focused run above. Six failures and three
+  errors are the previous Mac groups (Foresta en/es/fr, MBR wording, Wi-Fi;
+  ARM64 profile and missing `lsblk`). There is an additional full-context
+  `test_repeated_launches_do_not_grow_shell_memory` failure: retained surfaces
+  grew 675,948 bytes against a 524,288-byte bound. Its isolated two-test module
+  passed in 5.556 s; this does not erase or explain the full-context failure.
+  No launcher/platform production source was edited in this tranche.
+- Separate `make validate` stops at the existing unsupported ARM64 builder.
+  `make shell-check footprint` and Bash/Python runbook syntax checks pass.
+  Logs are temporary at `/tmp/greia-stage-error-followup/`.
+
+No Linux image, mount, loop, QEMU or update operation was executed on this Mac.
+These results do not identify the installed stage's actual first error or
+establish healthy B acceptance.
+
+### Separate unresolved source observation
+
+Outside this reported failure, source review found that
+`BootHealthService._confirm_update` records committed history after delegating
+`confirm_boot_health` without checking `detail.confirmed`; the launcher-facing
+response can therefore describe acceptance while a staged update on accepted A
+is still unconfirmed. This is not established as the stage failure cause and
+is not changed in this harness/diagnostic tranche. Keep it separate for a
+focused production correction and tests before release; do not turn it into
+a reason to rebuild or replay this current diagnostic work order.

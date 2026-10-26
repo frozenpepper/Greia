@@ -11,7 +11,9 @@ prefixed by `greia login:`, so the harness failure-marker parser missed it and
 continued to arm. Healthy B remains unproven. See
 [the retry evidence report](../reviews/2026-10-26_AB_STAGE_RETRY_EVIDENCE.md).
 Do not reuse the failed clone; fix the test-control marker/journal capture
-before authorizing another attempt.
+before another attempt. The immediate next action is offline diagnostics from
+that existing failed clone; see the follow-up section below. Do not run the
+retry blocks until that diagnosis and the harness preflight are complete.
 
 This retries only healthy A-to-B from the [current-source evidence report](../reviews/2026-10-26_AB_SMOKE_CLEAN_SOURCE_RERUN_EVIDENCE.md), reusing its clean bundles and accepted-A clone instead of repeating the long install/first boot. Reuse is conditional on every artifact, hash, source-path, first-boot and focused-test check below. A failed preflight stops this attempt; it does not authorize another image
 build. Fix host/harness problems before running a VM. Rebuild via the
@@ -19,7 +21,16 @@ build. Fix host/harness problems before running a VM. Rebuild via the
 changed or the required artifacts are actually missing/corrupt. Preserve the
 working artifacts. Never repair guest state manually.
 
-## Work order: one retry, no rebuild loop
+## On hold: collect existing failure evidence first
+
+The immediate work order is
+[`2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS.md`](2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS.md).
+It reads the failed clone only and stops. Do not execute the retry sections
+below as an automatic response to a harness fix. They remain the reference
+for a later explicitly scoped run after the first failure has been diagnosed
+or the limits of old evidence have been recorded.
+
+## Reference work order: one retry, no rebuild loop
 
 1. Run the cheap source preflight below before any build or VM work. It runs
    generated STAGE/ARM code against fake sockets and exercises teardown failure
@@ -115,14 +126,16 @@ export ACCEPTED_A="$OLD_EVIDENCE/vm/first-boot/product/firstboot-clone.img"
 export FIRST_BOOT_RESULT="$OLD_EVIDENCE/vm/first-boot/result.json"
 test -s "$UPDATE_BASE_BUNDLE" && test -s "$UPDATE_NEXT_BUNDLE" && test -s "$ACCEPTED_A" && test -s "$FIRST_BOOT_RESULT"
 test -s "$OLD_EVIDENCE/vm/install/product/disposable-target.img"
+# PSmisc 23.7 accepts fuser -v <absolute paths>; it rejects a standalone --.
+# Root-owned 0600 artifacts are read via sudo; do not chmod them for this guide.
 command -v fuser >/dev/null
-if sudo timeout 10 fuser -v -- "$ACCEPTED_A" "$OLD_EVIDENCE/vm/install/product/disposable-target.img" > "$UPDATE_EVIDENCE/image-holders.txt" 2>&1; then
+if sudo env LC_ALL=C timeout 10 fuser -v "$ACCEPTED_A" "$OLD_EVIDENCE/vm/install/product/disposable-target.img" > "$UPDATE_EVIDENCE/image-holders.txt" 2>&1; then
   echo "Selected image is in use; stop before cloning." >&2; exit 1
 else
   HOLDER_STATUS=$?
   printf '%s\n' "$HOLDER_STATUS" > "$UPDATE_EVIDENCE/image-holders.exit"
-  if (( HOLDER_STATUS != 1 )); then
-    echo "Image-holder check failed or timed out; stop." >&2; exit 1
+  if (( HOLDER_STATUS != 1 )) || test -s "$UPDATE_EVIDENCE/image-holders.txt"; then
+    echo "Image-holder check failed, produced diagnostic output, or timed out; stop." >&2; exit 1
   fi
 fi
 sudo losetup --list --noheadings --output NAME,BACK-FILE > "$UPDATE_EVIDENCE/loops.before.txt"
@@ -130,10 +143,10 @@ if grep -F "$OLD_EVIDENCE/" "$UPDATE_EVIDENCE/loops.before.txt"; then
   echo "Old evidence still has attached loops; stop and preserve audit." >&2; exit 1
 fi
 test ! -L "$UPDATE_BASE_BUNDLE" && test ! -L "$UPDATE_NEXT_BUNDLE" && test ! -L "$ACCEPTED_A" && test ! -L "$FIRST_BOOT_RESULT"
-printf '%s  %s\n' b45f0fc77aaf04883442a74be742dc4e1fa888648a55e274b51b836a5b662a9b "$UPDATE_BASE_BUNDLE" | sha256sum -c -
-printf '%s  %s\n' 3ae9cdeafa6e52459016e1a23315648ee4b8887a314c77c288259c1df4d68aa5 "$UPDATE_NEXT_BUNDLE" | sha256sum -c -
-python3 tools/greia_update.py inspect "$UPDATE_BASE_BUNDLE" > "$UPDATE_EVIDENCE/base-inspect.json"
-python3 tools/greia_update.py inspect "$UPDATE_NEXT_BUNDLE" > "$UPDATE_EVIDENCE/next-inspect.json"
+printf '%s  %s\n' b45f0fc77aaf04883442a74be742dc4e1fa888648a55e274b51b836a5b662a9b "$UPDATE_BASE_BUNDLE" | sudo sha256sum -c -
+printf '%s  %s\n' 3ae9cdeafa6e52459016e1a23315648ee4b8887a314c77c288259c1df4d68aa5 "$UPDATE_NEXT_BUNDLE" | sudo sha256sum -c -
+sudo -E env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 tools/greia_update.py inspect "$UPDATE_BASE_BUNDLE" > "$UPDATE_EVIDENCE/base-inspect.json"
+sudo -E env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 tools/greia_update.py inspect "$UPDATE_NEXT_BUNDLE" > "$UPDATE_EVIDENCE/next-inspect.json"
 ```
 
 Validate the old first-boot result against the base bundle manifest and current
@@ -142,7 +155,7 @@ with observed identity, untouched B, and no input-image mutation. The report pub
 recording and comparing this run's pre/post SHA.
 
 ```bash
-python3 - "$FIRST_BOOT_RESULT" "$UPDATE_BASE_BUNDLE" "$OLD_EVIDENCE/vm/install/product/disposable-target.img" "$ACCEPTED_A" <<'PYCODE'
+sudo -E env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 - "$FIRST_BOOT_RESULT" "$UPDATE_BASE_BUNDLE" "$OLD_EVIDENCE/vm/install/product/disposable-target.img" "$ACCEPTED_A" <<'PYCODE'
 import hashlib, json, sys, zipfile
 from pathlib import Path
 result_path, bundle, installed, accepted = map(Path, sys.argv[1:])
@@ -166,8 +179,8 @@ assert r["slot_hash_evidence"]["booted_slots"] == ["A"] and r["slot_hash_evidenc
 assert accepted.is_file()
 print(json.dumps({"base_release_id": base_id, "accepted_A_bytes": accepted.stat().st_size}, indent=2))
 PYCODE
-printf '%s  %s\n' 83d693d915d53e314906fc7e4b319257ba201855121aa1f529f0bf998bf7d1a2 "$ACCEPTED_A" | sha256sum -c -
-sha256sum "$ACCEPTED_A" | tee "$UPDATE_EVIDENCE/accepted-A-before.sha256"
+printf '%s  %s\n' 83d693d915d53e314906fc7e4b319257ba201855121aa1f529f0bf998bf7d1a2 "$ACCEPTED_A" | sudo sha256sum -c -
+sudo sha256sum "$ACCEPTED_A" | tee "$UPDATE_EVIDENCE/accepted-A-before.sha256"
 ```
 
 The healthy-update leg is now eligible. The runner reads both bundle release

@@ -3,6 +3,10 @@
 **Purpose:** the short current state for contributors and agents: active workstreams, recent results, blockers and next steps. It is not an archive.
 **Public-source readiness:** IN PROGRESS. Root entry points exist (`LICENSE`, `NOTICE.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`); the licensing/provenance audit is open (see `NOTICE.md`).
 **Ordinary-family release:** NOT READY (`docs/release/GREIA_PUBLIC_RELEASE_READINESS.md`).
+**Current A/B action (2026-10-26 follow-up):** read the existing failed image via
+`docs/testing/2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS.md`, report and stop. No
+build or VM retry. This supersedes earlier same-day next-retry instructions;
+the installed stage cause remains unknown.
 
 Entries dated before 2026-10-15 were removed from this file in the 2026-10-16 open-source cleanup. Read them with `git show 101e332a:HANDOVER.md`; lessons from that period are indexed in `docs/archive/README.md`.
 
@@ -304,6 +308,31 @@ PRESERVED; the 4 first-run DONE, all 16 earlier retakes, and all 143 evidence-ga
 rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
+
+### 2026-10-26 — Stage failure remains unknown; offline diagnosis first
+
+The `abb11b0a0` Linux retry failed at stage with exit 120. The parser missed
+the exact `greia login: x8-control: phase ... failed` prefix and continued to
+arm; that harness defect is now reproduced and fixed. Error capture now saves
+bounded valid JSON with the raw service response/refusal and cause chain before
+exit, plus a service snapshot before poweroff. A subprocess reproduces exit
+120 from a failed buffered stderr flush; that is a demonstrated loss mechanism,
+not proof of the installed stage's first error.
+
+Immediate work order: `docs/testing/2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS.md`.
+Read the existing failed clone offline and commit its facts. No image rebuild,
+VM boot, update replay or larger fault matrix. The new collector uses read-only
+loops and `ro,noload` mounts. Old volatile journal data may already be gone;
+missing new capture files in that old image are expected. Preserve all inputs.
+The old holder command's unsupported `fuser --` form is removed, usage output
+cannot masquerade as no holders, and root-owned artifacts are read via sudo
+without chmod. No production code or image build input changed here.
+
+Final focused verification: 339 tests PASS; fresh Luna review found no
+remaining blocker in this source scope. Full gate remains NOT GREEN; exact
+results are appended to `docs/reviews/2026-10-26_AB_STAGE_RETRY_EVIDENCE.md`.
+The actual stage cause and
+healthy B are UNPROVEN; Session 04 remains OPEN.
 
 ### 2026-10-26 — A/B stage timeout and teardown follow-up
 

@@ -115,28 +115,22 @@ The old signed `.greiaupdate` v2 flow and release signing keys are
 superseded by ADR 0036 and are not the normal production route; older
 references to them are historical only.
 
-For the next A/B Linux attempt, start with
-`docs/testing/2026-10-26_AB_STAGE_RETRY.md`: one healthy A-to-B retry using the
-verified `1275e0be1` artifacts only if source-diff, hash, first-boot and offline
-checks pass. Current timeout/cleanup fixes affect the harness, not the image.
-Only changed shipped/build inputs or missing/corrupt artifacts justify the
-rebuild/install route in `2026-10-25_AB_SMOKE_RETRY.md`. A host/harness failure
-requires diagnosis against existing inputs, not a speculative rebuild. Run the
-cheap source preflight first, then only this one healthy update; record its
-result and stop rather than chaining the larger fault matrix.
-The older `866ba6827` candidate-only guide stays historical. Staging uses the
-production client's operation timeout; root-only test arm is still distinct
-from panel operations. Owned loop cleanup must finish or report failure; save
-association audits and never bulk-detach unrelated loops.
+The immediate A/B work order is
+`docs/testing/2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS.md`: collect read-only
+facts from the existing failed clone, then report and stop. Do not rebuild,
+boot QEMU, replay an update or launch a fault matrix. The last retry's stage
+marker was hidden by a console prefix; its error output was lost. Source now
+recognizes that prefix and persists bounded response/cause diagnostics before
+poweroff, but the actual installed stage cause remains unknown.
 
-The authorized retry from `abb11b0a0` has now run: focused suites passed (176),
-status/verify passed, and `update-stage` reported `phase update-stage failed
-(exit 120)`. The stage marker was prefixed by `greia login:`, so the harness
-parser missed it and continued to arm, which correctly refused as unstaged.
-The shipped 1800 s stage bound was verified in the immutable payload; the
-stage service error was not captured. The next change must fix the
-failure-marker parser and stage journal capture before another attempt. See
-`docs/reviews/2026-10-26_AB_STAGE_RETRY_EVIDENCE.md`.
+Use sudo reads for root-owned 0600 artifacts; never chmod to satisfy a check.
+PSmisc `fuser -v <absolute-file>` has no `--`; status 1 means no holders only
+when output is empty. A usage error must not pass the offline preflight.
+The collector does not claim acceptance, and missing new diagnostic files in
+an old image do not establish a cause. Preserve the old input images and
+existing reports. The prior healthy-update retry is on hold, not an automatic
+next step. Separate stage/poweroff/arm boots preserve UPDATE_STAGED in the
+current state machine; no production source changed in this follow-up.
 
 The installed updater discovers the fixed published bundle directly. Status
 is reporting/recovery progress, not a package-admission requirement. Device

@@ -71,6 +71,10 @@ def _fake_guest_root(base: Path) -> Path:
     return base
 
 
+def _raise_system_exit(code: int) -> None:
+    raise SystemExit(code)
+
+
 class ProductSpecReuseTests(unittest.TestCase):
     def test_spec_reuses_frozen_sequence_and_contract(self) -> None:
         spec = product_spec()
@@ -147,7 +151,10 @@ class ControlSeamTextTests(unittest.TestCase):
     def test_update_stage_uses_production_client_and_timeout_policy(self) -> None:
         text = control_runner_text()
         self.assertIn("from greia_platform.update_client import UpdatePrivilegedClient", text)
-        self.assertIn("payload = UpdatePrivilegedClient(sock).request(op)", text)
+        self.assertIn(
+            "payload = UpdatePrivilegedClient(sock, socket_factory=_capture_response_socket).request(op)",
+            text,
+        )
         from greia_platform.update_client import _OP_TIMEOUT_SECONDS
 
         self.assertEqual(_OP_TIMEOUT_SECONDS["STAGE_CURRENT_CANDIDATE"], 1800.0)
@@ -240,6 +247,223 @@ class ControlSeamTextTests(unittest.TestCase):
         self.assertIn('umount "$CTL_MNT" || true', text)
         self.assertIn("timeout 8 journalctl --no-pager -u", text)
         self.assertIn("timeout 8 systemctl --no-block poweroff", text)
+
+    def test_generated_stage_client_persists_transport_cause_before_exit(self) -> None:
+        import json
+        import os
+        import socket
+        import sys
+
+        from greia_platform.update_client import UpdatePrivilegedClient
+
+        marker = 'python3 - "$PHASE_FILE" "$SOCK" "$CTL_MNT" <<\'PYEOF\'\n'
+        text = control_runner_text()
+        update_script = text.split(marker, 1)[1].split("\nPYEOF", 1)[0]
+
+        class ResetSocket:
+            def __init__(self) -> None:
+                self.timeout = None
+                self.sent = b""
+
+            def settimeout(self, value):
+                self.timeout = value
+
+            def connect(self, _path):
+                pass
+
+            def sendall(self, raw):
+                self.sent += raw
+
+            def shutdown(self, _how):
+                pass
+
+            def recv(self, _size):
+                raise ConnectionResetError("stage service reset socket after request")
+
+            def close(self):
+                pass
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_args):
+                self.close()
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            phase_file = root / "phase.json"
+            phase_file.write_text('{"phase":"update-stage"}', encoding="utf-8")
+            diag_dir = root / "persist" / "x8-control"
+            update_script = update_script.replace(
+                'Path("/var/lib/greia-os/x8-control")', f"Path({str(diag_dir)!r})"
+            )
+            stage_socket = ResetSocket()
+            argv = ["control.py", str(phase_file), UPDATE_SOCKET_PATH, str(root)]
+
+            with (
+                _mock.patch.object(socket, "socket", lambda *_args: stage_socket),
+                _mock.patch.object(sys, "argv", argv),
+                _mock.patch.object(os, "_exit", side_effect=_raise_system_exit),
+            ):
+                with self.assertRaises(SystemExit) as raised:
+                    exec(compile(update_script, "generated-update-control.py", "exec"), {"__name__": "__main__"})
+
+            self.assertEqual(raised.exception.code, 1)
+            self.assertEqual(stage_socket.timeout, 1800.0)
+            self.assertTrue(stage_socket.sent)
+            record = json.loads((diag_dir / "phase-result.json").read_text(encoding="utf-8"))
+            self.assertEqual((record["phase"], record["operation"], record["status"]),
+                             ("update-stage", "STAGE_CURRENT_CANDIDATE", "FAILED"))
+            self.assertIn("Greia system-update service is unavailable", record["error"])
+            self.assertIn("ConnectionResetError: stage service reset socket after request", record["cause_chain"])
+            self.assertTrue(record["traceback"].endswith("[truncated]"))
+
+    def test_generated_stage_refusal_persists_exact_service_payload(self) -> None:
+        import json
+        import os
+        import socket
+        import sys
+
+        from greia_platform.privileged_channel import encode_response, new_transaction_id
+        from greia_platform.update_client import UpdatePrivilegedClient
+
+        marker = 'python3 - "$PHASE_FILE" "$SOCK" "$CTL_MNT" <<\'PYEOF\'\n'
+        text = control_runner_text()
+        update_script = text.split(marker, 1)[1].split("\nPYEOF", 1)[0]
+
+        class ResponseSocket:
+            def __init__(self, response: bytes) -> None:
+                self.response = response
+                self.timeout = None
+
+            def settimeout(self, value):
+                self.timeout = value
+
+            def connect(self, _path):
+                pass
+
+            def sendall(self, _raw):
+                pass
+
+            def shutdown(self, _how):
+                pass
+
+            def recv(self, _size):
+                response, self.response = self.response, b""
+                return response
+
+            def close(self):
+                pass
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_args):
+                self.close()
+
+        reason = "fixture service refusal: " + "🚀" * 1800
+        response = encode_response(
+            new_transaction_id(), "ERROR", {"status": "REFUSED", "reason": reason}
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            phase_file = root / "phase.json"
+            phase_file.write_text('{"phase":"update-stage"}', encoding="utf-8")
+            diag_dir = root / "persist" / "x8-control"
+            update_script = update_script.replace(
+                'Path("/var/lib/greia-os/x8-control")', f"Path({str(diag_dir)!r})"
+            )
+            stage_socket = ResponseSocket(response)
+            argv = ["control.py", str(phase_file), UPDATE_SOCKET_PATH, str(root)]
+            with (
+                _mock.patch.object(socket, "socket", lambda *_args: stage_socket),
+                _mock.patch.object(sys, "argv", argv),
+                _mock.patch.object(os, "_exit", side_effect=_raise_system_exit),
+            ):
+                with self.assertRaises(SystemExit) as raised:
+                    exec(compile(update_script, "generated-update-control.py", "exec"), {"__name__": "__main__"})
+
+            self.assertEqual(raised.exception.code, 1)
+            record = json.loads((diag_dir / "phase-result.json").read_text(encoding="utf-8"))
+            raw_record = (diag_dir / "phase-result.json").read_bytes()
+            self.assertLessEqual(len(raw_record), 8192)
+            self.assertEqual(record["response"]["returned_op"], "ERROR")
+            self.assertTrue(record["response"]["truncated"])
+            self.assertIn("fixture service refusal", record["response"]["preview"])
+
+    def test_generated_stage_failure_avoids_exit_120_from_buffered_stderr(self) -> None:
+        import json
+        import socket
+        import subprocess
+        import sys
+        import threading
+
+        from greia_platform.privileged_channel import encode_response, new_transaction_id
+
+        marker = 'python3 - "$PHASE_FILE" "$SOCK" "$CTL_MNT" <<\'PYEOF\'\n'
+        text = control_runner_text()
+        update_script = text.split(marker, 1)[1].split("\nPYEOF", 1)[0]
+
+        def run_script(source: str, root: Path) -> tuple[int, Path]:
+            phase_file = root / "phase.json"
+            phase_file.write_text('{"phase":"update-stage"}', encoding="utf-8")
+            diag_dir = root / "persist" / "x8-control"
+            source = source.replace(
+                'Path("/var/lib/greia-os/x8-control")', f"Path({str(diag_dir)!r})"
+            )
+            socket_path = str(root / "service.sock")
+            listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            listener.bind(socket_path)
+            listener.listen(1)
+            response = encode_response(
+                new_transaction_id(), "ERROR", {"status": "REFUSED", "reason": "fixture refusal"}
+            )
+
+            def serve_once() -> None:
+                connection, _ = listener.accept()
+                with connection:
+                    while b"\n" not in connection.recv(4096):
+                        pass
+                    connection.sendall(response)
+                listener.close()
+
+            server = threading.Thread(target=serve_once, daemon=True)
+            server.start()
+            child_source = "import sys\nsys.stderr.write('pending-buffer-' + 'x' * 10000)\n" + source
+            process = subprocess.Popen(
+                [sys.executable, "-c", child_source, str(phase_file), socket_path, str(root)],
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.PIPE,
+            )
+            assert process.stderr is not None
+            process.stderr.close()
+            code = process.wait(timeout=15)
+            server.join(timeout=5)
+            listener.close()
+            self.assertFalse(server.is_alive())
+            return code, diag_dir / "phase-result.json"
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            positive_root = root / "positive-control"
+            fixed_root = root / "fixed-runner"
+            positive_root.mkdir()
+            fixed_root.mkdir()
+
+            # Positive control: restoring SystemExit makes Python flush the
+            # deliberately broken stderr pipe and replace exit 1 with 120.
+            positive = update_script.replace("os._exit(1)", "raise SystemExit(1)")
+            positive_code, _positive_record = run_script(positive, positive_root)
+            self.assertEqual(positive_code, 120)
+
+            fixed_code, fixed_record = run_script(update_script, fixed_root)
+            self.assertEqual(fixed_code, 1)
+            raw = fixed_record.read_bytes()
+            self.assertLessEqual(len(raw), 8192)
+            record = json.loads(raw.decode("ascii"))
+            self.assertEqual(record["status"], "FAILED")
+            self.assertEqual(record["response"]["returned_op"], "ERROR")
 
     def test_runner_text_is_valid_bash(self) -> None:
         import subprocess as _subprocess
@@ -604,11 +828,78 @@ class ControlPhaseFailureTests(unittest.TestCase):
             self.assertIn("phase update-verify failed", str(caught.exception))
             self.assertIn("no current update candidate in the inbox", str(caught.exception))
 
+    def test_prompt_prefixed_stage_failure_from_reported_serial_bytes_is_detected(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            serial = Path(tmp) / "serial.log"
+            serial.write_bytes(
+                b"greia login: x8-control: phase update-stage failed (exit 120); "
+                b"capturing service diagnostics\r\n"
+            )
+            failure = _product._control_phase_failure(serial, "update-stage")
+            self.assertIn(
+                "x8-control: phase update-stage failed (exit 120)", str(failure)
+            )
+            self.assertIn("without a more specific refusal line", str(failure))
+
+    def test_prompt_prefixed_stage_failure_stops_boot_health_before_arm(self) -> None:
+        from types import SimpleNamespace
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            bundle = root / "candidate.greiaupdate"
+            bundle.write_bytes(b"fixture candidate")
+            serial_lines = {
+                "update-stage": (
+                    b"greia login: x8-control: phase update-stage failed "
+                    b"(exit 120); capturing service diagnostics\r\n"
+                )
+            }
+            attempted: list[str] = []
+            harness = ProductHarness(LifecycleConfig(output_dir=root / "out"))
+
+            def fake_boot(phase, _control_phase):
+                attempted.append(phase)
+                serial_log = root / f"{phase}.serial.log"
+                host_log = root / f"{phase}.host.log"
+                Path(serial_log).write_bytes(serial_lines.get(phase, b""))
+                harness._boot_installed_phase(
+                    phase=phase,
+                    argv=["qemu-system-i386"],
+                    serial_log=Path(serial_log),
+                    host_log=Path(host_log),
+                )
+
+            with (
+                _mock.patch.object(_product, "resolve_device_host_tool", return_value="/qemu"),
+                _mock.patch.object(_product.shutil, "which", return_value=None),
+                _mock.patch.object(
+                    _product.subprocess,
+                    "run",
+                    return_value=SimpleNamespace(returncode=0, stdout="", stderr=""),
+                ),
+            ):
+                with self.assertRaisesRegex(
+                    LifecycleHarnessError, "phase update-stage failed"
+                ):
+                    _product.run_boot_health_leg(
+                        product_root=root,
+                        installed_clone=root / "clone.img",
+                        control_dir=root / "control",
+                        release_bundle=bundle,
+                        boot_fn=fake_boot,
+                        slot_digest_fn=lambda _path, slot: f"digest-{slot}",
+                    )
+            self.assertEqual(
+                attempted,
+                ["wait-health-poweroff", "update-status", "update-verify", "update-stage"],
+            )
+            self.assertNotIn("update-arm", attempted)
+
     def test_failure_marker_is_bound_to_exact_phase(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             serial = Path(tmp) / "serial.log"
             serial.write_text(
-                "x8-control: phase update-stage failed (exit 1)\n",
+                "greia login: x8-control: phase update-stage failed (exit 1)\r\n",
                 encoding="utf-8",
             )
             failure = _product._control_phase_failure(serial, "update-verify")

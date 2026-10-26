@@ -133,20 +133,23 @@ refused `update transaction is accepted, not staged`. The shipped client's
 30 s client timeout; the stage service error was not captured before poweroff.
 Do not call it a production refusal.
 
-Next: fix the test-control failure-marker handling and stage journal capture,
-then authorize one new attempt against the same verified inputs. If a
-shipped/build input changed or an artifact is absent/mismatched, rebuild via
-`2026-10-25_AB_SMOKE_RETRY.md`. A harness/host preflight failure is not a
-rebuild trigger. Diagnose that layer against the same artifacts; keep build
-outputs. The executed work order `docs/testing/2026-10-26_AB_STAGE_RETRY.md`
-runs one healthy update only, then reports and stops even on success. Do not
-start a full fault matrix or rebuild loop. Never reuse the failed
-healthy-update clone or manually repair guest state.
-Record owned loop associations before/after the leg; leftover associations
-are a cleanup failure, not a pass. Never bulk-detach unrelated host devices.
-The `866ba6827` candidate-reuse guide remains historical.
-The executed retry report is
-`docs/reviews/2026-10-26_AB_STAGE_RETRY_EVIDENCE.md`.
+Immediate next work order:
+`docs/testing/2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS.md`. Read only the
+existing failed clone; no rebuild, QEMU boot or update replay. The marker
+parser and durable error capture are repaired in source, but the actual stage
+cause remains unknown. The collector reports slot identities, existing
+transaction/status and available bounded test-control logs; it does not
+attest update success. The old image predates durable capture and journald is
+volatile, so missing new log files are expected and are not a diagnosis.
+
+The PSmisc 23.7 holder check must use `fuser -v <absolute-file>` without `--`.
+Accept no-holder status 1 only with empty output: usage errors also return 1.
+Use sudo to read root-owned 0600 build artifacts; do not chmod them for checks.
+Preserve the failed clone, accepted A and bundles. Record diagnostic facts and
+stop before another run. A missing tool or harness error does not justify an
+image rebuild. The previous stage-retry work order is on hold until the first
+failure is understood or explicitly recorded as unrecoverable from old logs.
+No production updater code changed in this follow-up. Session 04 remains OPEN.
 
 The active root stays writable. Hashes spanning its boot are retained for
 diagnosis, not checked for equality. First-boot B remains untouched and must

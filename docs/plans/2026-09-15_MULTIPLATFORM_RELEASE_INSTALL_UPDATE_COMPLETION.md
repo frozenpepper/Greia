@@ -3421,3 +3421,21 @@ test-control failure-marker handling and stage journal capture, then authorize
 a new single attempt; do not reuse the failed clone or rebuild the OS for this
 harness-only cause. Session 04 remains OPEN; no B health, rollback, Parent,
 full-system, physical or USB claim is made.
+
+## 2026-10-26 — Correct masked failure and collect existing-image diagnostics
+
+The `abb11b0a0` report is a failed stage, not healthy B. Prefix matching missed
+the reported login-prefixed marker and incorrectly continued to arm. Source
+now reproduces/detects those bytes, stops the phase sequence, and persists
+bounded raw response/refusal and exception-cause diagnostics before poweroff.
+A subprocess demonstrates exit 120 from stderr-flush failure; the installed
+stage's actual first error is still unknown. Separate stage/arm boots were
+traced against the real journal/reconciliation owners and preserve staged state.
+
+The immediate route is `docs/testing/2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS.md`:
+read-only collection from the existing failed clone, report and stop. No rebuild
+or fresh VM/update run. The collector reuses scoped teardown and mounts with
+read-only loop plus `ro,noload`; its output is facts, not acceptance. PSmisc
+holder syntax/status handling and sudo reads of root-owned artifacts are also
+corrected. Production code/build inputs remain unchanged. Source evidence is
+appended to `docs/reviews/2026-10-26_AB_STAGE_RETRY_EVIDENCE.md`; Session 04 OPEN.
