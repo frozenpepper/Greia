@@ -115,13 +115,15 @@ The old signed `.greiaupdate` v2 flow and release signing keys are
 superseded by ADR 0036 and are not the normal production route; older
 references to them are historical only.
 
-The immediate A/B work order is
-`docs/testing/2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS.md`: collect read-only
-facts from the existing failed clone, then report and stop. Do not rebuild,
-boot QEMU, replay an update or launch a fault matrix. The last retry's stage
-marker was hidden by a console prefix; its error output was lost. Source now
-recognizes that prefix and persists bounded response/cause diagnostics before
-poweroff, but the actual installed stage cause remains unknown.
+The offline failed-image read is complete
+(`docs/testing/2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS.md`). A is the accepted
+base 0.13.0 slot; B has **no release identity**, so it does not contain the
+next release; PERSIST still accepts A and update status remains `received`.
+The stage failed before B finalization, but the first stage error is
+**unrecoverable from this image**; the old control's durable files are absent.
+Report: `docs/reviews/2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS_RESULT.md`. Do not
+rebuild, boot QEMU, replay an update or launch a fault matrix. A later bounded
+diagnostic boot with corrected capture needs a separate work order.
 
 Use sudo reads for root-owned 0600 artifacts; never chmod to satisfy a check.
 PSmisc `fuser -v <absolute-file>` has no `--`; status 1 means no holders only

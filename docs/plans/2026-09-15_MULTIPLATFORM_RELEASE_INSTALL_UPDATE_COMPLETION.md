@@ -3439,3 +3439,27 @@ read-only loop plus `ro,noload`; its output is facts, not acceptance. PSmisc
 holder syntax/status handling and sudo reads of root-owned artifacts are also
 corrected. Production code/build inputs remain unchanged. Source evidence is
 appended to `docs/reviews/2026-10-26_AB_STAGE_RETRY_EVIDENCE.md`; Session 04 OPEN.
+
+## 2026-10-26 — Failed-image read: B empty, stage cause unrecoverable
+
+Executed the offline work order from `65cd6212e`. Focused diagnostics/handoff
+suites: **14 tests OK**. The failed clone was proven offline (fuser status 1
+with empty output) and the collector exited 0 with cleanup ok (loop
+`/dev/loop37` detached; no owned loops after). Diagnostic JSON SHA-256
+`c7f01595…`, stored under
+`/var/tmp/greia-ab-offline-65cd6212e2e0023d9e6f131d52e24d80396ce66d-20261026T145341Z/`.
+
+Facts: A is the accepted base 0.13.0 slot; B mounted but has **no release
+identity**, so B does not contain the next 0.13.1 release; PERSIST layout
+still accepts A, the boot journal is `accepted`, and update status names the
+next bundle but remains **`received`** with activation unavailable. The old
+control's `phase-result.json` and `service-diagnostics.txt` are absent, as
+expected for this image. Collector errors are empty.
+
+The stage failed before B finalization, but the first stage error is
+**unrecoverable from this image**: the facts cannot distinguish a service
+refusal, crash, or lost control error. The demonstrated closed-stderr flush is
+a possible loss mechanism, not proof. Do not rebuild or replay blindly. A
+later bounded diagnostic boot with corrected capture needs a separate work
+order. Healthy B remains UNPROVEN; Session 04 OPEN. Report:
+`docs/reviews/2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS_RESULT.md`.

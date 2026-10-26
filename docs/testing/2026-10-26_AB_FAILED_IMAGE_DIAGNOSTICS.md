@@ -3,6 +3,16 @@
 Date: 2026-10-26. This is the immediate work order after
 [`c387489b5`'s report](../reviews/2026-10-26_AB_STAGE_RETRY_EVIDENCE.md).
 
+**Executed result (2026-10-26, `65cd6212e`):** focused diagnostics/handoff
+suites 14 OK; collector exit 0 with cleanup ok. A is the accepted base 0.13.0
+slot; B mounted but has no release identity, so B does not contain the next
+release; PERSIST still accepts A and update status remains `received`; the old
+control's `phase-result.json`/`service-diagnostics.txt` are absent. The first
+stage error is unrecoverable from this image. Report:
+[`2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS_RESULT.md`](../reviews/2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS_RESULT.md).
+Do not rebuild or replay blindly; a later bounded diagnostic boot with
+corrected capture needs a separate work order.
+
 The stage error was lost, and the control incorrectly continued to arm.
 The marker/parser and error capture are corrected in source, but **the actual
 installed stage failure is still unknown**. Do not rebuild images, boot QEMU,

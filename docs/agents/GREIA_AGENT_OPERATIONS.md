@@ -133,23 +133,28 @@ refused `update transaction is accepted, not staged`. The shipped client's
 30 s client timeout; the stage service error was not captured before poweroff.
 Do not call it a production refusal.
 
-Immediate next work order:
-`docs/testing/2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS.md`. Read only the
-existing failed clone; no rebuild, QEMU boot or update replay. The marker
-parser and durable error capture are repaired in source, but the actual stage
-cause remains unknown. The collector reports slot identities, existing
-transaction/status and available bounded test-control logs; it does not
-attest update success. The old image predates durable capture and journald is
-volatile, so missing new log files are expected and are not a diagnosis.
+Offline failed-image read completed
+(`docs/testing/2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS.md`). Focused
+diagnostics/handoff suites passed (14); the collector exited 0 with cleanup ok.
+Facts: A is the accepted base 0.13.0 slot; B mounted but has **no release
+identity**, so it does not contain the next release; PERSIST still accepts A
+and update status remains `received`; old control diagnostics are absent.
+The stage failed before B finalization, but the first stage error is
+**unrecoverable from this image**; the facts cannot distinguish a service
+refusal, crash, or lost control error. Report:
+`docs/reviews/2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS_RESULT.md`.
+
+Do not rebuild, boot QEMU, replay the update or start a fault matrix from this
+result. A later bounded diagnostic boot with the corrected durable capture
+needs a separate work order. Preserve the failed clone, accepted A and the
+bundles. The previous stage-retry work order remains on hold until the first
+failure is understood or explicitly recorded as unrecoverable from old logs.
+No production updater code changed in this follow-up. Session 04 remains OPEN.
 
 The PSmisc 23.7 holder check must use `fuser -v <absolute-file>` without `--`.
 Accept no-holder status 1 only with empty output: usage errors also return 1.
 Use sudo to read root-owned 0600 build artifacts; do not chmod them for checks.
-Preserve the failed clone, accepted A and bundles. Record diagnostic facts and
-stop before another run. A missing tool or harness error does not justify an
-image rebuild. The previous stage-retry work order is on hold until the first
-failure is understood or explicitly recorded as unrecoverable from old logs.
-No production updater code changed in this follow-up. Session 04 remains OPEN.
+Never infer update acceptance from the collector's JSON.
 
 The active root stays writable. Hashes spanning its boot are retained for
 diagnosis, not checked for equality. First-boot B remains untouched and must

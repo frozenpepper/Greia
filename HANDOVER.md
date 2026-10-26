@@ -3,10 +3,12 @@
 **Purpose:** the short current state for contributors and agents: active workstreams, recent results, blockers and next steps. It is not an archive.
 **Public-source readiness:** IN PROGRESS. Root entry points exist (`LICENSE`, `NOTICE.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`); the licensing/provenance audit is open (see `NOTICE.md`).
 **Ordinary-family release:** NOT READY (`docs/release/GREIA_PUBLIC_RELEASE_READINESS.md`).
-**Current A/B action (2026-10-26 follow-up):** read the existing failed image via
-`docs/testing/2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS.md`, report and stop. No
-build or VM retry. This supersedes earlier same-day next-retry instructions;
-the installed stage cause remains unknown.
+**Current A/B action (2026-10-26 follow-up):** the offline read of the failed
+image is complete. A is accepted; B has no release identity; update status is
+still `received`; the first stage error is unrecoverable from this image. No
+rebuild or VM replay. The next step needs a separate bounded diagnostic boot
+with the corrected durable capture. See
+`docs/reviews/2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS_RESULT.md`.
 
 Entries dated before 2026-10-15 were removed from this file in the 2026-10-16 open-source cleanup. Read them with `git show 101e332a:HANDOVER.md`; lessons from that period are indexed in `docs/archive/README.md`.
 
@@ -308,6 +310,34 @@ PRESERVED; the 4 first-run DONE, all 16 earlier retakes, and all 143 evidence-ga
 rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
+
+### 2026-10-26 — Failed-image read: B not next release; stage cause unrecoverable
+
+Ran the offline read-only work order
+`docs/testing/2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS.md` from clean
+`65cd6212e`. The focused diagnostics/handoff suites passed (14 tests), the
+failed clone was proven offline, and the collector exited 0 with cleanup
+reported ok (loop `/dev/loop37` detached; no owned loops remained). Diagnostic
+JSON:
+`/var/tmp/greia-ab-offline-65cd6212e2e0023d9e6f131d52e24d80396ce66d-20261026T145341Z/image/diagnostics.json`
+(SHA-256 `c7f01595…`).
+
+Observed: A is the accepted base 0.13.0 slot; B mounted but has **no release
+identity**, so it does not contain the next 0.13.1 release; PERSIST layout
+still accepts A and the boot journal is `accepted`. Update status names the
+next bundle but remains **`received`** with activation unavailable; its
+`bundle_path` is a host-mount `/tmp/greia-x8-persist-…` path. The old control's
+`phase-result.json`/`service-diagnostics.txt` are absent, as expected. The
+collector reported no errors.
+
+The stage failed before B finalization, but the available facts cannot
+distinguish a service refusal, crash, or lost control error. A closed-stderr
+flush is a demonstrated loss mechanism, not proof of this stage's cause. The
+first stage error is **unrecoverable from this image**; healthy B remains
+unproven. Report:
+`docs/reviews/2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS_RESULT.md`. Next: a
+separate bounded diagnostic boot with corrected durable capture; do not rebuild
+or replay blindly. Session 04 remains OPEN.
 
 ### 2026-10-26 — Stage failure remains unknown; offline diagnosis first
 
