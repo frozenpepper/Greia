@@ -140,7 +140,7 @@ def missing_supported_locales() -> tuple[str, ...]:
         item.locale for item in SUPPORTED_SYSTEM_LANGUAGES
         if item.locale not in _UI_STRINGS and not all(
             key in language_ui(item.locale, "achievements")
-            for key in ("title", "empty", "new_label", "new_badge")
+            for key in ("library_title", "empty_library", "new_label", "new_badge")
         )
     )
 
