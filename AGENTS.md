@@ -4,13 +4,13 @@ This repository implements a child-first educational Linux appliance/platform. T
 
 ## Branch policy
 
-- Work directly on `main` by default.
-- Do not create feature, review, merge, temporary, safety, or work branches unless the repository owner explicitly asks for a branch.
+- The owner and core coding agents work directly on `main` by default. External volunteer contributors work on their own branches and submit pull requests.
+- For the owner/core coding agents, do not create feature, review, merge, temporary, safety, or work branches unless the repository owner explicitly asks for a branch. External volunteer contributors are explicitly authorized to create their own contribution branches.
 - An existing historical branch is not permission to continue branch-based development.
 - Before substantive writes, refresh the current `main` head so concurrent work is preserved.
 - If concurrent work has advanced `main`, reconcile the intended changes with that current history and commit the result back to `main`; do not solve divergence by creating another branch unless explicitly instructed.
-- Pull requests or branch-based review workflows are used only when the repository owner explicitly requests them.
-- External contributors work from forks and open pull requests as described in `CONTRIBUTING.md`; the rules above govern the core team and its agents.
+- For the owner/core coding agents, pull requests or branch-based review workflows are used only when the repository owner explicitly requests them; they are the default for external volunteer contributors.
+- External volunteer contributors with private-repository access work on their own branches and open pull requests as described in `CONTRIBUTING.md`; a private fork is also acceptable where supported. They must not push directly to `main`. The rules above govern the core team and its agents.
 
 ## Authoritative read order and active plan
 
