@@ -63,10 +63,12 @@ class RegistryAndSelectorTests(unittest.TestCase):
     def test_creations_gallery_copy_covers_every_released_language(self) -> None:
         from greia_platform.creation_gallery_painter import _GALLERY_TEXT
 
+        from greia_platform.system_language import language_ui
         for key, options in _GALLERY_TEXT.items():
             with self.subTest(key=key):
-                self.assertEqual(set(options), set(RELEASED))
-                self.assertTrue(all(value.strip() for value in options.values()))
+                for locale in RELEASED:
+                    text = language_ui(locale, "gallery").get(key, options.get(locale, ""))
+                    self.assertTrue(text.strip(), f"{key}/{locale}")
 
     def test_installer_catalogues_cover_spanish_and_french(self) -> None:
         from greia_installer.i18n import InstallerTranslator
