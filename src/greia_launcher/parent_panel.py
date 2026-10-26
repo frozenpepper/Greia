@@ -909,6 +909,9 @@ class ParentSettingsOverlay:
                                 self._select_tab(tab)
                                 break
                     return True
+                elif target.action == "language_page":
+                    self._language_index = int(target.value)
+                    return True
                 elif target.action == "language_select":
                     self._language_index = int(target.value)
                     self._apply_language(self._language_index)
@@ -2127,10 +2130,14 @@ class ParentSettingsOverlay:
         )
         gap = 12
         columns = 2 if len(SUPPORTED_SYSTEM_LANGUAGES) <= 4 else 3
+        page_size = 4 if columns == 2 else 6
+        page_start = (self._language_index // page_size) * page_size
+        visible = SUPPORTED_SYSTEM_LANGUAGES[page_start:page_start + page_size]
         cell_w = min(280, (inner_w - gap * (columns - 1)) // columns)
         cell_h = 60
-        for index, language in enumerate(SUPPORTED_SYSTEM_LANGUAGES):
-            row, column = divmod(index, columns)
+        for offset, language in enumerate(visible):
+            index = page_start + offset
+            row, column = divmod(offset, columns)
             cell = pygame.Rect(
                 card.left + pad + column * (cell_w + gap),
                 y + row * (cell_h + gap),
@@ -2175,8 +2182,21 @@ class ParentSettingsOverlay:
                     [(cx - 8, cy), (cx - 2, cy + 6), (cx + 9, cy - 7)], 4,
                 )
             self._targets.append(PanelHitTarget("language_select", index, cell))
-        rows = -(-len(SUPPORTED_SYSTEM_LANGUAGES) // columns)
+        rows = -(-len(visible) // columns)
         y += rows * (cell_h + gap) + 6
+        if len(SUPPORTED_SYSTEM_LANGUAGES) > page_size:
+            page = page_start // page_size
+            pages = (len(SUPPORTED_SYSTEM_LANGUAGES) + page_size - 1) // page_size
+            nav_h = 38
+            if page > 0:
+                previous = pygame.Rect(card.left + pad, y, 86, nav_h)
+                self._kit_button(screen, previous, "Prev", typography, pygame)
+                self._targets.append(PanelHitTarget("language_page", (page - 1) * page_size, previous))
+            if page + 1 < pages:
+                following = pygame.Rect(card.right - pad - 86, y, 86, nav_h)
+                self._kit_button(screen, following, "Next", typography, pygame)
+                self._targets.append(PanelHitTarget("language_page", (page + 1) * page_size, following))
+            y += nav_h + 6
         self._draw_status(
             screen, pygame, typography, card, pad, y,
             self._language_message, self._language_message_is_error,
