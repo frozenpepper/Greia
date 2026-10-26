@@ -2,6 +2,15 @@
 
 Date: 2026-10-25 · Status: **UNPROVEN; Linux VM work order; Session 04 OPEN**
 
+**Latest result (2026-10-26, current-source rerun from `1275e0be1`):**
+install and first boot PASS; `update-status` and
+`update-verify` return `STATUS -> OK` / `VERIFIED`, then the test-only guest
+control's hard-coded 30 s socket timeout fires during `update-stage` while the
+~714 MB candidate is being written. Healthy B is not reached. The failure is a
+harness control-bound defect; loops leaked and were cleaned with the safe
+helper. Do not reuse these images after changing the harness. See
+`docs/reviews/2026-10-26_AB_SMOKE_CLEAN_SOURCE_RERUN_EVIDENCE.md`.
+
 ## Current route (2026-10-26)
 
 The installed updater now discovers the fixed published package without a

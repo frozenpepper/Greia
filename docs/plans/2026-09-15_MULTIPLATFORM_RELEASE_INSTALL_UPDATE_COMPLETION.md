@@ -3327,3 +3327,40 @@ clean build/install/first-A/healthy-B route in
 is historical; old images cannot prove this implementation. Source results:
 `docs/reviews/2026-10-26_UPDATE_DISCOVERY_SIMPLIFICATION.md`. No new VM/device
 claim; Session 04 remains OPEN.
+
+## 2026-10-26 — Current-source A/B rerun: install/first PASS, stage harness timeout
+
+Executed the clean route from `1275e0be1` on Linux. Host preflight passed and
+the run started at 76% disk use after pruning oversized superseded `866ba6827`
+artifacts (small logs preserved outside the tree). Full `make verify`:
+**5,961 tests, 6 failures, 3 errors, 3 skips**; all failure/error IDs match the
+documented Linux baseline and the earlier extra timing failure did not recur,
+so `BASELINE_REVIEW=matched` was recorded without waiving the red baseline.
+Focused A/B selectors passed **232 tests**.
+
+Built the 0.13.0 base fixture (bundle
+`b45f0fc77aaf04883442a74be742dc4e1fa888648a55e274b51b836a5b662a9b`), the
+installer (`1edbcb0bec1b8b279543e74d4a39c0b2dc61454ce102f988fbe0fa75ce325571`)
+and the 0.13.1 next fixture (bundle
+`3ae9cdeafa6e52459016e1a23315648ee4b8887a314c77c288259c1df4d68aa5`) from that
+SHA. Both fixtures are experimental/non-release and both bundles inspect
+cleanly. The install leg and first boot (default/committed A, accepted base
+release, clean poweroff) **PASSED**.
+
+The healthy A-to-B leg is **FAILED at `update-stage`**, not at discovery: the
+installed service returned `STATUS -> OK` and `VERIFY_CURRENT_CANDIDATE ->
+VERIFIED`, then the test-only guest control's hard-coded 30 s socket timeout
+fired while `STAGE_CURRENT_CANDIDATE` was writing the ~714 MB candidate. No
+stage completion, arm, B boot/health or final host observation ran; healthy B
+remains **UNPROVEN**. This is a harness control-bound defect, not a recorded
+production refusal. The run also leaked 19 loop devices; they were detached
+with `build/lib/safe-cleanup.sh` and the post-cleanup loop audit is empty.
+
+Evidence root:
+`/var/tmp/greia-ab-smoke-1275e0be1a9e0cda724ce18151ae65a25f03c98c-20261026T014350Z/`.
+Report:
+`docs/reviews/2026-10-26_AB_SMOKE_CLEAN_SOURCE_RERUN_EVIDENCE.md`. Next: fix
+the test-only stage timeout and loop cleanup, commit a new freeze, then rebuild
+and rerun all three legs; do not reuse these images with modified harness
+source. Session 04 remains OPEN; no rollback, Parent/fault, full-system,
+physical or USB claim is made.

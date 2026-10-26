@@ -72,6 +72,35 @@ installer/first-boot/lifecycle test gates or the Creations/Activity
 audit programme. Do not invent a second language registry or silently
 promote unvoiced locales.
 
+## 2026-10-26 — Current-source A/B rerun: install/first PASS, stage harness timeout
+
+Ran the clean three-leg route in `docs/testing/2026-10-25_AB_SMOKE_RETRY.md`
+from clean `1275e0be1`. Host/SMART preflight passed; disk started at 76% after
+pruning the superseded `866ba6827` images (small logs retained). Full
+`make verify` was **5,961 tests, 6 failures, 3 errors, 3 skips**; every
+failure/error ID is in the documented Linux baseline (5,959/7/3/3), the prior
+extra `morbidi_mostriciattoli` timing failure did not recur, and
+`BASELINE_REVIEW=matched`. Focused A/B suites passed **232 tests**.
+
+Built the 0.13.0 base fixture (bundle `b45f0fc7…`), installer (`1edbcb0b…`)
+and 0.13.1 next fixture (`3ae9cdea…`) from that SHA; both fixtures are
+experimental/non-release and both bundles inspect cleanly. The **install leg
+PASSED** and **first boot PASSED** (default/committed A, accepted base release,
+clean poweroff). The **healthy A-to-B leg FAILED at `update-stage`**: the
+installed updater returned `STATUS -> OK` and `VERIFY_CURRENT_CANDIDATE ->
+VERIFIED`, then the test-only guest control hit its hard-coded 30 s socket
+timeout while `STAGE_CURRENT_CANDIDATE` was writing the ~714 MB candidate.
+No stage/arm/B health/final observation was reached; healthy B remains
+**UNPROVEN**. The failure is a harness control timeout, not a recorded
+production refusal. The run also leaked 19 loop devices; they were detached
+with the safe helper and the greia loop audit is empty.
+
+Evidence: `/var/tmp/greia-ab-smoke-1275e0be1a9e0cda724ce18151ae65a25f03c98c-20261026T014350Z/`.
+Detailed report:
+`docs/reviews/2026-10-26_AB_SMOKE_CLEAN_SOURCE_RERUN_EVIDENCE.md`.
+Next: fix the test-only stage timeout/loop cleanup, commit a new freeze, and
+rebuild/rerun from scratch; do not reuse these images. Session 04 remains OPEN.
+
 ## 2026-10-26 — Clean-source A/B smoke: install/first PASS, healthy blocked
 
 Pulled the new `docs/testing/2026-10-25_AB_SMOKE_RETRY.md` work order and ran

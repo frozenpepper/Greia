@@ -129,6 +129,17 @@ is historical. Do not repair the old guest manually. Stop on a failed leg and
 return logs before the larger fault matrix. Routine Python/Activity packages
 continue to use `.greia_update`, without rebuilding an OS image each time.
 
+Latest exact-source result (2026-10-26, `1275e0be1`): install and first-A
+PASSED; the installed updater returned `STATUS -> OK` and
+`VERIFY_CURRENT_CANDIDATE -> VERIFIED`, but `update-stage` hit the test-only
+control's hard-coded 30 s socket timeout while writing the ~714 MB candidate.
+Do not treat that as a production stage refusal or rerun blindly; fix the
+control bound and the loop-cleanup leak, commit a new freeze, then rebuild.
+The current harness can leave partscan loop devices even after a passed leg;
+audit `losetup -a | grep greia` and detach with `build/lib/safe-cleanup.sh`
+`safe_detach_loop`. See
+`docs/reviews/2026-10-26_AB_SMOKE_CLEAN_SOURCE_RERUN_EVIDENCE.md`.
+
 The active root stays writable. Hashes spanning its boot are retained for
 diagnosis, not checked for equality. First-boot B remains untouched and must
 match. Production SlotWriter active/accepted-slot refusal, expected release,
