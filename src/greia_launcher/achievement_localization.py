@@ -8,6 +8,7 @@ from greia_platform.system_language import (
     SystemLanguageError,
     resolve_child_locale,
     system_language,
+    language_ui,
 )
 
 
@@ -123,18 +124,24 @@ def achievement_ui_strings(locale: str | None) -> AchievementUiStrings:
     except SystemLanguageError:
         canonical = DEFAULT_SYSTEM_LOCALE
 
-    direct = _UI_STRINGS.get(canonical)
-    if direct is not None:
-        return direct
     base = canonical.split("-", 1)[0]
-    return _UI_STRINGS.get(base, _UI_STRINGS[DEFAULT_SYSTEM_LOCALE])
+    original = _UI_STRINGS.get(canonical, _UI_STRINGS.get(base, _UI_STRINGS[DEFAULT_SYSTEM_LOCALE]))
+    overrides = language_ui(canonical, "achievements")
+    return AchievementUiStrings(**{
+        key: overrides.get(key, getattr(original, key))
+        for key in ("title", "empty", "new_label", "new_badge")
+    })
 
 
 def missing_supported_locales() -> tuple[str, ...]:
     """Return supported Greia locales missing achievement Shell chrome."""
 
     return tuple(
-        item.locale for item in SUPPORTED_SYSTEM_LANGUAGES if item.locale not in _UI_STRINGS
+        item.locale for item in SUPPORTED_SYSTEM_LANGUAGES
+        if item.locale not in _UI_STRINGS and not all(
+            key in language_ui(item.locale, "achievements")
+            for key in ("title", "empty", "new_label", "new_badge")
+        )
     )
 
 
