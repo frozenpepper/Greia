@@ -41,7 +41,7 @@ class DocumentationAuditTests(unittest.TestCase):
         self.assertGreater(count, 50)
         self.assertEqual(
             errors, (),
-            "\\n".join(
+            "\n".join(
                 f"{issue.source}:{issue.line}: {issue.target}"
                 for issue in errors[:30]
             ),
