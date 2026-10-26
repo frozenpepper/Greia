@@ -160,7 +160,8 @@ python3 tools/greia_voice.py doctor
 
 For default cloned-character production, require the selected VoxStage provider,
 active references and FFmpeg. Chatterbox is an explicit alternative; native macOS
-is needed for pedagogical pronunciation. Current new-generation **Parakeet-TDT v3** ASR needs the prepared verifier\nenvironment and cached pinned model, independently of synthesis readiness.
+is needed for pedagogical pronunciation. Current new-generation **Parakeet-TDT v3** ASR needs the prepared verifier
+environment and cached pinned model, independently of synthesis readiness.
 
 Whisper generation/review/cutting resolves cached weights offline and cannot
 bootstrap a missing model. Configure any missing verifier or alternate-provider
