@@ -1,56 +1,78 @@
-# Add a Greia Language — Contributor and Agent Guide
+# Add a Language to Greia
 
-**Status:** executable source/voice workflow, **NOT YET configuration-only** (audited 2026-10-26).
-**Audience:** a volunteer with the full private repository, or an agent asked “Let's add a new language”.
-**Authority:** `docs/product/SYSTEM_LANGUAGE_AND_LOCALIZATION.md` and ADR 0028; exact behavior belongs to source. This guide must not be used to silently enable incomplete languages.
+**Status:** manifest-based language selection implemented in source (2026-10-26). Physical installer/OS acceptance of an extra language is still unverified. 
+**Audience:** human translators or their local agents working with the full Greia checkout.
 
-## Start here
+## Tell your agent
 
-1. Read `AGENTS.md`, `SETUP.md`, this guide, `skills/greia-voice-production/SKILL.md`, and `docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md`.
-2. Ask for the *language tag* (for example `de` or `pt-BR`), native display name, target script, and whether this is **translation staging** or **release/selection approval**. If the owner has already supplied these, do not ask again.
-3. Work in your own branch and submit a pull request; do not push directly to `main` as an external contributor. Never publish a private checkout or its fork without permission.
-4. Keep system/instructional source documentation in English. Translate only actual child/parent-facing content and approved spoken scripts. Keep exact IDs, variables, markup and dynamic placeholders intact.
-5. Stage the language without making it selectable. A locale only becomes a supported product language after all text, font, audio, render, runtime and installed-device checks pass and the owner authorizes promotion.
+> Let's add a new Greia language: German (`de`). Prepare all OS, installer, Parent and Activity text, phonics/curriculum work and the missing audio. Use the canonical Voice Studio with the selected masters and Parakeet verification. Do not offer the unfinished language in the installer until it has been reviewed.
 
-## What already works
+The exact locale, native language name, script and translator should be substituted as appropriate.
 
-Greia has a shared locale parser/resolver and per-Activity `activities/<activity>/locales/<locale>.json` files, with semantic text/audio IDs and English fallback. An Activity declares supported languages in its `activity.toml`. The device, profile, installer and Parent API use the one **selectable-language registry**, currently `SUPPORTED_SYSTEM_LANGUAGES` in `src/greia_platform/system_language.py`. This currently lists **en, it, es, fr**.
+Read `AGENTS.md`, `SETUP.md`, `skills/greia-language-expansion/SKILL.md` and `skills/greia-voice-production/SKILL.md`. Outside contributors use review branches and pull requests, not direct pushes to `main`.
 
-For an example, compare `activities/painting/locales/en.json` and `es.json`. Do not translate IDs such as `btn.undo` or audio paths. Some literacy Activities have language-specific lesson **content** separate from UI language, so translating the interface does not translate their curriculum, examples, phonemes or spoken targets.
+## One folder owns each offered language
 
-## Reality check: not a data-only language extension today
+The *only* list of device-selectable languages is the set of valid manifests in:
 
-The current repository **cannot** add a fully functional fifth selectable language by editing only config and translation files. In addition to per-Activity locale JSON and TOML manifests:
+```text
+src/greia_platform/languages/
+  en/manifest.json
+  it/manifest.json
+  es/manifest.json
+  fr/manifest.json
+  de/                       # translation staging: NOT selectable until manifest exists
+    ui.json                  # text resources for installer and OS
+```
 
-- `src/greia_platform/system_language.py` contains a Python tuple of supported languages.
-- Installer text is coded in `src/greia_installer/i18n.py` and `i18n_es_fr.py`, including formatted status messages and a hardcoded accepted-language check.
-- On-device Parent text has Python locale tables in `src/greia_launcher/panel_localization.py`; launcher feedback and other Shell presentation modules also contain translated Python literals.
-- `tools/audit_greia_language_coverage.py` has a hardcoded four-language inventory list.
-- `tests/test_four_language_release_contract.py` and other current release tests deliberately require **exactly** four languages. They must remain a truthful release contract until a new language is ready.
-- The external Parents HTML app has its own source repository, `frozenpepper/Greia-Parent-App-Html` (pinned in `runtime/parent-app-client.*`). It must be checked, tested and repinned through its existing release procedure.
-- Audio vocabulary, system messages, character banks, literacy lessons, images containing words, available glyphs and layout fit need actual per-language coverage; the language registry alone cannot create them.
+An English reference manifest looks like this (substitute the new locale and names):
 
-**Engineering target (not yet implemented):** a single reviewed language catalog/config for supported/selectable locales; installer, on-device Parent/Shell and runtime locale strings in editable resource bundles; language inventory/tests derived from that catalog, with separate released-language acceptance expectations. Moving current literals into those resources is **a one-time code migration**. Afterwards new left-to-right languages with existing font and speech-model coverage should be primarily config, translation, audio and validation work. Complex scripts/RTL, grammatical/curriculum logic or unsupported speech languages can still require implementation changes. Do not claim “config-only” before this refactor and an actual fifth-language dry run.
+```json
+{
+  "schema_version": 1,
+  "locale": "de",
+  "name": "German",
+  "native_name": "Deutsch",
+  "flag": "🇩🇪",
+  "order": 40,
+  "direction": "ltr"
+}
+```
 
-## Stage one new language
+When `de/manifest.json` is added, the installer language-first chooser, the hidden on-device Parent Settings, Greia Parents API and device language persistence automatically discover `de` at the next process start. Installer language tiles and Parent language tiles paginate automatically when there are more than four. The current four languages and their accepted text/audio remain unchanged.
 
-1. Inventory every current English text owner (installer, Shell, on-device Parent, external Parents HTML, Creations, built-in Activities and encyclopedia), including dynamic messages. The source inventory is `tools/audit_greia_language_coverage.py`, **but its locale list currently needs engineering updates for new locales** and it explicitly excludes some code-owned speech/UI.
-2. Add untranslated working bundles for the requested tag alongside the existing Activity locale JSON. Preserve all English keys, placeholders, audio cue IDs and ownership. Translate and review each surface; don't relabel English fallback as a translated string.
-3. For locale-specific literacy, syllables, plural/agreement rules and educational vocabulary, review the *curriculum* independently from the ordinary UI.
-4. Verify script, glyph coverage, text shaping, keyboard/input, directionality and layout at 1024×600 and 800×480. A non-Latin or right-to-left language is **not** enabled merely by adding a font.
-5. Prepare a list of exact missing spoken cues (speaker, kind, locale, reviewed text, cue ID, destination) without overwriting accepted existing files. Voice generation and review are the separate authoring workflow below.
-6. Use the simulator and Activity tests to inspect the staged texts. Test the actual installer and Parent panels, then an installed OS image/device, before the owner promotes the language.
-7. Do not change the system selector, product claims or the exact-four-language acceptance tests merely to make staging appear complete.
+**Important:** a manifest is the decision to *offer* the language, not merely start translating it. A missing manifest keeps a work-in-progress language out of the product. Greia will fall back to English for missing optional messages, but that is not a claim of completed translation. Complex scripts, right-to-left presentation, specialized literacy curricula, and unsupported speech-model languages can still require technical work.
 
-## Voice Studio: new language
+## Prepare the files (no Python changes)
 
-The canonical entry point is `tools/greia_voice.py` / `VoiceEngine`, not a direct VoxStage, Chatterbox, Parakeet or FFmpeg invocation. Details: `skills/greia-voice-production/SKILL.md`, `tools/greia_voice_core/README.md`, `docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md`.
+From the full repository, with `PYTHONPATH=src` and development dependencies available:
 
-- **Selected character model:** VoxCPM2 (VoxStage shared local Apple-Silicon worker, no cloud fallback); Chatterbox is an explicit alternative, not automatic.
-- **Selected masters:** `assets/audio/characters/canonical/v0.3/manifest.toml`. Dani, Tito, Momo use the owner-selected v0.3 voices; Lilli, Leo, Flash retain the selected v0.2 identities and bytes. The exact reference WAV files ship in this authoring repository. Never redesign/rewrite them when extending a language.
-- **Default new-generation ASR:** locally cached, pinned multilingual Parakeet-TDT v3 (`mlx-community/parakeet-tdt-0.6b-v3`; revision `ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15`). Whisper Base is retained for **historical** comparison/review. Parakeet can only check languages it recognizes accurately; investigate/test its coverage for the proposed language before relying on PASS/WARN.
-- **New machine caveat:** the separate private source repo [`frozenpepper/voxstage`](https://github.com/frozenpepper/voxstage) has `scripts/install.py`, `scripts/download_model.py`, and `skills/voxstage/SKILL.md`, but its installer intentionally reuses packages already installed on the owner's Mac; it is **not** a tested general fresh-Mac bootstrap. VoxStage/its 3.23 GB model, the pinned Parakeet model/cache, and the local Takeboard review utility are **not** in Greia. Access to private Greia does not grant access to private VoxStage. A new volunteer cannot assume a Greia clone can set up the whole Studio. Provision shared-tool access or a genuinely reproducible independent install before calling workstation setup PASS. Get explicit consent for significant model downloads/cloud spend.
-- On a machine where tools and cached models are already provisioned, use the *prepared Greia voice Python* rather than a random Python environment:
+```bash
+PYTHONPATH=src python3 tools/scaffold_greia_language.py de
+```
+
+The scaffold creates `src/greia_platform/languages/de/ui.json` containing English reference strings for these data-driven UI surfaces:
+
+- `installer` and `installer_dynamic` (including Wi-Fi/disk/power warnings);
+- `parent`, `parent_constants`, `parent_audio_presets` (hidden Parent Settings);
+- `collections`, `discoveries`, `launcher_feedback`, `first_profile`, `usage_limit`, `achievements`, `gallery` (child Shell, profile wizard and Creations).
+
+It also creates `activities/<activity>/locales/de.json` for each English-authored built-in Activity, retaining semantic keys and replacing inherited audio declarations with empty entries. This is **reference English copy to translate**, not German. Existing files are never overwritten. No manifest or model is installed by the scaffold.
+
+Translate values, not JSON keys, IDs, placeholders such as `{count}` or `{ssid}`, or file paths. Keep educational *content language* separate from UI language; phonemes, letter names, lesson items, number pronunciation and child-friendly grammar require their own native-language review. Add `de` to Activity `activity.toml` language declarations once the Activity's translation is complete (this is configuration, not Python code). The external Greia Parents HTML client draws its available-language choices from the Parent API; its own UI copy still needs localized review in the separately managed `frozenpepper/Greia-Parent-App-Html` repository.
+
+For new languages, `ui.json` is an optional overlay at runtime but required for complete release source review. Existing en/it/es/fr translations still have legacy Python-owned baseline dictionaries; this file interface avoids changing those Python modules for subsequent languages.
+
+## Record and verify spoken material
+
+Follow `docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md` and `tools/greia_voice_core/README.md`. The Voice Studio entry point is **`tools/greia_voice.py`**. It uses:
+
+- **VoxCPM2** via the shared **VoxStage** worker for character speech (Chatterbox remains an explicit alternate provider).
+- Immutable canonical masters at `assets/audio/characters/canonical/v0.3/manifest.toml`: Dani, Tito and Momo selected v0.3; Lilli, Leo and Flash retain their exact v0.2 identities.
+- Pinned local **Parakeet-TDT v3** for current generation verification; older Whisper Base is retained for historical comparisons. The exact pinned Parakeet model/revision is in `tools/greia_voice_core/asr_policy.py`.
+- Human listening before final acceptance. ASR PASS does not certify pronunciation, emotion or language accuracy. New language recognition and native pedagogical pronunciation require explicit capability checks.
+
+On the owner's **already-provisioned** Apple Silicon authoring host:
 
 ```bash
 voxstage start
@@ -58,19 +80,25 @@ voice_python="$HOME/Library/Application Support/Greia/voice-production/venv/bin/
 "$voice_python" tools/greia_voice.py doctor
 ```
 
-Read `doctor`'s **verifier readiness separately**; success for character synthesis does not mean Parakeet is present. An unavailable verifier is not a PASS. Use `tools/greia_voice.py generate` or `batch` with semantic `--speaker`, `--kind`, `--locale`, `--text`, `--cue-id`, staging `--output`. New output stays pending listening; machine PASS is not human acceptance. Pedagogical pronunciation uses the separate native/system route and currently requires macOS; verify that a suitable voice exists for the *new* language or treat it as blocked. Do not direct-generate into shipping asset directories.
+Read the selected provider, reference and `verifier.available` statuses independently. For each reviewed script generate into temporary review staging via `greia_voice.py generate` or a serialized `batch`, then use the existing Takeboard/manual review workflow and integrate accepted audio paths. The external private `frozenpepper/voxstage` tool and Takeboard are not automatically installed or made accessible by a Greia clone; a fresh volunteer machine still needs a separately arranged, compatible voice workstation. Never silently download models, use paid cloud compute, or overwrite approved audio.
 
-## Source checks before proposing release
+## Promote and validate
 
-Run from the repository root, with the project's development dependencies available:
+After the translated text and audio are in place, add `de/manifest.json` and verify all product areas:
 
 ```bash
-for pattern in test_system_language.py test_localization.py test_installer_localization.py test_four_language_release_contract.py test_four_language_inventory.py test_voice_parakeet_pipeline.py; do
-  PYTHONPATH=src python3 -m unittest discover -s tests -p "$pattern" -v || exit 1
-done
-python3 tools/greia_voice.py doctor
+PYTHONPATH=src python3 tools/check_greia_language.py de
+PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_language_manifests.py' -v
+PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_system_language.py' -v
+PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_installer_localization.py' -v
+PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_four_language_release_contract.py' -v
+make verify
 ```
 
-These tests cover the **existing four-language baseline**, not proof of a fifth language. For the proposed locale also check every intended key, placeholder, manifest, semantic audio resolver, speech receipt, script/fonts, rendered UI, speaker identity and physical playback. Run `make verify` per `CONTRIBUTING.md` before proposing promotion; core OS image acceptance is separate.
+`check_greia_language.py` checks that the offered locale has its UI text sections, matching placeholders, Activity manifests and Activity text bundles. The release contract also checks shared voice-bank availability. Both are source-only checks; they cannot replace human audio review, font and text-fit acceptance at 800×480/1024×600, actual installer/Parents behavior, full image composition or playback on physical hardware.
 
-**Report:** target tag, staging/release status, translated vs fallback count, missing/blocked text and audio, actual model/master/verifier readiness, test results and environment, human listening review, screenshot/device evidence, and exact required code changes. If any part is missing, report **not ready** instead of silently editing the registry.
+**Do not ship the new manifest on a family image until the language actually works.** Moving a language from a translation-only folder into the offered set requires no edits to the core language registry, installer language chooser, on-device Parent language chooser, or their API. Restart the appropriate application/rebuild the image to load newly added manifests; the registry is read at startup, not rescanned every frame.
+
+## Evidence and caveats
+
+Report the locale, changed translation/resource files, exact untranslated/fallback items, missing narrated/phonics cues, voice provider/master and verifier readiness, test results, GUI/device screenshots, playback review and any unsupported script features. The current four-language rollout remains en/it/es/fr until a new language is explicitly promoted. Avoid claiming that adding an RTL/non-Latin language is automatically equivalent to adding another Latin-language resource pack.
