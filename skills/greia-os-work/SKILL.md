@@ -132,13 +132,15 @@ preflight passes** under `PYTHONUNBUFFERED=1`. The second run then stopped at
 the source-reuse allowlist: the pull added
 `src/greia_platform/languages/en/manifest.json` and `.../it/manifest.json`,
 production source outside the allowed harness/tests/docs/skills/root-doc
-paths. The one-stage boot was **not** started. The files are selector metadata
-and absent from the accepted-A image/next bundle, but the work order requires
-an explicit review decision before reuse. Report:
+paths. The one-stage boot was **not** started. Current main (`56f871148`) also
+adds installer/launcher/platform localization source plus en/es/fr/it
+manifests, so the gate is unchanged and broader. The language files are
+selector metadata and absent from the accepted-A image/next bundle, but the
+work order requires an explicit review decision before reuse. Report:
 `docs/reviews/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC_SOURCE_GATE_FAILURE.md`.
-Record a reuse exception for the selector manifests or rebuild the next
-bundle/image; do not boot until then. Do not rebuild the OS automatically for
-this gate, and do not treat the test fixture fix as stage evidence.
+Record a reuse exception or rebuild the next bundle/image; do not boot until
+then. Do not rebuild the OS automatically for this gate, and do not treat the
+test fixture fix as stage evidence.
 
 Use sudo reads for root-owned 0600 inputs, never chmod. PSmisc holder checks
 must use its supported syntax and reject status-1 usage output. The old

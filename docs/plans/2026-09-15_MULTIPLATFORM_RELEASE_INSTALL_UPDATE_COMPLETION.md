@@ -3529,12 +3529,15 @@ reuse allowlist, so the work order stopped before the one-stage diagnostic
 boot. No VM, install, arm, B boot, update replay or collector ran.
 
 The new files are selector metadata (locale/name/native/flag/order/direction);
-they are not in the accepted-A image or next bundle from `1275e0be1`. Whether
-they are irrelevant to the updater-stage target is a review decision, not a
+they are not in the accepted-A image or next bundle from `1275e0be1`. During
+push reconciliation, main advanced to `56f871148` with the broader
+localization implementation (installer/launcher/platform source plus
+en/es/fr/it manifests), so the source gate is unchanged and broader. Whether
+any of it is irrelevant to the updater-stage target is a review decision, not a
 safe assumption under the gate. Read-only input checks pass: accepted-A and
 next-bundle hashes OK, holder status 1 with empty output, zero old-evidence
 loops. Report:
 `docs/reviews/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC_SOURCE_GATE_FAILURE.md`.
-Next: record an explicit reuse exception for the manifests or rebuild the next
-bundle/image; do not boot until that decision is recorded. Actual stage cause
-and healthy B remain UNPROVEN; Session 04 OPEN.
+Next: record an explicit reuse exception or rebuild the next bundle/image; do
+not boot until that decision is recorded. Actual stage cause and healthy B
+remain UNPROVEN; Session 04 OPEN.

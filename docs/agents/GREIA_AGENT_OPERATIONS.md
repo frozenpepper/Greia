@@ -160,18 +160,19 @@ request, child/server cleanup is bounded and synchronized, and the final
 then stopped at the source-reuse allowlist: the pull added
 `src/greia_platform/languages/en/manifest.json` and `.../it/manifest.json`,
 production source outside the allowed harness/tests/docs/skills/root-doc
-paths. The one-stage boot was **not** started. The files are selector metadata
-and are not in the accepted-A image or next bundle, but the work order requires
-an explicit review decision before reuse. Read-only hashes/holder/loop checks
-passed. Report:
+paths. The one-stage boot was **not** started. Current main (`56f871148`) also
+adds installer/launcher/platform localization source plus en/es/fr/it
+manifests, so the gate is unchanged and broader. The language files are
+selector metadata and are not in the accepted-A image or next bundle, but the
+work order requires an explicit review decision before reuse. Read-only
+hashes/holder/loop checks passed. Report:
 `docs/reviews/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC_SOURCE_GATE_FAILURE.md`.
 
-Record an explicit reuse exception for the selector manifests or rebuild the
-next bundle/image; do not boot the stage diagnostic until then. Do not rebuild
-the OS automatically, repeat the old offline read or resume the full
-healthy-update retry. The actual stage cause and healthy B remain UNPROVEN;
-Session 04 remains OPEN. No production updater source changed in this
-follow-up.
+Record an explicit reuse exception or rebuild the next bundle/image; do not
+boot the stage diagnostic until then. Do not rebuild the OS automatically,
+repeat the old offline read or resume the full healthy-update retry. The actual
+stage cause and healthy B remain UNPROVEN; Session 04 remains OPEN. No
+production updater source changed in this follow-up.
 
 The PSmisc 23.7 holder check must use `fuser -v <absolute-file>` without `--`.
 Accept no-holder status 1 only with empty output: usage errors also return 1.
