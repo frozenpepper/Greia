@@ -59,9 +59,17 @@ The scaffold creates `src/greia_platform/languages/de/ui.json` containing Englis
 
 It also creates `activities/<activity>/locales/de.json` for each English-authored built-in Activity, retaining semantic keys and replacing inherited audio declarations with empty entries. This is **reference English copy to translate**, not German. Existing files are never overwritten. No manifest or model is installed by the scaffold.
 
-Translate values, not JSON keys, IDs, placeholders such as `{count}` or `{ssid}`, or file paths. Keep educational *content language* separate from UI language; phonemes, letter names, lesson items, number pronunciation and child-friendly grammar require their own native-language review. Add `de` to Activity `activity.toml` language declarations once the Activity's translation is complete (this is configuration, not Python code). The external Greia Parents HTML client draws its available-language choices from the Parent API; its own UI copy still needs localized review in the separately managed `frozenpepper/Greia-Parent-App-Html` repository.
+Translate values, not JSON keys, IDs, placeholders such as `{count}` or `{ssid}`, or file paths. `first_profile.extra_letters` may remain an empty string when the language does not need additional keyboard letters. Keep educational *content language* separate from UI language; phonemes, letter names, lesson items, number pronunciation and child-friendly grammar require their own native-language review. Add `de` to Activity `activity.toml` language declarations once the Activity's translation is complete (this is configuration, not Python code). The external Greia Parents HTML client draws its available-language choices from the Parent API; its own UI copy still needs localized review in the separately managed `frozenpepper/Greia-Parent-App-Html` repository.
 
 For new languages, `ui.json` is an optional overlay at runtime but required for complete release source review. Existing en/it/es/fr translations still have legacy Python-owned baseline dictionaries; this file interface avoids changing those Python modules for subsequent languages.
+
+Before adding the manifest, audit the staged translation as often as useful:
+
+```bash
+PYTHONPATH=src python3 tools/check_greia_language.py de --staged
+```
+
+This checks source catalog completeness and interpolation keys **without** adding the new language to any device picker. It does not decide whether copied English text has been translated correctly, and Activity TOML declarations must already include the new locale for full source coverage.
 
 ## Record and verify spoken material
 
@@ -84,7 +92,7 @@ Read the selected provider, reference and `verifier.available` statuses independ
 
 ## Promote and validate
 
-After the translated text and audio are in place, add `de/manifest.json` and verify all product areas:
+After the translated text and audio are in place and the owner approves offering the new language, add `de/manifest.json` and verify all product areas:
 
 ```bash
 PYTHONPATH=src python3 tools/check_greia_language.py de
