@@ -85,6 +85,12 @@ sandboxing, the production display session, boot, installation and Acer/Pi
 performance need their own evidence. When you describe what you tested, say
 where it ran.
 
+## Documentation and repository cleanup
+
+Before presenting new instructions as current, review `docs/DOCUMENTATION.md` and run `python3 tools/audit_greia_documentation.py --strict` on a full checkout. Keep family guides short, use `docs/development/ADD_A_GREIA_LANGUAGE.md` for language packs, and link current procedures instead of copying dated test transcripts into living guides. The audit checks relative Markdown links across documentation; it does not verify technical truth or require a runtime image build.
+
+Do not commit generated test videos, screenshots, temporary outputs or local model caches. Do not delete source tests, provenance/accepted voice assets, unresolved A/B evidence or historical records still referenced by current plans merely because they look old. Old unneeded captures can be removed from the working tree after verifying references; Git history retains them. For the cleanup rules and historical archive, see `docs/DOCUMENTATION.md` §7.
+
 ## Making a change
 
 - **Find the owner first.** `docs/DOCUMENTATION.md` maps each concern to the
