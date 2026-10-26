@@ -42,9 +42,9 @@ class SystemLanguageTests(unittest.TestCase):
 
     def test_legacy_unsupported_aliases_are_no_longer_selectable(self) -> None:
         with self.assertRaises(SystemLanguageError):
-            system_language("zh")
-        with self.assertRaises(SystemLanguageError):
-            system_language("ZH-cn")
+            system_language("xx-FAKE")
+        # Future languages are chosen by manifests, not a frozen blacklist.
+        self.assertEqual(tuple(item.locale for item in load_system_languages()), SUPPORTED_SYSTEM_LOCALES)
 
     def test_install_record_is_initial_device_language_then_state_override_wins(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -64,18 +64,18 @@ class SystemLanguageTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             record = root / "install-record.json"
-            # Retired tags from the old twelve-language registry fail soft.
+            # Unknown historic tags fail soft without rewriting source state.
             record.write_text(json.dumps({"locale": "zz"}), encoding="utf-8")
             settings = root / "settings"
             settings.mkdir()
             override = settings / "language.json"
             override.write_text(
-                json.dumps({"schema_version": 1, "locale": "zh-CN"}), encoding="utf-8"
+                json.dumps({"schema_version": 1, "locale": "xx"}), encoding="utf-8"
             )
             store = SystemLanguageStore(settings, install_record_path=record)
             self.assertEqual(store.read().locale, "en")
             self.assertEqual(json.loads(record.read_text())["locale"], "zz")
-            self.assertEqual(json.loads(override.read_text())["locale"], "zh-CN")
+            self.assertEqual(json.loads(override.read_text())["locale"], "xx")
             store.replace("it")
             self.assertEqual(store.read().locale, "it")
 
