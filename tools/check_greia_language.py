@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Audit one manifest-advertised Greia locale before making release claims."""
+"""Audit staged and manifest-advertised locales before release."""
 from __future__ import annotations
 
 import argparse
@@ -12,6 +12,7 @@ from string import Formatter
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 from greia_platform.system_language import SUPPORTED_SYSTEM_LOCALES
+from greia_platform.localization import LocaleTag, LocalizationError
 from scaffold_greia_language import reference_sections
 
 LEGACY_LANGUAGES = frozenset({"en", "it", "es", "fr"})
@@ -21,10 +22,19 @@ def fields(template: str) -> set[str]:
     return {name for _, name, _, _ in Formatter().parse(template) if name is not None}
 
 
-def audit(locale: str, root: Path = ROOT) -> list[str]:
+def audit(locale: str, root: Path = ROOT, *, staged: bool = False) -> list[str]:
+    """Check locale resources; release mode also requires an offered manifest."""
     errors: list[str] = []
-    if locale not in SUPPORTED_SYSTEM_LOCALES:
+    try:
+        canonical = LocaleTag.parse(locale).value
+    except LocalizationError as exc:
+        return [f"invalid locale {locale!r}: {exc}"]
+    if locale != canonical:
+        return [f"locale must use canonical spelling: {canonical}"]
+    if not staged and locale not in SUPPORTED_SYSTEM_LOCALES:
         return [f"{locale}: no offered manifest exists in the installed language folder"]
+    if staged and not (root / "src" / "greia_platform" / "languages" / locale).is_dir():
+        return [f"{locale}: no language staging folder found"]
     if locale not in LEGACY_LANGUAGES:
         path = root / "src" / "greia_platform" / "languages" / locale / "ui.json"
         try:
@@ -39,7 +49,7 @@ def audit(locale: str, root: Path = ROOT) -> list[str]:
                 continue
             for key, english in expected.items():
                 translated = actual.get(key)
-                if not isinstance(translated, str) or not translated.strip():
+                if not isinstance(translated, str) or (not translated.strip() and not (section == "first_profile" and key == "extra_letters")):
                     errors.append(f"{locale}: missing UI text {section}/{key}")
                     continue
                 try:
@@ -60,6 +70,9 @@ def audit(locale: str, root: Path = ROOT) -> list[str]:
                 errors.append(f"{directory.name}: locale field mismatch")
             original = reference["strings"]
             translated = actual["strings"]
+            if not isinstance(original, dict) or not isinstance(translated, dict):
+                errors.append(f"{directory.name}: invalid strings catalog")
+                continue
             if set(original) != set(translated):
                 errors.append(f"{directory.name}: locale string key mismatch")
             for key in original.keys() & translated.keys():
@@ -78,12 +91,14 @@ def audit(locale: str, root: Path = ROOT) -> list[str]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("locale", help="one installed/offered manifest locale, e.g. de")
+    parser.add_argument("locale", help="canonical locale, e.g. de")
+    parser.add_argument("--staged", action="store_true",
+                        help="audit translations before manifest promotion")
     args = parser.parse_args()
-    issues = audit(args.locale)
+    issues = audit(args.locale, staged=args.staged)
     for issue in issues:
         print(f"ERROR: {issue}")
-    print(f"Greia {args.locale}: {len(issues)} source/placeholder problems; "
+    print(f"Greia {args.locale} ({'staged' if args.staged else 'offered'}): {len(issues)} source/placeholder problems; "
           "audio, font, rendered UI and device acceptance remain separate.")
     return 2 if issues else 0
 
