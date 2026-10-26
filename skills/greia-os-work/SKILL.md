@@ -28,6 +28,17 @@ is `tools/export_voice_review_batch.py`; exact commands are in
 Machine findings never initialize human acceptance. Takeboard edits only its
 review JSON; importing decisions into Greia receipts/runtime is a separate task.
 
+## Extending Greia's language set
+
+For a new installer/OS/Parent/Activity language, route first to
+`skills/greia-language-expansion/SKILL.md` and
+`docs/development/ADD_A_GREIA_LANGUAGE.md`. Offered languages are
+manifest directories at `src/greia_platform/languages/<locale>/manifest.json`,
+not a list to extend in Python. The helper tools scaffold and check per-locale
+JSON/TOML without enabling an unfinished language. Build/device and native
+speech acceptance are still separate. Do not change `main` merely to make a
+staged language appear release-ready.
+
 ## Universal rules
 
 1. Work from current `main`; preserve concurrent changes. Read `AGENTS.md` and `HANDOVER.md` first.
