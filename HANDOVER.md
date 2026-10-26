@@ -312,6 +312,23 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-26 — Manifest-language contributor audit refinement (SOURCE-WIP)
+
+The manifest-backed source from the preceding entry remains the implementation
+baseline. This follow-up repaired the new-locale checker: `--staged` now audits
+an unfinished fifth language **without** a selectable manifest; an empty
+`first_profile.extra_letters` value is valid when that alphabet needs no extra
+keys. `tests/test_language_manifests.py` adds staged `de` source completeness/
+placeholder cases, fifth-language installer pagination, and manifest-data-backed
+installer/Parent translation cases. The guide now documents the pre-promotion
+command. Existing en/it/es/fr content and audio were not touched.
+
+**Evidence:** inspected and committed via the private GitHub connector.
+No tests were executed in a complete checkout and no GUI/device/audio/image
+acceptance was run. The next agent should run the focused repository tests and
+report failures before hardware work. Other ongoing installer/A-B diagnostic
+work is independent; this newer source does not inherit its successful preflight.
+
 ### 2026-10-26 — Manifest-driven language offering and data-only new-language authoring (SOURCE-WIP)
 
 The owner requested that additional Greia languages no longer require editing Python
