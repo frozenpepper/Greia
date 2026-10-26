@@ -39,6 +39,12 @@ Read every provider status: the intentionally unavailable native adapter and an
 optional unavailable verifier are not the same as an unavailable selected
 character provider. A successful process exit is not audio acceptance.
 
+### Fresh-clone limitation (especially for outside language contributors)
+
+The commands below assume the **shared VoxStage command and VoxCPM2 model** already exist. VoxStage and the optional Takeboard listening tool are external shared utilities, not installed by the Greia repository. Parakeet-TDT v3 verification additionally requires a prepared compatible MLX Python environment and the **exact cached pinned model snapshot**; a different clean Mac does not inherit the owner's cached models. `doctor` must be read for both provider and verifier readiness. This document currently **does not supply a verified fresh-host VoxStage/Takeboard installer**, so do not promise new volunteers a complete ready-to-run studio from a clean clone. Arrange approved tool access and a reproducible install procedure separately before calling that setup ready.
+
+For new-language planning and the release boundary, start with `docs/development/ADD_A_GREIA_LANGUAGE.md`.
+
 ## 2. Default workstation dependencies
 
 The Greia HTTP client needs Python 3.11+ and the repository's canonical v0.3
