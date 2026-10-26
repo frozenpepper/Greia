@@ -1,7 +1,7 @@
 # Greia contributor skill architecture
 
 **Status:** repository convention  
-**Reviewed:** 2026-08-25
+**Reviewed:** 2026-10-26
 
 Greia skills use **progressive disclosure**.
 
@@ -78,6 +78,16 @@ user asks to work on boot
 user asks to create a canonical character pose
     -> skills/greia-visual-authoring/SKILL.md
     -> canonical-cast / character-grammar / motion docs
+
+user asks to add, translate, stage, switch or retire a Greia language
+    -> skills/greia-language-expansion/SKILL.md
+    -> docs/development/ADD_A_GREIA_LANGUAGE.md
+    -> per-locale manifests, UI JSON, Activity bundles and the shared voice skill
+
+user asks to record new character dialogue or language narration
+    -> skills/greia-voice-production/SKILL.md
+    -> docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md
+    -> canonical v0.3 masters, VoxStage/VoxCPM2 and Parakeet verifier
 ```
 
 Do not load unrelated voice-generation, boot, achievement, packaging, visual-library, Parent or simulator manuals merely because they exist in the same project. In particular, generated Greia character speech and child microphone recording are separate task routes.
@@ -108,6 +118,8 @@ Current top-level routers:
 skills/greia-activity-authoring/SKILL.md
 skills/greia-os-work/SKILL.md
 skills/greia-visual-authoring/SKILL.md
+skills/greia-language-expansion/SKILL.md
+skills/greia-voice-production/SKILL.md
 ```
 
 All future Greia skills should follow the same pattern.
