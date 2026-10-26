@@ -1748,3 +1748,21 @@ language choices there already consume the API's manifest-derived language
 list. Converting browser chrome to locale data and validating it requires a
 separate targeted change and pinned-client integration, not a hardware flash.
 No runtime manifests or accepted audio were added or altered.
+
+### 2026-10-26 — Manifest checker rerun: 59/59 focused PASS
+
+Owner's local agent executed requested source suites at exact commit
+`bd3aa0a25fdd58220ad1b361ebf7ce2715a3ba47`, Python 3.12.7,
+`PYTHONPATH=src`, `PYTHONDONTWRITEBYTECODE=1`:
+manifest 13, device language 9, installer 7, Parent panel 19, release
+contract 11 = **59/59 PASS**. Explicit regressions for nested format
+placeholders, UI schema errors and nested staged UI/Activity placeholders
+all passed. EN/IT/ES/FR checker: 0 errors each, exit 0.
+
+Worktree remained clean for tracked files, 310 existing untracked files
+preserved; no production manifests or audio modified. This closes the
+previous entry's *focused source verification* request. **Not evidence
+of** a fifth language's rendered UI/font suitability, voice/audio quality,
+installer image, physical hardware or complete browser Parents chrome.
+Avoid unnecessary repeated checks and defer device work until it can be
+combined with an appropriate existing local acceptance session.
