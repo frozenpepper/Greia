@@ -5,9 +5,15 @@
 
 This folder keeps the dated reviews, investigations and decision reports from
 August–September 2026 that still teach something useful. The documents are
-moved here verbatim: they are not rewritten, and their status lines, commit
+moved here verbatim when archived, and their status lines, commit
 SHAs and "next step" sections describe the moment they were written, not the
-current project.
+current project. Two archived documents received **link-target-only repairs**
+on 2026-10-27: the early-learning expansion plan index and September launcher
+review now link to the files as they existed at their historical Git revisions,
+including retired work-package documents. Their findings, status and proposed
+instructions were not updated or re-authorized. The pre-repair copies remain
+recoverable in Git history. Do not restore their referenced old work packages
+to the active checkout just to satisfy link checks.
 
 What was **not** kept: screenshots, capture evidence (JSON traces, logs,
 checksums), one-off runbooks and test procedures for finished work, session
