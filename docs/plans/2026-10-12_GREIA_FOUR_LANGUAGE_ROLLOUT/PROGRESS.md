@@ -1766,3 +1766,27 @@ of** a fifth language's rendered UI/font suitability, voice/audio quality,
 installer image, physical hardware or complete browser Parents chrome.
 Avoid unnecessary repeated checks and defer device work until it can be
 combined with an appropriate existing local acceptance session.
+
+### 2026-10-26 — Release docs/skills language-authority correction and cleanup
+
+The owner requested comprehensive release documentation clarity and removal of
+old disposable test/demo material. A GitHub source audit examined maintained
+language-related documentation, corrected the Activity-authoring skill's
+permanent "exactly four" claim to **four currently offered per-locale
+manifests**; expanded `docs/development/ADD_A_GREIA_LANGUAGE.md` to
+cover existing-language switching, regional fallback, staging, maintenance
+and retirement; aligned `SYSTEM_LANGUAGE_AND_LOCALIZATION.md`, release gate,
+family Parents guide, voice authoring guides and skill index. New speech still
+uses the selected VoxStage/VoxCPM2 and Parakeet-TDT v3 verification;
+historical Whisper instructions remain explicitly historical. Old
+twelve-language proposal moved to `docs/archive/plans/`.
+
+Repository-wide, safe clean-up removed only the obsolete September website
+prototype tree (21 historical files / 3,518,032 bytes), and shortened the
+living handover while preserving dated history by Git SHA; accepted voice,
+assets, production tests, and A/B evidence remain untouched. Added a
+read-only documentation relative-link scanner and unit tests; remote GitHub
+inspection of 136 maintained Markdown docs found zero unresolved relative
+links. **New scanner tests and full local checkout audit have not executed**,
+and neither this nor the previous 59/59 source-localization PASS constitutes
+actual fifth-language GUI/image/device/voice or browser-chrome acceptance.
