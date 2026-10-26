@@ -17,12 +17,12 @@ main; if the preflight passes, continue directly with the one diagnostic boot
 already scoped here. Do not stop just to request another approval, and do not
 rebuild the OS for this tests-only correction.
 
-**Latest source-reuse stop (2026-10-26, `abd9f5045` → `ef8eb3415`):** the
+**Latest source-reuse stop (2026-10-26, `abd9f5045` → continued localization head):** the
 80-test preflight passed at `abd9f5045`, but the pull added
 `src/greia_platform/languages/en/manifest.json` and `.../it/manifest.json`,
 which are production source outside the reuse allowlist. Per the stop rule, the
-one-stage boot was **not** started. During push reconciliation main advanced to
-`ef8eb3415` with the broader localization implementation (installer/launcher/
+one-stage boot was **not** started. During push reconciliation main continued
+to advance (at last check `ef8eb3415`) with the broader localization implementation (installer/launcher/
 platform source and en/es/fr/it manifests), so the source gate is unchanged and
 broader. A reviewer must either record an explicit reuse exception or rebuild
 the next bundle/image. Report:
