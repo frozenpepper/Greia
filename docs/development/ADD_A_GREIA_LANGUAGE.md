@@ -71,6 +71,60 @@ PYTHONPATH=src python3 tools/check_greia_language.py de --staged
 
 This checks the `ui.json` schema and section types, source catalog completeness, and interpolation keys (including **nested** Python-format fields such as `{count:{width}}`) **without** adding the new language to any device picker. It does not decide whether copied English text has been translated correctly, and Activity TOML declarations must already include the new locale for full source coverage.
 
+## Manage an existing language
+
+**Where it belongs.** Device language identity and native display names come only
+from `src/greia_platform/languages/<locale>/manifest.json`. Installer, Shell,
+first-profile wizard, on-device Parents and usage/achievement/gallery copy use
+the optional `ui.json` sections documented above. Each Activity owns its
+actual `activity.toml` supported-locale declaration, `locales/<locale>.json`
+text and approved sound files. The separately pinned browser Parents client
+uses the device API for the list of languages it can select, **but** its own
+browser navigation text is maintained separately in
+`Greia-Parent-App-Html/src/localization.js`. An added OS manifest is *not*
+proof that the browser chrome has been translated.
+
+**Change a family's language.** A parent chooses it as the first step in the
+installer, later through Greia Parents' **Device → Language** section, or
+through the hidden on-device Parents panel opened by holding **S and T
+together for five seconds at the child-selection/login screen**, then
+authenticating. The single device language store persists the change and the
+child-session's profile override takes precedence where one is configured.
+Greia re-resolves Activity UI language from declared Activity support; an
+English-only Activity is still allowed on an Italian-language computer.
+
+**Fallbacks and content.** Regional variants resolve exact locale, then base
+locale, then English where the Activity's declared policy allows. Text and
+semantic prerecorded speech resolve through the shared platform localization
+handler, never by guessing filenames with custom per-Activity code. Fallback is
+resilience, *not* an excuse to mark a language as completed: the child may
+need spoken instructions in the selected language. The educational **target
+language** of a phonics, rhyming or writing lesson is separate from ordinary
+UI locale and may require native pedagogy/content authoring.
+
+**Update, fix or remove a language.** Edit translation values, reviewed sound
+assets or the metadata manifest, not a Python list. Keep placeholders and
+semantic cue IDs stable; add new keys across **all offered locales**. For a
+country/region variant, use the canonical BCP-47 tag/directory and test exact
+locale versus base fallback before publishing. To discontinue a selectable
+language, first secure explicit owner approval, remove its offered
+`manifest.json` in a reviewed release, check existing saved preferences
+fall back cleanly, and reconcile Activity/voice/client claims. Do not delete
+approved voice files or prior evidence as an accidental side effect.
+Manifests and UI resources are loaded at process startup: rebuild the image
+or restart the relevant process to see a new offered language. Never edit
+live-installed files to simulate a released language in a family build.
+
+**Troubleshooting.** A new locale missing from the installer almost always
+means it has no valid shipped manifest, was staged without promotion, or the
+process has not restarted. A visible locale with English strings needs a
+`ui.json`/Activity bundle coverage review, *not* another selector entry. A
+blank flag or clipped text is a font/renderer and viewport issue; test
+800×480 and 1024×600. Missing speech needs a semantic cue and native
+recording review; do not invent a TTS runtime on the child's OS.
+Run `tools/check_greia_language.py <locale> --staged` before promotion and
+without `--staged` after it, alongside the focused release tests.
+
 ## Record and verify spoken material
 
 Follow `docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md` and `tools/greia_voice_core/README.md`. The Voice Studio entry point is **`tools/greia_voice.py`**. It uses:
