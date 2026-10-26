@@ -308,7 +308,8 @@ class InstallerTranslator:
         except (LocalizationError, ValueError):
             language = DEFAULT_SYSTEM_LOCALE
         if language not in SUPPORTED_SYSTEM_LOCALES:
-            language = DEFAULT_SYSTEM_LOCALE
+            base = LocaleTag.parse(language).language
+            language = base if base in SUPPORTED_SYSTEM_LOCALES else DEFAULT_SYSTEM_LOCALE
         object.__setattr__(self, "locale", language)
 
     @property
