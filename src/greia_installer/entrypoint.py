@@ -161,7 +161,7 @@ class LanguageChooser:
                 self._targets["page-prev"] = previous
             if page + 1 < pages:
                 following = pygame.Rect(main.left + 96, nav_y, 88, 50)
-                self.look.pill(screen, following, "Next", fill=FIELD, size=18)
+                self.look.pill(screen, following, "▶", fill=FIELD, size=18)
                 self._targets["page-next"] = following
 
     def handle_event(self, event: Any, pygame: Any) -> str | None:
