@@ -42,8 +42,12 @@ An ear/speaker button (top right, every step) replays Leo's line.
 
 - **Language:** the device language (installer choice until a parent changes
   it); explicit launch context (`GREIA_PROFILE_LOCALE`/`GREIA_DEVICE_LOCALE`)
-  wins. Copy exists for EN/IT/ES/FR; other locales use base language, then
-  English.
+  wins. The existing reviewed copy covers EN/IT/ES/FR. New offered languages
+  provide wizard strings and optional on-screen extra letters in their
+  per-language `src/greia_platform/languages/<locale>/ui.json`
+  `first_profile` section (see the add-language guide). Missing optional
+  entries fall back through the resolver to the baseline/English; such
+  fallback is **not** evidence that a new wizard translation is complete.
 - **Speech:** prerecorded Leo clips at
   `assets/audio/system/first-boot/<locale>/<cue>.wav`, played on the Shell's
   single spoken-label channel. Missing clip: locale → base → English → silence,
