@@ -47,6 +47,10 @@ def tracked_markdown(root: Path) -> tuple[Path, ...]:
 
 def maintained(path: Path) -> bool:
     name = path.as_posix()
+    # The archive index is a maintained navigation page even though the
+    # archived evidence it links to is intentionally historical.
+    if name == "docs/archive/README.md":
+        return True
     if name.startswith(_HISTORICAL_PREFIXES):
         return False
     if name.startswith(_HISTORICAL_TESTING):
