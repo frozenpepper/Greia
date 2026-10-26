@@ -157,7 +157,7 @@ class LanguageChooser:
             nav_y = nav_center - 25
             if page > 0:
                 previous = pygame.Rect(main.left, nav_y, 88, 50)
-                self.look.pill(screen, previous, "Prev", fill=FIELD, size=18)
+                self.look.pill(screen, previous, "◀", fill=FIELD, size=18)
                 self._targets["page-prev"] = previous
             if page + 1 < pages:
                 following = pygame.Rect(main.left + 96, nav_y, 88, 50)
