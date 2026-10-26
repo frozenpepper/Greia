@@ -8,22 +8,27 @@ install and first boot PASS; `update-status` and
 control's hard-coded 30 s socket timeout fires during `update-stage` while the
 ~714 MB candidate is being written. Healthy B is not reached. The failure is a
 harness control-bound defect; loops leaked and were cleaned with the safe
-helper. Do not reuse these images after changing the harness. See
+helper. The stage-retry guide below now permits reuse only after explicit source and
+artifact checks. See
 `docs/reviews/2026-10-26_AB_SMOKE_CLEAN_SOURCE_RERUN_EVIDENCE.md`.
 
-## Current route (2026-10-26)
+## Current route (2026-10-26 follow-up)
 
-The installed updater now discovers the fixed published package without a
-status receipt. This changes production code: the old `866ba6827` images and
-accepted-A clone cannot verify it. The candidate-only reuse guide is
-superseded for this change. Build both fixtures and installer from one current
-committed `main` SHA, then run install → first boot → healthy A-to-B below.
-Do not patch the old guest or edit its status manually. Stop on a failed leg
-and preserve logs; do not start the larger fault matrix until healthy B passes.
-The existing [full-system work order](2026-10-23_SYSTEM_UPDATE_LINUX_ACCEPTANCE.md)
-and [application-package work order](2026-10-24_SOFTWARE_UPDATE_ACCEPTANCE.md)
-own later acceptance. Routine Python/Activity ZIP updates do not need an A/B
-image rebuild; this rebuild exercises the installed full-system discovery fix.
+Start with [`2026-10-26_AB_STAGE_RETRY.md`](2026-10-26_AB_STAGE_RETRY.md).
+It retries only healthy A-to-B using the current-source `1275e0be1` bundles
+and accepted-A image when its source-diff, artifact-hash, first-boot and offline
+checks all pass. The current fixes affect test orchestration only. Old `866ba6827`
+artifacts remain invalid. Do not use the failed healthy-update clone.
+
+Use this rebuild procedure only when shipped/build inputs changed or the
+required images/packages are actually missing or corrupt. A failed harness
+test, missing host tool, attached loop, timeout or report-schema check is not
+a rebuild trigger; diagnose it against the existing inputs first. When a
+rebuild is justified, build
+both fixtures and installer from one current committed `main` SHA, install,
+first-A health, then healthy A-to-B. Do not patch the guest manually. Stop at
+the first failed leg before any larger fault matrix. Routine Python/Activity
+ZIP updates do not require rebuilding an A/B image.
 
 Use the documented x86_64 Debian/Ubuntu host with root/sudo, QEMU i386,
 `qemu-img`, loop/mount, squashfs and GRUB EFI i386+x64; disk use below 80%.

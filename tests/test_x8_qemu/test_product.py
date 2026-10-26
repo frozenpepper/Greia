@@ -144,6 +144,95 @@ class ControlSeamTextTests(unittest.TestCase):
         self.assertIn("poweroff", text)
         self.assertIn(CONTROL_DISK_LABEL, text)
 
+    def test_update_stage_uses_production_client_and_timeout_policy(self) -> None:
+        text = control_runner_text()
+        self.assertIn("from greia_platform.update_client import UpdatePrivilegedClient", text)
+        self.assertIn("payload = UpdatePrivilegedClient(sock).request(op)", text)
+        from greia_platform.update_client import _OP_TIMEOUT_SECONDS
+
+        self.assertEqual(_OP_TIMEOUT_SECONDS["STAGE_CURRENT_CANDIDATE"], 1800.0)
+        marker = 'python3 - "$PHASE_FILE" "$SOCK" "$CTL_MNT" <<\'PYEOF\'\n'
+        update_script = text.split(marker, 1)[1].split("\nPYEOF", 1)[0]
+        compile(update_script, "generated-update-control.py", "exec")
+
+    def test_generated_update_arm_executes_root_only_socket_request(self) -> None:
+        import socket
+        import sys
+
+        from greia_platform.privileged_channel import encode_response, new_transaction_id
+        from greia_platform.update_client import UpdatePrivilegedClient
+
+        class FakeSocket:
+            def __init__(self, response: bytes) -> None:
+                self.response = response
+                self.sent = b""
+                self.timeout = None
+
+            def settimeout(self, value):
+                self.timeout = value
+
+            def connect(self, path):
+                self.path = path
+
+            def sendall(self, raw):
+                self.sent += raw
+
+            def shutdown(self, _how):
+                pass
+
+            def recv(self, _size):
+                response, self.response = self.response, b""
+                return response
+
+            def close(self):
+                pass
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_args):
+                self.close()
+
+        marker = 'python3 - "$PHASE_FILE" "$SOCK" "$CTL_MNT" <<\'PYEOF\'\n'
+        text = control_runner_text()
+        update_script = text.split(marker, 1)[1].split("\nPYEOF", 1)[0]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            phase_file = root / "phase.json"
+            phase_file.write_text('{"phase":"update-arm"}', encoding="utf-8")
+            responses = {
+                "arm": encode_response(new_transaction_id(), "ARM_CURRENT_CANDIDATE", {"status": "ARMED"}),
+                "stage": encode_response(new_transaction_id(), "STAGE_CURRENT_CANDIDATE", {"status": "STAGED"}),
+            }
+            made = []
+
+            def factory(_family, _kind):
+                sock = FakeSocket(responses["arm"])
+                made.append(sock)
+                return sock
+
+            argv = ["control.py", str(phase_file), UPDATE_SOCKET_PATH, str(root)]
+            with _mock.patch.object(sys, "argv", argv), _mock.patch.object(socket, "socket", factory):
+                exec(compile(update_script, "generated-update-control.py", "exec"), {"__name__": "__main__"})
+            self.assertEqual(made[0].timeout, 30.0)
+            self.assertTrue(made[0].sent)
+
+            # Run the generated STAGE branch through the production request
+            # method with an injected socket factory. This proves 1800 s is
+            # actually applied to the operation that previously timed out.
+            phase_file.write_text('{"phase":"update-stage"}', encoding="utf-8")
+            made.clear()
+            stage_socket = FakeSocket(responses["stage"])
+            def production_client_init(client, socket_path, *, socket_factory=socket.socket):
+                original_init(client, socket_path, socket_factory=stage_factory)
+            def stage_factory(_family, _kind):
+                made.append(stage_socket)
+                return stage_socket
+            original_init = UpdatePrivilegedClient.__init__
+            with _mock.patch.object(UpdatePrivilegedClient, "__init__", production_client_init), _mock.patch.object(sys, "argv", argv):
+                exec(compile(update_script, "generated-update-control.py", "exec"), {"__name__": "__main__"})
+            self.assertEqual(stage_socket.timeout, 1800.0)
+
     def test_runner_powers_off_with_diagnostics_on_phase_failure(self) -> None:
         text = control_runner_text()
         self.assertIn("capturing service diagnostics", text)
@@ -162,6 +251,132 @@ class ControlSeamTextTests(unittest.TestCase):
             timeout=60,
         )
         self.assertEqual(completed.returncode, 0, completed.stderr.decode()[:500])
+
+
+class LoopCleanupDelegationTests(unittest.TestCase):
+    def test_loop_detach_uses_shared_identity_safe_cleanup_helper(self) -> None:
+        from types import SimpleNamespace
+
+        calls: list[tuple[list[str], dict[str, object]]] = []
+
+        def run(argv, **kwargs):
+            calls.append((argv, kwargs))
+            return SimpleNamespace(returncode=0, stdout="", stderr="")
+
+        _product._loop_detach("/dev/loop7", runner=run)
+
+        self.assertEqual(len(calls), 1)
+        argv, kwargs = calls[0]
+        self.assertEqual(argv[1], "-c")
+        self.assertIn('safe_detach_loop "$2"', argv[2])
+        self.assertEqual(argv[3], "greia-loop-cleanup")
+        self.assertEqual(argv[4], str(PROJECT_ROOT / "build/lib/safe-cleanup.sh"))
+        self.assertEqual(argv[5], "/dev/loop7")
+        self.assertEqual(kwargs["timeout"], 60)
+        self.assertFalse(kwargs.get("shell", False))
+
+    def test_loop_detach_fails_closed_when_shared_cleanup_reports_failure(self) -> None:
+        from types import SimpleNamespace
+
+        failed = SimpleNamespace(
+            returncode=1,
+            stdout="",
+            stderr="ERROR: refusing loop cleanup after device reuse",
+        )
+        with self.assertRaisesRegex(LifecycleHarnessError, "device reuse"):
+            _product._loop_detach("/dev/loop7", runner=lambda *a, **k: failed)
+
+    def test_loop_detach_preserves_operation_error_and_adds_cleanup_diagnostic(self) -> None:
+        from types import SimpleNamespace
+
+        failed = SimpleNamespace(
+            returncode=1, stdout="", stderr="loop detach did not fully settle"
+        )
+        with self.assertRaisesRegex(ValueError, "operation failed") as caught:
+            try:
+                raise ValueError("operation failed")
+            finally:
+                _product._loop_detach(
+                    "/dev/loop7", runner=lambda *a, **k: failed
+                )
+        self.assertTrue(
+            any("loop detach did not fully settle" in note for note in caught.exception.__notes__)
+        )
+
+    def test_unmount_uses_scoped_shared_cleanup_helper(self) -> None:
+        from types import SimpleNamespace
+
+        calls: list[list[str]] = []
+
+        def run(argv, **kwargs):
+            calls.append(argv)
+            return SimpleNamespace(returncode=0, stdout="", stderr="")
+
+        _product._umount_fs(Path("/tmp/greia-owned-mount"), runner=run)
+        self.assertEqual(calls[0][2], 'source "$1"; safe_unmount_path_tree "$2"')
+        self.assertEqual(calls[0][-1], "/tmp/greia-owned-mount")
+
+    def test_failed_unmount_still_detaches_and_preserves_mounted_tree(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            mountpoint = Path(tmp) / "still-mounted"
+            mountpoint.mkdir()
+            (mountpoint / "evidence.txt").write_text("retain", encoding="utf-8")
+            detach_calls: list[str] = []
+
+            with (
+                _mock.patch.object(
+                    _product,
+                    "_umount_fs",
+                    side_effect=LifecycleHarnessError("simulated busy mount"),
+                ),
+                _mock.patch.object(
+                    _product,
+                    "_loop_detach",
+                    side_effect=lambda loopdev, **kwargs: detach_calls.append(loopdev) or True,
+                ),
+            ):
+                with self.assertRaisesRegex(
+                    LifecycleHarnessError, "unmount .*simulated busy mount"
+                ):
+                    _product._cleanup_loop_mounts(
+                        (mountpoint,), "/dev/loop9", runner=lambda *a, **k: None
+                    )
+
+            self.assertEqual(detach_calls, ["/dev/loop9"])
+            self.assertEqual((mountpoint / "evidence.txt").read_text(), "retain")
+
+    def test_failed_cleanup_keeps_primary_error_and_adds_note(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            mountpoint = Path(tmp) / "still-mounted"
+            mountpoint.mkdir()
+            (mountpoint / "evidence.txt").write_text("retain", encoding="utf-8")
+            detach_calls: list[str] = []
+
+            with (
+                _mock.patch.object(
+                    _product,
+                    "_umount_fs",
+                    side_effect=LifecycleHarnessError("simulated busy mount"),
+                ),
+                _mock.patch.object(
+                    _product,
+                    "_loop_detach",
+                    side_effect=lambda loopdev, **kwargs: detach_calls.append(loopdev) or True,
+                ),
+            ):
+                with self.assertRaisesRegex(ValueError, "operation failed") as caught:
+                    try:
+                        raise ValueError("operation failed")
+                    finally:
+                        _product._cleanup_loop_mounts(
+                            (mountpoint,), "/dev/loop9", runner=lambda *a, **k: None
+                        )
+
+            self.assertEqual(detach_calls, ["/dev/loop9"])
+            self.assertTrue(mountpoint.exists())
+            self.assertTrue(
+                any("simulated busy mount" in note for note in caught.exception.__notes__)
+            )
 
 
 class PersistCandidateInjectionTests(unittest.TestCase):

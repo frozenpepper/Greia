@@ -121,24 +121,24 @@ uses normal inbox publication, without host-to-guest receipt path projection.
 Ownership, atomic publication, transfer checks and bounded failure diagnostics
 remain. Durable application jobs and A/B journals still own recovery.
 
-This changes production code. Use `docs/testing/2026-10-25_AB_SMOKE_RETRY.md`
-to rebuild baseline/next bundles and installer from current committed `main`,
-then install → first-A health → healthy A-to-B. The old `866ba6827` images
-proved install/A only and cannot test this fix; the candidate-only reuse guide
-is historical. Do not repair the old guest manually. Stop on a failed leg and
-return logs before the larger fault matrix. Routine Python/Activity packages
-continue to use `.greia_update`, without rebuilding an OS image each time.
+Latest installed result (`1275e0be1`): install and first-A passed; the updater
+returned STATUS/VERIFIED. Staging hit a harness 30-second timeout, and the
+report recorded leaked loop associations. Current harness fixes reuse the
+production operation timeout for staging and the repository's bounded loop
+cleanup. Root-only arm remains available only through the root test control.
 
-Latest exact-source result (2026-10-26, `1275e0be1`): install and first-A
-PASSED; the installed updater returned `STATUS -> OK` and
-`VERIFY_CURRENT_CANDIDATE -> VERIFIED`, but `update-stage` hit the test-only
-control's hard-coded 30 s socket timeout while writing the ~714 MB candidate.
-Do not treat that as a production stage refusal or rerun blindly; fix the
-control bound and the loop-cleanup leak, commit a new freeze, then rebuild.
-The current harness can leave partscan loop devices even after a passed leg;
-audit `losetup -a | grep greia` and detach with `build/lib/safe-cleanup.sh`
-`safe_detach_loop`. See
-`docs/reviews/2026-10-26_AB_SMOKE_CLEAN_SOURCE_RERUN_EVIDENCE.md`.
+Next use `docs/testing/2026-10-26_AB_STAGE_RETRY.md`. It permits one healthy
+A-to-B retry using those exact bundles/accepted-A only after its source-diff,
+hash, first-boot and offline checks pass. If a shipped/build input changed or
+an artifact is absent/mismatched, rebuild via `2026-10-25_AB_SMOKE_RETRY.md`.
+A harness/host preflight failure is not a rebuild trigger. Diagnose that
+layer against the same artifacts; keep build outputs. This work order runs
+one healthy update only, then reports and stops even on success. Do not start
+a full fault matrix or rebuild loop. Never reuse the failed healthy-update
+clone or manually repair guest state.
+Record owned loop associations before/after the leg; leftover associations
+are a cleanup failure, not a pass. Never bulk-detach unrelated host devices.
+The `866ba6827` candidate-reuse guide remains historical.
 
 The active root stays writable. Hashes spanning its boot are retained for
 diagnosis, not checked for equality. First-boot B remains untouched and must

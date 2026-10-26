@@ -273,6 +273,31 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-26 — A/B stage timeout and teardown follow-up
+
+The `1275e0be1` Linux report proves install/first-A PASS and installed update
+STATUS/VERIFY PASS. Healthy B remains UNPROVEN: the harness cut staging off
+at 30 seconds and the report records leftover loop associations. Current
+harness fixes use the shipped client's operation timeout for stage (1,800 s)
+while preserving the bounded root-only arm request. Teardown uses existing
+scoped cleanup helpers, reports failure and preserves operation errors.
+
+Next: `docs/testing/2026-10-26_AB_STAGE_RETRY.md` permits one healthy A-to-B
+retry from the verified `1275e0be1` bundles and accepted-A only after source,
+artifact, first-boot, offline and loop checks pass. The source/artifact pairing
+is explicit: harness-only fixes do not require rebuilding unchanged images.
+Owner correction: run the cheap preflight first; host/harness failures require
+diagnosis against existing artifacts, not speculative image builds. This work
+order performs one healthy update, records its outcome and stops; no automatic
+chain into a larger fault matrix.
+If a production/build input changed or an artifact/check fails, fall back to
+the clean three-leg guide. Never reuse the failed healthy-update clone or
+repair guest status. Source checks: 320 broader tests PASS, 176 guide tests PASS; fresh Luna review
+PASS. Full gate status is recorded in the evidence report. New harness code
+has no Linux VM proof yet; Session 04
+remains OPEN. Verification and corrections are appended to
+`docs/reviews/2026-10-26_AB_SMOKE_CLEAN_SOURCE_RERUN_EVIDENCE.md`.
+
 ### 2026-10-26 — Package discovery simplified; status is progress only
 
 Owner direction replaces the receipt-dependent discovery design. The installed

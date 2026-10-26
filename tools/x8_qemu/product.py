@@ -434,6 +434,7 @@ def control_runner_text() -> str:
         "import sys\n"
         "import traceback\n"
         "from pathlib import Path\n"
+        "from greia_platform.update_client import UpdatePrivilegedClient\n"
         "from greia_platform.update_privileged import build_request, read_response\n"
         "def _emit(message):\n"
         "    try:\n"
@@ -471,23 +472,28 @@ def control_runner_text() -> str:
         "    inbox = SystemUpdateInbox(Path(\"/var/lib/greia-os\"))\n"
         "    if candidate.is_file() and not inbox.candidate_path.is_file():\n"
         "        inbox.receive(candidate)\n"
-        "request = build_request(op)\n"
-        "client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)\n"
-        "client.settimeout(30.0)\n"
-        "client.connect(sock)\n"
-        "client.sendall(request)\n"
-        "try:\n"
-        "    client.shutdown(socket.SHUT_WR)\n"
-        "except OSError:\n"
-        "    pass\n"
-        "chunks = []\n"
-        "while True:\n"
-        "    chunk = client.recv(4096)\n"
-        "    if not chunk:\n"
-        "        break\n"
-        "    chunks.append(chunk)\n"
-        "client.close()\n"
-        "transaction_id, returned_op, payload = read_response(b\"\".join(chunks))\n"
+        "if op == \"ARM_CURRENT_CANDIDATE\":\n"
+        "    # ARM is root-only and deliberately outside the Parent client allowlist.\n"
+        "    request = build_request(op)\n"
+        "    client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)\n"
+        "    client.settimeout(30.0)\n"
+        "    client.connect(sock)\n"
+        "    client.sendall(request)\n"
+        "    try:\n"
+        "        client.shutdown(socket.SHUT_WR)\n"
+        "    except OSError:\n"
+        "        pass\n"
+        "    chunks = []\n"
+        "    while True:\n"
+        "        chunk = client.recv(4096)\n"
+        "        if not chunk:\n"
+        "            break\n"
+        "        chunks.append(chunk)\n"
+        "    client.close()\n"
+        "    _transaction_id, returned_op, payload = read_response(b\"\".join(chunks))\n"
+        "else:\n"
+        "    payload = UpdatePrivilegedClient(sock).request(op)\n"
+        "    returned_op = op\n"
         "expected_status = {\n"
         "    \"STATUS\": \"OK\",\n"
         "    \"VERIFY_CURRENT_CANDIDATE\": \"VERIFIED\",\n"
@@ -940,18 +946,65 @@ def _loop_attach_partscan(image_path: Path, *, runner=None, which=None) -> str:
     return loopdev[0]
 
 
-def _loop_detach(loopdev: str, *, runner=None) -> None:
-    """Best-effort detach (cleanup path: never raises)."""
-    run = runner or subprocess.run
-    try:
-        run(
-            ["losetup", "-d", "--", str(loopdev)],
-            capture_output=True,
-            text=True,
-            timeout=60,
+def _run_safe_cleanup(
+    function: str, resource: str, *, runner=None
+) -> bool:
+    """Run one resource-scoped cleanup function from Greia's shared helper.
+
+    If cleanup runs while an operation exception is already unwinding, keep
+    that primary exception and attach the cleanup diagnostic to it.
+    """
+    if not resource:
+        return True
+    primary = sys.exception()
+    helper = PROJECT_ROOT / "build/lib/safe-cleanup.sh"
+    bash = shutil.which("bash")
+    if bash is None or not helper.is_file():
+        exc = LifecycleHarnessError(
+            f"cannot safely run {function} for {resource}: bash or {helper} is unavailable"
         )
-    except Exception:
-        pass
+        return _report_cleanup_failure(exc, primary_exception=primary)
+    try:
+        _run_checked(
+            [
+                bash,
+                "-c",
+                f'source "$1"; {function} "$2"',
+                "greia-loop-cleanup",
+                str(helper),
+                str(resource),
+            ],
+            runner=runner,
+            timeout=60,
+            what=f"{function} for {resource}",
+        )
+    except Exception as exc:
+        return _report_cleanup_failure(exc, primary_exception=primary)
+    return True
+
+
+def _report_cleanup_failure(
+    exc: Exception,
+    *,
+    primary_exception: BaseException | None,
+) -> bool:
+    """Fail a successful teardown; annotate an already-failing operation."""
+    if primary_exception is not None:
+        primary_exception.add_note(f"cleanup also failed: {exc}")
+        return False
+    if isinstance(exc, LifecycleHarnessError):
+        raise exc
+    raise LifecycleHarnessError(f"resource cleanup failed: {exc}") from exc
+
+
+def _loop_detach(loopdev: str, *, runner=None) -> bool:
+    """Wait for parent and partscan minors to detach from this owned loop.
+
+    ``losetup -d`` is lazy for partscan devices. The shared helper waits for
+    both the parent association and partition minors, and refuses to touch a
+    loop number if its backing image changed meanwhile.
+    """
+    return _run_safe_cleanup("safe_detach_loop", str(loopdev), runner=runner)
 
 
 def _mount_fs(
@@ -966,18 +1019,90 @@ def _mount_fs(
     _run_checked(argv, runner=runner, timeout=120, what=f"mount {source}")
 
 
-def _umount_fs(mountpoint: Path, *, runner=None) -> None:
-    """Best-effort unmount (cleanup path: never raises)."""
-    run = runner or subprocess.run
-    try:
-        run(
-            ["umount", "--", str(mountpoint)],
-            capture_output=True,
-            text=True,
-            timeout=60,
-        )
-    except Exception:
-        pass
+def _umount_fs(mountpoint: Path, *, runner=None) -> bool:
+    """Boundedly unmount only this owned mount tree, reporting failures."""
+    return _run_safe_cleanup("safe_unmount_path_tree", str(mountpoint), runner=runner)
+
+
+def _cleanup_loop_mounts(
+    mountpoints: tuple[Path, ...], loopdev: str, *, runner=None
+) -> bool:
+    """Attempt every owned unmount and loop detach, then report teardown.
+
+    Mount trees are removed only after their unmount helper confirms the tree
+    is clear. The loop detach is attempted even when any unmount fails. When
+    called from an existing exception path, failures are added as notes and
+    the original exception remains authoritative.
+    """
+    primary = sys.exception()
+    failures: list[str] = []
+    unmounted: set[Path] = set(Path(path) for path in mountpoints) if not loopdev else set()
+    if loopdev:
+        for mountpoint in mountpoints:
+            try:
+                if _umount_fs(mountpoint, runner=runner):
+                    unmounted.add(Path(mountpoint))
+                else:
+                    failures.append(f"unmount {mountpoint} did not complete")
+            except Exception as exc:
+                failures.append(f"unmount {mountpoint}: {exc}")
+    if loopdev:
+        try:
+            if not _loop_detach(loopdev, runner=runner):
+                failures.append(f"loop detach {loopdev} did not complete")
+        except Exception as exc:
+            failures.append(f"loop detach {loopdev}: {exc}")
+    for mountpoint in mountpoints:
+        if Path(mountpoint) in unmounted:
+            shutil.rmtree(mountpoint, ignore_errors=True)
+    if failures:
+        diagnostic = "product resource cleanup failed: " + "; ".join(failures)
+        if primary is not None:
+            primary.add_note(diagnostic)
+            return False
+        raise LifecycleHarnessError(diagnostic)
+    return True
+
+
+def _cleanup_injected_loop_mount(
+    mountpoint: Path,
+    loopdev: str,
+    *,
+    mounted: bool,
+    unmount_fn,
+    detach_fn,
+) -> bool:
+    """Aggregate cleanup when a caller injects resource-operation seams."""
+    primary = sys.exception()
+    failures: list[str] = []
+    unmounted = not mounted
+    if mounted:
+        try:
+            unmount_result = unmount_fn(mountpoint)
+            unmounted = unmount_result is not False
+            if not unmounted:
+                failures.append(f"unmount {mountpoint} did not complete")
+        except Exception as exc:
+            failures.append(f"unmount {mountpoint}: {exc}")
+    if loopdev:
+        try:
+            try:
+                detach_result = detach_fn(loopdev)
+            except TypeError:
+                detach_result = detach_fn(loopdev, runner=None)
+            if detach_result is False:
+                failures.append(f"loop detach {loopdev} did not complete")
+        except Exception as exc:
+            failures.append(f"loop detach {loopdev}: {exc}")
+    if unmounted:
+        shutil.rmtree(mountpoint, ignore_errors=True)
+    if failures:
+        diagnostic = "product resource cleanup failed: " + "; ".join(failures)
+        if primary is not None:
+            primary.add_note(diagnostic)
+            return False
+        raise LifecycleHarnessError(diagnostic)
+    return True
 
 
 def disposable_target_observation(target_image: Path, *, size_bytes: int):
@@ -1637,14 +1762,7 @@ def gather_installed_target_observation(
             schema_marker_path=schema_marker_path,
         )
     finally:
-        if mounted_boot:
-            _umount_fs(boot_mnt, runner=runner)
-        if mounted_persist:
-            _umount_fs(persist_mnt, runner=runner)
-        if loopdev:
-            _loop_detach(loopdev, runner=runner)
-        shutil.rmtree(boot_mnt, ignore_errors=True)
-        shutil.rmtree(persist_mnt, ignore_errors=True)
+        _cleanup_loop_mounts((boot_mnt, persist_mnt), loopdev, runner=runner)
     return {
         "target_image": str(target),
         "disk_identities": disk_identities,
@@ -1715,10 +1833,7 @@ def _copy_phase_into_control_image(
                 what=f"control input copy into {image_path}",
             )
     finally:
-        _umount_fs(mountpoint, runner=runner)
-        if loopdev:
-            _loop_detach(loopdev, runner=runner)
-        shutil.rmtree(mountpoint, ignore_errors=True)
+        _cleanup_loop_mounts((mountpoint,), loopdev, runner=runner)
     try:
         payload = json.loads(phase.read_text(encoding="utf-8"))
         copied_phase = str(payload.get("phase"))
@@ -1792,11 +1907,7 @@ def inject_update_candidate_into_persist(
             "parent_ownership": ownership,
         }
     finally:
-        if mounted:
-            _umount_fs(mountpoint, runner=runner)
-        if loopdev:
-            _loop_detach(loopdev, runner=runner)
-        shutil.rmtree(mountpoint, ignore_errors=True)
+        _cleanup_loop_mounts((mountpoint,), loopdev, runner=runner)
 
 def _fsync_file_and_parent(path: Path) -> None:
     """Flush one published file and its containing directory on the host."""
@@ -2169,11 +2280,10 @@ def inject_live_clone(
             sha_fn=sha_fn,
         )
     finally:
-        _umount_fs(mountpoint, runner=runner)
-        if loopdev:
-            _loop_detach(loopdev, runner=runner)
-        shutil.rmtree(mountpoint, ignore_errors=True)
-        shutil.rmtree(work_dir, ignore_errors=True)
+        try:
+            _cleanup_loop_mounts((mountpoint,), loopdev, runner=runner)
+        finally:
+            shutil.rmtree(work_dir, ignore_errors=True)
     return {
         "clone": str(Path(clone_path).resolve()),
         "squashfs_path": LIVE_SQUASHFS_IN_PARTITION,
@@ -3352,9 +3462,7 @@ def enable_installed_clone_serial_console(
         finally:
             _umount_fs(mountpoint, runner=runner)
     finally:
-        if loopdev:
-            _loop_detach(loopdev, runner=runner)
-        shutil.rmtree(mountpoint, ignore_errors=True)
+        _cleanup_loop_mounts((mountpoint,), loopdev, runner=runner)
     post_sha = str(hash_file(Path(clone_path)))
     return {
         "clone": str(Path(clone_path).resolve()),
@@ -3532,9 +3640,7 @@ def inject_boot_slot(
         finally:
             _umount_fs(mountpoint, runner=runner)
     finally:
-        if loopdev:
-            _loop_detach(loopdev, runner=runner)
-        shutil.rmtree(mountpoint, ignore_errors=True)
+        _cleanup_loop_mounts((mountpoint,), loopdev, runner=runner)
     post_sha = str(hash_file(Path(clone_path)))
     mutation = record_slot_injection_mutation(
         pre_sha256=pre_sha, post_sha256=post_sha, injected_files=injected_files
@@ -3604,8 +3710,7 @@ def hash_slot_partition(
                 digest.update(chunk)
         return digest.hexdigest()
     finally:
-        if loopdev:
-            _loop_detach(loopdev, runner=runner)
+        _cleanup_loop_mounts((), loopdev, runner=runner)
 
 
 def inspect_boot_health_roots(
@@ -4035,14 +4140,7 @@ def gather_boot_health_observation(
             "schema_marker": str(resolved["schema_marker_path"]),
         }
     finally:
-        if mounted_boot:
-            _umount_fs(boot_mnt, runner=runner)
-        if mounted_persist:
-            _umount_fs(persist_mnt, runner=runner)
-        if loopdev:
-            _loop_detach(loopdev, runner=runner)
-        shutil.rmtree(boot_mnt, ignore_errors=True)
-        shutil.rmtree(persist_mnt, ignore_errors=True)
+        _cleanup_loop_mounts((boot_mnt, persist_mnt), loopdev, runner=runner)
     return {
         "target_image": str(target),
         "disk_identities": inspection["disk_identities"],
@@ -5939,14 +6037,7 @@ class ProductHarness:
                 "transitions": len(list(journal.transitions)),
             }
         finally:
-            if mounted_boot:
-                _umount_fs(boot_mnt)
-            if mounted_persist:
-                _umount_fs(persist_mnt)
-            if loopdev:
-                _loop_detach(loopdev)
-            shutil.rmtree(boot_mnt, ignore_errors=True)
-            shutil.rmtree(persist_mnt, ignore_errors=True)
+            _cleanup_loop_mounts((boot_mnt, persist_mnt), loopdev)
 
     def _observe_recovery_stage(
         self,
@@ -6310,21 +6401,21 @@ def build_unhealthy_candidate_bundle(
 
     mountpoint = Path(_tempfile.mkdtemp(prefix="greia-x8-unhealthy-mnt-"))
     loopdev = ""
+    mounted = False
     removed: list[str] = []
     try:
         loopdev = str(do_attach(payload_copy))
         _do_mount(loopdev, mountpoint)
-        try:
-            removed = _remove_health_issuer_files(mountpoint)
-        finally:
-            _do_unmount(mountpoint)
+        mounted = True
+        removed = _remove_health_issuer_files(mountpoint)
     finally:
-        if loopdev:
-            try:
-                do_detach(loopdev)
-            except TypeError:
-                do_detach(loopdev, runner=None)
-        shutil.rmtree(mountpoint, ignore_errors=True)
+        _cleanup_injected_loop_mount(
+            mountpoint,
+            loopdev,
+            mounted=mounted,
+            unmount_fn=_do_unmount,
+            detach_fn=do_detach,
+        )
     if not removed:
         raise LifecycleHarnessError(
             "unhealthy candidate refused: base rootfs carries no pinned "
@@ -7067,21 +7158,21 @@ def build_nonbooting_candidate_bundle(
 
     mountpoint = Path(_tempfile.mkdtemp(prefix="greia-x8-nonboot-mnt-"))
     loopdev = ""
+    mounted = False
     removed: list[str] = []
     try:
         loopdev = str(do_attach(payload_copy))
         _do_mount(loopdev, mountpoint)
-        try:
-            removed = _remove_kernel_files(mountpoint)
-        finally:
-            _do_unmount(mountpoint)
+        mounted = True
+        removed = _remove_kernel_files(mountpoint)
     finally:
-        if loopdev:
-            try:
-                do_detach(loopdev)
-            except TypeError:
-                do_detach(loopdev, runner=None)
-        shutil.rmtree(mountpoint, ignore_errors=True)
+        _cleanup_injected_loop_mount(
+            mountpoint,
+            loopdev,
+            mounted=mounted,
+            unmount_fn=_do_unmount,
+            detach_fn=do_detach,
+        )
     if not removed:
         raise LifecycleHarnessError(
             "nonbooting candidate refused: base rootfs carries no kernel "
@@ -7384,14 +7475,7 @@ def gather_nonboot_stage_observation(
             )
             observed = dict(post)
     finally:
-        if mounted_boot:
-            _umount_fs(boot_mnt, runner=runner)
-        if mounted_persist:
-            _umount_fs(persist_mnt, runner=runner)
-        if loopdev:
-            _loop_detach(loopdev, runner=runner)
-        shutil.rmtree(boot_mnt, ignore_errors=True)
-        shutil.rmtree(persist_mnt, ignore_errors=True)
+        _cleanup_loop_mounts((boot_mnt, persist_mnt), loopdev, runner=runner)
     return observed
 
 
@@ -7513,14 +7597,7 @@ def gather_persist_refusal_observation(
             accepted_release_id=accepted_release_id,
         )
     finally:
-        if mounted_boot:
-            _umount_fs(boot_mnt, runner=runner)
-        if mounted_persist:
-            _umount_fs(persist_mnt, runner=runner)
-        if loopdev:
-            _loop_detach(loopdev, runner=runner)
-        shutil.rmtree(boot_mnt, ignore_errors=True)
-        shutil.rmtree(persist_mnt, ignore_errors=True)
+        _cleanup_loop_mounts((boot_mnt, persist_mnt), loopdev, runner=runner)
     return observed
 
 
@@ -8071,12 +8148,5 @@ def gather_recovery_stage_observation(
             )
             observed = dict(pre)
     finally:
-        if mounted_boot:
-            _umount_fs(boot_mnt, runner=runner)
-        if mounted_persist:
-            _umount_fs(persist_mnt, runner=runner)
-        if loopdev:
-            _loop_detach(loopdev, runner=runner)
-        shutil.rmtree(boot_mnt, ignore_errors=True)
-        shutil.rmtree(persist_mnt, ignore_errors=True)
+        _cleanup_loop_mounts((boot_mnt, persist_mnt), loopdev, runner=runner)
     return observed

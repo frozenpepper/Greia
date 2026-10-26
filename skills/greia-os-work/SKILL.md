@@ -115,16 +115,25 @@ The old signed `.greiaupdate` v2 flow and release signing keys are
 superseded by ADR 0036 and are not the normal production route; older
 references to them are historical only.
 
-For the next A/B Linux attempt, use
-`docs/testing/2026-10-25_AB_SMOKE_RETRY.md`: rebuild current committed source,
-install, first-A health, then healthy A-to-B. The installed updater now discovers
-the fixed published bundle directly; status is reporting/recovery progress,
-not a package-admission requirement. No host-to-guest receipt projection or
-manual status repair is required. Old images cannot verify the production fix;
-`2026-10-26_AB_CANDIDATE_RETRY.md` is historical. Device-owned application jobs,
-slot journals, compatibility checks and boot recovery remain necessary.
-Routine Python/Activity updates remain small `.greia_update` packages and do
-not require rebuilding A/B images. Session 04 remains OPEN until Linux evidence.
+For the next A/B Linux attempt, start with
+`docs/testing/2026-10-26_AB_STAGE_RETRY.md`: one healthy A-to-B retry using the
+verified `1275e0be1` artifacts only if source-diff, hash, first-boot and offline
+checks pass. Current timeout/cleanup fixes affect the harness, not the image.
+Only changed shipped/build inputs or missing/corrupt artifacts justify the
+rebuild/install route in `2026-10-25_AB_SMOKE_RETRY.md`. A host/harness failure
+requires diagnosis against existing inputs, not a speculative rebuild. Run the
+cheap source preflight first, then only this one healthy update; record its
+result and stop rather than chaining the larger fault matrix.
+The older `866ba6827` candidate-only guide stays historical. Staging uses the
+production client's operation timeout; root-only test arm is still distinct
+from panel operations. Owned loop cleanup must finish or report failure; save
+association audits and never bulk-detach unrelated loops.
+
+The installed updater discovers the fixed published bundle directly. Status
+is reporting/recovery progress, not a package-admission requirement. Device
+jobs, slot journals and recovery remain. Routine Python/Activity updates use
+small `.greia_update` packages without rebuilding OS images for each update.
+Session 04 remains OPEN until the Linux lifecycle predicates actually pass.
 
 Session 04 owns the real legacy-i386 fresh-install/update/rollback lifecycle. The
 `POSTR1-P1-INSTALLER-RED` / Gate-P5/V12G/D6 routing below is historical and

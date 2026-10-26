@@ -3364,3 +3364,29 @@ the test-only stage timeout and loop cleanup, commit a new freeze, then rebuild
 and rerun all three legs; do not reuse these images with modified harness
 source. Session 04 remains OPEN; no rollback, Parent/fault, full-system,
 physical or USB claim is made.
+
+## 2026-10-26 — Harness staging bound and cleanup correction
+
+The clean `1275e0be1` rerun establishes installed candidate STATUS/VERIFY as
+well as install/A health, but not healthy B. Its 30-second test client bound
+cut off staging; the report also records 19 loop associations. Current source
+reuses the production operation timeout for status/verify/stage (stage 1,800 s),
+keeps root-only test arm separate, and replaces ignored teardown results with
+scoped repository cleanup and explicit failure reporting. This changes only
+harness/tests, not shipped updater behavior.
+
+Next is the bounded healthy A-to-B route in
+`docs/testing/2026-10-26_AB_STAGE_RETRY.md`, conditional on unchanged shipped
+source/build inputs plus exact bundle/accepted-A hashes, prior first-boot proof
+and offline/loop checks. This supersedes the report's blanket rebuild direction
+for harness-only changes. Otherwise rebuild via the clean three-leg guide.
+No new Linux/physical success is claimed. Source verification is appended to
+`docs/reviews/2026-10-26_AB_SMOKE_CLEAN_SOURCE_RERUN_EVIDENCE.md`; Session 04 OPEN.
+
+Owner workflow correction in this follow-up: the immediate work order runs
+cheap source/host preflight, then only the healthy update against preserved
+verified images. A missing tool, timeout, stale test assertion or cleanup issue
+is not a rebuild trigger. Diagnose the failing layer first. Rebuild only for
+changed shipped/build inputs or actually missing/corrupt artifacts. Record the
+single retry result and stop; do not automatically start the remaining fault
+matrix. Those release obligations remain OPEN separately.

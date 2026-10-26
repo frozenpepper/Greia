@@ -136,3 +136,67 @@ and fix the loop-cleanup leak. Because that changes harness source, freeze a
 new committed `main` SHA and rebuild all three inputs; do not reuse these
 images with a modified harness. GUI, rollback/reverse, Parent/fault, 507,
 full-system, physical and USB legs remain NOT RUN. Session 04 remains OPEN.
+
+## 5. Source follow-up — timeout/cleanup repair and bounded retry
+
+This is an append-only correction to the next-step instruction above. No
+new Linux VM run occurred on the Mac. The report's actual install/A and
+STATUS/VERIFIED results remain tied to `1275e0be1`; healthy B is UNPROVEN.
+
+The test control now uses `UpdatePrivilegedClient` for its panel-supported
+operations, inheriting the production finite stage bound of 1,800 seconds.
+ARM is intentionally root-only and retains a bounded framed test request;
+no production allowlist is broadened. The old helper did one lazy loop detach
+and ignored errors. Teardown now uses the repository's scoped unmount/detach
+helpers rather than silently accepting leftovers. Actual clearance of the
+reported field devices still requires the Linux rerun; source is not VM proof.
+
+The next guide is [`2026-10-26_AB_STAGE_RETRY.md`](../testing/2026-10-26_AB_STAGE_RETRY.md).
+It may reuse this report's bundles and accepted-A only when source-path checks
+prove shipped/build inputs unchanged, exact published hashes match, the old
+first-boot proof passes, and image-holder/loop checks establish offline inputs.
+This replaces the blanket requirement to rebuild unchanged images after a
+harness-only fix. On any failed prerequisite use the clean three-leg fallback.
+Never reuse the failed healthy-update clone or repair guest state.
+
+Source verification ran on the worktree based on `87838b3d6`:
+
+- Final broader source run: **320 tests PASS in 3.556 s**. Selectors:
+  `test_x8_qemu.test_product`, `test_product_install`,
+  `test_product_boot_health`, `test_product_boot_health_identity`,
+  `test_session04_legs`, `test_product_recovery_d31_reverse`, plus
+  `test_system_update_service`, `test_parent_system_updates`,
+  `test_update_privileged_bridge`, `test_slot_writer`,
+  `test_build_loop_cleanup_contract`, `test_build_cleanup_contract`.
+- Fresh Luna review: **PASS, no remaining findings** after the unmount failure
+  path and executable offline preflight were corrected. The guide selector set
+  independently passed **176 tests**.
+- Tests execute the generated ARM and STAGE Python against fake sockets,
+  assert the actual stage timeout, and cover success-path teardown failure,
+  continued detach after unmount failure, mounted-tree preservation and primary
+  exception retention. Legacy helper assertions were updated to check exact
+  owned resources through the safe helper seam.
+- Bash/Python guide syntax checks pass; `make shell-check footprint` passes.
+  Separate `make validate` stops at the existing unsupported ARM64 builder.
+- Final-source `make verify`: **5,961 tests in 293.848 s; 6 failures, 3 errors,
+  9 skips; NOT GREEN**. Failure IDs match the previous Mac results: Foresta
+  en/es/fr content expectations (3), MBR wording (1), Parent Wi-Fi assertions
+  (2); errors are ARM64 target-builder support (1) and missing macOS `lsblk`
+  (2). An earlier pre-final cleanup revision's full run aborted in native
+  Pygame/Quattro Amici audio/rendering; it produced no completed-suite result.
+  The completed final run above supersedes it for test totals, without making
+  the red gate green.
+
+Temporary local logs: `/tmp/greia-stage-followup/`. These checks used mocked
+host-resource operations; no Linux image/mount/loop/QEMU run was performed.
+The exact 19 devices are field-report evidence, not reproduced instances.
+No production source or image producer changed in this tranche.
+
+Owner follow-up: the revised handoff explicitly forbids speculative rebuilds
+for host/harness/test-preflight failures and stops after one healthy-update
+result. A further Luna contract audit checked guest module availability,
+operation allowlists, actual timeout values (VERIFY 60 s, STAGE 1,800 s) and
+the documented host phase budget (2,400 s). The 1275 image already passed real
+VERIFY under its old 30-second control; the revised guide does not require
+another full image build. The generic harness configuration's shorter default
+is not used by this work order; preserve the explicit 2,400-second setting.

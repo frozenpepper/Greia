@@ -338,8 +338,10 @@ class SlotInjectionTests(unittest.TestCase):
             clone = base / "clone.img"
             clone.write_bytes(b"clone" * 64)
             runner = _FakeRunner()
+            mounted_paths: list[Path] = []
 
             def _fake_mount(source, mountpoint, *, read_only, runner=None, which=None):
+                mounted_paths.append(Path(mountpoint))
                 _shutil.copytree(seed, mountpoint, dirs_exist_ok=True)
 
             with _mock.patch.object(_product, "_mount_fs", _fake_mount):
@@ -358,7 +360,22 @@ class SlotInjectionTests(unittest.TestCase):
             self.assertFalse(grub["source_image_mutated"])
             partscans = [c for c in runner.argv0("losetup") if "-P" in c]
             self.assertEqual(len(partscans), 1)
-            self.assertEqual(len([c for c in runner.argv0("losetup") if "-d" in c]), 1)
+            cleanup = runner.argv0("bash")
+            unmounts = [c for c in cleanup if "safe_unmount_path_tree" in c[2]]
+            detaches = [c for c in cleanup if "safe_detach_loop" in c[2]]
+            self.assertEqual(len(unmounts), 3)
+            self.assertTrue(
+                all(c[4] == str(_product.PROJECT_ROOT / "build/lib/safe-cleanup.sh") for c in unmounts)
+            )
+            self.assertEqual(len(mounted_paths), 2)
+            self.assertTrue(all(c[5] == str(mounted_paths[0]) for c in unmounts))
+            self.assertEqual(str(mounted_paths[0]), str(mounted_paths[1]))
+            self.assertEqual(len(detaches), 1)
+            self.assertEqual(detaches[0][3], "greia-loop-cleanup")
+            self.assertEqual(
+                detaches[0][4], str(_product.PROJECT_ROOT / "build/lib/safe-cleanup.sh")
+            )
+            self.assertEqual(detaches[0][5], "/dev/loop9")
 
     def test_inject_second_slot_reuses_patched_console(self) -> None:
         # Idempotency: slot-B injection after slot-A on the same clone
@@ -1235,7 +1252,14 @@ class HashSlotPartitionTests(unittest.TestCase):
             self.assertEqual(digest, _hashlib.sha256(node_a.read_bytes()).hexdigest())
             partscans = [c for c in runner.argv0("losetup") if "-P" in c]
             self.assertEqual(len(partscans), 1)
-            self.assertEqual(len([c for c in runner.argv0("losetup") if "-d" in c]), 1)
+            cleanup = runner.argv0("bash")
+            detaches = [c for c in cleanup if "safe_detach_loop" in c[2]]
+            self.assertEqual(len(detaches), 1)
+            self.assertEqual(detaches[0][3], "greia-loop-cleanup")
+            self.assertEqual(
+                detaches[0][4], str(_product.PROJECT_ROOT / "build/lib/safe-cleanup.sh")
+            )
+            self.assertEqual(detaches[0][5], "/dev/loop9")
 
     def test_unknown_slot_refused(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

@@ -969,13 +969,22 @@ class ControlDiskCopyTests(unittest.TestCase):
             kinds = [c[0].rsplit("/", 1)[-1] for c in runner.calls]
             self.assertIn("losetup", kinds)
             self.assertIn("mount", kinds)
-            self.assertIn("umount", kinds)
             copies = runner.argv0("cp")
             self.assertEqual(len(copies), 1)
             self.assertTrue(copies[0][2].endswith(CONTROL_PHASE_FILE))
             self.assertTrue(copies[0][3].endswith(CONTROL_PHASE_FILE))
-            detaches = [c for c in runner.argv0("losetup") if "-d" in c]
+            mounts = runner.argv0("mount")
+            cleanup = runner.argv0("bash")
+            unmounts = [c for c in cleanup if "safe_unmount_path_tree" in c[2]]
+            detaches = [c for c in cleanup if "safe_detach_loop" in c[2]]
+            self.assertEqual(len(unmounts), 1)
+            self.assertEqual(unmounts[0][3], "greia-loop-cleanup")
+            self.assertEqual(unmounts[0][4], str(_product.PROJECT_ROOT / "build/lib/safe-cleanup.sh"))
+            self.assertEqual(unmounts[0][5], mounts[0][-1])
             self.assertEqual(len(detaches), 1)
+            self.assertEqual(detaches[0][3], "greia-loop-cleanup")
+            self.assertEqual(detaches[0][4], str(_product.PROJECT_ROOT / "build/lib/safe-cleanup.sh"))
+            self.assertEqual(detaches[0][5], "/dev/loop9")
 
     def test_copy_missing_tool_is_blocked(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -1099,8 +1108,10 @@ class SquashfsRebuildTests(unittest.TestCase):
             runner = _FakeRunner()
 
             def _fake_mount(source, mountpoint, *, read_only, runner=None, which=None):
+                mounted_paths.append(Path(mountpoint))
                 _shutil.copytree(seed, mountpoint, dirs_exist_ok=True)
 
+            mounted_paths: list[Path] = []
             with _mock.patch.object(_product, "_mount_fs", _fake_mount):
                 proof = inject_live_clone(clone, runner=runner, which=_fake_which)
             self.assertEqual(proof["squashfs_path"], "live/filesystem.squashfs")
@@ -1132,9 +1143,15 @@ class SquashfsRebuildTests(unittest.TestCase):
             self.assertEqual(len(partscans), 1)
             self.assertEqual(len(runner.argv0("unsquashfs")), 1)
             self.assertEqual(len(runner.argv0("mksquashfs")), 1)
-            self.assertEqual(
-                len([c for c in runner.argv0("losetup") if "-d" in c]), 1
-            )
+            cleanup = runner.argv0("bash")
+            unmounts = [c for c in cleanup if "safe_unmount_path_tree" in c[2]]
+            detaches = [c for c in cleanup if "safe_detach_loop" in c[2]]
+            self.assertEqual(len(unmounts), 1)
+            self.assertEqual(unmounts[0][4], str(_product.PROJECT_ROOT / "build/lib/safe-cleanup.sh"))
+            self.assertEqual(unmounts[0][5], str(mounted_paths[0]))
+            self.assertEqual(len(detaches), 1)
+            self.assertEqual(detaches[0][4], str(_product.PROJECT_ROOT / "build/lib/safe-cleanup.sh"))
+            self.assertEqual(detaches[0][5], "/dev/loop9")
 
     def test_inject_refuses_without_shipped_socket_unit(self) -> None:
         # Fail-closed: an exploded tree without the shipped transaction
