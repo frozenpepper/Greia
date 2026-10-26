@@ -31,7 +31,7 @@ def reference_sections() -> dict[str, dict[str, str]]:
     achievement = _UI_STRINGS["en"]
     feedback = LAUNCH_COPY["en"]
     return {
-        "installer": {key: key for key in sorted(_ITALIAN)},
+        "installer": {**{key: key for key in sorted(_ITALIAN)}, "Choose your language": "Choose your language"},
         "installer_dynamic": {
             "press_key": "Press the key that types “{value}”",
             "connecting": "Connecting to {value}…",
