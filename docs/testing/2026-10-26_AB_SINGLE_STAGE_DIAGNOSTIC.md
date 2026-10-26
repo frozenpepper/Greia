@@ -4,6 +4,16 @@ Date: 2026-10-26. The [offline result](../reviews/2026-10-26_AB_FAILED_IMAGE_DIA
 is complete: the original error was not saved and cannot be recovered from
 that image. Do not repeat collection from that old clone.
 
+**Latest preflight result (2026-10-26, `81ba47dba`):** **FAILED** at the source
+test gate. `test_generated_stage_failure_avoids_exit_120_from_buffered_stderr`
+left its positive-control fake server thread alive after
+`server.join(timeout=5)` (80 tests: 79 passed, 1 failed). Per this work order,
+the one-stage boot was **not** started. The read-only source allowlist, input
+hashes, holder and old-loop checks were completed separately and passed. Report:
+[`2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC_PREFLIGHT_FAILURE.md`](../reviews/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC_PREFLIGHT_FAILURE.md).
+Fix the test-control server teardown, rerun the preflight, then authorize the
+boot. Do not rebuild the OS for this harness-only failure.
+
 This work order boots **only `update-stage` once**, using the corrected capture.
 It reuses accepted A and the next bundle, writes only a fresh disposable clone,
 then collects its saved response/error and slot facts automatically. It does

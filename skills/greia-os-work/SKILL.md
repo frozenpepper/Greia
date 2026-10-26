@@ -116,7 +116,7 @@ superseded by ADR 0036 and are not the normal production route; older
 references to them are historical only.
 
 The offline failed-image read is complete; its first error is unrecoverable.
-Current next work order:
+The scoped work order is
 `docs/testing/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC.md`. Its helper
 `python -m tools.x8_qemu.stage_diagnostic` uses the verified accepted-A image
 and bundle, clones A, injects the candidate offline, boots only `update-stage`
@@ -124,6 +124,14 @@ once and always collects the stopped clone. There is no build/install/arm/B
 boot or full acceptance matrix. The host timeout is 2,400 s above the existing
 1,800 s client stage bound. The result is diagnostic-only, with input hashes,
 service error/response evidence and collection failures retained. Report and stop.
+
+The preflight has now been run and **failed**: the closed-stderr positive
+control left its fake-server thread alive after `server.join(timeout=5)` (80
+tests, one failure; the other 79 passed). The one-stage boot was not started,
+per the work order. Read-only allowlist/hash/holder/loop checks passed. Report:
+`docs/reviews/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC_PREFLIGHT_FAILURE.md`.
+Fix the fake-server teardown/join, rerun the preflight, then authorize the boot.
+Do not rebuild the OS for this harness-only failure.
 
 Use sudo reads for root-owned 0600 inputs, never chmod. PSmisc holder checks
 must use its supported syntax and reject status-1 usage output. The old

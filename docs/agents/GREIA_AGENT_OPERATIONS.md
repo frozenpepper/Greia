@@ -144,17 +144,21 @@ The stage failed before B finalization, but the first stage error is
 refusal, crash, or lost control error. Report:
 `docs/reviews/2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS_RESULT.md`.
 
-The newly scoped next work order is
-`docs/testing/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC.md`: reuse verified
-accepted A and the next bundle, make a fresh clone, boot only `update-stage`
-once, and always collect the stopped clone's saved response/error and state.
-No image build/install/arm/B boot or larger matrix. The control disk is phase-
-only 64 MiB; the bundle is injected into PERSIST offline. The helper records
-both inputs before/after and propagates collection and cleanup failures. Its
-result is diagnostic-only; a QEMU return is not stage or health acceptance.
-Record the first concrete cause and stop. Do not repeat the old offline read
-or automatically resume the full healthy-update retry. No production updater
-source changed in this follow-up. Session 04 remains OPEN.
+The scoped single-stage work order is
+`docs/testing/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC.md`. Its preflight stopped
+at the source-test gate: 80 tests ran, one failed because the
+closed-stderr positive control left its fake-server thread alive after
+`server.join(timeout=5)`; the other 79 passed. Per the work order the
+one-stage VM boot was **not** started. The read-only allowlist/hash/holder/
+loop checks passed and inputs were preserved. This is a test-control race, not
+an installed-updater result. Report:
+`docs/reviews/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC_PREFLIGHT_FAILURE.md`.
+
+Fix the fake-server teardown/join, rerun the preflight, then authorize the
+single `update-stage` boot. Do not rebuild the OS for this harness-only
+failure, repeat the old offline read or resume the full healthy-update retry.
+The actual stage cause and healthy B remain UNPROVEN; Session 04 remains OPEN.
+No production updater source changed in this follow-up.
 
 The PSmisc 23.7 holder check must use `fuser -v <absolute-file>` without `--`.
 Accept no-holder status 1 only with empty output: usage errors also return 1.

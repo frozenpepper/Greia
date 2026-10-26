@@ -3,11 +3,13 @@
 **Purpose:** the short current state for contributors and agents: active workstreams, recent results, blockers and next steps. It is not an archive.
 **Public-source readiness:** IN PROGRESS. Root entry points exist (`LICENSE`, `NOTICE.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`); the licensing/provenance audit is open (see `NOTICE.md`).
 **Ordinary-family release:** NOT READY (`docs/release/GREIA_PUBLIC_RELEASE_READINESS.md`).
-**Current A/B action (2026-10-26 follow-up):** offline evidence collection is
-complete and the original stage error is unrecoverable. Run only the bounded
-stage-only diagnostic in `docs/testing/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC.md`
-using the verified accepted-A image and bundle, then report and stop. No rebuild,
-install, arm or B boot. The installed stage cause remains unknown.
+**Current A/B action (2026-10-26 follow-up):** the bounded single-stage
+diagnostic in `docs/testing/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC.md` stopped at
+its source-test preflight; the one-stage boot was **not** started. Fix the
+positive-control fake-server teardown, rerun the preflight, then authorize the
+boot. No rebuild, install, arm or B boot. The installed stage cause remains
+unknown; visible report
+`docs/reviews/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC_PREFLIGHT_FAILURE.md`.
 
 Entries dated before 2026-10-15 were removed from this file in the 2026-10-16 open-source cleanup. Read them with `git show 101e332a:HANDOVER.md`; lessons from that period are indexed in `docs/archive/README.md`.
 
@@ -309,6 +311,26 @@ PRESERVED; the 4 first-run DONE, all 16 earlier retakes, and all 143 evidence-ga
 rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
+
+### 2026-10-26 — Single-stage diagnostic stopped at preflight test failure
+
+The work order `docs/testing/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC.md` was
+executed from clean `81ba47dba`. Its source-test gate ran 80 tests with one
+failure: `test_generated_stage_failure_avoids_exit_120_from_buffered_stderr`
+left its positive-control fake-server thread alive after
+`server.join(timeout=5)`. The other 79 tests passed, including the new
+stage-diagnostic suite. Per the work order, the one-stage VM boot was **not**
+started; no install, arm, B boot, update replay or collector run occurred.
+
+The remaining preflight checks were completed read-only for the report: the
+source-diff allowlist was clean, accepted-A and next-bundle hashes matched,
+the input holder check was status 1 with empty output, and no old loops were
+attached. Inputs were preserved and not chmodded. This is a test-control race,
+not an installed-updater result. Report:
+`docs/reviews/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC_PREFLIGHT_FAILURE.md`.
+Next: fix the fake-server teardown/join, rerun the preflight, then authorize the
+single stage boot; do not rebuild the OS for this harness-only failure.
+Session 04 remains OPEN.
 
 ### 2026-10-26 — Offline answer received; one captured stage operation next
 

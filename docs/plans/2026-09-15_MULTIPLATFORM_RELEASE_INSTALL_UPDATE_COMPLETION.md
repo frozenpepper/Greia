@@ -3483,3 +3483,21 @@ are preserved and exactly allowlisted as non-image source for artifact reuse.
 Evidence is appended to `docs/reviews/2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS_RESULT.md`.
 No Linux boot executed on this Mac; actual stage cause and healthy B unproven.
 Session 04 remains OPEN.
+
+## 2026-10-26 — Single-stage diagnostic preflight failure
+
+Ran the work order preflight from clean `81ba47dba`. The source-test gate ran
+**80 tests with one failure**:
+`test_generated_stage_failure_avoids_exit_120_from_buffered_stderr` left its
+positive-control fake-server thread alive after `server.join(timeout=5)`. The
+other 79 tests passed, including the new stage-diagnostic suite. Per the work
+order, the one-stage VM boot was **not** started; no install, arm, B boot,
+update replay or collector run occurred. The remaining read-only preflight
+checks passed: source allowlist clean, accepted-A/next-bundle hashes OK, holder
+status 1 with empty output, zero old-evidence loops. Inputs were preserved.
+
+This is a test-control race, not an installed-updater result. Report:
+`docs/reviews/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC_PREFLIGHT_FAILURE.md`.
+Next: fix the fake-server teardown/join, rerun the preflight, then authorize
+the single stage boot. Do not rebuild the OS for this harness-only failure.
+The installed stage cause and healthy B remain UNPROVEN; Session 04 OPEN.
