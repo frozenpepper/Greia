@@ -334,7 +334,10 @@ at source HEAD `254faddfb55bd0b9ef94d663b988da9f2ead6612`:
 **no broken repository-relative Markdown links in that source-level sweep**.
 The read-only `tools/audit_repository_docs.py --scope maintained` helper now
 also treats `docs/archive/README.md` as a maintained navigation index
-(regression test corrected). This remote review is not a local test execution
+(regression test corrected). `CONTRIBUTING.md` now routes language volunteers
+to the manifest/scaffold workflow and accurately distinguishes owner-requested
+PR review from technically unenforced private GitHub Free branch protection,
+without presenting a paid upgrade as a prerequisite. This remote review is not a local test execution
 and does not establish semantic accuracy of every historical document.
 
 Retired nine 2026-08-22 PNG captures from completed historical visual-review
