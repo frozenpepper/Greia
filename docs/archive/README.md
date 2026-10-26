@@ -21,6 +21,12 @@ at `docs/archive/reviews/X.md` if it appears below.
 For the current state of the project, read `README.md`, `HANDOVER.md` and
 `docs/DOCUMENTATION.md` instead.
 
+## Language-support history
+
+| Document | Lesson |
+|---|---|
+| [plans/LANGUAGE_SUPPORT_TIERS_PROPOSAL_2026-09-27.md](plans/LANGUAGE_SUPPORT_TIERS_PROPOSAL_2026-09-27.md) | The old declared twelve-language set overstated actual text and voice coverage. Its staged tiers were superseded by the owner-approved EN/IT/ES/FR rollout and later per-language manifest discovery; follow `docs/product/SYSTEM_LANGUAGE_AND_LOCALIZATION.md` and `docs/development/ADD_A_GREIA_LANGUAGE.md` for current behavior. |
+
 ## Boot, installation and hardware
 
 | Document | Lesson |
