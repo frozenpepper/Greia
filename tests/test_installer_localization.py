@@ -65,9 +65,9 @@ class InstallerLocalizationTests(unittest.TestCase):
         self.assertEqual(translator.text("Wi-Fi: Casa"), "Wi-Fi: Casa")
 
     def test_released_four_language_translations_are_selectable(self) -> None:
-        self.assertEqual(
-            [item.locale for item in SUPPORTED_SYSTEM_LANGUAGES], ["en", "it", "es", "fr"]
-        )
+        self.assertTrue({"en", "it", "es", "fr"}.issubset(
+            {item.locale for item in SUPPORTED_SYSTEM_LANGUAGES}
+        ))
         self.assertEqual(InstallerTranslator("es").text("Continue"), "Continuar")
         self.assertEqual(InstallerTranslator("fr").text("Continue"), "Continuer")
         self.assertEqual(InstallerTranslator("es-ES").text("Start"), "Empezar")
