@@ -265,3 +265,37 @@ The source follow-up passed 335 focused tests and the short guide's exact
 outcomes; the full gate remains NOT GREEN. No Linux image/VM step was run in
 this follow-up. Use the exact committed source and new smoke work order for
 the next actual Linux result.
+
+## Clean-source A/B smoke retry at 866ba6827
+
+Source: `866ba68277be8500db62de55a9189d78c9ea704b` (clean main; full gate
+5,959 tests, 7 failures, 3 errors, 3 skips, failure/error IDs identical to the
+9161 baseline; +2 new tests). Focused A/B product suites: 66 OK.
+
+Evidence root: `/var/tmp/greia-ab-smoke-866ba68277be8500db62de55a9189d78c9ea704b-20261025T162521Z`.
+
+Artifacts:
+- base fixture 0.13.0-phase0-dev bundle SHA-256 `93f55468230ce4e2b63d4665b3e1f826ae384c47b918674fe5c432a2f3c29a17` (714,298,003 bytes)
+- installer SHA-256 `492483b77231cff7564a909c0c50a3d886d762a055f5ab427b11b4e54bafcdd4` (2,270,167,040 bytes)
+- next fixture 0.13.1-phase0-dev bundle SHA-256 `76ef1ffe2795124f06f73ec81306313101129b7e23f74de38d5fbd7926a6fee9` (714,302,165 bytes)
+
+Results:
+- **install: PASS** (`vm/install/result.json`)
+- **first-boot: PASS** — default A accepted, first-install journal cleared, clean poweroff (`vm/first-boot/result.json`)
+- **healthy-update: BLOCKED** at the first update-verify boot:
+  `no current update candidate in the inbox` (`vm/healthy-update/result.json`,
+  `product-update-verify-serial.log`). The 0.13.1 candidate is present in the
+  disposable clone's PERSIST
+  `greia/namespaces/parent-credentials/system-updates/inbox/candidate.greiaupdate`,
+  but the running `greia-system-update.service` still does not discover it.
+  No healthy B boot, rollback, 507, Parent-stop, applying-cut, Mobile or
+  physical leg ran.
+
+Harness changes made while retrying: candidates are copied host-side into the
+PERSIST inbox before the update boot; control inputs are copied into the
+control image; the control candidate copy is skipped when the inbox already
+holds it. These are test-only changes under `tools/x8_qemu` and do not alter
+the installed image. Next exact step: reconcile the running service's
+`SystemUpdateInbox` state-dir/inbox path and candidate naming with the PERSIST
+location, then rerun healthy A-to-B from the accepted first-boot clone.
+Session 04 remains OPEN.

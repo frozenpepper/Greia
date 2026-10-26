@@ -450,12 +450,13 @@ def control_runner_text() -> str:
         "op = ops.get(str(phase))\n"
         "if op is None:\n"
         "    raise SystemExit(f\"x8-control: refused unknown update phase {phase!r}\")\n"
-        "if phase == \"update-stage\":\n"
+        "if phase in (\"update-verify\", \"update-stage\"):\n"
         "    candidate = ctl_mnt / \"candidate.greiaupdate\"\n"
-        "    if candidate.is_file():\n"
-        "        inbox_dir = Path(\"/var/lib/greia-os/system-updates/inbox\")\n"
+        "    inbox_dir = Path(\"/var/lib/greia-os/system-updates/inbox\")\n"
+        "    inbox_candidate = inbox_dir / \"candidate.greiaupdate\"\n"
+        "    if candidate.is_file() and not inbox_candidate.is_file():\n"
         "        inbox_dir.mkdir(parents=True, exist_ok=True)\n"
-        "        shutil.copy2(candidate, inbox_dir / \"candidate.greiaupdate\")\n"
+        "        shutil.copy2(candidate, inbox_candidate)\n"
         "request = build_request(op)\n"
         "client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)\n"
         "client.settimeout(30.0)\n"
@@ -1683,6 +1684,22 @@ def _copy_phase_into_control_image(
             timeout=120,
             what=f"control phase copy into {image_path}",
         )
+        try:
+            declared = json.loads(phase.read_text(encoding="utf-8")).get("inputs") or {}
+        except (ValueError, OSError):
+            declared = {}
+        for name in declared.values():
+            if not isinstance(name, str) or not name:
+                continue
+            source = Path(control_dir) / name
+            if not source.is_file():
+                continue
+            _run_checked(
+                ["cp", "--", str(source), str(mountpoint / name)],
+                runner=runner,
+                timeout=300,
+                what=f"control input copy into {image_path}",
+            )
     finally:
         _umount_fs(mountpoint, runner=runner)
         if loopdev:
@@ -1691,13 +1708,72 @@ def _copy_phase_into_control_image(
     try:
         payload = json.loads(phase.read_text(encoding="utf-8"))
         copied_phase = str(payload.get("phase"))
+        copied_inputs = [
+            name
+            for name in (payload.get("inputs") or {}).values()
+            if isinstance(name, str) and (Path(control_dir) / name).is_file()
+        ]
     except (ValueError, OSError):
         copied_phase = ""
+        copied_inputs = []
     return {
         "loop_device": loopdev,
-        "copied": [CONTROL_PHASE_FILE],
+        "copied": [CONTROL_PHASE_FILE, *copied_inputs],
         "phase": copied_phase,
     }
+
+
+def inject_update_candidate_into_persist(
+    clone_path: Path, bundle: Path, *, runner=None, which=None
+) -> dict[str, object]:
+    """Place the update candidate in the installed PERSIST inbox before boot.
+
+    The control-disk path is phase transport only; a full system bundle is too
+    large to copy through the guest at update time. The installed layout binds
+    /var/lib/greia-os to PERSIST parent-credentials, so the host copies the
+    candidate there while the disposable clone is offline.
+    """
+    import tempfile as _tempfile
+
+    _require_loop_tools("losetup", "mount", "umount", "cp", "partprobe", which=which)
+    mountpoint = Path(_tempfile.mkdtemp(prefix="greia-x8-persist-"))
+    loopdev = ""
+    try:
+        loopdev = _loop_attach(Path(clone_path), runner=runner, which=which)
+        _run_checked(
+            ["partprobe", loopdev], runner=runner, timeout=120,
+            what="persist partition probe",
+        )
+        _mount_fs(
+            f"{loopdev}p4", mountpoint, read_only=False, runner=runner, which=which
+        )
+        inbox = (
+            mountpoint
+            / "greia/namespaces/parent-credentials/system-updates/inbox"
+        )
+        _run_checked(
+            ["mkdir", "-p", str(inbox)], runner=runner, timeout=60,
+            what="persist inbox create",
+        )
+        candidate = inbox / "candidate.greiaupdate"
+        _run_checked(
+            ["cp", "--", str(bundle), str(candidate)], runner=runner, timeout=600,
+            what="persist candidate copy",
+        )
+        _run_checked(
+            ["chmod", "0755", str(inbox)], runner=runner, timeout=60,
+            what="persist inbox mode",
+        )
+        _run_checked(
+            ["chmod", "0644", str(candidate)], runner=runner, timeout=60,
+            what="persist candidate mode",
+        )
+        return {"inbox": str(inbox), "candidate_bytes": candidate.stat().st_size}
+    finally:
+        _umount_fs(mountpoint, runner=runner)
+        if loopdev:
+            _loop_detach(loopdev, runner=runner)
+        shutil.rmtree(mountpoint, ignore_errors=True)
 
 
 def materialize_control_disk(
@@ -1705,13 +1781,15 @@ def materialize_control_disk(
     image_path: Path,
     *,
     label: str = CONTROL_DISK_LABEL,
+    size_bytes: int = 64 * 1024 * 1024,
     runner=None,
     which=None,
 ) -> dict[str, object]:
     """Materialize the host-written phase dir as a labelled ext4 disk image.
 
-    Disposable clone-only artifact: 64 MiB sparse file, ``mkfs.ext4 -L``,
-    then the mandatory loop copy of ``phase.json`` (+ inputs) via
+    Disposable clone-only artifact: sparse file (64 MiB default, larger when
+    an update leg carries a candidate bundle), ``mkfs.ext4 -L``, then the
+    mandatory loop copy of ``phase.json`` (+ inputs) via
     :func:`_copy_phase_into_control_image` so the guest runner finds the
     phase it was told to drive. Missing tools stay ``BLOCKED`` naming the
     facility; the source image is never touched.
@@ -1741,7 +1819,7 @@ def materialize_control_disk(
     dst.parent.mkdir(parents=True, exist_ok=True)
     run = runner or subprocess.run
     completed = run(
-        ["truncate", "-s", str(64 * 1024 * 1024), str(dst)],
+        ["truncate", "-s", str(int(size_bytes)), str(dst)],
         capture_output=True,
         timeout=120,
     )
@@ -4192,7 +4270,9 @@ class ProductHarness:
             if materialize_fn is not None:
                 materialize_fn(control_dir, control_image)
             else:
-                materialize_control_disk(control_dir, control_image)
+                materialize_control_disk(
+                    control_dir, control_image, size_bytes=control_size
+                )
             argv, serial_log, host_log = product_installer_qemu_argv(
                 installer_clone=clone_path,
                 target_image=target_path,
@@ -4348,6 +4428,7 @@ class ProductHarness:
         boot_fn=None,
         observe_fn=None,
         slot_digest_fn=None,
+        candidate_inject_fn=None,
     ) -> dict[str, object]:
         """Boot the installed SYSTEM_A, stage B, boot B via real services.
 
@@ -4425,6 +4506,10 @@ class ProductHarness:
             clone_proof = dict(clone_fn(origin, clone_path))
         else:
             clone_proof = clone_product_image(origin, clone_path)
+        if candidate_inject_fn is not None:
+            candidate_inject = dict(candidate_inject_fn(clone_path, bundle))
+        else:
+            candidate_inject = inject_update_candidate_into_persist(clone_path, bundle)
 
         qemu_binary = select_install_qemu_binary()
         shipped_units = record_shipped_boot_units()
@@ -4441,24 +4526,18 @@ class ProductHarness:
         injected_files_a = list(slot_a_injection.get("injected_files", []))
         boots: list[str] = []
         control_image = root / "control-disk.img"
-        candidate_staged = False
+        control_size = 64 * 1024 * 1024
         slot_b_injection: dict[str, object] | None = None
         for phase in BOOT_HEALTH_LEG_PHASES:
             if phase == "wait-health-poweroff" and boots and "update-arm" in boots:
                 slot_b_injection = _do_inject("B")
-            inputs: dict[str, object] = {}
-            if phase in BOOT_HEALTH_UPDATE_PHASES:
-                inputs = {"candidate_bundle": CANDIDATE_BUNDLE_FILE}
-            write_control_phase(control_dir, phase=phase, inputs=inputs)
-            if phase == "update-stage" and not candidate_staged:
-                self._stage_candidate_onto_control(
-                    control_dir, bundle, control_image=None
-                )
-                candidate_staged = True
+            write_control_phase(control_dir, phase=phase)
             if materialize_fn is not None:
                 materialize_fn(control_dir, control_image)
             else:
-                materialize_control_disk(control_dir, control_image)
+                materialize_control_disk(
+                    control_dir, control_image, size_bytes=control_size
+                )
             argv, serial_log, host_log = product_boot_qemu_argv(
                 installed_clone=clone_path,
                 control_image=control_image,
@@ -4549,6 +4628,7 @@ class ProductHarness:
             "release_bundle": str(bundle),
             "release_bundle_sha256": bundle_sha,
             "clone": clone_proof,
+            "candidate_inject": candidate_inject,
             "slot_a_injection": slot_a_injection,
             "slot_b_injection": slot_b_injection,
             "shipped_units": shipped_units,

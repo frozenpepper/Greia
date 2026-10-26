@@ -72,6 +72,30 @@ installer/first-boot/lifecycle test gates or the Creations/Activity
 audit programme. Do not invent a second language registry or silently
 promote unvoiced locales.
 
+## 2026-10-26 — Clean-source A/B smoke: install/first PASS, healthy blocked
+
+Pulled the new \`docs/testing/2026-10-25_AB_SMOKE_RETRY.md\` work order and ran
+it from clean \`866ba6827\`. The full gate matched the documented red baseline
+(5,959 tests, 7 failures, 3 errors, 3 skips; +2 new tests, same failure/error
+IDs), and the focused A/B source suites passed 66 tests.
+
+The clean base 0.13.0 fixture (bundle \`93f55468…\`), installer
+(\`492483b7…\`), and next 0.13.1 fixture (bundle \`76ef1ffe…\`) all built from
+that SHA. The **install leg PASSED** and the **first boot PASSED** (default A
+accepted, first-install journal cleared, clean poweroff).
+
+The **healthy A-to-B leg is BLOCKED** at \`update-verify\`: the service reports
+\`no current update candidate in the inbox\` even though the 0.13.1 candidate is
+present in the disposable clone's PERSIST
+\`greia/namespaces/parent-credentials/system-updates/inbox/candidate.greiaupdate\`.
+The harness now prepares/injects that candidate host-side; the remaining issue
+is the running service's inbox discovery/path contract. No healthy B boot,
+rollback, 507, Parent-stop, applying-cut, Mobile or physical leg ran.
+
+Evidence: \`/var/tmp/greia-ab-smoke-866ba68277be8500db62de55a9189d78c9ea704b-20261025T162521Z/\`;
+details appended to \`docs/reviews/2026-10-25_SOFTWARE_UPDATE_LINUX_RETRY.md\`.
+Session 04 remains OPEN.
+
 ## 2026-10-25 — A/B first-boot health ACCEPTED; active-slot isolation blocker
 
 The Acer A/B acceptance first boot now works through the shipped health path:

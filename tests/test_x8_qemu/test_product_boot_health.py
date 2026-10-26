@@ -910,6 +910,7 @@ class RunProductWiringTests(unittest.TestCase):
                     materialize_fn=lambda d, i: None,
                     boot_fn=_boot,
                     observe_fn=lambda t: dict(_full_boot_observation()),
+                    candidate_inject_fn=lambda *_: {"fake": True},
                     slot_digest_fn=_scripted_digest_fn(_green_digests()),
                 )
             self.assertTrue(result["ok"])
@@ -921,10 +922,7 @@ class RunProductWiringTests(unittest.TestCase):
             self.assertEqual(
                 result["slot_digests"]["active_before"], "aa" * 32
             )
-            self.assertIn("candidate.greiaupdate", CANDIDATE_BUNDLE_FILE)
-            staged = base / "out/product/control-disk" / CANDIDATE_BUNDLE_FILE
-            self.assertTrue(staged.is_file())
-            self.assertEqual(staged.read_bytes(), bundle.read_bytes())
+            self.assertEqual(result["candidate_inject"], {"fake": True})
             # P5.3 identity fold rides in the leg result for Gate-P5.
             identity = result["unit_identity"]
             self.assertEqual(
@@ -975,6 +973,7 @@ class RunProductWiringTests(unittest.TestCase):
                         observe_fn=lambda t: dict(
                             _full_boot_observation(), default_slot="A"
                         ),
+                        candidate_inject_fn=lambda *_: {"fake": True},
                         slot_digest_fn=moving,
                     )
             self.assertIn("expected 'B'", str(caught.exception))

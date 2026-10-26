@@ -3259,3 +3259,22 @@ No Linux image build, mount, QEMU or physical operation ran here. Next: freeze
 this source and give the Linux agent only the short smoke guide for its first
 retry; retain first failure and clean artifacts, then continue the larger
 matrix after all three legs pass. **Session 04 remains OPEN.**
+
+## 2026-10-26 — Clean-source A/B smoke: install/first PASS, healthy blocked
+
+Ran the 2026-10-25 A/B smoke work order from clean `866ba6827` after fixing the
+missed 1664 MiB payload bound (`866ba6827`). Full gate matched the red baseline
+(5,959 tests, 7F/3E/3S; same IDs, +2 tests); focused A/B suites 66 OK. Built the
+0.13.0 base fixture/installer and 0.13.1 next fixture from that SHA. The install
+leg and first boot (default A accepted, clean poweroff) **PASSED**.
+
+The healthy A-to-B leg is **BLOCKED** at `update-verify`: the running
+`greia-system-update.service` reports no candidate in the inbox although the
+0.13.1 candidate is present in the disposable clone's PERSIST
+`greia/namespaces/parent-credentials/system-updates/inbox`. Test-only harness
+changes now inject the candidate host-side and copy control inputs; the next
+owner must reconcile the service's inbox path/discovery with that location and
+rerun healthy A-to-B. No B health, rollback/failure, 507, Parent-stop,
+applying-cut, Mobile or physical leg ran. Evidence is under
+`/var/tmp/greia-ab-smoke-866ba68277be8500db62de55a9189d78c9ea704b-20261025T162521Z/`.
+Session 04 remains OPEN.
