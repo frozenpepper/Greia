@@ -19,7 +19,25 @@ LEGACY_LANGUAGES = frozenset({"en", "it", "es", "fr"})
 
 
 def fields(template: str) -> set[str]:
-    return {name for _, name, _, _ in Formatter().parse(template) if name is not None}
+    """Collect named placeholders, including those inside format specifications.
+
+    E.g. '{count:{width}d}' requires both 'count' and 'width'. Python's
+    Formatter.parse() yields the nested expression as a format_spec, so
+    inspecting only the top-level fields would miss a runtime KeyError.
+    """
+    result: set[str] = set()
+
+    def visit(value: str, depth: int) -> None:
+        if depth > 8:
+            raise ValueError("format placeholders are nested too deeply")
+        for _, name, format_spec, _ in Formatter().parse(value):
+            if name is not None:
+                result.add(name)
+            if format_spec and "{" in format_spec:
+                visit(format_spec, depth + 1)
+
+    visit(template, 0)
+    return result
 
 
 def audit(locale: str, root: Path = ROOT, *, staged: bool = False) -> list[str]:
@@ -38,9 +56,22 @@ def audit(locale: str, root: Path = ROOT, *, staged: bool = False) -> list[str]:
     if locale not in LEGACY_LANGUAGES:
         path = root / "src" / "greia_platform" / "languages" / locale / "ui.json"
         try:
+            if path.stat().st_size > 256 * 1024:
+                raise ValueError("UI catalog exceeds runtime 256 KiB limit")
             data = json.loads(path.read_text(encoding="utf-8"))
+            if not isinstance(data, dict) or type(data.get("schema_version")) is not int or data["schema_version"] != 1:
+                raise ValueError("expected schema_version 1 object")
+            for name, mapping in data.items():
+                if name == "schema_version":
+                    continue
+                if not isinstance(name, str) or not isinstance(mapping, dict):
+                    raise ValueError(f"UI section {name!r} must be an object")
+                if any(not isinstance(key, str) or not isinstance(value, str)
+                       or len(key) > 160 or len(value) > 8192
+                       for key, value in mapping.items()):
+                    raise ValueError(f"UI section {name!r} contains invalid text")
         except (OSError, UnicodeError, ValueError) as exc:
-            errors.append(f"{locale}: unreadable UI catalog: {exc}")
+            errors.append(f"{locale}: invalid UI catalog: {exc}")
             data = {}
         for section, expected in reference_sections().items():
             actual = data.get(section)
