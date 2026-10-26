@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "locale": "it",
+  "name": "Italian",
+  "native_name": "Italiano",
+  "flag": "🇮🇹",
+  "order": 10,
+  "direction": "ltr"
+}
