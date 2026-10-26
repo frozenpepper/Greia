@@ -4,6 +4,17 @@
 **Date:** 2026-08-18  
 **Scope:** Greia Shell/launcher, profiles, Parent controls, installer, platform chrome, Activities, localized audio, future Web runtime and package authoring
 
+**Implementation note (2026-10-27):** The Context below describes the
+August 2026 gap that motivated this accepted decision; statements such as
+"profiles currently have no language override" are **historical baseline**
+facts, not a report on present source. The accepted *decision* still governs
+the separation of device/profile/Activity UI versus learning-content language.
+For the now-implemented device-language manifest directory, optional
+`ui.json` resources, actual four offered locales and a practical extension
+procedure, use `docs/product/SYSTEM_LANGUAGE_AND_LOCALIZATION.md` and
+`docs/development/ADD_A_GREIA_LANGUAGE.md`. Browser Parents chrome has a
+separate localization catalog; adding an OS manifest does not translate it.
+
 ## Context
 
 Greia is intended for young children, many of whom cannot yet read. Activities may also be distributed independently and many will realistically ship in only one language. User-facing words, spoken instructions and language-sensitive media therefore need a platform contract that works both for richly localized Activities and for a perfectly valid English-only Activity installed on an Italian Greia system.
