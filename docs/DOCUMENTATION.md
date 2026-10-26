@@ -225,6 +225,7 @@ This is a navigation map, not a substitute for reading source.
 | Child text letter-case policy | `src/greia_platform/child_text.py` |
 | Profile presentation/grammatical agreement | `src/greia_platform/profile_presentation.py` |
 | Localization bundle/fallback | `src/greia_platform/localization.py`, `src/greia_platform/language_context.py` |
+| Offered OS/installer/Parent languages + optional UI catalogs | `src/greia_platform/languages/*/manifest.json`, `src/greia_platform/languages/*/ui.json`, loaded by `src/greia_platform/system_language.py` |
 | Language presentation | `src/greia_platform/language_presentation.py` |
 | Device language persistence | `src/greia_platform/system_language.py` |
 | Installer language selection | `src/greia_installer/entrypoint.py`, `src/greia_installer/engine.py` |
