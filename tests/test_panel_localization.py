@@ -112,7 +112,7 @@ class ParentPanelTextTests(unittest.TestCase):
         self.assertEqual(panel_message("tab.wifi", "it"), "Wi-Fi")
 
     def test_unsupported_and_malformed_locale_fallback_only_in_ui_copy(self) -> None:
-        self.assertEqual(panel_message("tab.audio", "zh-CN"), "Audio & Mic")
+        self.assertEqual(panel_message("tab.audio", "xx-NOPE"), "Audio & Mic")
         self.assertEqual(panel_message("tab.audio", "invalid_/locale"), "Audio & Mic")
         self.assertEqual(panel_message("tab.audio", "it-IT"), "Audio e microfono")
 
