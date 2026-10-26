@@ -56,6 +56,25 @@ The browser interface organizes common tasks into **Home**, **Children**, **Acti
 
 Some features described in plans — especially public Activity-store/update, system recovery and backup flows — are not yet fully delivered. A missing or disabled control may simply mean the installed release does not support that operation.
 
+## Change Greia's language
+
+Greia currently offers **English, Italian, Spanish and French**. You can
+change the computer's language without reinstalling it:
+
+1. Open **Greia Parents → This Greia → Language** in the browser, or open
+   the on-device Parents panel with **S + T** held for five seconds at the
+   child-selection screen, then choose its **Language** tab.
+2. Select the language by its name and confirm. It becomes the computer's
+   default language and stays selected after restart.
+3. If a particular child has a separate language preference, their profile
+   can take priority over that computer default. An Activity offered only in
+   another language may use its own fallback; that does not change Greia's
+   chosen language.
+
+Only languages actually included and approved in that Greia release appear.
+Contributors preparing additional languages do not automatically expose
+unfinished translations to families.
+
 ## Three common family setups
 
 **One child:** create the profile at first startup, choose the child's picture and optional age, and leave Activities on Automatic. You can adjust individual games later.
@@ -68,7 +87,7 @@ Some features described in plans — especially public Activity-store/update, sy
 
 Greia distinguishes the **Parent password** from an optional **child profile password**. The Parent password grants management access; do not share it with a child. Parent browsers have separate, revocable credentials so losing one device does not require signing out every other device.
 
-The current design stores child profiles and progress locally and works offline for normal child Activities. Avoid exposing the parent management service outside your home network. Current development HTTP is **not** proof that a public, secure network release is ready.
+The current design stores child profiles and progress locally and works offline for normal child Activities. Avoid exposing the parent management service outside your home network. The current development source serves the network Parents App over **local HTTPS with a device-generated certificate**; browser and actual-device acceptance still determine public-release readiness.
 
 ## Activities from other creators
 
