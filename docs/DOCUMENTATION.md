@@ -320,7 +320,7 @@ Examples:
 
 Owner decision (2026-10-16, open-source cleanup): once work is finished and no longer current, its dated documents leave the working tree.
 
-- A document that still teaches something (a root cause, a rejected approach, a design rationale) moves verbatim to `docs/archive/` and gets one line in `docs/archive/README.md`.
+- A document that still teaches something (a root cause, a rejected approach, a design rationale) moves verbatim to `docs/archive/` and gets one line in `docs/archive/README.md`. Link-target-only repairs may point to verified, immutable historical Git revisions when moves/deletions break navigation; they must not rewrite a historical finding, evidence claim or obsolete procedure as if current.
 - Everything else (screenshots, capture evidence, finished runbooks, session handovers and status snapshots) is deleted. Git history keeps it.
 - A document still cited by a living authority (an ADR, product or design document, skill, asset provenance record or source file) stays in place until that citation is retired.
 - `HANDOVER.md` keeps only the current state and recent entries; it is not an archive.
@@ -358,8 +358,13 @@ reviews, plans and the archive too. Unlike the earlier entry-only link test,
 this reports the source file/line and missing relative target, and never
 deletes data. Historical documents may legitimately link to evidence removed
 from the working tree during cleanup, but these findings must not be confused
-with broken links in a living guide. The audit has not yet been executed in
-a full local checkout at the new cleanup head.
+with broken links in a living guide. The maintained-scope audit was run in a local checkout at
+`678c2f4acc65e8f97ac56c77975592ac2a112331` on 2026-10-27:
+**241 inspected, 0 unresolved links**, with **4/4 audit tests passing**.
+The informational all-scope inventory at that revision examined 425 documents
+and found 40 broken historical links in two archived files. Those 40 targets
+were subsequently repaired as immutable Git-revision links; a fresh full
+all-scope audit of the resulting commit has not yet been executed.
 
 ### 8.1 Release-preparation source audit — 2026-10-26
 
@@ -371,14 +376,17 @@ claims were found in those inspected files. The small
 `tests/test_repository_docs_audit.py` suite now also checks maintained links
 against the actual local repository when run as part of ordinary tests.
 
-This was **source inspection, not execution** of
-`tools/audit_repository_docs.py`, not validation of external URLs, and not
-a claim that every historical review remains accurate today. Historical
+The original broader source inspection was **not execution** of the audit tool;
+the focused maintained-scope check was **subsequently executed locally** at the
+exact 2026-10-26 head described above. Neither exercise validates external
+URLs or establishes semantic correctness of every historical document. Historical
 reviews, superseded plans and one-off test reports are **dated evidence**;
 they must not override maintained guides. For a complete inventory including
-historical broken links, the read-only tool provides `--scope all`, but old
-paths to deleted evidence should be interpreted in the context of their
-original commit, not blindly recreated.
+historical broken links, the read-only tool provides `--scope all`. Links
+into retired evidence should target an immutable Git revision of the original
+file, not result in restoring obsolete runbooks, or make the historical report
+appear current. Two archived source documents had such path-only repairs on
+2026-10-27; see `docs/archive/README.md`.
 
 Retired in this cleanup tranche: September website study mocks and a set
 of disposable August visual test screenshots. Historical reports and
