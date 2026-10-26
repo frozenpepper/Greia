@@ -44,6 +44,7 @@ import hashlib
 import json
 import os
 import shutil
+import stat
 import subprocess
 import sys
 from dataclasses import dataclass, field
@@ -269,7 +270,25 @@ def control_runner_text() -> str:
         f"CTL_MNT=/run/{CONTROL_DISK_LABEL.lower()}\n"
         "mkdir -p \"$CTL_MNT\"\n"
         f"mount -o ro \"LABEL={CONTROL_DISK_LABEL}\" \"$CTL_MNT\"\n"
-        f"trap 'umount \"$CTL_MNT\"' EXIT\n"
+        "PHASE=setup\n"
+        "say() { echo \"x8-control: $*\" > /dev/ttyS0 2>/dev/null || true; }\n"
+        "control_error() {\n"
+        "  _rc=$1\n"
+        "  say \"phase $PHASE failed (exit $_rc); capturing service diagnostics\"\n"
+        "  for _unit in greia-system-update.service greia-software-update-recover.service greia-system-update.socket; do\n"
+        "    timeout 8 journalctl --no-pager -u \"$_unit\" -n 40 -o short-precise > /dev/ttyS0 2>&1 || true\n"
+        "  done\n"
+        "  timeout 8 systemctl --no-block poweroff || true\n"
+        "  return 0\n"
+        "}\n"
+        "control_exit() {\n"
+        "  _rc=$?\n"
+        "  trap - EXIT\n"
+        f"  umount \"$CTL_MNT\" || true\n"
+        "  if [ \"$_rc\" -ne 0 ]; then control_error \"$_rc\"; fi\n"
+        "  exit \"$_rc\"\n"
+        "}\n"
+        "trap control_exit EXIT\n"
         f"PHASE_FILE=\"$CTL_MNT/{CONTROL_PHASE_FILE}\"\n"
         "test -f \"$PHASE_FILE\" || { echo \"x8-control: no phase file\" >&2; exit 1; }\n"
         "PHASE=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))[\"phase\"])' \"$PHASE_FILE\")\n"
@@ -282,10 +301,6 @@ def control_runner_text() -> str:
         f"    SOCK=\"{BOOT_HEALTH_SOCKET_PATH}\";;\n"
         "  *) echo \"x8-control: refused unknown phase $PHASE\" >&2; exit 1;;\n"
         "esac\n"
-        "# Host-visible progress (best-effort serial echo; orchestration\n"
-        "# chatter only, never attestation) so a hung guest boot is\n"
-        "# diagnosable from the host serial log in seconds.\n"
-        "say() { echo \"x8-control: $*\" > /dev/ttyS0 2>/dev/null || true; }\n"
         "say \"phase $PHASE starting\"\n"
         "if [ \"$PHASE\" = \"install-execute\" ]; then\n"
         "  touch /run/greia-x8-debug 2>/dev/null || true\n"
@@ -452,11 +467,10 @@ def control_runner_text() -> str:
         "    raise SystemExit(f\"x8-control: refused unknown update phase {phase!r}\")\n"
         "if phase in (\"update-verify\", \"update-stage\"):\n"
         "    candidate = ctl_mnt / \"candidate.greiaupdate\"\n"
-        "    inbox_dir = Path(\"/var/lib/greia-os/system-updates/inbox\")\n"
-        "    inbox_candidate = inbox_dir / \"candidate.greiaupdate\"\n"
-        "    if candidate.is_file() and not inbox_candidate.is_file():\n"
-        "        inbox_dir.mkdir(parents=True, exist_ok=True)\n"
-        "        shutil.copy2(candidate, inbox_candidate)\n"
+        "    from greia_platform.system_updates import SystemUpdateInbox\n"
+        "    inbox = SystemUpdateInbox(Path(\"/var/lib/greia-os\"))\n"
+        "    if candidate.is_file() and not inbox.candidate_path.is_file():\n"
+        "        inbox.receive(candidate)\n"
         "request = build_request(op)\n"
         "client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)\n"
         "client.settimeout(30.0)\n"
@@ -1730,14 +1744,16 @@ def inject_update_candidate_into_persist(
 
     The control-disk path is phase transport only; a full system bundle is too
     large to copy through the guest at update time. The installed layout binds
-    /var/lib/greia-os to PERSIST parent-credentials, so the host copies the
-    candidate there while the disposable clone is offline.
+    /var/lib/greia-os to PERSIST parent-credentials. The source-owned inbox
+    API publishes both the validated fixed-name candidate and status record
+    while the disposable clone is offline.
     """
     import tempfile as _tempfile
 
-    _require_loop_tools("losetup", "mount", "umount", "cp", "partprobe", which=which)
+    _require_loop_tools("losetup", "mount", "umount", "partprobe", which=which)
     mountpoint = Path(_tempfile.mkdtemp(prefix="greia-x8-persist-"))
     loopdev = ""
+    mounted = False
     try:
         loopdev = _loop_attach(Path(clone_path), runner=runner, which=which)
         _run_checked(
@@ -1747,33 +1763,199 @@ def inject_update_candidate_into_persist(
         _mount_fs(
             f"{loopdev}p4", mountpoint, read_only=False, runner=runner, which=which
         )
-        inbox = (
-            mountpoint
-            / "greia/namespaces/parent-credentials/system-updates/inbox"
+        mounted = True
+        # Use the inbox owner so the candidate and its status.json pointer are
+        # published together under the same validation/atomic-rename contract
+        # used by Parent delivery. The privileged updater resolves candidate
+        # identity from status.json; merely copying the fixed filename is not
+        # sufficient to make it a current candidate.
+        from greia_platform.system_updates import (
+            UPDATE_STATE_DIR_DEFAULT,
+            SystemUpdateInbox,
         )
-        _run_checked(
-            ["mkdir", "-p", str(inbox)], runner=runner, timeout=60,
-            what="persist inbox create",
+
+        state_dir = mountpoint / "greia/namespaces/parent-credentials"
+        _assert_real_persist_update_paths(state_dir)
+        namespace_owner = state_dir.stat()
+        received = SystemUpdateInbox(state_dir).receive(Path(bundle))
+        candidate = Path(received.path)
+        guest_candidate_path = SystemUpdateInbox(
+            Path(UPDATE_STATE_DIR_DEFAULT)
+        ).candidate_path
+        status_path = _project_persist_candidate_status(
+            state_dir, guest_state_dir=Path(UPDATE_STATE_DIR_DEFAULT)
         )
-        candidate = inbox / "candidate.greiaupdate"
-        _run_checked(
-            ["cp", "--", str(bundle), str(candidate)], runner=runner, timeout=600,
-            what="persist candidate copy",
+        if not status_path.is_file():
+            raise LifecycleHarnessError(
+                "persist candidate status projection did not leave status.json"
+            )
+        ownership = _restore_parent_inbox_ownership(
+            state_dir, candidate_path=candidate, status_path=status_path
         )
-        _run_checked(
-            ["chmod", "0755", str(inbox)], runner=runner, timeout=60,
-            what="persist inbox mode",
-        )
-        _run_checked(
-            ["chmod", "0644", str(candidate)], runner=runner, timeout=60,
-            what="persist candidate mode",
-        )
-        return {"inbox": str(inbox), "candidate_bytes": candidate.stat().st_size}
+        _fsync_file_and_parent(candidate)
+        _fsync_file_and_parent(status_path)
+        return {
+            "inbox": str(candidate.parent),
+            "candidate_path": str(candidate),
+            "candidate_bytes": candidate.stat().st_size,
+            "status_path": str(status_path),
+            "guest_candidate_path": str(guest_candidate_path),
+            "status_written": status_path.is_file(),
+            "parent_uid": namespace_owner.st_uid,
+            "parent_gid": namespace_owner.st_gid,
+            "parent_ownership": ownership,
+        }
     finally:
-        _umount_fs(mountpoint, runner=runner)
+        if mounted:
+            _umount_fs(mountpoint, runner=runner)
         if loopdev:
             _loop_detach(loopdev, runner=runner)
         shutil.rmtree(mountpoint, ignore_errors=True)
+
+
+def _project_persist_candidate_status(
+    mounted_state_dir: Path, *, guest_state_dir: Path
+) -> Path:
+    """Retarget a validated mounted-inbox receipt to the guest's canonical path.
+
+    The host receives the bundle through :class:`SystemUpdateInbox`, which
+    validates it and atomically records the receipt. Its temporary mount path
+    is not meaningful inside the guest, so only ``bundle_path`` is projected
+    to the fixed installed state root. The privileged owner still enforces
+    containment under its configured state directory.
+    """
+    from greia_platform.system_updates import SystemUpdateInbox, _atomic_json
+
+    mounted = SystemUpdateInbox(Path(mounted_state_dir))
+    guest = SystemUpdateInbox(Path(guest_state_dir))
+    try:
+        status = json.loads(mounted.status_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise LifecycleHarnessError(
+            f"persist candidate receive did not produce valid status metadata: {exc}"
+        ) from exc
+    if not isinstance(status, dict):
+        raise LifecycleHarnessError("persist candidate receive status is not an object")
+    raw_path = status.get("bundle_path")
+    if raw_path != str(mounted.candidate_path) or not mounted.candidate_path.is_file():
+        raise LifecycleHarnessError(
+            "persist candidate receive status does not identify the mounted candidate"
+        )
+    status["bundle_path"] = str(guest.candidate_path)
+    _atomic_json(mounted.status_path, status)
+    _fsync_file_and_parent(mounted.candidate_path)
+    _fsync_file_and_parent(mounted.status_path)
+    return mounted.status_path
+
+
+def _fsync_file_and_parent(path: Path) -> None:
+    """Flush one published file and its containing directory on the host."""
+    for target, is_directory in ((Path(path), False), (Path(path).parent, True)):
+        flags = os.O_RDONLY | (getattr(os, "O_DIRECTORY", 0) if is_directory else 0)
+        descriptor = os.open(target, flags)
+        try:
+            os.fsync(descriptor)
+        finally:
+            os.close(descriptor)
+
+
+def _restore_parent_inbox_ownership(
+    state_dir: Path, *, candidate_path: Path, status_path: Path
+) -> dict[str, object]:
+    """Give only the newly populated update subtree back to its namespace owner."""
+    owner = Path(state_dir).lstat()
+    if not stat.S_ISDIR(owner.st_mode):
+        raise LifecycleHarnessError("Parent credentials state root is not a real directory")
+    expected = (owner.st_uid, owner.st_gid)
+    inbox_dir = Path(candidate_path).parent
+    updates_dir = inbox_dir.parent
+    paths = (updates_dir, inbox_dir, Path(candidate_path), Path(status_path))
+    for path in paths:
+        info = path.lstat()
+        is_file = path in (Path(candidate_path), Path(status_path))
+        correct_type = stat.S_ISREG(info.st_mode) if is_file else stat.S_ISDIR(info.st_mode)
+        if not correct_type:
+            raise LifecycleHarnessError(
+                f"Parent update path is not a real {'file' if is_file else 'directory'} ({path})"
+            )
+        if (info.st_uid, info.st_gid) != expected:
+            os.chown(path, *expected, follow_symlinks=False)
+    if stat.S_IMODE(inbox_dir.lstat().st_mode) != 0o700:
+        raise LifecycleHarnessError("Parent update inbox mode drifted from 0700")
+    for path in (Path(candidate_path), Path(status_path)):
+        if stat.S_IMODE(path.lstat().st_mode) != 0o600:
+            raise LifecycleHarnessError(
+                f"Parent update file mode drifted from 0600 ({path.name})"
+            )
+    return {
+        "uid": expected[0],
+        "gid": expected[1],
+        "paths": [str(path) for path in paths],
+        "inbox_mode": "0700",
+        "candidate_mode": "0600",
+        "status_mode": "0600",
+    }
+
+
+def _assert_real_persist_update_paths(state_dir: Path) -> None:
+    """Reject symlinked namespace/update directories before offline injection."""
+    root = Path(state_dir)
+    try:
+        root_info = root.lstat()
+    except OSError as exc:
+        raise LifecycleHarnessError(
+            f"Parent credentials namespace is unavailable: {root}"
+        ) from exc
+    if not stat.S_ISDIR(root_info.st_mode):
+        raise LifecycleHarnessError("Parent credentials namespace is not a real directory")
+    for path in (root / "system-updates", root / "system-updates/inbox"):
+        try:
+            info = path.lstat()
+        except FileNotFoundError:
+            continue
+        except OSError as exc:
+            raise LifecycleHarnessError(
+                f"PERSIST update path cannot be inspected: {path}"
+            ) from exc
+        if not stat.S_ISDIR(info.st_mode):
+            raise LifecycleHarnessError(
+                f"PERSIST update path is not a real directory: {path}"
+            )
+
+
+def _control_phase_failure(serial_log: Path, phase: str) -> str | None:
+    """Return bounded serial evidence when the guest powered off after failure."""
+    try:
+        with Path(serial_log).open("rb") as handle:
+            handle.seek(0, os.SEEK_END)
+            size = handle.tell()
+            handle.seek(max(0, size - 64 * 1024), os.SEEK_SET)
+            tail = handle.read(64 * 1024).decode("utf-8", errors="replace")
+    except OSError:
+        return None
+    lines = tail.splitlines()
+    marker_prefix = "x8-control: phase "
+    marker_index = next(
+        (index for index in range(len(lines) - 1, -1, -1)
+         if lines[index].startswith(marker_prefix)
+         and " failed (exit " in lines[index]),
+        None,
+    )
+    if marker_index is None:
+        return None
+    marker = lines[marker_index][:400]
+    expected_prefix = f"x8-control: phase {phase} failed (exit "
+    if not marker.startswith(expected_prefix):
+        marker = f"x8-control: expected phase {phase}; observed {marker}"
+    reason = next(
+        (
+            line[:600]
+            for line in reversed(lines[:marker_index])
+            if " refused:" in line or " update failed:" in line
+        ),
+        "guest emitted a phase failure marker without a more specific refusal line",
+    )
+    return f"{marker}; reason: {reason}"
 
 
 def materialize_control_disk(
@@ -4270,9 +4452,7 @@ class ProductHarness:
             if materialize_fn is not None:
                 materialize_fn(control_dir, control_image)
             else:
-                materialize_control_disk(
-                    control_dir, control_image, size_bytes=control_size
-                )
+                materialize_control_disk(control_dir, control_image)
             argv, serial_log, host_log = product_installer_qemu_argv(
                 installer_clone=clone_path,
                 target_image=target_path,
@@ -4681,6 +4861,12 @@ class ProductHarness:
             capture_output=True,
             timeout=max(60, int(self.config.timeout_seconds)),
         )
+        failure_marker = _control_phase_failure(serial_log, phase)
+        if failure_marker is not None:
+            raise LifecycleHarnessError(
+                f"product installed control phase {phase} failed: {failure_marker}; "
+                f"inspect {serial_log}"
+            )
         if completed.returncode != 0:
             detail = ""
             try:

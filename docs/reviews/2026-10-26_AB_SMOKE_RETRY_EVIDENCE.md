@@ -7,6 +7,12 @@ Work order: `docs/testing/2026-10-25_AB_SMOKE_RETRY.md`
 Source: `866ba68277be8500db62de55a9189d78c9ea704b` (clean `main`)
 Evidence root: `/var/tmp/greia-ab-smoke-866ba68277be8500db62de55a9189d78c9ea704b-20261025T162521Z`
 
+**Routing correction (2026-10-26):** the proposed guest-serial investigation in
+§8/§9 is superseded by the follow-up in §11. Use the conditional candidate-only
+route in `docs/testing/2026-10-26_AB_CANDIDATE_RETRY.md`; do not enter or
+manually repair the old guest. If its reuse preconditions fail, use the clean
+three-leg fallback in `docs/testing/2026-10-25_AB_SMOKE_RETRY.md`.
+
 ## 1. Source gates
 
 - `make verify`: **5,959 tests, 7 failures, 3 errors, 3 skips; NOT GREEN**.
@@ -192,3 +198,48 @@ inbox and enter the guest (serial console) before the update phase. Then:
 - `344417139` — added host-side A/B candidate injection and recorded the
   partial smoke.
 - `bbf33665b` — cleaned HANDOVER markdown escapes.
+
+## 11. 2026-10-26 follow-up — test-harness receipt correction; Linux retry pending
+
+Append-only correction: the prior injector placed `candidate.greiaupdate` in
+the PERSIST inbox but did not publish the `status.json` receipt that
+`SystemUpdateInbox` uses for canonical candidate discovery. That explains the
+missing-candidate result as an incomplete test injection; it does not yet
+prove the service will accept the corrected injection at runtime. No Linux
+VM rerun has occurred, so healthy A-to-B remains UNPROVEN.
+
+The source-only harness correction now mounts the disposable clone's PERSIST,
+publishes the bundle through `SystemUpdateInbox.receive`, projects the validated
+`bundle_path` to the guest's `/var/lib/greia-os` location, restores namespace
+ownership, and fsyncs candidate and receipt. Control runner uses the same inbox
+API when receiving a candidate on control media. Declared control inputs are
+copied and control-disk sizing supports the bundle. Refusal errors now produce
+bounded serial diagnostics and power off so the host captures a phase marker;
+the installer control-disk default-size NameError and related fake seam were
+also corrected. All changes are test harness/tests; no shipped updater,
+installer or runtime inputs changed in this tranche.
+
+Current source review passed. The candidate guide's focused selectors passed
+**168 tests in 1.220 s**, and the broader X8 focused gate passed **296 tests in
+3.236 s**. The local full gate is **5,959 tests, 6 failures, 3 errors, 9 skips;
+NOT GREEN**. The six failures are the known Foresta English/Spanish/French
+content expectations (3), MBR diagnostic wording (1), and Parent Wi-Fi
+assertions (2); errors are the ARM64 profile resolution (1) and two macOS
+`lsblk` cases. Do not claim the full gate is green. These source results do not
+extend the previous Linux install/A acceptance evidence.
+
+After reviewed harness changes are committed, next run
+`docs/testing/2026-10-26_AB_CANDIDATE_RETRY.md` on Linux if its source-diff,
+artifact-SHA, prior first-boot, and PERSIST checks pass. This reuses the old
+clean bundles and accepted-A image. If preflight fails, use the clean three-leg
+fallback `docs/testing/2026-10-25_AB_SMOKE_RETRY.md`. Do not inspect or repair
+the guest manually. On a healthy B result, continue with the 10/23 and 10/24
+fault matrices. Session 04 remains OPEN.
+
+Verification scope: these commands ran on the Mac worktree rooted at
+`0c2ca7e07`, with the reviewed harness changes. The full gate started before
+the final identity-test fake-injection correction; both final focused runs
+include that correction. Separately, `make validate` stopped at the existing
+ARM64 builder error; `make shell-check footprint` passed. All Bash fences and
+Python heredocs in both retry guides parsed successfully. Local logs are in
+`/tmp/greia-ab-candidate-followup/` (temporary, not Linux VM evidence).

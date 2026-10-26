@@ -51,6 +51,7 @@ from tools.x8_qemu.product import (
     control_runner_text,
     control_unit_text,
     inject_control_into_root,
+    inject_update_candidate_into_persist,
     product_spec,
     read_control_phase,
     require_product_host,
@@ -143,6 +144,14 @@ class ControlSeamTextTests(unittest.TestCase):
         self.assertIn("poweroff", text)
         self.assertIn(CONTROL_DISK_LABEL, text)
 
+    def test_runner_powers_off_with_diagnostics_on_phase_failure(self) -> None:
+        text = control_runner_text()
+        self.assertIn("capturing service diagnostics", text)
+        self.assertIn("trap control_exit EXIT", text)
+        self.assertIn('umount "$CTL_MNT" || true', text)
+        self.assertIn("timeout 8 journalctl --no-pager -u", text)
+        self.assertIn("timeout 8 systemctl --no-block poweroff", text)
+
     def test_runner_text_is_valid_bash(self) -> None:
         import subprocess as _subprocess
 
@@ -153,6 +162,279 @@ class ControlSeamTextTests(unittest.TestCase):
             timeout=60,
         )
         self.assertEqual(completed.returncode, 0, completed.stderr.decode()[:500])
+
+
+class PersistCandidateInjectionTests(unittest.TestCase):
+    def test_loop_attach_failure_does_not_attempt_unmount(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            clone = root / "clone.img"
+            clone.write_bytes(b"clone")
+            bundle = root / "candidate.greiaupdate"
+            bundle.write_bytes(b"candidate")
+            with (
+                _mock.patch.object(_product, "_require_loop_tools"),
+                _mock.patch.object(
+                    _product,
+                    "_loop_attach",
+                    side_effect=LifecycleHarnessError("attach failed"),
+                ),
+                _mock.patch.object(_product, "_umount_fs") as unmount,
+                _mock.patch.object(_product, "_loop_detach") as detach,
+            ):
+                with self.assertRaisesRegex(LifecycleHarnessError, "attach failed"):
+                    inject_update_candidate_into_persist(clone, bundle)
+            unmount.assert_not_called()
+            detach.assert_not_called()
+
+    def test_uses_canonical_inbox_receive_to_publish_candidate_status(self) -> None:
+        from types import SimpleNamespace
+        from greia_platform import system_updates as _updates
+        from greia_platform.system_updates import SystemUpdateInbox
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            clone = root / "clone.img"
+            clone.write_bytes(b"disposable clone")
+            bundle = root / "candidate.greiaupdate"
+            bundle.write_bytes(b"fixture bundle bytes")
+            runner = SimpleNamespace(returncode=0, stdout="", stderr="")
+            captured: dict[str, object] = {}
+            real_atomic_json = _updates._atomic_json
+
+            def atomic_json(path: Path, payload: dict[str, object]) -> None:
+                captured["published_status"] = dict(payload)
+                real_atomic_json(path, payload)
+
+            def receive(inbox: SystemUpdateInbox, source: Path):
+                candidate = inbox.candidate_path
+                candidate.parent.mkdir(parents=True, exist_ok=True)
+                candidate.parent.chmod(0o700)
+                shutil.copyfile(source, candidate)
+                candidate.chmod(0o600)
+                status = inbox.status_path
+                status.write_text(
+                    __import__("json").dumps({
+                        "state": "received",
+                        "release": {"release_id": "fixture-release"},
+                        "bundle_path": str(candidate),
+                        "bundle_sha256": "a" * 64,
+                        "activation_available": False,
+                    }),
+                    encoding="utf-8",
+                )
+                status.chmod(0o600)
+                captured["state_dir"] = inbox.state_dir
+                captured["candidate"] = candidate
+                return SimpleNamespace(path=str(candidate))
+
+            def mount_persist(source: str, mountpoint: Path, **kwargs) -> None:
+                (mountpoint / "greia/namespaces/parent-credentials").mkdir(
+                    parents=True, exist_ok=True
+                )
+
+            with (
+                _mock.patch.object(_product, "_require_loop_tools"),
+                _mock.patch.object(_product, "_loop_attach", return_value="/dev/loop7"),
+                _mock.patch.object(_product, "_mount_fs", side_effect=mount_persist),
+                _mock.patch.object(_product, "_umount_fs"),
+                _mock.patch.object(_product, "_loop_detach"),
+                _mock.patch.object(SystemUpdateInbox, "receive", receive),
+                _mock.patch.object(_updates, "_atomic_json", atomic_json),
+            ):
+                proof = inject_update_candidate_into_persist(
+                    clone, bundle, runner=lambda *args, **kwargs: runner
+                )
+
+            state_dir = Path(str(captured["state_dir"]))
+            self.assertEqual(
+                state_dir.parts[-3:],
+                ("greia", "namespaces", "parent-credentials"),
+            )
+            self.assertEqual(Path(str(captured["candidate"])).name, "candidate.greiaupdate")
+            self.assertTrue(proof["status_written"])
+            status = captured["published_status"]
+            self.assertEqual(status["bundle_path"], proof["guest_candidate_path"])
+            self.assertEqual(
+                proof["guest_candidate_path"],
+                "/var/lib/greia-os/system-updates/inbox/candidate.greiaupdate",
+            )
+            self.assertEqual(status["release"], {"release_id": "fixture-release"})
+            self.assertEqual(status["bundle_sha256"], "a" * 64)
+            self.assertEqual(proof["candidate_bytes"], bundle.stat().st_size)
+            self.assertEqual(proof["parent_ownership"]["inbox_mode"], "0700")
+            self.assertEqual(proof["parent_ownership"]["candidate_mode"], "0600")
+            self.assertEqual(proof["parent_ownership"]["status_mode"], "0600")
+
+    def test_projected_receipt_is_accepted_by_guest_path_resolver(self) -> None:
+        import json
+        from greia_platform.system_updates import (
+            SystemUpdateInbox,
+            SystemUpdateServiceAuthority,
+            SystemUpdateError,
+        )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            mounted = SystemUpdateInbox(root / "mounted-persist")
+            guest = SystemUpdateInbox(root / "guest-state")
+            mounted.candidate_path.parent.mkdir(parents=True)
+            mounted.candidate_path.write_bytes(b"validated fixture bytes")
+            guest.candidate_path.parent.mkdir(parents=True)
+            shutil.copyfile(mounted.candidate_path, guest.candidate_path)
+            receipt = {
+                "state": "received",
+                "release": {"release_id": "fixture-release"},
+                "bundle_path": str(mounted.candidate_path),
+                "bundle_sha256": "a" * 64,
+                "activation_available": False,
+            }
+            mounted.status_path.parent.mkdir(parents=True, exist_ok=True)
+            mounted.status_path.write_text(json.dumps(receipt), encoding="utf-8")
+            guest.status_path.parent.mkdir(parents=True, exist_ok=True)
+            guest.status_path.write_text(json.dumps(receipt), encoding="utf-8")
+            fsynced: list[Path] = []
+            real_fsync = _product._fsync_file_and_parent
+
+            def track_fsync(path: Path) -> None:
+                fsynced.append(Path(path))
+                real_fsync(path)
+
+            authority = object.__new__(SystemUpdateServiceAuthority)
+            authority.state_dir = guest.state_dir
+            with self.assertRaises(SystemUpdateError):
+                authority._current_bundle_path()
+
+            with _mock.patch.object(
+                _product, "_fsync_file_and_parent", track_fsync
+            ):
+                _product._project_persist_candidate_status(
+                    mounted.state_dir, guest_state_dir=guest.state_dir
+                )
+            self.assertEqual(fsynced, [mounted.candidate_path, mounted.status_path])
+            shutil.copyfile(mounted.status_path, guest.status_path)
+            self.assertEqual(
+                authority._current_bundle_path().resolve(),
+                guest.candidate_path.resolve(),
+            )
+            summary = authority.candidate_summary()
+            self.assertTrue(summary.present)
+            self.assertEqual(summary.release_id, "fixture-release")
+            self.assertEqual(summary.bundle_sha256, "a" * 64)
+
+            guest.status_path.unlink()
+            with self.assertRaises(SystemUpdateError):
+                authority._current_bundle_path()
+
+    def test_parent_ownership_restoration_is_scoped_and_preserves_private_modes(self) -> None:
+        from types import SimpleNamespace
+
+        with tempfile.TemporaryDirectory() as tmp:
+            state_dir = Path(tmp) / "parent-credentials"
+            updates = state_dir / "system-updates"
+            inbox = updates / "inbox"
+            inbox.mkdir(parents=True)
+            candidate = inbox / "candidate.greiaupdate"
+            status = updates / "status.json"
+            candidate.write_bytes(b"candidate")
+            status.write_bytes(b"status")
+            inbox.chmod(0o700)
+            candidate.chmod(0o600)
+            status.chmod(0o600)
+            owner = state_dir.stat()
+            real_stat = Path.lstat
+            calls: list[tuple[Path, int, int]] = []
+
+            def stat_with_different_owner(path: Path, *args, **kwargs):
+                result = real_stat(path, *args, **kwargs)
+                if path == state_dir:
+                    return SimpleNamespace(
+                        st_uid=owner.st_uid + 1,
+                        st_gid=owner.st_gid + 1,
+                        st_mode=result.st_mode,
+                    )
+                return result
+
+            with (
+                _mock.patch.object(Path, "lstat", autospec=True, side_effect=stat_with_different_owner),
+                _mock.patch.object(
+                    _product.os,
+                    "chown",
+                    side_effect=lambda path, uid, gid, **kwargs: calls.append(
+                        (Path(path), uid, gid)
+                    ),
+                ),
+            ):
+                proof = _product._restore_parent_inbox_ownership(
+                    state_dir, candidate_path=candidate, status_path=status
+                )
+            self.assertEqual(
+                [item[0] for item in calls], [updates, inbox, candidate, status]
+            )
+            self.assertTrue(all(item[1:] == (owner.st_uid + 1, owner.st_gid + 1) for item in calls))
+            self.assertEqual(len(proof["paths"]), 4)
+            self.assertEqual(inbox.stat().st_mode & 0o777, 0o700)
+            self.assertEqual(candidate.stat().st_mode & 0o777, 0o600)
+            self.assertEqual(status.stat().st_mode & 0o777, 0o600)
+
+    def test_symlinked_update_namespace_is_refused_before_injection(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            state = root / "parent-credentials"
+            state.mkdir()
+            external = root / "external"
+            external.mkdir()
+            (state / "system-updates").symlink_to(external, target_is_directory=True)
+            with self.assertRaisesRegex(
+                LifecycleHarnessError, "not a real directory"
+            ):
+                _product._assert_real_persist_update_paths(state)
+
+
+class ControlPhaseFailureTests(unittest.TestCase):
+    def test_zero_exit_after_guest_refusal_is_still_a_phase_failure(self) -> None:
+        from types import SimpleNamespace
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            serial = root / "serial.log"
+            serial.write_text(
+                "x8-control: update VERIFY_CURRENT_CANDIDATE refused: "
+                "{'reason': 'no current update candidate in the inbox'}\n"
+                "x8-control: phase update-verify failed (exit 1); "
+                "capturing service diagnostics\n",
+                encoding="utf-8",
+            )
+            harness = ProductHarness(LifecycleConfig(output_dir=root / "out"))
+            with (
+                _mock.patch.object(_product, "resolve_device_host_tool", return_value="/qemu"),
+                _mock.patch.object(_product.shutil, "which", return_value=None),
+                _mock.patch.object(
+                    _product.subprocess,
+                    "run",
+                    return_value=SimpleNamespace(returncode=0, stdout="", stderr=""),
+                ),
+            ):
+                with self.assertRaises(LifecycleHarnessError) as caught:
+                    harness._boot_installed_phase(
+                        phase="update-verify",
+                        argv=["qemu-system-i386"],
+                        serial_log=serial,
+                        host_log=root / "host.log",
+                    )
+            self.assertIn("phase update-verify failed", str(caught.exception))
+            self.assertIn("no current update candidate in the inbox", str(caught.exception))
+
+    def test_failure_marker_is_bound_to_exact_phase(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            serial = Path(tmp) / "serial.log"
+            serial.write_text(
+                "x8-control: phase update-stage failed (exit 1)\n",
+                encoding="utf-8",
+            )
+            failure = _product._control_phase_failure(serial, "update-verify")
+            self.assertIn("expected phase update-verify", str(failure))
+            self.assertIn("observed x8-control: phase update-stage failed", str(failure))
 
 
 class PhaseChannelTests(unittest.TestCase):

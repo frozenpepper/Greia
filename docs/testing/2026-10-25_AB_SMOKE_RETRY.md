@@ -2,9 +2,20 @@
 
 Date: 2026-10-25 · Status: **UNPROVEN; Linux VM work order; Session 04 OPEN**
 
-Initial clean A/B smoke only: rebuild both experimental bundles and installer
-from one committed `main` SHA, then install → first boot → healthy A-to-B. This
-supersedes the older setup route only here; later fault legs remain in
+## Current route (2026-10-26)
+
+The 2026-10-25 retry's install and A first boot passed; only healthy A-to-B
+was blocked because the test candidate lacked the canonical `status.json`
+projection in the guest inbox. If the old bundle/image/result artifacts pass
+the preflight in [`2026-10-26_AB_CANDIDATE_RETRY.md`](2026-10-26_AB_CANDIDATE_RETRY.md),
+use that short candidate-only retry next; it reuses accepted A and does not
+rebuild or reinstall. If any artifact is absent, hash-mismatched, or the A
+acceptance/PERSIST checks fail, stop and use this guide's clean three-leg route.
+Do not diagnose or modify the old guest manually.
+
+This clean route remains the fallback: rebuild both experimental bundles and
+installer from one committed `main` SHA, then install → first boot → healthy
+A-to-B. Later fault legs remain in
 [10/23 A/B work order](2026-10-23_SYSTEM_UPDATE_LINUX_ACCEPTANCE.md),
 [10/24 package work order](2026-10-24_SOFTWARE_UPDATE_ACCEPTANCE.md); 10/23 §3
 remains the harness reference.

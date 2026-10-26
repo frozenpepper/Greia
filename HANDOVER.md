@@ -96,6 +96,10 @@ Evidence: `/var/tmp/greia-ab-smoke-866ba68277be8500db62de55a9189d78c9ea704b-2026
 details appended to `docs/reviews/2026-10-25_SOFTWARE_UPDATE_LINUX_RETRY.md`; the detailed retry report is `docs/reviews/2026-10-26_AB_SMOKE_RETRY_EVIDENCE.md`.
 Session 04 remains OPEN.
 
+Correction: source-only harness fixes now prepare a candidate-only Linux retry;
+healthy B remains unproven. Use the conditional route in
+`docs/testing/2026-10-26_AB_CANDIDATE_RETRY.md`.
+
 ## 2026-10-25 — A/B first-boot health ACCEPTED; active-slot isolation blocker
 
 The Acer A/B acceptance first boot now works through the shipped health path:
@@ -239,6 +243,39 @@ PRESERVED; the 4 first-run DONE, all 16 earlier retakes, and all 143 evidence-ga
 rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
+
+### 2026-10-26 — Candidate-only retry prepared; VM result pending
+
+Correction to the preceding route: the initial host-side injector placed only
+`candidate.greiaupdate`, not the inbox receipt required by canonical
+`SystemUpdateInbox` discovery. The test harness now receives the bundle through
+`SystemUpdateInbox.receive`, projects its validated `bundle_path` into the
+guest's canonical `/var/lib/greia-os` status record, restores inbox ownership
+and fsyncs the published files. Control inputs are copied and sized correctly;
+serial refusal markers trigger bounded guest diagnostics/poweroff, and the
+installer control-disk size path/test seam no longer raises an undefined-name
+error. These are harness/test changes only; no production update service or
+installer behavior changed.
+
+The prior install and first-A health PASS remain tied to clean `866ba6827`;
+**healthy B remains UNPROVEN** because this candidate path has not been rerun
+on Linux. Source review passed. Guide-specific focused selectors passed **168
+tests in 1.220 s**; the broader X8 focused gate passed **296 tests in 3.236 s**.
+The local full gate completed **5,959 tests: 6 failures, 3 errors, 9 skips; NOT
+GREEN**. Failures match Foresta English/Spanish/French content (3), MBR wording
+(1), and Parent Wi-Fi assertions (2); errors match ARM64 profile resolution
+(1) and two macOS `lsblk` cases. This is not a full-gate PASS or Linux runtime
+evidence.
+
+After the reviewed harness changes are committed, run
+`docs/testing/2026-10-26_AB_CANDIDATE_RETRY.md` on Linux only if its source-path,
+artifact-hash, old first-boot and PERSIST checks pass. It reuses the clean
+0.13.0/0.13.1 bundles and accepted-A clone, without rebuilding/reinstalling.
+If any precondition fails, use the clean three-leg fallback
+`docs/testing/2026-10-25_AB_SMOKE_RETRY.md`. Do not manually repair or enter a
+root shell in the old guest. After healthy B, continue with the 10/23 and 10/24
+fault matrices. Session 04 remains OPEN; no B boot/health, rollback, physical
+or family-readiness claim is made.
 
 ### 2026-10-25 — Simpler A/B smoke; writable-root hash gate corrected
 

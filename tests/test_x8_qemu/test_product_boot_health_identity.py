@@ -245,6 +245,7 @@ class BootIdentityGreenTests(unittest.TestCase):
                     },
                     materialize_fn=lambda d, i: None,
                     boot_fn=lambda phase, *a: None,
+                    candidate_inject_fn=lambda *_: {"fake": "candidate-receipt"},
                     observe_fn=lambda t: dict(_green_observation()),
                     slot_digest_fn=_scripted_digest_fn(
                         ["bb" * 32, "aa" * 32, "aa" * 32, "cc" * 32]
@@ -263,6 +264,9 @@ class BootIdentityGreenTests(unittest.TestCase):
             self.assertEqual(identity["boot_observation"]["accepted_release_id"], "greia-0.21.0")
             self.assertFalse(result["source_image_mutated"])
             self.assertFalse(identity["source_image_mutated"])
+            self.assertEqual(
+                result["candidate_inject"], {"fake": "candidate-receipt"}
+            )
             assert_product_identity_complete(
                 identity, installed_image=installed, release_bundles=[bundle]
             )
@@ -305,6 +309,7 @@ class BootIdentityGreenTests(unittest.TestCase):
                         },
                         materialize_fn=lambda d, i: None,
                         boot_fn=lambda phase, *a: None,
+                        candidate_inject_fn=lambda *_: {"fake": "candidate-receipt"},
                         observe_fn=lambda t: dict(_green_observation()),
                         slot_digest_fn=_scripted_digest_fn(
                             ["bb" * 32, "aa" * 32, "aa" * 32, "cc" * 32]

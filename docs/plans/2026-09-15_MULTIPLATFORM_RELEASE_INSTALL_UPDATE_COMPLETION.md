@@ -3281,3 +3281,31 @@ Session 04 remains OPEN.
 
 Detailed retry evidence and root-cause analysis:
 `docs/reviews/2026-10-26_AB_SMOKE_RETRY_EVIDENCE.md`.
+
+## 2026-10-26 — Candidate receipt projection corrected in test harness; VM retry pending
+
+- Follow-up source work explains the previous update-verify refusal: host-side
+  injection wrote the fixed candidate file but omitted the `status.json`
+  receipt used by canonical `SystemUpdateInbox` discovery. The harness now calls
+  `SystemUpdateInbox.receive` on the mounted disposable PERSIST tree, projects
+  only the validated `bundle_path` to the guest's canonical
+  `/var/lib/greia-os` path, restores inbox ownership, and fsyncs candidate and
+  receipt. Guest control uses the same inbox API when receiving control media.
+- Test orchestration also copies declared inputs, sizes the control disk for
+  the bundle, emits bounded refusal diagnostics/poweroff for fail-fast serial
+  evidence, initializes installer control-disk defaults, and aligns fake seams
+  with the production helper. These are `tools/x8_qemu`/test changes only; no
+  shipped updater, installer or runtime input changed in this tranche.
+- Source review passed. Focused candidate-guide selectors: **168 tests,
+  PASS in 1.220 s**. Broader X8 focused gate: **296 tests, PASS in 3.236 s**.
+  Local `make verify`: **5,959 tests, 6 failures, 3 errors, 9 skips; NOT GREEN**
+  (Foresta en/es/fr 3, MBR wording 1, Parent Wi-Fi 2; ARM64 profile 1 and
+  macOS `lsblk` 2 errors). No full-gate or Linux-runtime pass is claimed.
+- The Linux run from clean source `866ba6827` installed and accepted A, but the
+  candidate-verification/update-to-B leg remains UNPROVEN. Next: after the
+  reviewed harness changes are committed, follow
+  `docs/testing/2026-10-26_AB_CANDIDATE_RETRY.md` if old bundles, accepted-A,
+  source-diff, SHA, first-boot and PERSIST preflight all pass. Otherwise use
+  the clean three-leg fallback `docs/testing/2026-10-25_AB_SMOKE_RETRY.md`.
+  Do not manually repair the old guest. After healthy B, execute the remaining
+  10/23 and 10/24 fault matrix. Session 04 remains OPEN.

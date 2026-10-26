@@ -867,6 +867,55 @@ class RunProductWiringTests(unittest.TestCase):
             # QEMU binds the same serial the host observation mirrors.
             self.assertIn(TARGET_DISK_SERIAL, " ".join(seen["argv"]))  # type: ignore[index]
 
+    def test_default_control_materializer_branch_uses_default_capacity(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            fixtures = _valid_fixtures(base)
+            official = base / "installer.img"
+            official.write_bytes(b"installer" * 64)
+            calls: list[dict[str, object]] = []
+            gate, qemu = _capable_host()
+
+            def materialize(control_dir: Path, image: Path, **kwargs):
+                calls.append(dict(kwargs))
+                Path(image).write_bytes(b"control image fixture")
+                return {"image": str(image), "size_bytes": 64 * 1024 * 1024}
+
+            with (
+                gate,
+                qemu,
+                _mock.patch.object(
+                    _product, "materialize_control_disk", side_effect=materialize
+                ),
+            ):
+                harness = ProductHarness(
+                    LifecycleConfig(output_dir=base / "out"),
+                    official_image=official,
+                )
+                result = harness.run_product(
+                    release_bundle=Path(str(fixtures["bundle"])),
+                    target_fn=None,
+                    clone_fn=lambda source, dest: {
+                        "source_sha256": _product.sha256_file(Path(source)),
+                        "clone": str(dest),
+                    },
+                    inject_fn=lambda clone: {
+                        "clone": str(clone),
+                        "injected_files": ["fixture"],
+                        "pre_sha256": "aa" * 32,
+                        "post_sha256": "bb" * 32,
+                        "source_image_mutated": False,
+                    },
+                    boot_fn=lambda *args: None,
+                    observe_fn=lambda target: {
+                        "default_slot": "A",
+                        "target_identity": "observed",
+                    },
+                )
+            self.assertTrue(result["ok"])
+            self.assertEqual(result["phases"], list(INSTALL_LEG_PHASES))
+            self.assertEqual(calls, [{}, {}])
+
     def test_run_product_source_pins_production_wiring(self) -> None:
         import inspect as _inspect
 

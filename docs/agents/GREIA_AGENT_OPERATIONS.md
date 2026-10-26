@@ -112,13 +112,25 @@ new `greia-devctl` verb is permitted. Only unreachable internal journal cut
 windows and generation/PERSIST staging-space cases remain NOT RUN with their
 specific missing observation/control.
 
-### A/B smoke retry (2026-10-25)
+### A/B candidate retry (2026-10-26)
 
-Use `docs/testing/2026-10-25_AB_SMOKE_RETRY.md` as the short next run. Rebuild
-both baseline and next fixture plus the clean installer from the recorded
-source; the previous Linux target was patched and its next bundle predates the
-credential-unit fixes. Run install, first-A health and healthy A-to-B before
-returning to the full interruption/recovery/data-survival matrix.
+The latest Linux run built clean base/next bundles and installer from
+`866ba6827`; install and first-A health passed, but healthy A-to-B was blocked
+because the harness injected only the candidate file, not its canonical
+`SystemUpdateInbox` receipt. After the reviewed harness correction is committed,
+use `docs/testing/2026-10-26_AB_CANDIDATE_RETRY.md` as the next Linux attempt if
+its source-path, artifact hash, prior first-boot, and PERSIST checks pass. It
+reuses those bundles and the accepted-A clone. Otherwise use the clean three-leg
+fallback in `docs/testing/2026-10-25_AB_SMOKE_RETRY.md`.
+
+The current harness receives candidates through `SystemUpdateInbox.receive`,
+projects the validated bundle path into the guest's canonical
+`/var/lib/greia-os` status record, restores PERSIST inbox ownership and fsyncs
+the published receipt. Its refusal marker captures bounded service diagnostics
+and powers off for host-side failure evidence. These are test-harness changes,
+not production update-service changes. Do not root-shell or manually repair
+the prior guest. Run the full interruption/recovery/data-survival matrix only
+after healthy B is accepted.
 
 The active root stays writable. Hashes spanning its boot are retained for
 diagnosis, not checked for equality. First-boot B remains untouched and must
