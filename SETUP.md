@@ -306,33 +306,39 @@ Letters, syllables, phonics and other pronunciation-authoritative material use `
 
 Dani-specific robotic speech uses `dani_system_speech`, now backed by Dani’s selected cloned master through VoxStage by default.
 
-### 7.5 Prepared Whisper review environment on this workstation
+### 7.5 Current Parakeet verifier and retained historical Whisper environment
 
-For automated post-generation review, explicitly use the existing Greia venv:
+**New VoiceEngine requests (since 2026-10-23)** use offline cached
+multilingual **Parakeet-TDT v3** through `tools/greia_voice_core/parakeet_asr.py`,
+with pinned model `mlx-community/parakeet-tdt-0.6b-v3` at revision
+`ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15`.
+This is **not** the same model as VoxCPM2 (speech generation). Verification
+does not silently fall back to Whisper or download missing weights.
+
+On the owner's already-prepared Apple Silicon workstation:
 
 ```bash
 voice_python="$HOME/Library/Application Support/Greia/voice-production/venv/bin/python"
 "$voice_python" tools/greia_voice.py doctor
 ```
 
-Verified 2026-10-21: this environment imports mlx-whisper 0.4.3 with NumPy 2.5.2,
-Numba 0.67.0 and MLX 0.32.1; whisper-tiny weights are already cached. The global
-Anaconda Python's NumPy/Numba ABI mismatch is not a failure of this environment.
-Use the explicit interpreter for all pilot/full review commands in
-`docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md`. No global package downgrade or
-shared synthesis environment repair is needed. These are workstation facts,
-not portable dependency pins or child-device requirements.
+Inspect `verifier.available` and the exact model/revision in the doctor
+response. Character provider readiness and doctor exit code 0 are **not**
+proof of ASR readiness. A fresh workstation must separately install a
+compatible MLX/Parakeet environment and provision the exact cached snapshot;
+the Greia checkout alone does not reproduce the owner's voice workstation.
+See `docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md` and the full entry
+in `tools/greia_voice_core/README.md`. Language support/recognition quality
+must be assessed for *new* languages before trusting machine transcripts.
 
-Current default verifier (owner decision, 2026-10-22):
-`mlx-community/whisper-base-mlx`, pinned revision
-`1e3e249fb8d01c655324bd6841b1deadffd6d04c`, with 143,724,204-byte weights.
-It runs in the same prepared environment; no package changes were required.
-Base replaces Tiny for new verification/extraction. Weights resolve offline using
-the pinned revision and required model files only. ASR comparisons ignore Unicode
-diacritics by default; `ignore_accents=False` / `--strict-accents` restores strict
-comparison without changing the supplied script. Old reports remain historical.
-Matched saved-audio results and limitations:
-`docs/reviews/2026-10-22_WHISPER_TINY_BASE_COMPARISON.md`.
+**Historical frozen corpus review** retains Whisper evidence and the old
+`mlx-community/whisper-base-mlx` pinned revision
+`1e3e249fb8d01c655324bd6841b1deadffd6d04c`
+(older records may use Tiny). The owner's prepared venv also has
+`mlx-whisper==0.4.3` and cached Base/Tiny weights for those workflows.
+Use `docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md` for exact historical
+review commands. Do not relabel, rerun or silently reinterpret prior receipts
+as Parakeet results. Neither ASR gives human listening acceptance.
 
 ### 7.6 Human review
 
