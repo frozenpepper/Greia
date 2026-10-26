@@ -288,6 +288,8 @@ HANDOVER.md
 
 For a family, start at [`docs/user/README.md`](user/README.md) instead. These short user-facing guides describe current or intended tasks in plain language: USB installation, parent management, and links to Activity/image creation. They are **derived practical documentation**, not sources for hardware certification or permission to publish an unaccepted image. Refresh them against the exact release when image downloads become available.
 
+For language contributors, [`docs/development/ADD_A_GREIA_LANGUAGE.md`](development/ADD_A_GREIA_LANGUAGE.md) and [`skills/greia-language-expansion/SKILL.md`](../skills/greia-language-expansion/SKILL.md) give the end-to-end text, audio, staging and acceptance route. This workflow is not yet configuration-only; source/product owners remain authoritative.
+
 For contributors, [`docs/development/CREATE_AN_ACTIVITY.md`](development/CREATE_AN_ACTIVITY.md) introduces the canonical Activity skill, and [`docs/development/BUILD_A_GREIA_IMAGE.md`](development/BUILD_A_GREIA_IMAGE.md) explicitly links to [`docs/agents/GREIA_IMAGE_BUILD_AGENT.md`](agents/GREIA_IMAGE_BUILD_AGENT.md). These compact front doors never supersede implementation, release-gate or agent-operation authorities.
 
 Then route by task using `skills/*`. Licensing, security reporting and conduct live in the root `LICENSE`, `NOTICE.md`, `SECURITY.md` and `CODE_OF_CONDUCT.md`.
