@@ -187,9 +187,8 @@ class PersistCandidateInjectionTests(unittest.TestCase):
             unmount.assert_not_called()
             detach.assert_not_called()
 
-    def test_uses_canonical_inbox_receive_to_publish_candidate_status(self) -> None:
+    def test_uses_canonical_receive_without_host_status_projection(self) -> None:
         from types import SimpleNamespace
-        from greia_platform import system_updates as _updates
         from greia_platform.system_updates import SystemUpdateInbox
 
         with tempfile.TemporaryDirectory() as tmp:
@@ -200,11 +199,12 @@ class PersistCandidateInjectionTests(unittest.TestCase):
             bundle.write_bytes(b"fixture bundle bytes")
             runner = SimpleNamespace(returncode=0, stdout="", stderr="")
             captured: dict[str, object] = {}
-            real_atomic_json = _updates._atomic_json
+            fsynced: list[Path] = []
+            real_fsync = _product._fsync_file_and_parent
 
-            def atomic_json(path: Path, payload: dict[str, object]) -> None:
-                captured["published_status"] = dict(payload)
-                real_atomic_json(path, payload)
+            def track_fsync(path: Path) -> None:
+                fsynced.append(Path(path))
+                real_fsync(path)
 
             def receive(inbox: SystemUpdateInbox, source: Path):
                 candidate = inbox.candidate_path
@@ -223,6 +223,9 @@ class PersistCandidateInjectionTests(unittest.TestCase):
                     }),
                     encoding="utf-8",
                 )
+                captured["status"] = __import__("json").loads(
+                    status.read_text(encoding="utf-8")
+                )
                 status.chmod(0o600)
                 captured["state_dir"] = inbox.state_dir
                 captured["candidate"] = candidate
@@ -240,7 +243,7 @@ class PersistCandidateInjectionTests(unittest.TestCase):
                 _mock.patch.object(_product, "_umount_fs"),
                 _mock.patch.object(_product, "_loop_detach"),
                 _mock.patch.object(SystemUpdateInbox, "receive", receive),
-                _mock.patch.object(_updates, "_atomic_json", atomic_json),
+                _mock.patch.object(_product, "_fsync_file_and_parent", track_fsync),
             ):
                 proof = inject_update_candidate_into_persist(
                     clone, bundle, runner=lambda *args, **kwargs: runner
@@ -252,79 +255,40 @@ class PersistCandidateInjectionTests(unittest.TestCase):
                 ("greia", "namespaces", "parent-credentials"),
             )
             self.assertEqual(Path(str(captured["candidate"])).name, "candidate.greiaupdate")
-            self.assertTrue(proof["status_written"])
-            status = captured["published_status"]
-            self.assertEqual(status["bundle_path"], proof["guest_candidate_path"])
+            status = captured["status"]
+            self.assertEqual(status["bundle_path"], str(captured["candidate"]))
+            self.assertNotIn("guest_candidate_path", proof)
             self.assertEqual(
-                proof["guest_candidate_path"],
-                "/var/lib/greia-os/system-updates/inbox/candidate.greiaupdate",
+                fsynced, [Path(proof["candidate_path"]), Path(proof["status_path"])]
             )
-            self.assertEqual(status["release"], {"release_id": "fixture-release"})
-            self.assertEqual(status["bundle_sha256"], "a" * 64)
             self.assertEqual(proof["candidate_bytes"], bundle.stat().st_size)
             self.assertEqual(proof["parent_ownership"]["inbox_mode"], "0700")
             self.assertEqual(proof["parent_ownership"]["candidate_mode"], "0600")
             self.assertEqual(proof["parent_ownership"]["status_mode"], "0600")
 
-    def test_projected_receipt_is_accepted_by_guest_path_resolver(self) -> None:
-        import json
+    def test_fixed_candidate_is_discovered_without_status_receipt(self) -> None:
         from greia_platform.system_updates import (
             SystemUpdateInbox,
             SystemUpdateServiceAuthority,
-            SystemUpdateError,
         )
 
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            mounted = SystemUpdateInbox(root / "mounted-persist")
             guest = SystemUpdateInbox(root / "guest-state")
-            mounted.candidate_path.parent.mkdir(parents=True)
-            mounted.candidate_path.write_bytes(b"validated fixture bytes")
             guest.candidate_path.parent.mkdir(parents=True)
-            shutil.copyfile(mounted.candidate_path, guest.candidate_path)
-            receipt = {
-                "state": "received",
-                "release": {"release_id": "fixture-release"},
-                "bundle_path": str(mounted.candidate_path),
-                "bundle_sha256": "a" * 64,
-                "activation_available": False,
-            }
-            mounted.status_path.parent.mkdir(parents=True, exist_ok=True)
-            mounted.status_path.write_text(json.dumps(receipt), encoding="utf-8")
-            guest.status_path.parent.mkdir(parents=True, exist_ok=True)
-            guest.status_path.write_text(json.dumps(receipt), encoding="utf-8")
-            fsynced: list[Path] = []
-            real_fsync = _product._fsync_file_and_parent
-
-            def track_fsync(path: Path) -> None:
-                fsynced.append(Path(path))
-                real_fsync(path)
+            guest.candidate_path.write_bytes(b"validated fixture bytes")
 
             authority = object.__new__(SystemUpdateServiceAuthority)
             authority.state_dir = guest.state_dir
-            with self.assertRaises(SystemUpdateError):
-                authority._current_bundle_path()
-
-            with _mock.patch.object(
-                _product, "_fsync_file_and_parent", track_fsync
-            ):
-                _product._project_persist_candidate_status(
-                    mounted.state_dir, guest_state_dir=guest.state_dir
-                )
-            self.assertEqual(fsynced, [mounted.candidate_path, mounted.status_path])
-            shutil.copyfile(mounted.status_path, guest.status_path)
             self.assertEqual(
                 authority._current_bundle_path().resolve(),
                 guest.candidate_path.resolve(),
             )
-            summary = authority.candidate_summary()
-            self.assertTrue(summary.present)
-            self.assertEqual(summary.release_id, "fixture-release")
-            self.assertEqual(summary.bundle_sha256, "a" * 64)
-
-            guest.status_path.unlink()
-            with self.assertRaises(SystemUpdateError):
-                authority._current_bundle_path()
+            guest.status_path.write_text("invalid progress metadata", encoding="utf-8")
+            self.assertEqual(
+                authority._current_bundle_path().resolve(),
+                guest.candidate_path.resolve(),
+            )
 
     def test_parent_ownership_restoration_is_scoped_and_preserves_private_modes(self) -> None:
         from types import SimpleNamespace

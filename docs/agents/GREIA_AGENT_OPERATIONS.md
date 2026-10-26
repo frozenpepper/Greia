@@ -112,25 +112,22 @@ new `greia-devctl` verb is permitted. Only unreachable internal journal cut
 windows and generation/PERSIST staging-space cases remain NOT RUN with their
 specific missing observation/control.
 
-### A/B candidate retry (2026-10-26)
+### A/B package discovery retry (2026-10-26)
 
-The latest Linux run built clean base/next bundles and installer from
-`866ba6827`; install and first-A health passed, but healthy A-to-B was blocked
-because the harness injected only the candidate file, not its canonical
-`SystemUpdateInbox` receipt. After the reviewed harness correction is committed,
-use `docs/testing/2026-10-26_AB_CANDIDATE_RETRY.md` as the next Linux attempt if
-its source-path, artifact hash, prior first-boot, and PERSIST checks pass. It
-reuses those bundles and the accepted-A clone. Otherwise use the clean three-leg
-fallback in `docs/testing/2026-10-25_AB_SMOKE_RETRY.md`.
+The installed updater discovers the published fixed-name bundle from its own
+manifest; `status.json` is reporting state, not an admission requirement.
+Missing/malformed/stale status must not require operator repair. The harness
+uses normal inbox publication, without host-to-guest receipt path projection.
+Ownership, atomic publication, transfer checks and bounded failure diagnostics
+remain. Durable application jobs and A/B journals still own recovery.
 
-The current harness receives candidates through `SystemUpdateInbox.receive`,
-projects the validated bundle path into the guest's canonical
-`/var/lib/greia-os` status record, restores PERSIST inbox ownership and fsyncs
-the published receipt. Its refusal marker captures bounded service diagnostics
-and powers off for host-side failure evidence. These are test-harness changes,
-not production update-service changes. Do not root-shell or manually repair
-the prior guest. Run the full interruption/recovery/data-survival matrix only
-after healthy B is accepted.
+This changes production code. Use `docs/testing/2026-10-25_AB_SMOKE_RETRY.md`
+to rebuild baseline/next bundles and installer from current committed `main`,
+then install → first-A health → healthy A-to-B. The old `866ba6827` images
+proved install/A only and cannot test this fix; the candidate-only reuse guide
+is historical. Do not repair the old guest manually. Stop on a failed leg and
+return logs before the larger fault matrix. Routine Python/Activity packages
+continue to use `.greia_update`, without rebuilding an OS image each time.
 
 The active root stays writable. Hashes spanning its boot are retained for
 diagnosis, not checked for equality. First-boot B remains untouched and must

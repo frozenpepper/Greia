@@ -1745,8 +1745,9 @@ def inject_update_candidate_into_persist(
     The control-disk path is phase transport only; a full system bundle is too
     large to copy through the guest at update time. The installed layout binds
     /var/lib/greia-os to PERSIST parent-credentials. The source-owned inbox
-    API publishes both the validated fixed-name candidate and status record
-    while the disposable clone is offline.
+    API validates and publishes the fixed-name candidate while the disposable
+    clone is offline. The installed updater discovers that canonical package
+    path directly; status remains progress/recovery metadata.
     """
     import tempfile as _tempfile
 
@@ -1764,13 +1765,9 @@ def inject_update_candidate_into_persist(
             f"{loopdev}p4", mountpoint, read_only=False, runner=runner, which=which
         )
         mounted = True
-        # Use the inbox owner so the candidate and its status.json pointer are
-        # published together under the same validation/atomic-rename contract
-        # used by Parent delivery. The privileged updater resolves candidate
-        # identity from status.json; merely copying the fixed filename is not
-        # sufficient to make it a current candidate.
+        # Reuse the production inbox receiver so package validation and
+        # publication stay identical to Parent delivery.
         from greia_platform.system_updates import (
-            UPDATE_STATE_DIR_DEFAULT,
             SystemUpdateInbox,
         )
 
@@ -1779,16 +1776,7 @@ def inject_update_candidate_into_persist(
         namespace_owner = state_dir.stat()
         received = SystemUpdateInbox(state_dir).receive(Path(bundle))
         candidate = Path(received.path)
-        guest_candidate_path = SystemUpdateInbox(
-            Path(UPDATE_STATE_DIR_DEFAULT)
-        ).candidate_path
-        status_path = _project_persist_candidate_status(
-            state_dir, guest_state_dir=Path(UPDATE_STATE_DIR_DEFAULT)
-        )
-        if not status_path.is_file():
-            raise LifecycleHarnessError(
-                "persist candidate status projection did not leave status.json"
-            )
+        status_path = SystemUpdateInbox(state_dir).status_path
         ownership = _restore_parent_inbox_ownership(
             state_dir, candidate_path=candidate, status_path=status_path
         )
@@ -1799,8 +1787,6 @@ def inject_update_candidate_into_persist(
             "candidate_path": str(candidate),
             "candidate_bytes": candidate.stat().st_size,
             "status_path": str(status_path),
-            "guest_candidate_path": str(guest_candidate_path),
-            "status_written": status_path.is_file(),
             "parent_uid": namespace_owner.st_uid,
             "parent_gid": namespace_owner.st_gid,
             "parent_ownership": ownership,
@@ -1811,42 +1797,6 @@ def inject_update_candidate_into_persist(
         if loopdev:
             _loop_detach(loopdev, runner=runner)
         shutil.rmtree(mountpoint, ignore_errors=True)
-
-
-def _project_persist_candidate_status(
-    mounted_state_dir: Path, *, guest_state_dir: Path
-) -> Path:
-    """Retarget a validated mounted-inbox receipt to the guest's canonical path.
-
-    The host receives the bundle through :class:`SystemUpdateInbox`, which
-    validates it and atomically records the receipt. Its temporary mount path
-    is not meaningful inside the guest, so only ``bundle_path`` is projected
-    to the fixed installed state root. The privileged owner still enforces
-    containment under its configured state directory.
-    """
-    from greia_platform.system_updates import SystemUpdateInbox, _atomic_json
-
-    mounted = SystemUpdateInbox(Path(mounted_state_dir))
-    guest = SystemUpdateInbox(Path(guest_state_dir))
-    try:
-        status = json.loads(mounted.status_path.read_text(encoding="utf-8"))
-    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
-        raise LifecycleHarnessError(
-            f"persist candidate receive did not produce valid status metadata: {exc}"
-        ) from exc
-    if not isinstance(status, dict):
-        raise LifecycleHarnessError("persist candidate receive status is not an object")
-    raw_path = status.get("bundle_path")
-    if raw_path != str(mounted.candidate_path) or not mounted.candidate_path.is_file():
-        raise LifecycleHarnessError(
-            "persist candidate receive status does not identify the mounted candidate"
-        )
-    status["bundle_path"] = str(guest.candidate_path)
-    _atomic_json(mounted.status_path, status)
-    _fsync_file_and_parent(mounted.candidate_path)
-    _fsync_file_and_parent(mounted.status_path)
-    return mounted.status_path
-
 
 def _fsync_file_and_parent(path: Path) -> None:
     """Flush one published file and its containing directory on the host."""

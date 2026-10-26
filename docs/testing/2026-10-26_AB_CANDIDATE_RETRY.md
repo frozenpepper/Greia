@@ -1,6 +1,12 @@
 # A/B candidate-only healthy-update retry
 
-Date: 2026-10-26 · Status: **UNPROVEN; Linux VM retry; Session 04 OPEN**
+Date: 2026-10-26 · Status: **HISTORICAL — superseded by installed-updater simplification**
+
+**Do not execute this artifact-reuse procedure for the current change.** The
+production updater now discovers the package directly; old images do not
+contain that fix. Use [the clean build/install/healthy-update procedure](2026-10-25_AB_SMOKE_RETRY.md).
+The remaining text preserves the preceding harness-only retry instructions.
+Session 04 remains OPEN.
 
 This retries only healthy A-to-B from the [October 26 evidence report](../reviews/2026-10-26_AB_SMOKE_RETRY_EVIDENCE.md), reusing its clean bundles and accepted-A clone instead of repeating the long install/first boot. Reuse is conditional on every artifact, hash, source-path, first-boot and focused-test check below. Any failed/missing check means stop and use the [clean three-leg route](2026-10-25_AB_SMOKE_RETRY.md). Never repair or diagnose the old guest manually.
 

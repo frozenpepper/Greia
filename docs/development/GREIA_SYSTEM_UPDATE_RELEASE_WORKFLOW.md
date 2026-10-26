@@ -310,6 +310,13 @@ The current source implements Internet delivery through Greia itself: check → 
 
 ## 9. Inbox safety
 
+The package at the fixed inbox candidate path supplies its own manifest facts.
+`status.json` reports progress; it is not a prerequisite for recognizing the
+package and cannot select a different candidate path. Missing or stale status
+does not require manual receipt repair. Normal transfers still validate and
+publish the complete package atomically; partial uploads are not candidates.
+The device's job and slot journal remain responsible for completion/recovery.
+
 The current unprivileged inbox:
 
 - validates the bounded ZIP shape;

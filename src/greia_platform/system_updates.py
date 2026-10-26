@@ -543,6 +543,27 @@ class SystemUpdateInbox:
         try:
             raw = json.loads(self.status_path.read_text(encoding="utf-8"))
         except (FileNotFoundError, OSError, UnicodeDecodeError, json.JSONDecodeError):
+            raw = None
+        if self.candidate_path.exists():
+            try:
+                manifest = _read_candidate_manifest_summary(self.candidate_path)
+            except (SystemUpdateError, OSError, zipfile.BadZipFile):
+                manifest = None
+            if manifest is not None and (
+                not isinstance(raw, dict)
+                or raw.get("bundle_path") != str(self.candidate_path)
+                or raw.get("release") != manifest.as_json_dict()
+            ):
+                # Receipt/status is progress data only. Recover the visible
+                # queued identity from the fixed candidate when that record
+                # is absent, malformed or stale.
+                raw = {
+                    "state": UpdateState.RECEIVED.value,
+                    "release": manifest.as_json_dict(),
+                    "bundle_path": str(self.candidate_path),
+                    "activation_available": False,
+                }
+        if raw is None:
             return {
                 "state": UpdateState.IDLE.value,
                 "queued": None,
@@ -2326,24 +2347,12 @@ class SystemUpdateServiceAuthority:
     def candidate_summary(self) -> UpdateCandidateSummary:
         try:
             path = self._current_bundle_path()
-            status = self._status_record()
-        except SystemUpdateError:
-            return UpdateCandidateSummary(present=False)
-        if not path.is_file():
-            return UpdateCandidateSummary(present=False)
-        release = status.get("release")
-        if not isinstance(release, dict):
-            return UpdateCandidateSummary(present=False)
-        digest = status.get("bundle_sha256", "")
-        if not isinstance(digest, str) or (digest and not re.fullmatch(r"[0-9a-f]{64}", digest)):
-            return UpdateCandidateSummary(present=False)
-        release_id = release.get("release_id", "")
-        if not isinstance(release_id, str) or len(release_id) > 96:
+            manifest = _read_candidate_manifest_summary(path)
+        except (SystemUpdateError, OSError, zipfile.BadZipFile):
             return UpdateCandidateSummary(present=False)
         return UpdateCandidateSummary(
             present=True,
-            release_id=release_id,
-            bundle_sha256=digest,
+            release_id=manifest.release_id,
         )
 
     def layout_summary(self) -> dict[str, object]:
@@ -2413,29 +2422,15 @@ class SystemUpdateServiceAuthority:
         path = getattr(backend, "layout_record_path", None)
         return Path(path) if path is not None else None
 
-    def _status_record(self) -> dict[str, object]:
-        inbox = SystemUpdateInbox(self.state_dir)
-        try:
-            raw = json.loads(inbox.status_path.read_text(encoding="utf-8"))
-        except (FileNotFoundError, OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
-            raise SystemUpdateError("no current update candidate in the inbox") from exc
-        if not isinstance(raw, dict):
-            raise SystemUpdateError("update status state is invalid")
-        return raw
-
     def _current_bundle_path(self) -> Path:
-        """Resolve the inbox candidate internally (never from request bytes)."""
-        status = self._status_record()
-        raw_path = status.get("bundle_path")
-        if not isinstance(raw_path, str) or not raw_path:
-            raise SystemUpdateError("no current update candidate in the inbox")
+        """Resolve only the fixed inbox candidate, independent of status data."""
         inbox = SystemUpdateInbox(self.state_dir)
+        candidate = inbox.candidate_path
         try:
             base = inbox.inbox_dir.resolve(strict=True)
-            candidate = Path(raw_path)
+            info = candidate.lstat()
             resolved = candidate.resolve(strict=True)
             resolved.relative_to(base)
-            info = resolved.lstat()
         except (OSError, ValueError) as exc:
             raise SystemUpdateError("update candidate is not an inbox file") from exc
         if not stat.S_ISREG(info.st_mode) or stat.S_ISLNK(info.st_mode):
@@ -2443,6 +2438,40 @@ class SystemUpdateServiceAuthority:
         if info.st_size <= 0 or info.st_size > MAX_BUNDLE_BYTES:
             raise SystemUpdateError("update candidate size is outside Greia bounds")
         return resolved
+
+
+def _read_candidate_manifest_summary(path: Path) -> UpdateManifest:
+    """Read bounded candidate identity for status without streaming payloads.
+
+    This is only a fast availability summary. Activation still goes through
+    ``inspect_update_bundle`` which verifies every declared member digest and
+    package invariant before any slot operation.
+    """
+
+    candidate = Path(path)
+    if candidate.is_symlink() or not candidate.is_file():
+        raise UpdateBundleError("update bundle is not a regular file")
+    size = candidate.stat().st_size
+    if size <= 0 or size > MAX_BUNDLE_BYTES:
+        raise UpdateBundleError("update bundle size is outside Greia bounds")
+    try:
+        with zipfile.ZipFile(candidate, "r") as archive:
+            names = archive.namelist()
+            if names not in (list(BUNDLE_MEMBERS_V3), list(BUNDLE_MEMBERS_V3_WITH_HW)):
+                raise UpdateBundleError("update bundle members/order are invalid")
+            info = archive.getinfo(MANIFEST_NAME)
+            if info.file_size <= 0 or info.file_size > MAX_MANIFEST_BYTES:
+                raise UpdateBundleError("manifest exceeds Greia bound")
+            raw = archive.read(MANIFEST_NAME)
+    except (zipfile.BadZipFile, OSError) as exc:
+        raise UpdateBundleError("update bundle is not a valid Greia ZIP artifact") from exc
+    try:
+        manifest = UpdateManifest.from_json_dict(json.loads(raw.decode("utf-8")))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise UpdateBundleError("manifest is not valid JSON") from exc
+    if raw != manifest.canonical_bytes():
+        raise UpdateBundleError("manifest is not canonical JSON")
+    return manifest
 
 
 # ---------------------------------------------------------------------------

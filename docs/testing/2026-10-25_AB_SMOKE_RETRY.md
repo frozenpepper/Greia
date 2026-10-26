@@ -4,21 +4,17 @@ Date: 2026-10-25 · Status: **UNPROVEN; Linux VM work order; Session 04 OPEN**
 
 ## Current route (2026-10-26)
 
-The 2026-10-25 retry's install and A first boot passed; only healthy A-to-B
-was blocked because the test candidate lacked the canonical `status.json`
-projection in the guest inbox. If the old bundle/image/result artifacts pass
-the preflight in [`2026-10-26_AB_CANDIDATE_RETRY.md`](2026-10-26_AB_CANDIDATE_RETRY.md),
-use that short candidate-only retry next; it reuses accepted A and does not
-rebuild or reinstall. If any artifact is absent, hash-mismatched, or the A
-acceptance/PERSIST checks fail, stop and use this guide's clean three-leg route.
-Do not diagnose or modify the old guest manually.
-
-This clean route remains the fallback: rebuild both experimental bundles and
-installer from one committed `main` SHA, then install → first boot → healthy
-A-to-B. Later fault legs remain in
-[10/23 A/B work order](2026-10-23_SYSTEM_UPDATE_LINUX_ACCEPTANCE.md),
-[10/24 package work order](2026-10-24_SOFTWARE_UPDATE_ACCEPTANCE.md); 10/23 §3
-remains the harness reference.
+The installed updater now discovers the fixed published package without a
+status receipt. This changes production code: the old `866ba6827` images and
+accepted-A clone cannot verify it. The candidate-only reuse guide is
+superseded for this change. Build both fixtures and installer from one current
+committed `main` SHA, then run install → first boot → healthy A-to-B below.
+Do not patch the old guest or edit its status manually. Stop on a failed leg
+and preserve logs; do not start the larger fault matrix until healthy B passes.
+The existing [full-system work order](2026-10-23_SYSTEM_UPDATE_LINUX_ACCEPTANCE.md)
+and [application-package work order](2026-10-24_SOFTWARE_UPDATE_ACCEPTANCE.md)
+own later acceptance. Routine Python/Activity ZIP updates do not need an A/B
+image rebuild; this rebuild exercises the installed full-system discovery fix.
 
 Use the documented x86_64 Debian/Ubuntu host with root/sudo, QEMU i386,
 `qemu-img`, loop/mount, squashfs and GRUB EFI i386+x64; disk use below 80%.
@@ -51,8 +47,8 @@ df -h "$UPDATE_EVIDENCE" > "$UPDATE_EVIDENCE/free-space.txt"
 Run the source gate and preserve pipeline statuses. Compare exact IDs/messages
 with `HANDOVER.md` and clean-baseline findings in
 `docs/reviews/2026-10-23_SYSTEM_UPDATE_IMPLEMENTATION_EVIDENCE.md`; do not reuse
-old counts. Latest comparable Linux retry: **5,957 tests, 7 failures, 3 errors,
-3 skips** (`docs/reviews/2026-10-25_SOFTWARE_UPDATE_LINUX_RETRY.md`). It is
+old counts. Latest comparable Linux retry: **5,959 tests, 7 failures, 3 errors,
+3 skips** (`docs/reviews/2026-10-26_AB_SMOKE_RETRY_EVIDENCE.md`, source `866ba6827`). It is
 comparison evidence, not a waiver; full gate is NOT GREEN. Improvements may
 disappear on Linux. Stop on new failures, higher counts, changed cause or lost
 logs. A later native macOS abort is not a Linux baseline.
@@ -77,12 +73,15 @@ test "$VERIFY_TEE_STATUS" = 0
 test "$BASELINE_REVIEW" = matched
 ```
 
-Then run the A/B focused source suites; both must pass before building:
+Then run the focused source suites; all must pass before building:
 
 ```bash
 set +e; set -o pipefail
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 tools/run_tests.py \
-  test_x8_qemu.test_product_boot_health test_x8_qemu.test_session04_legs -v \
+  test_x8_qemu.test_product test_x8_qemu.test_product_install \
+  test_x8_qemu.test_product_boot_health test_x8_qemu.test_session04_legs \
+  test_x8_qemu.test_product_boot_health_identity test_system_update_service \
+  test_system_updates test_parent_system_updates test_update_privileged_bridge -v \
   2>&1 | tee "$UPDATE_EVIDENCE/ab-product-focused.log"
 FOCUSED_PIPE_STATUS=("${PIPESTATUS[@]}"); FOCUSED_STATUS="${FOCUSED_PIPE_STATUS[0]}"
 FOCUSED_TEE_STATUS="${FOCUSED_PIPE_STATUS[1]}"

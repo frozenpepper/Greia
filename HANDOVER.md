@@ -244,6 +244,32 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-26 — Package discovery simplified; status is progress only
+
+Owner direction replaces the receipt-dependent discovery design. The installed
+full-system updater now recognizes only its fixed published inbox package and
+reads candidate identity from that package's manifest. Missing, malformed or
+stale status cannot hide it or redirect it elsewhere. Availability polling
+reads the bounded manifest without hashing the whole payload; full verification
+and compatibility checks still run before staging. A consumed/absent candidate
+stays absent. Durable software jobs, atomic publication, slot journals and
+application-generation recovery remain intact; the `.greia_update` Upload &
+install flow still continues on-device after the Parent disconnects.
+
+The test harness no longer projects a host receipt path into the guest. This
+is a production-code change: rebuild both fixtures and the installer from the
+new committed source using `docs/testing/2026-10-25_AB_SMOKE_RETRY.md`, then
+run install → first-A health → healthy A-to-B. The prior candidate-only reuse
+guide is HISTORICAL; old `866ba6827` images do not contain this fix. Do not
+manually repair their status. Python/Activity updates remain ZIP packages and
+do not need full-image rebuilding for each update.
+
+Source verification: 327 focused tests PASS; independent Luna review PASS.
+Full gate: 5,961 tests, 6 failures, 3 errors, 9 skips (same prior Mac IDs; NOT
+GREEN). Exact evidence is in
+`docs/reviews/2026-10-26_UPDATE_DISCOVERY_SIMPLIFICATION.md`. No new Linux VM or
+physical run occurred here. Session 04 remains OPEN.
+
 ### 2026-10-26 — Candidate-only retry prepared; VM result pending
 
 Correction to the preceding route: the initial host-side injector placed only

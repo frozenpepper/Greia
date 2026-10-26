@@ -884,6 +884,73 @@ class AuthoritySocketTests(unittest.TestCase):
             self.assertFalse(layout["single_root"])
             self.assertEqual(layout["active_slot"], "A")
 
+    def test_fixed_candidate_is_authoritative_without_status_receipt(self) -> None:
+        for receipt in ("absent", "malformed", "stale"):
+            with self.subTest(receipt=receipt), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                authority = self._authority(root)
+                inbox = SystemUpdateInbox(root / "state")
+                if receipt == "absent":
+                    inbox.status_path.unlink()
+                elif receipt == "malformed":
+                    inbox.status_path.write_text("{not json", encoding="utf-8")
+                else:
+                    outside = root / "untrusted.greiaupdate"
+                    outside.write_bytes(b"not the inbox candidate")
+                    inbox.status_path.write_text(
+                        json.dumps(
+                            {
+                                "state": "failed",
+                                "bundle_path": str(outside),
+                                "release": {"release_id": "stale-release"},
+                                "bundle_sha256": "0" * 64,
+                            }
+                        ),
+                        encoding="utf-8",
+                    )
+
+                summary = authority.candidate_summary()
+                self.assertTrue(summary.present)
+                self.assertEqual(summary.release_id, "greia-0.15.0")
+                self.assertEqual(summary.bundle_sha256, "")
+                verified = authority.verify_current_candidate()
+                self.assertTrue(verified.present)
+                self.assertEqual(verified.release_id, summary.release_id)
+                public_status = inbox.status_payload()
+                self.assertEqual(public_status["state"], "received")
+                self.assertEqual(
+                    public_status["release"]["release_id"], "greia-0.15.0"
+                )
+                # Discovery and verification do not stage or consume bytes.
+                self.assertTrue(inbox.candidate_path.is_file())
+
+    def test_corrupt_and_consumed_candidates_are_not_discovered_or_restored(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            authority = self._authority(root)
+            inbox = SystemUpdateInbox(root / "state")
+            inbox.candidate_path.write_bytes(b"corrupt package")
+            self.assertFalse(authority.candidate_summary().present)
+            with self.assertRaises(SystemUpdateError):
+                authority.verify_current_candidate()
+
+            # A consumed candidate is represented by absence; historical
+            # progress metadata cannot recreate or redirect package authority.
+            inbox.candidate_path.unlink()
+            inbox.status_path.write_text(
+                json.dumps(
+                    {
+                        "state": "staging",
+                        "bundle_path": str(inbox.candidate_path),
+                        "release": {"release_id": "old-release"},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            self.assertFalse(authority.candidate_summary().present)
+            with self.assertRaises(SystemUpdateError):
+                authority.verify_current_candidate()
+
     def test_privileged_status_reports_bounded_installed_readiness_sections(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             authority = self._authority(Path(directory), present=False)

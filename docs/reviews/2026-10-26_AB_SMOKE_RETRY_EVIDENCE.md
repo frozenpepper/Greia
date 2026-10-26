@@ -243,3 +243,14 @@ include that correction. Separately, `make validate` stopped at the existing
 ARM64 builder error; `make shell-check footprint` passed. All Bash fences and
 Python heredocs in both retry guides parsed successfully. Local logs are in
 `/tmp/greia-ab-candidate-followup/` (temporary, not Linux VM evidence).
+
+## 12. Owner-directed simplification supersedes receipt projection
+
+The owner rejected making status a discovery prerequisite. The production
+updater now recognizes its fixed published package directly, and the harness
+no longer projects receipt paths. Section 11 remains the history of the prior
+fix. The candidate-only reuse route is now historical because the installed
+updater changed. Next run the current-source clean three-leg guide
+`docs/testing/2026-10-25_AB_SMOKE_RETRY.md`; do not patch the old guest.
+Source evidence is `2026-10-26_UPDATE_DISCOVERY_SIMPLIFICATION.md` in this folder.
+No new healthy-B result is claimed.

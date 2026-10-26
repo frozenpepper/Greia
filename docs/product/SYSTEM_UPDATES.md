@@ -335,6 +335,11 @@ runtime syntax and declared target selectors before staging. Both formats
 use ordinary checksums for corruption detection and contain no signature
 authority.
 
+The fixed published full-system package supplies candidate identity directly.
+Its discovery does not require `status.json`; missing or stale reporting state
+cannot hide it or choose another file. Status reports progress, while the
+device-owned job and slot journal preserve authorized work and recovery.
+
 The bounded stores keep one current accepted job/candidate, clean stale
 receive temporaries and preserve free-space reserves. A second upload cannot
 race an active job. Application generation staging keeps the prior complete

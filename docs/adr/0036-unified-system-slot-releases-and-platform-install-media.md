@@ -57,6 +57,21 @@ Do not create architecture for malicious local file tampering, publisher-identit
 
 Checksums may exist as ordinary transfer/debug aids only.
 
+### Package discovery clarification — 2026-10-26
+
+The published package at the inbox's fixed candidate path is the source of
+candidate identity and manifest facts. A separate `status.json` is progress
+and reporting state, not permission to recognize or verify that package.
+Missing, malformed or stale status must not hide a valid published candidate
+or redirect discovery to another file. Incomplete uploads remain temporary
+until publication. Successful staging removes the candidate; retained status
+must not make a consumed package appear available again.
+
+This does not remove the device's update job, slot journal or recovery state.
+Those record work already authorized and let the OS finish or recover after
+interruption. Compatibility, archive validity, free space, inactive-slot
+selection and boot health remain practical reliability checks.
+
 ## 3. `.greiaupdate` v3
 
 Greia uses one deliberately simple pre-release bundle format:

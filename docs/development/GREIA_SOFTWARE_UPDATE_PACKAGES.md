@@ -13,6 +13,14 @@ updates are standalone packages: they do not need the old full-system catalog
 or a full disk image. Only the `full_system` type uses the existing v3 A/B
 bundle and slot writer.
 
+The package manifest describes what to install. The durable job records the
+parent's Upload & install command and lets the device continue after the app
+disconnects; it is not a publisher certificate or a second package approval.
+The full-system inbox discovers its fixed published bundle directly, without
+requiring a separate status receipt. Temporary/incomplete uploads are never
+applied. Application-generation and A/B recovery state remain necessary to
+recover from interruption or broken replacement code.
+
 ## 1. Package types and boundaries
 
 `.greia_update` is a ZIP archive with `manifest.json` first. Schema version 1

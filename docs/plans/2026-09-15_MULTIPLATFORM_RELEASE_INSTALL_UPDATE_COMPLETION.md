@@ -3309,3 +3309,21 @@ Detailed retry evidence and root-cause analysis:
   the clean three-leg fallback `docs/testing/2026-10-25_AB_SMOKE_RETRY.md`.
   Do not manually repair the old guest. After healthy B, execute the remaining
   10/23 and 10/24 fault matrix. Session 04 remains OPEN.
+
+## 2026-10-26 — Owner-directed package discovery simplification
+
+The fixed published full-system package now owns candidate identity; status
+is reporting/progress only. Discovery and public status recover from a missing,
+malformed or stale receipt using the package manifest, without hashing the large
+payload on polling. Full verification, compatibility, incomplete-upload isolation,
+consumed-candidate removal, device-owned jobs and recovery remain. The harness
+removes host-to-guest receipt projection. ADR 0036 and current operator/product
+manuals now state that distinction. ADR 0038's lightweight application route
+and independent on-device continuation remain unchanged.
+
+Production source changed, so the next Linux action is the current-source
+clean build/install/first-A/healthy-B route in
+`docs/testing/2026-10-25_AB_SMOKE_RETRY.md`. The old candidate-only reuse guide
+is historical; old images cannot prove this implementation. Source results:
+`docs/reviews/2026-10-26_UPDATE_DISCOVERY_SIMPLIFICATION.md`. No new VM/device
+claim; Session 04 remains OPEN.

@@ -116,18 +116,15 @@ superseded by ADR 0036 and are not the normal production route; older
 references to them are historical only.
 
 For the next A/B Linux attempt, use
-`docs/testing/2026-10-26_AB_CANDIDATE_RETRY.md` only when its source-diff,
-artifact-SHA, prior first-boot and PERSIST preflight all pass. It reuses the
-clean 0.13.0/0.13.1 bundles and accepted-A clone to retry only healthy A-to-B;
-no rebuild/reinstall is needed. If any prerequisite fails, use the clean
-three-leg fallback `docs/testing/2026-10-25_AB_SMOKE_RETRY.md`. The previous
-install and first-A PASS do not establish healthy B, and the corrected
-`SystemUpdateInbox.receive`/status projection has no Linux rerun yet. Never
-manually repair the old guest. Continue the larger fault matrix only after a
-healthy B acceptance. ADR 0036 treats raw hashes as observational for a slot
-booted during observation; retain inactive-destination refusal and semantic
-root/release/journal/health/PERSIST checks. Routine application packages do not
-require rebuilding A/B images for each Python change.
+`docs/testing/2026-10-25_AB_SMOKE_RETRY.md`: rebuild current committed source,
+install, first-A health, then healthy A-to-B. The installed updater now discovers
+the fixed published bundle directly; status is reporting/recovery progress,
+not a package-admission requirement. No host-to-guest receipt projection or
+manual status repair is required. Old images cannot verify the production fix;
+`2026-10-26_AB_CANDIDATE_RETRY.md` is historical. Device-owned application jobs,
+slot journals, compatibility checks and boot recovery remain necessary.
+Routine Python/Activity updates remain small `.greia_update` packages and do
+not require rebuilding A/B images. Session 04 remains OPEN until Linux evidence.
 
 Session 04 owns the real legacy-i386 fresh-install/update/rollback lifecycle. The
 `POSTR1-P1-INSTALLER-RED` / Gate-P5/V12G/D6 routing below is historical and
