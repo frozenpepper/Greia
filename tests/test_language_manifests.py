@@ -169,6 +169,76 @@ class ManifestLanguageTests(unittest.TestCase):
             self.assertEqual(panel_localization.panel_message("parent.title", "de"), "Elterneinstellungen")
             self.assertEqual(panel_localization.panel_constant("AUDIO_TITLE", "de"), "Mikrofonpegel")
 
+    def test_nested_placeholders_are_checked_recursively(self):
+        import sys
+        tools = Path(__file__).resolve().parents[1] / "tools"
+        if str(tools) not in sys.path:
+            sys.path.insert(0, str(tools))
+        from check_greia_language import fields
+        self.assertEqual(fields("Count {count:{width}.{precision}f}"),
+                         {"count", "width", "precision"})
+        self.assertEqual(fields("Use {{braces}}"), set())
+        with self.assertRaises(ValueError):
+            fields("Unclosed {name")
+
+    def test_staged_checker_rejects_bad_ui_schema_or_invalid_section(self):
+        import sys
+        tools = Path(__file__).resolve().parents[1] / "tools"
+        if str(tools) not in sys.path:
+            sys.path.insert(0, str(tools))
+        from scaffold_greia_language import prepare
+        from check_greia_language import audit
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            prepare("de", root)
+            catalog = root / "src/greia_platform/languages/de/ui.json"
+            data = json.loads(catalog.read_text(encoding="utf-8"))
+            data["schema_version"] = 2
+            catalog.write_text(json.dumps(data), encoding="utf-8")
+            self.assertTrue(any("schema_version" in issue
+                                for issue in audit("de", root, staged=True)))
+            data["schema_version"] = 1
+            data["unexpected"] = {"bad": ["not a string"]}
+            catalog.write_text(json.dumps(data), encoding="utf-8")
+            self.assertTrue(any("invalid text" in issue
+                                for issue in audit("de", root, staged=True)))
+
+    def test_staged_checker_catches_nested_ui_and_activity_placeholders(self):
+        import sys
+        tools = Path(__file__).resolve().parents[1] / "tools"
+        if str(tools) not in sys.path:
+            sys.path.insert(0, str(tools))
+        from scaffold_greia_language import prepare
+        from check_greia_language import audit
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            demo = root / "activities" / "demo"
+            (demo / "locales").mkdir(parents=True)
+            (demo / "activity.toml").write_text(
+                '[activity]\\nlanguages = ["en", "de"]\\n', encoding="utf-8"
+            )
+            (demo / "locales" / "en.json").write_text(
+                json.dumps({"schema_version": 1, "locale": "en",
+                            "strings": {"activity.title": "Count {count:{width}} dots"},
+                            "audio": {}}), encoding="utf-8"
+            )
+            prepare("de", root)
+            translated_path = demo / "locales" / "de.json"
+            activity_data = json.loads(translated_path.read_text(encoding="utf-8"))
+            activity_data["strings"]["activity.title"] = "Zähle {count:{wrong}} Punkte"
+            translated_path.write_text(json.dumps(activity_data), encoding="utf-8")
+            ui_path = root / "src/greia_platform/languages/de/ui.json"
+            ui_data = json.loads(ui_path.read_text(encoding="utf-8"))
+            ui_data["parent"]["language.changed"] = "Gespeichert {name:{wrong}}"
+            ui_path.write_text(json.dumps(ui_data), encoding="utf-8")
+            issues = audit("de", root, staged=True)
+            self.assertTrue(any("demo/activity.title: placeholder mismatch" in issue
+                                for issue in issues), issues)
+            self.assertTrue(any("parent/language.changed" in issue
+                                for issue in issues), issues)
+
     def test_bad_optional_catalogue_cannot_inject_object_values(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
