@@ -72,6 +72,38 @@ installer/first-boot/lifecycle test gates or the Creations/Activity
 audit programme. Do not invent a second language registry or silently
 promote unvoiced locales.
 
+## 2026-10-26 — Stage retry: status/verify PASS, stage failure masked by login prefix
+
+Ran the single healthy A-to-B retry in
+`docs/testing/2026-10-26_AB_STAGE_RETRY.md` from clean `abb11b0a0`, reusing
+the verified `1275e0be1` bundles and accepted-A clone. The source-diff
+allowlist passed and the focused harness suites were **176 tests OK**. Reuse
+preflight passed: both bundle hashes and accepted-A
+(`83d693d9…`) matched, the prior first-boot JSON validated, no image holder was
+present, and there were no owned loops before the leg. PSmisc 23.7 rejected the
+work order's `fuser -v -- <files>` form, so the equivalent supported invocation
+was recorded; the reused `0600` bundles were made `0644` so the user-level
+checks could read them.
+
+The leg got further: `update-status -> OK`, `update-verify -> VERIFIED`, then
+**`update-stage` failed with `phase update-stage failed (exit 120)`**. The stage
+failure line was prefixed by `greia login:`, so the harness's
+`_control_phase_failure` parser missed it and booted `update-arm`, which
+correctly refused with `update transaction is accepted, not staged`. The first
+concrete error is the stage failure; the arm refusal is downstream. The
+immutable base payload's shipped client has the 1800 s stage bound, so this is
+not the old 30 s test-client timeout. The captured serial lacks the stage
+service error/traceback, so installed-updater stage completion remains
+**UNPROVEN**; no production refusal is claimed. Accepted-A SHA is unchanged,
+the loop audit is 0, and no healthy B/arm/fault leg ran.
+
+Evidence:
+`/var/tmp/greia-ab-stage-abb11b0a0fc999ec536841f02441423546b845fa-20261026T085728Z/`.
+Report: `docs/reviews/2026-10-26_AB_STAGE_RETRY_EVIDENCE.md`. Next: fix the
+failure-marker parser and stage journal capture in the test control, then
+authorize one new attempt; do not reuse this failed clone or rebuild the OS for
+a harness-only cause. Session 04 remains OPEN.
+
 ## 2026-10-26 — Current-source A/B rerun: install/first PASS, stage harness timeout
 
 Ran the clean three-leg route in `docs/testing/2026-10-25_AB_SMOKE_RETRY.md`

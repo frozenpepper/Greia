@@ -3390,3 +3390,34 @@ is not a rebuild trigger. Diagnose the failing layer first. Rebuild only for
 changed shipped/build inputs or actually missing/corrupt artifacts. Record the
 single retry result and stop; do not automatically start the remaining fault
 matrix. Those release obligations remain OPEN separately.
+
+## 2026-10-26 — Stage retry result: stage failure masked by login-prefixed marker
+
+Executed the single retry in `docs/testing/2026-10-26_AB_STAGE_RETRY.md` from
+`abb11b0a0`, reusing the verified `1275e0be1` bundles and accepted-A clone.
+Source-diff allowlist passed; focused harness suites **176 tests OK**. Reuse
+hashes and prior first-boot JSON validated; holder check reported no users and
+there were no owned loops before the leg. Host-preflight deviations recorded:
+PSmisc 23.7 rejects the work order's `fuser -v -- <files>` form (equivalent
+supported form used, status 1 = no holders), and the reused root-owned `0600`
+bundles were made `0644` so the user-level checks could read them.
+
+The leg reached `update-status -> OK` and `update-verify -> VERIFIED`, then
+**`update-stage` failed with `phase update-stage failed (exit 120)`**.
+`update-arm` then correctly refused with `update transaction is accepted, not
+staged`. The stage failure marker was prefixed by `greia login:` on the serial
+console, so `_control_phase_failure` did not recognize it and the harness
+continued to the arm phase. The first concrete error is the stage failure; the
+arm refusal is downstream. The immutable base payload's shipped client has the
+1800 s stage bound, so this is not the old 30 s test-client timeout. The
+captured serial does not include the stage service error/traceback, so
+installed-updater stage completion remains **UNPROVEN**; no production refusal
+is claimed. Accepted-A SHA is unchanged and the post-leg loop audit is 0.
+
+Evidence:
+`/var/tmp/greia-ab-stage-abb11b0a0fc999ec536841f02441423546b845fa-20261026T085728Z/`.
+Report: `docs/reviews/2026-10-26_AB_STAGE_RETRY_EVIDENCE.md`. Next: fix the
+test-control failure-marker handling and stage journal capture, then authorize
+a new single attempt; do not reuse the failed clone or rebuild the OS for this
+harness-only cause. Session 04 remains OPEN; no B health, rollback, Parent,
+full-system, physical or USB claim is made.

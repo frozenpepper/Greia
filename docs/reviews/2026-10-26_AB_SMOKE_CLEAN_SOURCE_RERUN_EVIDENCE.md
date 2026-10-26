@@ -200,3 +200,14 @@ the documented host phase budget (2,400 s). The 1275 image already passed real
 VERIFY under its old 30-second control; the revised guide does not require
 another full image build. The generic harness configuration's shorter default
 is not used by this work order; preserve the explicit 2,400-second setting.
+
+## Follow-up retry (2026-10-26)
+
+The harness fixes were committed in `abb11b0a0`, and the authorized single
+retry was executed per `docs/testing/2026-10-26_AB_STAGE_RETRY.md`. Focused
+harness suites passed (176), reuse preflight passed, status/verify passed, but
+`update-stage` reported `phase update-stage failed (exit 120)`. The stage
+failure line was prefixed by `greia login:`, so the harness parser missed it
+and continued to arm, which correctly refused as unstaged. Healthy B remains
+unproven. Exact evidence:
+`docs/reviews/2026-10-26_AB_STAGE_RETRY_EVIDENCE.md`.

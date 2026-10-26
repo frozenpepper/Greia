@@ -129,6 +129,15 @@ production client's operation timeout; root-only test arm is still distinct
 from panel operations. Owned loop cleanup must finish or report failure; save
 association audits and never bulk-detach unrelated loops.
 
+The authorized retry from `abb11b0a0` has now run: focused suites passed (176),
+status/verify passed, and `update-stage` reported `phase update-stage failed
+(exit 120)`. The stage marker was prefixed by `greia login:`, so the harness
+parser missed it and continued to arm, which correctly refused as unstaged.
+The shipped 1800 s stage bound was verified in the immutable payload; the
+stage service error was not captured. The next change must fix the
+failure-marker parser and stage journal capture before another attempt. See
+`docs/reviews/2026-10-26_AB_STAGE_RETRY_EVIDENCE.md`.
+
 The installed updater discovers the fixed published bundle directly. Status
 is reporting/recovery progress, not a package-admission requirement. Device
 jobs, slot journals and recovery remain. Routine Python/Activity updates use

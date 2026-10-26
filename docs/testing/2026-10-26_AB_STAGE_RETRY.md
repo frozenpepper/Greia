@@ -2,6 +2,17 @@
 
 Date: 2026-10-26 · Status: **UNPROVEN; Linux VM retry; Session 04 OPEN**
 
+**Latest result (2026-10-26, `abb11b0a0`):** focused harness suites 176 OK;
+reuse hashes/first-boot/offline checks passed; `update-status` returned `OK`
+and `update-verify` returned `VERIFIED`; `update-stage` failed with
+`phase update-stage failed (exit 120)`, then `update-arm` correctly refused
+`update transaction is accepted, not staged`. The stage failure line was
+prefixed by `greia login:`, so the harness failure-marker parser missed it and
+continued to arm. Healthy B remains unproven. See
+[the retry evidence report](../reviews/2026-10-26_AB_STAGE_RETRY_EVIDENCE.md).
+Do not reuse the failed clone; fix the test-control marker/journal capture
+before authorizing another attempt.
+
 This retries only healthy A-to-B from the [current-source evidence report](../reviews/2026-10-26_AB_SMOKE_CLEAN_SOURCE_RERUN_EVIDENCE.md), reusing its clean bundles and accepted-A clone instead of repeating the long install/first boot. Reuse is conditional on every artifact, hash, source-path, first-boot and focused-test check below. A failed preflight stops this attempt; it does not authorize another image
 build. Fix host/harness problems before running a VM. Rebuild via the
 [clean route](2026-10-25_AB_SMOKE_RETRY.md) only when shipped/build inputs

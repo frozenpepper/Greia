@@ -121,24 +121,32 @@ uses normal inbox publication, without host-to-guest receipt path projection.
 Ownership, atomic publication, transfer checks and bounded failure diagnostics
 remain. Durable application jobs and A/B journals still own recovery.
 
-Latest installed result (`1275e0be1`): install and first-A passed; the updater
-returned STATUS/VERIFIED. Staging hit a harness 30-second timeout, and the
-report recorded leaked loop associations. Current harness fixes reuse the
-production operation timeout for staging and the repository's bounded loop
-cleanup. Root-only arm remains available only through the root test control.
+Latest installed results: from `1275e0be1`, install and first-A passed and
+the updater returned STATUS/VERIFIED, but staging hit a harness 30-second
+timeout and leaked loops. Those harness fixes are in `abb11b0a0`; the
+authorized single retry from `abb11b0a0` then passed focused suites (176),
+status and verify, but `update-stage` reported `phase update-stage failed
+(exit 120)`. The failure line was prefixed by `greia login:`, so the harness's
+`_control_phase_failure` parser missed it and booted arm, which correctly
+refused `update transaction is accepted, not staged`. The shipped client's
+1800 s stage bound is present in the immutable payload, so this is not the old
+30 s client timeout; the stage service error was not captured before poweroff.
+Do not call it a production refusal.
 
-Next use `docs/testing/2026-10-26_AB_STAGE_RETRY.md`. It permits one healthy
-A-to-B retry using those exact bundles/accepted-A only after its source-diff,
-hash, first-boot and offline checks pass. If a shipped/build input changed or
-an artifact is absent/mismatched, rebuild via `2026-10-25_AB_SMOKE_RETRY.md`.
-A harness/host preflight failure is not a rebuild trigger. Diagnose that
-layer against the same artifacts; keep build outputs. This work order runs
-one healthy update only, then reports and stops even on success. Do not start
-a full fault matrix or rebuild loop. Never reuse the failed healthy-update
-clone or manually repair guest state.
+Next: fix the test-control failure-marker handling and stage journal capture,
+then authorize one new attempt against the same verified inputs. If a
+shipped/build input changed or an artifact is absent/mismatched, rebuild via
+`2026-10-25_AB_SMOKE_RETRY.md`. A harness/host preflight failure is not a
+rebuild trigger. Diagnose that layer against the same artifacts; keep build
+outputs. The executed work order `docs/testing/2026-10-26_AB_STAGE_RETRY.md`
+runs one healthy update only, then reports and stops even on success. Do not
+start a full fault matrix or rebuild loop. Never reuse the failed
+healthy-update clone or manually repair guest state.
 Record owned loop associations before/after the leg; leftover associations
 are a cleanup failure, not a pass. Never bulk-detach unrelated host devices.
 The `866ba6827` candidate-reuse guide remains historical.
+The executed retry report is
+`docs/reviews/2026-10-26_AB_STAGE_RETRY_EVIDENCE.md`.
 
 The active root stays writable. Hashes spanning its boot are retained for
 diagnosis, not checked for equality. First-boot B remains untouched and must
