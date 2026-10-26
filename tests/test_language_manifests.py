@@ -146,6 +146,27 @@ class ManifestLanguageTests(unittest.TestCase):
         self.assertIsNone(chooser.handle_event(event, pygame))
         self.assertEqual(chooser.selected_index, 4)
 
+    def test_fifth_language_installer_and_parent_copy_come_from_ui_data(self):
+        from greia_installer import i18n
+        from greia_launcher import panel_localization
+
+        base = tuple(i18n.SUPPORTED_SYSTEM_LOCALES)
+        original_panel = panel_localization.LOCALES
+        with patch.object(i18n, "SUPPORTED_SYSTEM_LOCALES", base + ("de",)), \\
+             patch.object(i18n, "language_ui", side_effect=lambda locale, section: {
+                 "installer": {"Continue": "Weiter", "Choose your language": "Sprache wählen"},
+                 "installer_dynamic": {"connecting": "Verbinde mit {value}…"},
+             }.get(section, {})), \\
+             patch.object(panel_localization, "LOCALES", original_panel + ("de",)), \\
+             patch.object(panel_localization, "language_ui", side_effect=lambda locale, section: {
+                 "parent": {"parent.title": "Elterneinstellungen"},
+                 "parent_constants": {"TAB_LANGUAGE": "Sprache"},
+             }.get(section, {})):
+            self.assertEqual(i18n.InstallerTranslator("de").text("Continue"), "Weiter")
+            self.assertEqual(i18n.InstallerTranslator("de").text("Connecting to Home…"), "Verbinde mit Home…")
+            self.assertEqual(panel_localization.panel_message("parent.title", "de"), "Elterneinstellungen")
+            self.assertEqual(panel_localization.panel_constant("TAB_LANGUAGE", "de"), "Sprache")
+
     def test_bad_optional_catalogue_cannot_inject_object_values(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
