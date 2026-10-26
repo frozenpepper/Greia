@@ -58,8 +58,7 @@ Some features described in plans — especially public Activity-store/update, sy
 
 ## Change Greia's language
 
-Greia currently offers **English, Italian, Spanish and French**. You can
-change the computer's language without reinstalling it:
+The current development version offers **English, Italian, Spanish and French**. The choices come from the languages actually included in that Greia release, so this list may expand in later versions. You can change the computer's language without reinstalling it:
 
 1. Open **Greia Parents → This Greia → Language** in the browser, or open
    the on-device Parents panel with **S + T** held for five seconds at the
