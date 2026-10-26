@@ -141,15 +141,16 @@ wrong language
 
 Those require regeneration/rejection.
 
-## 7. Whisper verifier
+## 7. Historical Whisper verifier (not the current default)
 
-Whisper is implemented separately behind `SpeechVerifier` and currently uses:
+This section describes historical Chatterbox/Whisper receipts, **not** the
+current `VoiceEngine` verifier. New generation requests now use the pinned
+multilingual Parakeet-TDT v3 provider behind `SpeechVerifier` as documented
+in `tools/greia_voice_core/asr_policy.py`. Old Whisper Tiny/Base evidence
+must remain attributed to its actual model rather than relabeled Parakeet.
 
-```text
-mlx-community/whisper-tiny
-```
-
-The requested locale language is passed explicitly.
+When deliberately replaying an old Whisper task, the requested language is
+passed explicitly.
 
 Suitable multi-word character/shared-library lines may be checked. Tiny one-word reactions and pedagogical speech normally skip ASR.
 
