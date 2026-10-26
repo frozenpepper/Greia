@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from greia_platform.child_text import display_text
+from greia_platform.system_language import language_ui
 from greia_platform.usage_limits import UsageLimitStatus
 
 
@@ -72,7 +73,7 @@ def home_usage_limit_presentation(
         return HomeUsageLimitPresentation(False, "", False)
 
     language = str(locale or "en").replace("_", "-").split("-", 1)[0].casefold()
-    messages = _MESSAGES.get(language, _MESSAGES["en"])
+    messages = {**_MESSAGES.get(language, _MESSAGES["en"]), **language_ui(locale or "en", "usage_limit")}
 
     if remaining <= 0:
         text = messages["finished"]
