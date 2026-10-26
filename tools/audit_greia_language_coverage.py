@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Source-side text/audio census for Greia's four-language rollout.
+"""Source-side text/audio census for Greia's manifest languages.
 
 This script is intentionally an inventory, NOT an acceptance validator.
 It reports missing locale bundles and declared audio cues without faking
@@ -19,7 +19,12 @@ import sys
 import tomllib
 from typing import Any
 
-LOCALES = ("en", "it", "es", "fr")
+_SOURCE_ROOT = Path(__file__).resolve().parents[1] / "src"
+if str(_SOURCE_ROOT) not in sys.path:
+    sys.path.insert(0, str(_SOURCE_ROOT))
+from greia_platform.system_language import SUPPORTED_SYSTEM_LOCALES
+
+LOCALES = SUPPORTED_SYSTEM_LOCALES
 SOURCE_LOCALES = ("en", "it")
 SPEECH_EXTENSIONS = {".wav", ".ogg"}
 
