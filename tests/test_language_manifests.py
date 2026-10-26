@@ -96,6 +96,56 @@ class ManifestLanguageTests(unittest.TestCase):
             with self.assertRaises(FileExistsError):
                 prepare("de", root)
 
+    def test_staged_fifth_language_can_pass_source_audit_before_manifest(self):
+        import sys
+        tools = Path(__file__).resolve().parents[1] / "tools"
+        if str(tools) not in sys.path:
+            sys.path.insert(0, str(tools))
+        from scaffold_greia_language import prepare
+        from check_greia_language import audit
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            demo = root / "activities" / "demo"
+            (demo / "locales").mkdir(parents=True)
+            (demo / "activity.toml").write_text(
+                '[activity]\\nlanguages = ["en", "de"]\\n', encoding="utf-8"
+            )
+            (demo / "locales" / "en.json").write_text(
+                json.dumps({"schema_version": 1, "locale": "en",
+                            "strings": {"activity.title": "Count {count} dots"},
+                            "audio": {}}), encoding="utf-8"
+            )
+            prepare("de", root)
+            self.assertFalse((root / "src/greia_platform/languages/de/manifest.json").exists())
+            self.assertEqual(audit("de", root, staged=True), [])
+            self.assertTrue(audit("de", root), "release audit must require a manifest")
+
+            translated_path = demo / "locales" / "de.json"
+            payload = json.loads(translated_path.read_text(encoding="utf-8"))
+            payload["strings"]["activity.title"] = "Zähle {wrong} Punkte"
+            translated_path.write_text(json.dumps(payload), encoding="utf-8")
+            self.assertTrue(any("placeholder mismatch" in issue
+                                for issue in audit("de", root, staged=True)))
+
+    def test_installer_language_chooser_can_page_to_fifth_entry_without_gui(self):
+        from types import SimpleNamespace
+        from greia_installer.entrypoint import LanguageChooser
+
+        chooser = LanguageChooser.__new__(LanguageChooser)
+        chooser.languages = tuple(SimpleNamespace(locale=str(i)) for i in range(5))
+        chooser.page_size = 4
+        chooser.columns = 2
+        chooser.selected_index = 0
+        chooser._pressed = True
+        chooser._targets = {
+            "page-next": SimpleNamespace(collidepoint=lambda point: point == (5, 5)),
+        }
+        pygame = SimpleNamespace(MOUSEBUTTONDOWN=1, MOUSEBUTTONUP=2, KEYDOWN=3)
+        event = SimpleNamespace(type=pygame.MOUSEBUTTONUP, button=1, pos=(5, 5))
+        self.assertIsNone(chooser.handle_event(event, pygame))
+        self.assertEqual(chooser.selected_index, 4)
+
     def test_bad_optional_catalogue_cannot_inject_object_values(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
