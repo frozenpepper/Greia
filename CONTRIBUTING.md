@@ -107,6 +107,13 @@ where it ran.
 - **Speech.** New prerecorded speech goes through `tools/greia_voice.py` (see
   [skills/greia-voice-production/SKILL.md](skills/greia-voice-production/SKILL.md)).
   Committed recordings are owner-reviewed; do not regenerate them.
+- **Adding, translating or maintaining a language?** Start at
+  [Add a Greia Language](docs/development/ADD_A_GREIA_LANGUAGE.md)
+  and [the language agent skill](skills/greia-language-expansion/SKILL.md).
+  Scaffold UI and Activity JSON, translate, record/review voice assets, run the
+  staged checker, and add the locale's manifest only after owner acceptance.
+  Installer and OS language choosers use the manifest directory; no new Python
+  language list is needed. Existing EN/IT/ES/FR remain released.
 - **Add or update tests** for behaviour you change. Prefer tests that exercise
   behaviour over tests that search source text.
 - **Update the documents your change makes wrong**: the relevant skill,
@@ -128,7 +135,7 @@ verification locally or on owner-approved machines.
 
 External contributors have access to the full repository so they can run Greia and test their work. They submit pull requests for owner review; `@frozenpepper` is named in `.github/CODEOWNERS`.
 
-**Enforcement depends on GitHub settings, not this text or the CODEOWNERS file alone.** Before inviting external collaborators, the owner must enable branch protection on `main`, require pull requests and at least one approval, require code-owner review, and disable force pushes and branch deletion. The owner may keep the administrator bypass for normal core development. If GitHub reports that private-repository protection requires Pro or Team, upgrade before inviting collaborators; until protection is active, invited users with write access can push to `main`.
+**Review rules and technical enforcement are different.** The owner asks external contributors to use branches and pull requests, and `.github/CODEOWNERS` documents the intended reviewer. On a private repository under a free personal GitHub account, branch protection may not be enforceable; collaborators who receive write access can technically push directly to `main` even though project policy forbids it. Only grant private write access to collaborators you trust to follow the PR workflow. If the repository's plan/settings later allow branch protection, the owner can enforce PR approval there. No paid subscription or repository transfer is a prerequisite for contributing under the present trust-based workflow.
 
 ## Coding agents
 
