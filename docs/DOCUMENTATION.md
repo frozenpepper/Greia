@@ -361,6 +361,31 @@ from the working tree during cleanup, but these findings must not be confused
 with broken links in a living guide. The audit has not yet been executed in
 a full local checkout at the new cleanup head.
 
+### 8.1 Release-preparation source audit — 2026-10-26
+
+A GitHub-source review inspected the Markdown links and obvious obsolete
+language/voice claims in **139 maintained root, `docs/` and `skills/`
+guides** plus **13 active plans/test procedures**. No missing repository
+link targets or present-tense fixed-twelve-language / obsolete default-voice
+claims were found in those inspected files. The small
+`tests/test_repository_docs_audit.py` suite now also checks maintained links
+against the actual local repository when run as part of ordinary tests.
+
+This was **source inspection, not execution** of
+`tools/audit_repository_docs.py`, not validation of external URLs, and not
+a claim that every historical review remains accurate today. Historical
+reviews, superseded plans and one-off test reports are **dated evidence**;
+they must not override maintained guides. For a complete inventory including
+historical broken links, the read-only tool provides `--scope all`, but old
+paths to deleted evidence should be interpreted in the context of their
+original commit, not blindly recreated.
+
+Retired in this cleanup tranche: September website study mocks and a set
+of disposable August visual test screenshots. Historical reports and
+approved recordings, release diagnostics and the named Encyclopedia
+visual baselines were preserved. The recovery context remains in
+`docs/archive/` and Git history.
+
 ## 9. Maintenance
 
 When implementation intentionally changes:
