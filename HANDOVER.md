@@ -312,6 +312,34 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-26 — Manifest language fixes: 59/59 focused tests PASS (SOURCE-VERIFIED)
+
+The owner's local agent verified exact `main` HEAD
+`bd3aa0a25fdd58220ad1b361ebf7ce2715a3ba47`, fast-forwarded cleanly
+from `7bb199514`. Existing Python 3.12.7 at
+`/opt/anaconda3/bin/python3`, `PYTHONPATH=src`,
+`PYTHONDONTWRITEBYTECODE=1`. Source suites passed:
+`test_language_manifests.py` **13/13**, `test_system_language.py` **9/9**,
+`test_installer_localization.py` **7/7**,
+`test_panel_localization.py` **19/19**,
+`test_four_language_release_contract.py` **11/11**:
+**59/59 focused PASS**. The `en`, `it`, `es`, `fr` source/placeholder
+audits each returned zero findings and exit 0. New nested placeholder,
+UI-schema validation and nested Activity/UI checker regression tests passed.
+
+Zero tracked modifications afterward; 310 previously untracked files
+remained untouched. No production language manifests or accepted audio
+changed across the verified commit range. No new locale was offered.
+This supersedes the preceding entry's outstanding focused-test rerun,
+but constitutes **SOURCE-VERIFIED** evidence only. Actual five-language
+rendering, font/layout, audio, installer image and device tests remain
+unperformed, as does complete language-localized browser chrome in the
+separate `Greia-Parent-App-Html` repository. Its language-choice options
+already derive from the Greia Parent API. Next useful step is a single
+bounded, nondestructive five-language UI/rendering exercise and separate
+browser-chrome localization design; do not repeat the already-passed five
+focused suites simply for ceremony or disturb independent A/B testing.
+
 ### 2026-10-26 — Fifth-language checker verified baseline and repaired (SOURCE-WIP)
 
 The owner's local agent ran five manifest/system/installer/Parent/release
