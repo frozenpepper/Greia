@@ -1697,3 +1697,25 @@ installer tests). The complete output is retained externally at
 The owner requested recording the missing 52 with the appropriate installed system voice and waived listening review. Run: `/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/native-system-tts-missing-52-v1/`. The existing VoiceEngine and journaled CorpusRunner path made 52 one-call native macOS recordings and installed them transactionally; no character clones, VoxStage, ASR or Parakeet were involved. Locale mapping: EN Samantha (8), IT Alice (4), ES Mónica (12), FR Thomas (28). Exact semantic request and separately pinned spoken text are preserved in receipts.
 
 Terminal and independent receipt audits PASS: 52 changed, 615 of 667 unchanged; all original backups and provenance reconciled. Each receipt truthfully states `verification=NOT_RUN` and `human_review=WAIVED_BY_OWNER` under authorization `owner-2026-10-23-native-system-tts-missing-52`; no machine or listening pass is claimed. The old Parakeet plans and review decisions remain unchanged. Focused voice-pattern verification passed 240 tests. `make verify PYTHON=/opt/anaconda3/bin/python3` ended at its test target with `Abort trap: 6` after 3 failure markers and before a unittest summary; it is NOT GREEN. Log: `/tmp/greia-native-tts-make-verify.log`; HANDOVER records this boundary.
+
+### 2026-10-26 — Manifest-based language extension follow-up (source-only)
+
+Continued the owner-requested source-first manifest architecture after the en/it/es/fr
+folder registry and common installer/OS/Parent resource integrations were committed.
+Fixed `tools/check_greia_language.py` to support `--staged`: contributors can
+validate a fifth locale's UI JSON, Activity TOML, and Activity strings before
+adding a selectable `manifest.json`. Optional `first_profile.extra_letters`
+can legitimately remain empty; previously the checker treated it as a blocker.
+Added fifth-language tests covering staged audits, placeholder mismatch
+detection, installer language-page navigation, and installer/on-device Parent
+strings supplied through new-language data rather than new Python translations.
+Updated the practical language contributor guide with the staged command.
+
+**Verification:** GitHub source review and committed regression tests only.
+No local Python tests, `make verify`, GUI/installer image, real device, or
+physical playback executed in this remote session. The new test cases must be
+run from a full local checkout before acceptance. Manifest-driven selection
+is implemented in source, but fifth-language release remains NOT ACCEPTED.
+The separate Parents browser app still needs language-specific browser chrome
+copy for full translation coverage, and Voice Studio is an external authoring
+workstation dependency. No existing approved audio was changed.
