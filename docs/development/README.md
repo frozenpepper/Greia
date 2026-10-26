@@ -118,6 +118,18 @@ Read this when using the desktop Greia Activity Simulator. It explains the canon
 
 Normative architecture is ADR 0029; exact implementation lives under `src/greia_simulator/` and canonical launcher/platform services.
 
+### Add or maintain a Greia language
+
+Use [`ADD_A_GREIA_LANGUAGE.md`](ADD_A_GREIA_LANGUAGE.md) for the complete
+manifest + UI/Activity JSON/TOML workflow, working with an unfinished locale
+without offering it, voice production and Parakeet verification, and updating,
+switching or retiring existing languages. Agents start with
+[`skills/greia-language-expansion/SKILL.md`](../../skills/greia-language-expansion/SKILL.md).
+The currently offered four locales (EN/IT/ES/FR) are just the manifests that
+ship today; adding an ordinary new language does not require changing a
+Python selector registry. The separately managed browser Parents App still
+needs its own browser-chrome translation resources and integration.
+
 ## Activity-authoring entry point
 
 The living practical Activity guide remains:
