@@ -1,7 +1,8 @@
 # Automated review of generated Greia speech
 
-**Status:** current post-generation procedure, 2026-10-22.
+**Status:** current procedure for reviewing the **2026-10-19 frozen replacement corpus**; its Whisper evidence lane is historical/model-specific (last reviewed 2026-10-26).
 **Entry point:** `tools/regenerate_voice_corpus.py review`.
+**New VoiceEngine generation:** uses pinned multilingual **Parakeet-TDT v3** by default, not the frozen corpus's Whisper Base review path. See `SETUP.md` §7 and `tools/greia_voice_core/asr_policy.py`.
 **Owner:** Voice Production Engine; no Activity-owned ASR/FFmpeg scripts.
 
 Generation DONE means the file was produced and installed. Follow generation
@@ -9,9 +10,11 @@ with this separate automated review, then listening review. Automated reports
 never change `human_review`, approve assets, regenerate speech or replace files.
 An automated PASS is a screening result, not audible/product acceptance.
 
-## Current model and comparison defaults (2026-10-22)
+## Frozen corpus-review model and comparison (2026-10-22)
 
-New review/verification uses cached multilingual Whisper Base,
+This historical corpus-review command uses cached multilingual Whisper Base;
+it does **not** change the Parakeet v3 default used for new VoiceEngine requests.
+The frozen review lane's model is
 `mlx-community/whisper-base-mlx` revision
 `1e3e249fb8d01c655324bd6841b1deadffd6d04c`. Screen policy v4 ignores accent/diacritic
 errors by default. `--strict-accents` on review/reassess restores strict comparison;
@@ -51,7 +54,9 @@ the shared VoxStage queue and release the model only when that shared worker is
 idle and it is appropriate to finish your session. Do not stop another project's
 jobs or load competing large models. Signal-only review needs no synthesis model.
 
-The reviewer permits **installed dependencies and cached Whisper weights only**.
+This frozen-corpus reviewer permits **installed dependencies and cached Whisper weights only**.
+That restriction applies to this command, not to the Parakeet v3 verifier used by
+new VoiceEngine generation.
 It does not install packages or download weights. ASR model calls force offline
 Hugging Face resolution. If dependencies/weights are unavailable, record the
 blocker and select the correct existing authoring environment per SETUP. Do not
@@ -79,7 +84,7 @@ set -o pipefail
 ```
 
 `--asr auto` probes code/cached-weight readiness once. Eligible clips get the
-existing Whisper verifier with verification REQUIRED. An unavailable verifier
+existing **frozen-corpus Whisper** verifier with verification REQUIRED. An unavailable verifier
 is **BLOCKED**, not successful verification. The tool still runs signal checks
 so ASR setup does not conceal corrupt audio. Use `--asr off` with a **different
 report directory** for an intentionally technical-only pass; its speech screen
