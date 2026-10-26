@@ -120,6 +120,7 @@ tests/                 the unittest suite
 |---|---|
 | Friendly parent and installer guides | [docs/user/README.md](docs/user/README.md) |
 | Create an Activity | [docs/development/CREATE_AN_ACTIVITY.md](docs/development/CREATE_AN_ACTIVITY.md) |
+| Add/translate a language (including Voice Studio) | [docs/development/ADD_A_GREIA_LANGUAGE.md](docs/development/ADD_A_GREIA_LANGUAGE.md) |
 | Build an OS image (human guide + linked agent runbook) | [docs/development/BUILD_A_GREIA_IMAGE.md](docs/development/BUILD_A_GREIA_IMAGE.md) |
 | How the docs fit together | [docs/DOCUMENTATION.md](docs/DOCUMENTATION.md) |
 | Architecture overview | [docs/architecture/GREIA_ARCHITECTURE.md](docs/architecture/GREIA_ARCHITECTURE.md) |
