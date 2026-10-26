@@ -28,6 +28,19 @@ working tree; the archive index preserves their lessons and Git history
 preserves their full content. No production voice or build artifacts
 were touched during that cleanup.
 
+**Documentation audit follow-up (2026-10-27, source-only archive repair):**
+The local agent verified the release-documentation cleanup at
+`678c2f4acc65e8f97ac56c77975592ac2a112331`: 241 maintained Markdown
+documents, zero broken internal links and four passing audit tests. The all-scope
+inventory at that commit found 40 historical links across two archived files.
+Those links were subsequently redirected to their verified historical Git
+snapshots (18 early-learning links, 22 launcher-review links); the archived
+findings were not changed and no retired test evidence was restored. Updated
+`docs/archive/README.md` and `docs/DOCUMENTATION.md` to explain the exception.
+A full all-scope rerun on the new head is still pending and can be combined
+with the next appropriate normal verification session; no device test is
+required for these Markdown changes.
+
 ## Active workstreams
 
 Blocking and lifecycle authorities (rules in `AGENTS.md`):
