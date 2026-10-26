@@ -7,7 +7,7 @@ description: Use when asked to translate, stage, record or add an OS/Activity/in
 
 **Start:** `docs/development/ADD_A_GREIA_LANGUAGE.md`. The one offered-language registry is now the set of `src/greia_platform/languages/<locale>/manifest.json` files, consumed by installer, Shell, Parent Settings and the Parent API. Do not add a second hardcoded language list.
 
-**Scaffold:** `PYTHONPATH=src python3 tools/scaffold_greia_language.py <locale>`. The tool creates editable UI and Activity JSON from English reference strings, **without** adding an offered manifest or replacing existing audio. Translate and review those files; add locale to Activity TOML declarations as required. Keep spoken scripts separate from UI copy and literacy curriculum.
+**Scaffold:** `PYTHONPATH=src python3 tools/scaffold_greia_language.py <locale>`. The tool creates editable UI and Activity JSON from English reference strings, **without** adding an offered manifest or replacing existing audio. Translate and review those files; add locale to Activity TOML declarations as required. Run `PYTHONPATH=src python3 tools/check_greia_language.py <locale> --staged` before publishing the manifest: it checks UI catalog schema, ordinary and nested format placeholders, and Activity key parity. It cannot judge translation quality. Keep spoken scripts separate from UI copy and literacy curriculum.
 
 **Voice:** read `skills/greia-voice-production/SKILL.md`, `tools/greia_voice_core/README.md` and `docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md`. Use the selected VoxCPM2/VoxStage master registry and current pinned Parakeet-TDT v3 verifier through VoiceEngine. No direct model calls or silent model downloads. Voice assets need actual human review.
 
