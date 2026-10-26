@@ -3,12 +3,15 @@
 **Purpose:** the short current state for contributors and agents: active workstreams, recent results, blockers and next steps. It is not an archive.
 **Public-source readiness:** IN PROGRESS. Root entry points exist (`LICENSE`, `NOTICE.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`); the licensing/provenance audit is open (see `NOTICE.md`).
 **Ordinary-family release:** NOT READY (`docs/release/GREIA_PUBLIC_RELEASE_READINESS.md`).
-**Current A/B action (2026-10-26 follow-up):** the corrected 80-test preflight
-passes, but current main has continued to advance (at last check `ef8eb3415`) and adds production installer/launcher/
-platform localization source and en/es/fr/it language manifests outside the
-reuse allowlist. The one-stage diagnostic boot was **not** started. A reviewer
-must record an explicit reuse exception or rebuild the next bundle/image. No
-rebuild/install/arm/B boot. Actual stage cause remains unknown. See
+**Last recorded A/B diagnostic checkpoint (2026-10-26; not a current HEAD claim):**
+the corrected 80-test preflight passed for the earlier candidate, but main
+subsequently gained production installer/launcher/platform localization changes
+and language manifests outside that candidate's artifact-reuse allowlist.
+The one-stage diagnostic boot was **not** started under that evidence.
+Before any new boot/install attempt, consult the latest exact A/B work order,
+recheck source and artifact identities, and obtain the existing gate's explicit
+reuse decision or rebuild. No B-boot/rollback or ordinary-family release
+acceptance is established by this checkpoint. See
 `docs/reviews/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC_SOURCE_GATE_FAILURE.md`.
 
 Entries dated before 2026-10-15 were removed from this file in the 2026-10-16 open-source cleanup. Read them with `git show 101e332a:HANDOVER.md`; lessons from that period are indexed in `docs/archive/README.md`.
@@ -321,6 +324,29 @@ PRESERVED; the 4 first-run DONE, all 16 earlier retakes, and all 143 evidence-ga
 rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
+
+### 2026-10-26 — Documentation and historical capture hygiene, source-reviewed
+
+Release documentation cleanup continued on GitHub after the original
+manifest-language and user-guide consolidation. Reviewed the tracked
+Markdown inventory and relative links for 240 maintained-candidate documents
+at source HEAD `254faddfb55bd0b9ef94d663b988da9f2ead6612`:
+**no broken repository-relative Markdown links in that source-level sweep**.
+The read-only `tools/audit_repository_docs.py --scope maintained` helper now
+also treats `docs/archive/README.md` as a maintained navigation index
+(regression test corrected). This remote review is not a local test execution
+and does not establish semantic accuracy of every historical document.
+
+Retired nine 2026-08-22 PNG captures from completed historical visual-review
+folders (514,381 bytes); Git history preserves them. No current Activity,
+canonical artwork, voice, release image, tests, A/B diagnostic evidence, or
+approved assets were touched. Preserved legacy audio acceptance reports,
+Encyclopedia visual golden masters and 2026-10 installer/A-B evidence.
+Historic review text may refer to now-retired screenshots; such links are
+historic context, not live instructions. Next useful full-worktree check:
+`python3 tools/audit_repository_docs.py --scope maintained` and
+`python3 tools/audit_repository_docs.py --scope all` at the exact latest HEAD.
+Leave current independent A/B acceptance undisturbed.
 
 ### 2026-10-26 — Release documentation and repository hygiene (GitHub source review)
 
