@@ -6,7 +6,7 @@
 ## Journey
 
 ```text
-Greia logo animation (skippable) → Language (EN / IT / ES / FR)
+Greia logo animation (skippable) → Language (manifest-offered locales; currently EN / IT / ES / FR)
 → Welcome → 1 Keyboard → 2 Disk → 3 Pointer → 4 Screen → 5 Wi-Fi (optional)
 → 6 Ready to install (hold to erase) → Installing → All done | Installation stopped
 ```
@@ -21,7 +21,7 @@ Without the shared catalogue in the live root the meadow is painted procedurally
 
 ## Page requirements
 
-- **Language:** 2-column grid of big tiles with drawn flags (the fonts have no flag glyphs); Continue is labelled in the highlighted language.
+- **Language:** 2-column grid of big tiles with drawn flags (the fonts have no flag glyphs); Continue is labelled in the highlighted language. The choices are loaded from packaged `src/greia_platform/languages/<locale>/manifest.json` files through `system_language.py`, not a fixed four-language list. More than four choices use paginated tiles; the page controls must remain reachable by pointer and keyboard at 800×480 as well as 1024×600. A translation-only folder without `manifest.json` never appears.
 - **Welcome:** says Greia goes on the internal disk, lists the steps, says nothing is erased before the last step, asks to keep power connected.
 - **Disk:** explains that only safe internal disks are offered; each disk shows model, size and device path; a "disk changed" rejection is shown on this page.
 - **Ready to install:** the disk to erase is the largest element (model, size, path) in a warning card, followed by "Everything currently on this disk will be erased. This cannot be undone.", the keyboard and Wi-Fi summary, and the 2-second hold button with its hint.
@@ -36,10 +36,10 @@ The root transaction service streams display-only `PROGRESS` frames on the same 
 
 ## Text and layout rules
 
-- All copy goes through the installer translator (`i18n.py`, `i18n_es_fr.py`); measurement uses the translated text, and paragraphs are translated before wrapping. Machine data (SSIDs, disk models, paths, credentials) is drawn verbatim.
+- All copy goes through the installer translator (`i18n.py`, `i18n_es_fr.py` for the four existing baseline dictionaries, plus `<locale>/ui.json` for newly offered languages). Measurement uses the translated text, and paragraphs are translated before wrapping. Machine data (SSIDs, disk models, paths, credentials) is drawn verbatim. Contributors use `docs/development/ADD_A_GREIA_LANGUAGE.md` and check staged translations before publishing a manifest.
 - Every label fits by measurement (shrink or ellipsis), never by a fixed width.
 - Readability floors (`presentation.text_floors`): body/paragraph text at least 20 px and helper text at least 16 px at 1024x600, 17 px and 15 px at 800x480. Sizes come from `presentation.text_scale` (about 22/25 px body/control at 600 px high), and kit labels never shrink below the helper size.
-- Reviewed at 1024x600 and 800x480 in EN/IT/ES/FR with `tools/installer_screenshots.py`, which also reports overlapping or off-screen hit targets, text drawn below the floor, kit labels spilling out of their box, and translated copy cut with an ellipsis. Zero faults is the bar (248 states, 2026-10-17).
+- **Historical evidence:** the 2026-10-17 screenshot audit covered the then-four languages (EN/IT/ES/FR) at 1024×600 and 800×480 via `tools/installer_screenshots.py` (248 states). That does **not** establish any future locale's legibility or the new paginated chooser's rendered behavior. Each added manifest requires fresh page-navigation/text-fitting review (no overlaps, floor violations or unexpected truncation) at both sizes and ultimately release-image/device evidence.
 
 ## Performance
 
