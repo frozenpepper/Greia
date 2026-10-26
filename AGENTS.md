@@ -14,7 +14,7 @@ This repository implements a child-first educational Linux appliance/platform. T
 
 ## New-language contributor route
 
-When asked to add, translate, stage or release a new Greia language, start with `skills/greia-language-expansion/SKILL.md` and `docs/development/ADD_A_GREIA_LANGUAGE.md`. Read the voice-production skill for speech work. The current four released languages remain en/it/es/fr; a new language is not a config-only product feature yet and must not be advertised before coverage and owner approval.
+When asked to add, translate, stage or release a new Greia language, start with `skills/greia-language-expansion/SKILL.md` and `docs/development/ADD_A_GREIA_LANGUAGE.md`. Read the voice-production skill for speech work. The original four released languages remain en/it/es/fr; new left-to-right languages use a language folder manifest plus localized data/resources instead of Python registry edits. Never offer an unfinished locale before translation, voice, layout and owner acceptance.
 
 ## Authoritative read order and active plan
 
