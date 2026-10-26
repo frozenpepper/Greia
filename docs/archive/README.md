@@ -21,6 +21,12 @@ at `docs/archive/reviews/X.md` if it appears below.
 For the current state of the project, read `README.md`, `HANDOVER.md` and
 `docs/DOCUMENTATION.md` instead.
 
+## Historical website direction
+
+| Document | Lesson |
+|---|---|
+| [reviews/2026-09-23_WEBSITE_DESIGN_STUDIES.md](reviews/2026-09-23_WEBSITE_DESIGN_STUDIES.md) | The owner's selected long-form family-facing website direction superseded the Wonder Map and Scribble Machine prototypes. Original mock HTML, CSS, JS and image previews live in Git history, not the active release checkout. |
+
 ## Language-support history
 
 | Document | Lesson |
