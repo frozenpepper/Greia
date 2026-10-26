@@ -5,6 +5,23 @@
 **Single local task queue:** `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`  
 **Evidence status:** The separately authorized 2026-10-21 V3 replacement completed with 1,340 pending-review receipts and full policy-v2 automated screening (1,115 PASS / 225 WARN). Human listening remains open. The prior source `make verify` remains NOT GREEN on recorded host/source failures; no GUI, Simulator or physical-install acceptance is claimed.
 
+## 2026-10-26 — Language manifests + contributor data workflow (source only)
+
+Owner-authorized extension of the four-language foundation: the offered-device
+language set now loads from one packaged per-locale `manifest.json` directory;
+four existing EN/IT/ES/FR entries preserve the currently selected list.
+Installer, on-device Parent settings and Parent API use the discovered set.
+Paginated selection layouts avoid an ever-growing single-screen tile grid.
+Optional `ui.json` overlays provide additional installer/Shell/Parent strings
+without new Python language lists; the English-reference Activity+UI scaffold,
+manifest/source coverage checker, focused tests and contributor skill/guide
+were added. Voice Production Engine, selected v0.3 masters and Parakeet-TDT v3
+policy remain unchanged. Missing audio, locale-specific curriculum, glyph
+coverage and layout evidence still block introducing a new selectable locale.
+This is **SOURCE-WIP**; no provider-free tests, simulator, full OS image, or
+real-device language acceptance ran through this GitHub connection. Existing
+A/B acceptance evidence is not transferable to new source commits.
+
 ## 2026-10-21 — V3 selected-master corpus replacement and automated review complete
 
 The owner-selected Dani v5-02, Momo v3-01 and Tito v3-01 masters were promoted
