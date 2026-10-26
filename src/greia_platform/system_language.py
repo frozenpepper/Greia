@@ -7,6 +7,7 @@ import subprocess
 import time
 from collections.abc import Mapping
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 
 from .localization import LocalizationError, LocaleTag
@@ -130,9 +131,6 @@ def language_ui(locale: str, section: str) -> dict[str, str]:
     if canonical not in _LANGUAGES_BY_LOCALE:
         return {}
     return _language_ui_cached(canonical).get(section, {})
-
-
-from functools import lru_cache
 
 
 @lru_cache(maxsize=MAX_SYSTEM_LANGUAGES)
