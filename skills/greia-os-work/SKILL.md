@@ -487,18 +487,25 @@ src/greia_platform/activity_backend_policy.py
 
 For Activity implementation itself, use `skills/greia-activity-authoring/SKILL.md`.
 
-## Supported-language declaration (four released languages)
+## Supported-language declaration (manifest-based; four currently released)
 
-The **selectable** OS device locales are exactly `en`, `it`, `es`, `fr`
-(owner decision 2026-10-17). The single registry is
-`SUPPORTED_SYSTEM_LANGUAGES` / `SUPPORTED_SYSTEM_LOCALES` in
-`src/greia_platform/system_language.py`; the installer language-first
-screen, on-device Parent panel, Parent API, `greia-languagectl` and the
-developer simulator all read it, and every built-in Activity manifest
-declares the same four. `tests/test_four_language_release_contract.py`
-enforces registry/selector/manifest/key parity and the shared spoken
-banks. Follow `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`.
-Any new Shell/installer/Parent string lands in all four languages.
+The **currently offered** OS locales are `en`, `it`, `es`, `fr`
+(owner decision 2026-10-17). The single selectable registry is
+the set of `src/greia_platform/languages/<locale>/manifest.json`
+files, loaded by `src/greia_platform/system_language.py` into
+`SUPPORTED_SYSTEM_LANGUAGES` / `SUPPORTED_SYSTEM_LOCALES`. Installer,
+on-device Parent panel, Parent API, privileged language helper and simulator
+consume that one registry. New ordinary LTR locales add resources, voice and
+Activity TOML/JSON without editing Python chooser lists. Stage translations
+without a manifest; run
+`PYTHONPATH=src python3 tools/check_greia_language.py <locale> --staged`
+to validate UI schema and format placeholders (including nested format
+fields) before owner-approved promotion. The release contract then
+checks manifest-derived text/Activity/audio coverage; device/UI review
+remains separate. Follow `docs/development/ADD_A_GREIA_LANGUAGE.md`
+and `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`.
+Any newly authored Shell/installer/Parent text still requires accurate
+translations for every offered locale.
 Historical unsupported records are left intact and read as safe
 English runtime fallback. Do not install voice/TTS models on Greia OS.
 New authoring-time provider adapters belong only under
