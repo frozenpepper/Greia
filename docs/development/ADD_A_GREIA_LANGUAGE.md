@@ -65,7 +65,9 @@ Read `doctor`'s **verifier readiness separately**; success for character synthes
 Run from the repository root, with the project's development dependencies available:
 
 ```bash
-PYTHONPATH=src python3 -m unittest tests.test_system_language tests.test_localization tests.test_installer_localization tests.test_four_language_release_contract tests.test_four_language_inventory tests.test_voice_parakeet_pipeline -v
+for pattern in test_system_language.py test_localization.py test_installer_localization.py test_four_language_release_contract.py test_four_language_inventory.py test_voice_parakeet_pipeline.py; do
+  PYTHONPATH=src python3 -m unittest discover -s tests -p "$pattern" -v || exit 1
+done
 python3 tools/greia_voice.py doctor
 ```
 
