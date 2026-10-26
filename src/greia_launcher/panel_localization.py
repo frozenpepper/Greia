@@ -120,7 +120,10 @@ def _language(locale: str) -> str:
         language = LocaleTag.parse(locale).value
     except (LocalizationError, ValueError):
         language = "en"
-    return language if language in LOCALES else "en"
+    if language in LOCALES:
+        return language
+    base = language.split("-", 1)[0]
+    return base if base in LOCALES else "en"
 
 
 def panel_message(key: str, locale: str, **variables: str) -> str:
