@@ -427,7 +427,7 @@ def _localized_title(
 ) -> str:
     lang = locale.split("-")[0].lower() if locale else "it"
     section = "collections" if translations is _CATEGORY_TRANSLATIONS else "discoveries"
-    configured = language_ui(lang, section).get(value)
+    configured = language_ui(locale or "it", section).get(value)
     if configured:
         return configured
     trans = translations.get(value)
