@@ -1,6 +1,6 @@
 # Greia Installer Experience
 
-**Status:** SOURCE (2026-10-17 redesign; same-day follow-ups: streamed progress, keyboard erase hold, text floors). Desktop/headless visual review only; no physical Acer evidence yet.
+**Status:** SOURCE (2026-10-17 redesign; later manifest-based language chooser extension). The recorded 2026-10-17 desktop/headless visual review covered EN/IT/ES/FR only; the later paginated five-language path and physical Acer installer remain visually unaccepted.
 **Scope:** what the parent sees and does in the graphical live installer. Disk eligibility, payload checks and the fail-closed transaction are owned by `src/greia_installer/` (`disk.py`, `transaction_client.py`, `transaction_service.py`) and AGENTS.md contract 14; nothing here relaxes them. Wi-Fi behaviour and carry-over: `INSTALLER_WIFI_SETUP.md`. Start-up animation: `docs/design/GREIA_BOOT_EXPERIENCE.md` § Stage D (installer).
 
 ## Journey
