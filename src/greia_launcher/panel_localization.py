@@ -132,6 +132,9 @@ def panel_message(key: str, locale: str, **variables: str) -> str:
     Unknown keys and mismatched interpolation fields are authoring bugs,
     not a signal to expose machine keys on the child-facing screen.
     """
+    if key not in _MESSAGES and key.startswith("language.option."):
+        from greia_platform.system_language import system_language
+        return system_language(key[len("language.option."):]).native_name
     source = _MESSAGES[key]
     selected = _language(locale)
     message = language_ui(selected, "parent").get(key, source.get(selected, source["en"]))
