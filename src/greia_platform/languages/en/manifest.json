@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "locale": "en",
+  "name": "English",
+  "native_name": "English",
+  "flag": "🇬🇧",
+  "order": 0,
+  "direction": "ltr"
+}
