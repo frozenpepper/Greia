@@ -15,6 +15,8 @@ from greia_platform.system_language import (
     SUPPORTED_SYSTEM_LANGUAGES,
     SystemLanguageError,
     SystemLanguageStore,
+    SUPPORTED_SYSTEM_LOCALES,
+    load_system_languages,
     system_language,
 )
 
@@ -27,11 +29,12 @@ class SystemLanguageTests(unittest.TestCase):
         locales = [item.locale for item in SUPPORTED_SYSTEM_LANGUAGES]
         self.assertEqual(len(locales), len(set(locales)))
         self.assertEqual(DEFAULT_SYSTEM_LOCALE, "en")
-        self.assertEqual(locales, ["en", "it", "es", "fr"])
-        for unavailable in ("de", "zh-CN", "pt", "ar", "hi", "id", "bn", "sw"):
-            self.assertNotIn(unavailable, locales)
-            with self.assertRaises(SystemLanguageError):
-                system_language(unavailable)
+        self.assertEqual(tuple(locales), SUPPORTED_SYSTEM_LOCALES)
+        self.assertEqual(tuple(locales), tuple(item.locale for item in load_system_languages()))
+        for baseline in ("en", "it", "es", "fr"):
+            self.assertIn(baseline, locales)
+        with self.assertRaises(SystemLanguageError):
+            system_language("xx-NOPE")
         for item in SUPPORTED_SYSTEM_LANGUAGES:
             self.assertTrue(item.flag)
             self.assertTrue(item.name)
@@ -62,7 +65,7 @@ class SystemLanguageTests(unittest.TestCase):
             root = Path(directory)
             record = root / "install-record.json"
             # Retired tags from the old twelve-language registry fail soft.
-            record.write_text(json.dumps({"locale": "de"}), encoding="utf-8")
+            record.write_text(json.dumps({"locale": "zz"}), encoding="utf-8")
             settings = root / "settings"
             settings.mkdir()
             override = settings / "language.json"
@@ -71,7 +74,7 @@ class SystemLanguageTests(unittest.TestCase):
             )
             store = SystemLanguageStore(settings, install_record_path=record)
             self.assertEqual(store.read().locale, "en")
-            self.assertEqual(json.loads(record.read_text())["locale"], "de")
+            self.assertEqual(json.loads(record.read_text())["locale"], "zz")
             self.assertEqual(json.loads(override.read_text())["locale"], "zh-CN")
             store.replace("it")
             self.assertEqual(store.read().locale, "it")
@@ -142,9 +145,9 @@ class SystemLanguageTests(unittest.TestCase):
                     active_profile_status_path=root / "active-profile.json",
                 )
                 self.assertEqual(app.language_payload()["locale"], "it")
-                self.assertEqual([item["locale"] for item in app.language_payload()["languages"]], ["en", "it", "es", "fr"])
+                self.assertEqual([item["locale"] for item in app.language_payload()["languages"]], list(SUPPORTED_SYSTEM_LOCALES))
                 with self.assertRaises(SystemLanguageError):
-                    app.update_language("hi")
+                    app.update_language("xx-NOPE")
                 self.assertEqual(app.update_language("en")["locale"], "en")
                 self.assertEqual(
                     SystemLanguageStore(settings, install_record_path=record).read().locale,
