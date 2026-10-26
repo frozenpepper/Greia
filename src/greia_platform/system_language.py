@@ -80,9 +80,9 @@ def load_system_languages(root: Path | None = None) -> tuple[SystemLanguage, ...
             continue
         if manifest.is_symlink() or not manifest.is_file():
             raise SystemLanguageError(f"invalid language manifest path: {manifest}")
-        if manifest.stat().st_size > MAX_LANGUAGE_MANIFEST_BYTES:
-            raise SystemLanguageError(f"oversized language manifest: {manifest}")
         try:
+            if manifest.stat().st_size > MAX_LANGUAGE_MANIFEST_BYTES:
+                raise ValueError("oversized language manifest")
             data = json.loads(manifest.read_text(encoding="utf-8"))
             if not isinstance(data, dict) or data.get("schema_version") != 1:
                 raise ValueError("expected schema_version 1 object")
