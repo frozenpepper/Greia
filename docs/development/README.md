@@ -139,7 +139,7 @@ needs its own browser-chrome translation resources and integration.
 
 ## Documentation check before release
 
-Run `python3 tools/audit_greia_documentation.py --strict` from the repo root to check Markdown links throughout current manuals, skills and developer/user guides. The tool reports historical broken links separately; it is read-only and does not replace tests, voice listening or release-image evidence.
+Run `python3 tools/audit_repository_docs.py --scope maintained` from the repo root to check Markdown links throughout current manuals, skills and developer/user guides. The tool reports historical broken links separately; it is read-only and does not replace tests, voice listening or release-image evidence.
 
 ## Activity-authoring entry point
 
