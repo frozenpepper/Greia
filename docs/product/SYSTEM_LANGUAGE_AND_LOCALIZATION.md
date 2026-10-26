@@ -31,7 +31,8 @@ The first graphical installer screen is a flag-first language chooser. It appear
 | `fr` | French | 🇫🇷 |
 
 The owner released Spanish and French alongside English and Italian on
-2026-10-17: every selector offers exactly these four, no more, no fewer.
+2026-10-17. These four manifests are installed today; new offered languages
+are discovered from the manifest directory when added to a future release.
 German `de`, Simplified
 Chinese `zh-CN`, Portuguese `pt`, Arabic `ar`, Hindi `hi`,
 Indonesian `id`, Bengali `bn` and Swahili `sw` are not supported
@@ -99,19 +100,30 @@ Malformed/missing override state must fail safely to the install-time/default va
 
 ## 5. One canonical registry
 
-The only product-owned selectable-language registry is:
+The only product-owned selectable-language registry is the discovered
+set of manifests under:
 
 ```text
-src/greia_platform/system_language.py
+src/greia_platform/languages/<locale>/manifest.json
 ```
 
-The installer and hidden on-device Parent Settings import that registry directly.
+`src/greia_platform/system_language.py` loads and validates those manifests
+at process startup, exposing `SUPPORTED_SYSTEM_LANGUAGES` to the installer,
+hidden on-device Parent Settings, privileged helper and Parent API. The
+per-language `ui.json` file in the same directory provides optional UI text
+resources. Absent manifests are not offered; incomplete translation folders
+must not contain a manifest until the language has passed acceptance.
 
 The Parent API returns that same registry to HTML/native clients. Browser code must **not** carry a second hard-coded list.
 
 Legacy `zh` and `zh-CN` values are no longer selectable until Chinese text, script and runtime acceptance. Old records containing them fall back safely to English.
 
-Adding/removing a selectable device language therefore requires a platform change plus appropriate localization/font/layout evidence; editing a browser-only array is not sufficient.
+Adding/removing a selectable device language therefore requires a reviewed
+language manifest and complete localization/font/audio/layout evidence, **not**
+a new Python language registry entry or browser-only array. Extra languages
+must be validated on real installer, Shell and Parent surfaces. Existing
+hardcoded English/Italian/Spanish/French baseline tables remain as fallbacks;
+new translations can be added through language UI JSON resources.
 
 ## 6. Greia Parents API
 
@@ -223,7 +235,11 @@ Arabic additionally requires real RTL text/layout acceptance; merely storing `ar
 ## 12. Current source ownership
 
 ```text
-src/greia_platform/system_language.py        registry + persistence + typed service
+src/greia_platform/system_language.py        manifest loader + persistence + typed service
+src/greia_platform/languages/*/manifest.json  offered language metadata
+src/greia_platform/languages/*/ui.json        optional per-language UI text catalog
+tools/scaffold_greia_language.py              English-reference UI + Activity bundle creation
+tools/check_greia_language.py                 source completeness/placeholder audit
 src/greia_installer/entrypoint.py            first-screen flag selector
 src/greia_installer/engine.py                InstallRequest + install-record write
 src/greia_parent/protocol.py                 Parent capability/resource vocabulary
