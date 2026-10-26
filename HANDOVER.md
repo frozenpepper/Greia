@@ -325,6 +325,37 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-27 — Documentation semantics and test-hygiene refinement (SOURCE REVIEW)
+
+Continued the owner-requested all-docs release cleanup atop the already
+completed 2026-10-26 maintained-document audit. Inspected latest main before
+writing; previous tranches had already reviewed maintained docs/links,
+archived the superseded language-tier proposal, retired 21 website prototype
+files and nine historical August visual screenshots, and shortened this
+handover. Preserved named current A/B results, actively linked reports,
+Encyclopedia golden-master evidence, accepted audio and source tests.
+
+Corrected `docs/product/INSTALLER_EXPERIENCE.md` to describe the actual
+manifest-backed and paginated language chooser, resource-based installer copy
+and the fact that 2026-10-17 four-language screenshot results cannot certify
+future five-language layouts. Clarified `docs/product/FIRST_BOOT_PROFILE_SETUP.md`
+that new wizard translations and extra alphabet letters come from each
+language's `ui.json` resources, not just historic EN/IT/ES/FR tables.
+Annotated ADR 0028's original August "no localization service" gap as
+historical Context without rewriting its accepted decision. Removed
+`tests/test_public_doc_links.py`, a redundant seven-entrypoint Markdown
+link test now subsumed by `tests/test_repository_docs_audit.py` plus
+`tools/audit_repository_docs.py --scope maintained` covering maintained
+guides. No production code, language manifests, selected character references
+or audio was changed.
+
+**Evidence boundary:** GitHub source inspection and verified commits only.
+The repository-wide doc audit and tests were **not executed** in this remote
+session; request one read-only local audit on exact new HEAD, without
+repeating the 59 previously passed language tests or disturbing A/B/voice
+work. Document-link audits do not certify historical report factual accuracy,
+external web links or current installer-image/physical acceptance.
+
 ### 2026-10-26 — Release documentation hygiene and language-maintenance review (SOURCE)
 
 Continued the owner-requested release cleanup against current GitHub `main`.
