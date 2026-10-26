@@ -1545,7 +1545,7 @@ class ParentSettingsOverlay:
             self._language_message_is_error = False
             self._language_message = self._ui_message(
                 "language.changed",
-                name=saved.native_name,
+                name=SUPPORTED_SYSTEM_LANGUAGES[self._language_index].native_name,
             )
         except (SystemLanguageError, OSError, IndexError) as exc:
             self._language_message_is_error = True
