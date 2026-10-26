@@ -325,6 +325,36 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-26 — Release documentation hygiene and language-maintenance review (SOURCE)
+
+Continued the owner-requested release cleanup against current GitHub `main`.
+Verified that the earlier tranche retired **21 historical September website
+mock files** and **9 disposable August visual test screenshots** (30 removed
+files total), archived the superseded language-tier proposal and shortened
+the handover. Preserved named Encyclopedia visual baselines, current A/B
+diagnostics, voice publication ledgers, approved recordings and active
+test suites. Their prior history remains retrievable by commit.
+
+Reviewed Markdown relative links and obvious conflicting present-tense
+localization/voice claims in **139 maintained root/docs/skills guides** and
+**13 active plans/test procedures** through GitHub reads; no missing links
+were found in that review. Corrected contributor quick-route examples and
+maintenance guidance, dynamically phrased family language instructions,
+and the prepared voice-Python `doctor` command in the local Voice Studio
+guide. Added a repository-wide maintained-document link regression in
+`tests/test_repository_docs_audit.py` and documented the source-audit
+scope in `docs/DOCUMENTATION.md`.
+
+**Evidence boundary:** these checks were GitHub source inspections, not
+execution of `tools/audit_repository_docs.py`, unit suites, image builds,
+UI/device checks or a review of external URL validity. Past manifest-related
+**59/59** passing tests apply to exact `bd3aa0a`; new documentation/test
+changes are not yet run at this later HEAD. The current source still offers
+EN/IT/ES/FR by manifest; staging and promoting a fifth language remain
+different actions. The separate browser Parents chrome still needs its
+own new-locale catalog work. Avoid repeating device tests or disturbing
+the concurrent A/B work solely to validate documentation changes.
+
 ### 2026-10-26 — Release docs and cleanup consolidation continuation (SOURCE-REVIEWED)
 
 Continued owner-requested audit from the previous source-cleanup HEAD.
