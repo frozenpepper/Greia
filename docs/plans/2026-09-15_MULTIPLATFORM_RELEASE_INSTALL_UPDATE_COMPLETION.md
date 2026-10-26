@@ -3501,3 +3501,19 @@ This is a test-control race, not an installed-updater result. Report:
 Next: fix the fake-server teardown/join, rerun the preflight, then authorize
 the single stage boot. Do not rebuild the OS for this harness-only failure.
 The installed stage cause and healthy B remain UNPROVEN; Session 04 OPEN.
+
+## 2026-10-26 — Deterministic closed-stderr preflight fixture
+
+The Linux report at `920595d4e` correctly stopped before VM work on a test
+fixture failure. The 10 KB pre-script stderr write could fail before connection;
+the server also had EOF/cancellation cleanup defects. Only that fixture changed:
+short controlled buffering, explicit child environment, real request/refusal
+assertions, EOF handling, bounded join-before-close and guaranteed child reap.
+The final work-order preflight passes 80 tests in 14.162 s with parent
+PYTHONUNBUFFERED=1; independent Luna review passed and repeated the final case
+8 times. Exact evidence is appended to the preflight-failure report.
+
+No production/harness implementation or image inputs changed. Next rerun the
+existing single-stage work-order preflight; if green continue directly to its
+one scoped stage diagnostic boot and report. No rebuild or new approval loop.
+Actual stage cause/healthy B remain UNPROVEN; Session 04 remains OPEN.

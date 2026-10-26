@@ -130,7 +130,11 @@ control left its fake-server thread alive after `server.join(timeout=5)` (80
 tests, one failure; the other 79 passed). The one-stage boot was not started,
 per the work order. Read-only allowlist/hash/holder/loop checks passed. Report:
 `docs/reviews/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC_PREFLIGHT_FAILURE.md`.
-Fix the fake-server teardown/join, rerun the preflight, then authorize the boot.
+That test fixture is now corrected and the final 80-test preflight passes
+under `PYTHONUNBUFFERED=1`. The fix is tests-only: synchronize actual request/
+response before the buffered-flush check, EOF handling and bounded teardown.
+Rerun the existing work-order preflight on the host; if green continue to its
+one already-scoped stage boot without a separate new approval step.
 Do not rebuild the OS for this harness-only failure.
 
 Use sudo reads for root-owned 0600 inputs, never chmod. PSmisc holder checks

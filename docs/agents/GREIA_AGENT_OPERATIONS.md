@@ -154,8 +154,11 @@ loop checks passed and inputs were preserved. This is a test-control race, not
 an installed-updater result. Report:
 `docs/reviews/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC_PREFLIGHT_FAILURE.md`.
 
-Fix the fake-server teardown/join, rerun the preflight, then authorize the
-single `update-stage` boot. Do not rebuild the OS for this harness-only
+The fixture is now corrected: buffered stderr is exercised after a real stage
+request, child/server cleanup is bounded and synchronized, and the final
+80-test preflight passes under `PYTHONUNBUFFERED=1`. Rerun the existing
+work-order preflight on the host; if green continue directly with its already-
+scoped single `update-stage` boot and return the saved error/result. Do not rebuild the OS for this harness-only
 failure, repeat the old offline read or resume the full healthy-update retry.
 The actual stage cause and healthy B remain UNPROVEN; Session 04 remains OPEN.
 No production updater source changed in this follow-up.

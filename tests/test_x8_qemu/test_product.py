@@ -393,18 +393,30 @@ class ControlSeamTextTests(unittest.TestCase):
 
     def test_generated_stage_failure_avoids_exit_120_from_buffered_stderr(self) -> None:
         import json
+        import os
         import socket
         import subprocess
         import sys
         import threading
 
-        from greia_platform.privileged_channel import encode_response, new_transaction_id
+        from greia_platform.privileged_channel import (
+            decode_request,
+            encode_response,
+            new_transaction_id,
+        )
 
         marker = 'python3 - "$PHASE_FILE" "$SOCK" "$CTL_MNT" <<\'PYEOF\'\n'
         text = control_runner_text()
         update_script = text.split(marker, 1)[1].split("\nPYEOF", 1)[0]
 
-        def run_script(source: str, root: Path) -> tuple[int, Path]:
+        def run_script(
+            source: str,
+            root: Path,
+            *,
+            expect_request: bool = True,
+            expect_connection: bool = True,
+            pending_stderr: bool = True,
+        ) -> tuple[int, Path]:
             phase_file = root / "phase.json"
             phase_file.write_text('{"phase":"update-stage"}', encoding="utf-8")
             diag_dir = root / "persist" / "x8-control"
@@ -415,33 +427,122 @@ class ControlSeamTextTests(unittest.TestCase):
             listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             listener.bind(socket_path)
             listener.listen(1)
+            listener.settimeout(0.1)
             response = encode_response(
                 new_transaction_id(), "ERROR", {"status": "REFUSED", "reason": "fixture refusal"}
             )
+            stop_server = threading.Event()
+            force_close_server = threading.Event()
+            server_errors: list[BaseException] = []
+            requests: list[tuple[str, dict[str, object]]] = []
+            active_connections: list[socket.socket] = []
 
             def serve_once() -> None:
-                connection, _ = listener.accept()
-                with connection:
-                    while b"\n" not in connection.recv(4096):
-                        pass
-                    connection.sendall(response)
-                listener.close()
+                try:
+                    while not stop_server.is_set():
+                        try:
+                            connection, _ = listener.accept()
+                            break
+                        except socket.timeout:
+                            continue
+                    else:
+                        return
+                    active_connections.append(connection)
+                    with connection:
+                        connection.settimeout(0.1)
+                        chunks: list[bytes] = []
+                        while not stop_server.is_set():
+                            try:
+                                chunk = connection.recv(4096)
+                            except socket.timeout:
+                                continue
+                            if not chunk:  # EOF before a complete request is terminal.
+                                break
+                            chunks.append(chunk)
+                            raw = b"".join(chunks)
+                            if b"\n" in raw:
+                                if not raw.endswith(b"\n") or raw.count(b"\n") != 1:
+                                    raise AssertionError("child sent malformed request framing")
+                                requests.append(decode_request(raw))
+                                connection.sendall(response)
+                                return
+                except OSError as exc:
+                    # Only the explicit bounded fallback may close a socket
+                    # while this worker is still blocked in accept/recv.
+                    if not force_close_server.is_set():
+                        server_errors.append(exc)
+                except BaseException as exc:
+                    server_errors.append(exc)
 
             server = threading.Thread(target=serve_once, daemon=True)
             server.start()
-            child_source = "import sys\nsys.stderr.write('pending-buffer-' + 'x' * 10000)\n" + source
-            process = subprocess.Popen(
-                [sys.executable, "-c", child_source, str(phase_file), socket_path, str(root)],
-                stdin=subprocess.DEVNULL,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.PIPE,
-            )
-            assert process.stderr is not None
-            process.stderr.close()
-            code = process.wait(timeout=15)
-            server.join(timeout=5)
-            listener.close()
+            code: int | None = None
+            process: subprocess.Popen[bytes] | None = None
+            try:
+                # Buffer a short write without touching the closed pipe until
+                # interpreter shutdown. A large write can exceed Linux's pipe
+                # capacity and fail before the generated control reaches its
+                # real socket request, invalidating the positive control.
+                child_prefix = "import sys\n"
+                if pending_stderr:
+                    # stderr is line-buffered by Python; without a newline,
+                    # this short write stays pending until interpreter exit.
+                    child_prefix += "sys.stderr.write('pending-buffer')\n"
+                child_source = child_prefix + source
+                child_env = os.environ.copy()
+                # Make the generated child import the repository's actual
+                # package, independent of pytest/unittest's sys.path setup.
+                child_env["PYTHONPATH"] = str(PROJECT_ROOT / "src")
+                # `-u` is not used; remove inherited unbuffered-I/O mode so
+                # the short no-newline write remains pending until shutdown.
+                child_env.pop("PYTHONUNBUFFERED", None)
+                process = subprocess.Popen(
+                    [sys.executable, "-c", child_source, str(phase_file), socket_path, str(root)],
+                    stdin=subprocess.DEVNULL,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.PIPE,
+                    cwd=root,
+                    env=child_env,
+                )
+                assert process.stderr is not None
+                process.stderr.close()
+                code = process.wait(timeout=15)
+            finally:
+                if process is not None and process.poll() is None:
+                    try:
+                        process.kill()
+                    except ProcessLookupError:
+                        pass
+                    process.wait(timeout=5)
+                stop_server.set()
+                # Let the worker observe cancellation through its 100 ms
+                # accept/recv timeouts before closing sockets from this
+                # thread. Closing under a blocked syscall can raise EBADF on
+                # Linux and turn normal teardown into a false test failure.
+                server.join(timeout=1)
+                if server.is_alive():
+                    force_close_server.set()
+                    listener.close()
+                    for connection in active_connections:
+                        connection.close()
+                    server.join(timeout=1)
+                else:
+                    listener.close()
+                    for connection in active_connections:
+                        connection.close()
             self.assertFalse(server.is_alive())
+            self.assertEqual(server_errors, [])
+            self.assertEqual(
+                len(active_connections),
+                int(expect_connection),
+                "fake server observed an unexpected number of client connections",
+            )
+            if expect_request:
+                self.assertEqual(len(requests), 1, "generated child never sent one complete request")
+                self.assertEqual(requests[0][0], "STAGE_CURRENT_CANDIDATE")
+            else:
+                self.assertEqual(requests, [], "early-exit child unexpectedly connected")
+            assert code is not None
             return code, diag_dir / "phase-result.json"
 
         with tempfile.TemporaryDirectory() as tmp:
@@ -452,10 +553,18 @@ class ControlSeamTextTests(unittest.TestCase):
             fixed_root.mkdir()
 
             # Positive control: restoring SystemExit makes Python flush the
-            # deliberately broken stderr pipe and replace exit 1 with 120.
+            # buffered broken stderr pipe at shutdown and replace exit 1 with
+            # 120. Assert the request and persisted refusal too, proving the
+            # intended generated diagnostic path ran before that flush.
             positive = update_script.replace("os._exit(1)", "raise SystemExit(1)")
             positive_code, _positive_record = run_script(positive, positive_root)
             self.assertEqual(positive_code, 120)
+            positive_record = json.loads(_positive_record.read_text(encoding="utf-8"))
+            self.assertEqual(positive_record["status"], "FAILED")
+            self.assertEqual(positive_record["response"]["returned_op"], "ERROR")
+            self.assertEqual(
+                positive_record["response"]["payload"]["reason"], "fixture refusal"
+            )
 
             fixed_code, fixed_record = run_script(update_script, fixed_root)
             self.assertEqual(fixed_code, 1)
@@ -464,6 +573,40 @@ class ControlSeamTextTests(unittest.TestCase):
             record = json.loads(raw.decode("ascii"))
             self.assertEqual(record["status"], "FAILED")
             self.assertEqual(record["response"]["returned_op"], "ERROR")
+            self.assertEqual(record["response"]["payload"]["reason"], "fixture refusal")
+
+            # Exercise cleanup independently of the socket path: a child that
+            # exits before connect must not strand accept() in the server.
+            early_root = root / "early-exit"
+            early_root.mkdir()
+            early_code, _ = run_script(
+                "raise SystemExit(23)\n",
+                early_root,
+                expect_request=False,
+                expect_connection=False,
+                pending_stderr=False,
+            )
+            self.assertEqual(early_code, 23)
+
+            # A client that connects but closes without a complete request
+            # must also release the server worker instead of spinning on EOF.
+            eof_root = root / "early-eof"
+            eof_root.mkdir()
+            eof_code, _ = run_script(
+                "import socket, sys\n"
+                "client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)\n"
+                "client.settimeout(5)\n"
+                "client.connect(sys.argv[2])\n"
+                "client.shutdown(socket.SHUT_WR)\n"
+                "assert client.recv(1) == b''\n"
+                "client.close()\n"
+                "raise SystemExit(24)\n",
+                eof_root,
+                expect_request=False,
+                expect_connection=True,
+                pending_stderr=False,
+            )
+            self.assertEqual(eof_code, 24)
 
     def test_runner_text_is_valid_bash(self) -> None:
         import subprocess as _subprocess

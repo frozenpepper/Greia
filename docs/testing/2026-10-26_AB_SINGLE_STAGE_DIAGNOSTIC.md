@@ -11,8 +11,11 @@ left its positive-control fake server thread alive after
 the one-stage boot was **not** started. The read-only source allowlist, input
 hashes, holder and old-loop checks were completed separately and passed. Report:
 [`2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC_PREFLIGHT_FAILURE.md`](../reviews/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC_PREFLIGHT_FAILURE.md).
-Fix the test-control server teardown, rerun the preflight, then authorize the
-boot. Do not rebuild the OS for this harness-only failure.
+**Source follow-up:** the test fixture is corrected; the final preflight passes
+80 tests with parent `PYTHONUNBUFFERED=1`. Rerun the commands below from current
+main; if the preflight passes, continue directly with the one diagnostic boot
+already scoped here. Do not stop just to request another approval, and do not
+rebuild the OS for this tests-only correction.
 
 This work order boots **only `update-stage` once**, using the corrected capture.
 It reuses accepted A and the next bundle, writes only a fresh disposable clone,
@@ -42,7 +45,7 @@ OLD_SOURCE=1275e0be1a9e0cda724ce18151ae65a25f03c98c
 SOURCE_HEAD="$(git rev-parse HEAD)"
 git merge-base --is-ancestor "$OLD_SOURCE" "$SOURCE_HEAD"
 CHANGED_PATHS="$(git diff --name-only "$OLD_SOURCE..$SOURCE_HEAD")"
-if printf '%s\n' "$CHANGED_PATHS" | grep -Ev '^(tools/x8_qemu/|tests/|docs/|skills/|HANDOVER\.md$|AGENTS\.md$|CONTRIBUTING\.md$|\.github/CODEOWNERS$)'; then
+if printf '%s\n' "$CHANGED_PATHS" | grep -Ev '^(tools/x8_qemu/|tests/|docs/|skills/|HANDOVER\.md$|AGENTS\.md$|CONTRIBUTING\.md$|README\.md$|SETUP\.md$|\.github/CODEOWNERS$)'; then
   echo "Changed path may affect the image; stop and inspect it, do not rebuild blindly." >&2
   exit 1
 fi
@@ -78,7 +81,8 @@ printf '%s  %s\n' 3ae9cdeafa6e52459016e1a23315648ee4b8887a314c77c288259c1df4d68a
 
 These hashes and accepted-A facts are from the completed `1275e0be1` report
 and the subsequent offline work. The additional allowlisted root documents
-are collaboration policy/CODEOWNERS changes, not image build inputs. Any
+are collaboration policy, navigation and workstation setup documentation,
+not image build inputs. Any
 other changed path needs review before reuse. Inspect actual free space for one sparse/reflink clone, the received bundle
 and staged B before proceeding. The shared clone helper already uses
 `cp --reflink=auto --sparse=always`; raw image length is not allocated size.

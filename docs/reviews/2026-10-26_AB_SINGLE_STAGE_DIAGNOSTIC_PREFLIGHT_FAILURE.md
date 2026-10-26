@@ -73,3 +73,52 @@ Only if it passes should the one `update-stage` diagnostic boot be authorized.
 Do not rebuild the OS for this harness-only test failure, do not use the old
 offline clone again, and do not infer any stage result from this report.
 Session 04 remains OPEN; healthy B remains unproven.
+
+## 4. Test-fixture correction (source follow-up)
+
+The failed preflight is preserved above. The fixture wrote 10,000 stderr bytes
+before executing the generated script; that write could flush immediately when
+the parent closed the reader, so the child could exit before connecting. The
+server also treated empty `recv()` as incomplete input and spun on EOF, and
+cleanup was not guaranteed after every child error. Those fixture defects are
+now corrected without changing production or test-control implementation.
+
+The revised fixture uses a short no-newline write with inherited unbuffered
+mode removed. It asserts that both positive and fixed generated clients really
+send STAGE and save the fixture's refusal before checking exit 120 versus 1.
+The fake server has cancellable accept/recv, explicit EOF handling, bounded
+join-before-close teardown and exceptional-path child kill/reap. Regressions
+cover exit-before-connect and connect-then-EOF; the latter half-closes and waits
+for server EOF so the assertion does not depend on scheduling.
+
+Executed on the Mac worktree based on `920595d4e`:
+
+- Exact work-order source preflight: **80 tests PASS in 14.162 s**, with parent
+  `PYTHONUNBUFFERED=1` and bytecode disabled.
+- Fresh independent Luna review: **PASS**; the final focused case passed
+  **8 consecutive repetitions** under that parent setting.
+- Product module: **58 tests PASS** in the author's final-source run.
+- `git diff --check` and the work-order Bash syntax check pass.
+- Full `make verify` was not rerun for this tests-only fixture/continuation
+  correction. The previously documented full gate remains NOT GREEN; no new
+  full-suite or runtime acceptance is claimed.
+
+Temporary local evidence: `/tmp/greia-stderr-fixture-followup/preflight-final.log`.
+No image build, loop/mount, QEMU boot or installed update ran here. Source tests
+on this Mac do not prove the Linux preflight or update outcome. Rerun the
+existing work order from current main: if preflight is green, continue directly
+with its already-scoped one stage diagnostic boot, capture the result and stop.
+No rebuild, new approval loop, arm, B boot or full retry is introduced.
+
+Concurrent main advanced with language/voice contributor documentation during
+this fix. Those commits were preserved by rebasing the unpublished fixture
+checkpoint onto current main. README/SETUP are now exactly allowed alongside
+AGENTS/CONTRIBUTING/CODEOWNERS in the image-reuse preflight, because their
+reviewed changes are documentation only. No image producer/runtime changed;
+these unrelated docs must not cause a speculative rebuild or another false stop.
+
+After reconciliation, the same exact 80-test preflight passed again in 14.393 s
+with `PYTHONUNBUFFERED=1`; log:
+`/tmp/greia-stderr-fixture-followup/preflight-reconciled.log`. The work order's
+actual reuse-path regex was also checked against the reconciled history and
+passed, alongside Bash syntax and whitespace checks.
