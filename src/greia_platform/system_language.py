@@ -123,7 +123,10 @@ def language_ui(locale: str, section: str) -> dict[str, str]:
     parent_audio_presets, launcher_feedback, collections, discoveries.
     Unknown keys/sections never become executable format or filesystem paths.
     """
-    canonical = str(LocaleTag.parse(locale))
+    try:
+        canonical = str(LocaleTag.parse(locale))
+    except LocalizationError:
+        return {}
     if canonical not in _LANGUAGES_BY_LOCALE:
         return {}
     return _language_ui_cached(canonical).get(section, {})
