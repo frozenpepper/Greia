@@ -27,3 +27,15 @@ assets/catalog/core_icons_v1_contact_sheet.png
 .claude/settings.local.json
 .claude/worktrees/
 opencode.json
+
+# Generated test/build tooling output (source fixtures and accepted evidence remain tracked).
+*.log
+.coverage
+.coverage.*
+htmlcov/
+coverage/
+test-results/
+.mypy_cache/
+.tox/
+.venv/
+node_modules/
