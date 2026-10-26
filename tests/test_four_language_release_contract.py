@@ -1,8 +1,7 @@
-"""Release contract for Greia's four released languages (owner decision 2026-10-17).
+"""Release contract for every manifest-advertised Greia language.
 
-EN, IT, ES and FR are all selectable. Every selector offers exactly the canonical
-registry, every built-in Activity declares it, text keys have four-way parity and
-the shared spoken-asset banks the platform resolves exist in all four languages.
+Every selector uses the manifest registry; each offered language must have the
+same Activity text keys, declarations, and accepted shared spoken banks.
 Provider-free and display-free: it reads source, bundles and committed files only.
 """
 from __future__ import annotations
@@ -25,7 +24,7 @@ from greia_platform.system_language import (
 )
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASED = ("en", "it", "es", "fr")
+RELEASED = SUPPORTED_SYSTEM_LOCALES
 _PLACEHOLDER = re.compile(r"\$\{?\w+\}?|\{\w+\}")
 
 
@@ -34,9 +33,12 @@ def _builtin_activities() -> list[Path]:
 
 
 class RegistryAndSelectorTests(unittest.TestCase):
-    def test_registry_is_exactly_the_four_released_languages(self) -> None:
-        self.assertEqual(SUPPORTED_SYSTEM_LOCALES, RELEASED)
+    def test_registry_matches_manifest_inventory(self) -> None:
+        from greia_platform.system_language import load_system_languages
+        self.assertEqual(load_system_languages(), SUPPORTED_SYSTEM_LANGUAGES)
         self.assertEqual(tuple(item.locale for item in SUPPORTED_SYSTEM_LANGUAGES), RELEASED)
+        for original in ("en", "it", "es", "fr"):
+            self.assertIn(original, RELEASED)
 
     def test_every_selector_reads_the_single_registry(self) -> None:
         # Installer language-first screen, on-device Parent panel and the
