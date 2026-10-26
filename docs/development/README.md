@@ -137,6 +137,10 @@ ship today; adding an ordinary new language does not require changing a
 Python selector registry. The separately managed browser Parents App still
 needs its own browser-chrome translation resources and integration.
 
+## Documentation check before release
+
+Run `python3 tools/audit_greia_documentation.py --strict` from the repo root to check Markdown links throughout current manuals, skills and developer/user guides. The tool reports historical broken links separately; it is read-only and does not replace tests, voice listening or release-image evidence.
+
 ## Activity-authoring entry point
 
 The living practical Activity guide remains:
