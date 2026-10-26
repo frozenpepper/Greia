@@ -72,7 +72,7 @@ class InstallerLocalizationTests(unittest.TestCase):
         self.assertEqual(InstallerTranslator("fr").text("Continue"), "Continuer")
         self.assertEqual(InstallerTranslator("es-ES").text("Start"), "Empezar")
         self.assertEqual(InstallerTranslator("fr-FR").text("Start"), "Commencer")
-        for locale in ("en", "de", "zh-CN", "ar", "hi", "bn", "sw"):
+        for locale in ("en", "zz", "xx-NOPE"):
             with self.subTest(locale=locale):
                 self.assertEqual(InstallerTranslator(locale).text("Continue"), "Continue")
 
