@@ -1719,3 +1719,32 @@ is implemented in source, but fifth-language release remains NOT ACCEPTED.
 The separate Parents browser app still needs language-specific browser chrome
 copy for full translation coverage, and Voice Studio is an external authoring
 workstation dependency. No existing approved audio was changed.
+
+### 2026-10-26 — Post-agent source verification: 56 PASS; schema/nested placeholder repairs untested
+
+Local agent verified exact head `7bb1995146ea917da6a3d33004b2c40d48c535ce`
+on macOS with Python 3.12.7 (`/opt/anaconda3/bin/python3`),
+`PYTHONPATH=src`, bytecode disabled. The five suites passed:
+`test_language_manifests.py` 10; `test_system_language.py` 9;
+`test_installer_localization.py` 7; `test_panel_localization.py` 19;
+`test_four_language_release_contract.py` 11 = **56/56 PASS**.
+The per-language source checker returned zero findings for EN, IT, ES and FR.
+No active tracked modifications; pre-existing untracked voice audit, `final.mp4`
+and `launch-video/` preserved. This is **source-only** evidence, not
+rendering, image composition or hardware acceptance.
+
+Agent findings: `check_greia_language.py` did not reject invalid UI schema
+and omitted placeholders nested inside format specifications (e.g.
+`{count:{width}}`). Subsequent GitHub commits updated the checker to reject
+invalid `ui.json` schema/sections/string types and recursively inspect
+format-spec placeholders. Added focused tests for invalid schema, nested
+UI/Activity placeholders, and retained the separate staged-language flow.
+Updated language guide and OS/language agent skills. **These later changes
+are NOT covered by the 56-pass evidence**; execute focused suites on the latest
+head before any acceptance claim. Browser-based Greia Parents still maintains
+independent four-language browser-chrome translations in
+`frozenpepper/Greia-Parent-App-Html/src/localization.js` but the device
+language choices there already consume the API's manifest-derived language
+list. Converting browser chrome to locale data and validating it requires a
+separate targeted change and pinned-client integration, not a hardware flash.
+No runtime manifests or accepted audio were added or altered.
