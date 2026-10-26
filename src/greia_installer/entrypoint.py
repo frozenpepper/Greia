@@ -54,7 +54,7 @@ class LanguageChooser:
     """The installer's mandatory first screen: one big tile per language.
 
     Drawn with the installer look (meadow, Leo, kit tiles) and laid out as a
-    2-column grid so all selectable languages stay child/parent-sized at
+    paginated 2-column grid so all languages remain child/parent-sized at
     800x480 and 1024x600. Flags are drawn shapes rather than emoji glyphs:
     the bundled fonts have no flag glyphs, which left an empty gap. The
     Continue label follows the highlighted language so a parent who cannot
@@ -85,6 +85,7 @@ class LanguageChooser:
             0,
         )
         self.columns = 2
+        self.page_size = 4  # bounded two-row grid on the smallest supported screen
         self._targets: dict[str, Any] = {}
         self._pressed = False
 
@@ -109,7 +110,9 @@ class LanguageChooser:
             pose="pose_wave",
         )
         self._targets = {}
-        count = len(self.languages)
+        page_start = (self.selected_index // self.page_size) * self.page_size
+        visible = self.languages[page_start:page_start + self.page_size]
+        count = len(visible)
         columns = self.columns if count > 1 else 1
         rows = (count + columns - 1) // columns
         gap = max(10, min(18, width // 60))
@@ -121,8 +124,9 @@ class LanguageChooser:
         top += max(0, (avail - grid_h) // 2)
         cell_w = (main.width - gap * (columns - 1)) // columns
         label_px = max(18, min(28, tile_h // 3))
-        for index, language in enumerate(self.languages):
-            row, column = divmod(index, columns)
+        for offset, language in enumerate(visible):
+            index = page_start + offset
+            row, column = divmod(offset, columns)
             cell = pygame.Rect(main.left + column * (cell_w + gap), top + row * (tile_h + gap), cell_w, tile_h)
             selected = index == self.selected_index
             hovered = cell.collidepoint(pointer_position)
@@ -147,6 +151,18 @@ class LanguageChooser:
         button.midright = (main.right, nav_center)
         self.look.pill(screen, button, continue_label, fill=SUNSHINE, size=max(18, min(25, height // 25)))
         self._targets["continue"] = button
+        if len(self.languages) > self.page_size:
+            page = page_start // self.page_size
+            pages = (len(self.languages) + self.page_size - 1) // self.page_size
+            nav_y = nav_center - 25
+            if page > 0:
+                previous = pygame.Rect(main.left, nav_y, 88, 50)
+                self.look.pill(screen, previous, "Prev", fill=FIELD, size=18)
+                self._targets["page-prev"] = previous
+            if page + 1 < pages:
+                following = pygame.Rect(main.left + 96, nav_y, 88, 50)
+                self.look.pill(screen, following, "Next", fill=FIELD, size=18)
+                self._targets["page-next"] = following
 
     def handle_event(self, event: Any, pygame: Any) -> str | None:
         """Apply one event; return the chosen locale when the parent confirms."""
@@ -159,6 +175,12 @@ class LanguageChooser:
                 return None
             self._pressed = False
             for key, rect in self._targets.items():
+                if key == "page-prev" and rect.collidepoint(event.pos):
+                    self.selected_index = max(0, (self.selected_index // self.page_size - 1) * self.page_size)
+                    return None
+                if key == "page-next" and rect.collidepoint(event.pos):
+                    self.selected_index = min(len(self.languages) - 1, (self.selected_index // self.page_size + 1) * self.page_size)
+                    return None
                 if key.startswith("language-") and rect.collidepoint(event.pos):
                     self.selected_index = int(key.split("-", 1)[1])
                     return None
@@ -214,6 +236,8 @@ def _draw_flag(screen: Any, pygame: Any, locale: str, rect: Any) -> None:
         pygame.draw.rect(screen, red, (rect.left, rect.centery - inner // 2 - 1, rect.width, inner + 1))
     else:
         pygame.draw.rect(screen, SURFACE, rect)
+        badge = pygame.font.Font(None, max(18, rect.height // 2)).render(locale.split("-")[0].upper(), True, INK)
+        screen.blit(badge, badge.get_rect(center=rect.center))
     pygame.draw.rect(screen, INK, rect, width=2, border_radius=3)
 
 
