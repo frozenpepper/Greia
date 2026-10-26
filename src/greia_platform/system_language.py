@@ -48,24 +48,115 @@ class SystemLanguage:
         }
 
 
-# This is the ONE canonical selectable-language registry for the installer,
-# installed Parent panel, privileged helper, Parent API clients and every
-# built-in Activity manifest. Offering a locale is a product support claim, not
-# merely an ability to persist its tag. The owner released Spanish and French
-# alongside English and Italian on 2026-10-17; every selector offers exactly
-# these four (tests enforce four-language text parity across Shell, installer,
-# Parent panel and Activities). See
-# docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md.
-SUPPORTED_SYSTEM_LANGUAGES: tuple[SystemLanguage, ...] = (
-    SystemLanguage("en", "English", "English", "🇬🇧"),
-    SystemLanguage("it", "Italian", "Italiano", "🇮🇹"),
-    SystemLanguage("es", "Spanish", "Español", "🇪🇸"),
-    SystemLanguage("fr", "French", "Français", "🇫🇷"),
-)
+# Language manifests are packaged beside this module and shipped in OS images.
+# One directory with a valid manifest represents one offered product locale.
+# Translators stage incomplete work outside this directory; placing a manifest
+# here is the explicit product-promotion action, not a background file scan.
+LANGUAGE_ROOT = Path(__file__).resolve().parent / "languages"
+MAX_SYSTEM_LANGUAGES = 32
+MAX_LANGUAGE_MANIFEST_BYTES = 4096
+
+
+def load_system_languages(root: Path | None = None) -> tuple[SystemLanguage, ...]:
+    """Read the bounded, sorted language manifests once at process startup.
+
+    Supplying a root makes this independently testable without patching global
+    variables. Never follow symlinked directories or manifests, and fail with
+    the offending file named instead of silently hiding an advertised locale.
+    """
+    directory = LANGUAGE_ROOT if root is None else Path(root)
+    try:
+        entries = sorted(directory.iterdir(), key=lambda item: item.name)
+    except OSError as exc:
+        raise SystemLanguageError(f"cannot read Greia language manifests: {directory}") from exc
+    result: list[tuple[int, SystemLanguage]] = []
+    seen: set[str] = set()
+    for entry in entries:
+        if not entry.is_dir() or entry.is_symlink():
+            continue
+        manifest = entry / "manifest.json"
+        if not manifest.exists():
+            continue
+        if manifest.is_symlink() or not manifest.is_file():
+            raise SystemLanguageError(f"invalid language manifest path: {manifest}")
+        if manifest.stat().st_size > MAX_LANGUAGE_MANIFEST_BYTES:
+            raise SystemLanguageError(f"oversized language manifest: {manifest}")
+        try:
+            data = json.loads(manifest.read_text(encoding="utf-8"))
+            if not isinstance(data, dict) or data.get("schema_version") != 1:
+                raise ValueError("expected schema_version 1 object")
+            locale = LocaleTag.parse(data["locale"]).value
+            if locale != entry.name or locale in seen:
+                raise ValueError("locale must match a unique directory name")
+            name, native, flag = (data[key] for key in ("name", "native_name", "flag"))
+            if not all(isinstance(value, str) and 0 < len(value.strip()) <= 80
+                       for value in (name, native, flag)):
+                raise ValueError("name, native_name and flag must be nonempty bounded strings")
+            order = data.get("order", 1000)
+            if type(order) is not int or not 0 <= order <= 10000:
+                raise ValueError("order must be an integer from 0 to 10000")
+            if data.get("direction", "ltr") not in ("ltr", "rtl"):
+                raise ValueError("direction must be ltr or rtl")
+            seen.add(locale)
+            result.append((order, SystemLanguage(locale, name, native, flag)))
+        except (OSError, ValueError, KeyError, TypeError, UnicodeError, json.JSONDecodeError) as exc:
+            raise SystemLanguageError(f"invalid language manifest {manifest}: {exc}") from exc
+        if len(result) > MAX_SYSTEM_LANGUAGES:
+            raise SystemLanguageError("too many Greia language manifests")
+    result.sort(key=lambda row: (row[0], row[1].locale))
+    if DEFAULT_SYSTEM_LOCALE not in seen:
+        raise SystemLanguageError("required English language manifest is missing")
+    return tuple(item for _, item in result)
+
+
+SUPPORTED_SYSTEM_LANGUAGES: tuple[SystemLanguage, ...] = load_system_languages()
 SUPPORTED_SYSTEM_LOCALES: tuple[str, ...] = tuple(
     item.locale for item in SUPPORTED_SYSTEM_LANGUAGES
 )
 _LANGUAGES_BY_LOCALE = {item.locale: item for item in SUPPORTED_SYSTEM_LANGUAGES}
+
+
+def language_ui(locale: str, section: str) -> dict[str, str]:
+    """Optional per-language UI text resources (loaded only once per process).
+
+    Source sections: installer, installer_dynamic, parent, parent_constants,
+    parent_audio_presets, launcher_feedback, collections, discoveries.
+    Unknown keys/sections never become executable format or filesystem paths.
+    """
+    canonical = str(LocaleTag.parse(locale))
+    if canonical not in _LANGUAGES_BY_LOCALE:
+        return {}
+    return _language_ui_cached(canonical).get(section, {})
+
+
+from functools import lru_cache
+
+
+@lru_cache(maxsize=MAX_SYSTEM_LANGUAGES)
+def _language_ui_cached(locale: str) -> dict[str, dict[str, str]]:
+    path = LANGUAGE_ROOT / locale / "ui.json"
+    if not path.is_file() or path.is_symlink():
+        return {}
+    try:
+        if path.stat().st_size > 256 * 1024:
+            raise ValueError("oversized language UI catalog")
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(data, dict) or data.get("schema_version") != 1:
+            raise ValueError("invalid schema")
+        result: dict[str, dict[str, str]] = {}
+        for section, mapping in data.items():
+            if section == "schema_version":
+                continue
+            if not isinstance(section, str) or not isinstance(mapping, dict):
+                raise ValueError("section must be a string-to-string map")
+            if any(not isinstance(key, str) or not isinstance(value, str)
+                   or len(key) > 160 or len(value) > 8192
+                   for key, value in mapping.items()):
+                raise ValueError("invalid UI string or key")
+            result[section] = mapping
+        return result
+    except (OSError, ValueError, UnicodeError) as exc:
+        raise SystemLanguageError(f"invalid language UI catalog {path}: {exc}") from exc
 
 
 def system_language(locale: str | LocaleTag) -> SystemLanguage:
