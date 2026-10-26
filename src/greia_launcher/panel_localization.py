@@ -13,6 +13,7 @@ from __future__ import annotations
 from string import Formatter
 
 from greia_platform.localization import LocalizationError, LocaleTag
+from greia_platform.system_language import SUPPORTED_SYSTEM_LOCALES, language_ui
 
 
 _MESSAGES: dict[str, dict[str, str]] = {
@@ -111,12 +112,12 @@ _MESSAGES: dict[str, dict[str, str]] = {
     },
 }
 
-LOCALES = ("en", "it", "es", "fr")
+LOCALES = SUPPORTED_SYSTEM_LOCALES
 
 
 def _language(locale: str) -> str:
     try:
-        language = LocaleTag.parse(locale).language
+        language = LocaleTag.parse(locale).value
     except (LocalizationError, ValueError):
         language = "en"
     return language if language in LOCALES else "en"
@@ -129,7 +130,8 @@ def panel_message(key: str, locale: str, **variables: str) -> str:
     not a signal to expose machine keys on the child-facing screen.
     """
     source = _MESSAGES[key]
-    message = source[_language(locale)]
+    selected = _language(locale)
+    message = language_ui(selected, "parent").get(key, source.get(selected, source["en"]))
     expected = {
         field_name
         for _, field_name, _, _ in Formatter().parse(message)
@@ -144,14 +146,15 @@ def audit_panel_messages() -> list[str]:
     """Pure authoring audit: every language must have equal keys/fields."""
     errors: list[str] = []
     for key, messages in _MESSAGES.items():
-        if set(messages) != set(LOCALES):
+        if any(locale not in messages and key not in language_ui(locale, "parent") for locale in LOCALES):
             errors.append(f"{key}: locale coverage mismatch")
             continue
         expected = {
             field_name for _, field_name, _, _ in Formatter().parse(messages["en"])
             if field_name is not None
         }
-        for locale, message in messages.items():
+        for locale in LOCALES:
+            message = language_ui(locale, "parent").get(key, messages.get(locale, ""))
             actual = {
                 field_name for _, field_name, _, _ in Formatter().parse(message)
                 if field_name is not None
@@ -231,7 +234,9 @@ def panel_constant(name: str, locale: str, **variables: str) -> str:
     """Translate a named panel form/control value from its English source."""
     options = _FORM_TRANSLATIONS[name]
     language = _language(locale)
-    message = getattr(_source_copy, name) if language == "en" else options[language]
+    message = language_ui(language, "parent_constants").get(
+        name, options.get(language, getattr(_source_copy, name))
+    )
     fields = {
         field for _, field, _, _ in Formatter().parse(message)
         if field is not None
@@ -244,9 +249,9 @@ def panel_constant(name: str, locale: str, **variables: str) -> str:
 def panel_audio_preset(value: float, locale: str) -> str:
     """Translate a known gain preset without changing numeric gain."""
     language = _language(locale)
-    if language == "en":
-        return _source_copy.AUDIO_PRESET_NAMES[value]
-    return _AUDIO_PRESETS[value][language]
+    return language_ui(language, "parent_audio_presets").get(
+        str(value), _AUDIO_PRESETS[value].get(language, _source_copy.AUDIO_PRESET_NAMES[value])
+    )
 
 
 def audit_panel_constants() -> list[str]:
@@ -254,14 +259,21 @@ def audit_panel_constants() -> list[str]:
     errors = []
     for name, translations in _FORM_TRANSLATIONS.items():
         source = getattr(_source_copy, name, None)
-        if not isinstance(source, str) or set(translations) != {"it", "es", "fr"}:
+        if not isinstance(source, str) or any(
+            locale != "en" and locale not in translations
+            and name not in language_ui(locale, "parent_constants")
+            for locale in LOCALES
+        ):
             errors.append(f"{name}: missing source or language")
             continue
         expected = {
             part for _, part, _, _ in Formatter().parse(source)
             if part is not None
         }
-        for locale, message in translations.items():
+        for locale in LOCALES:
+            message = (source if locale == "en" else language_ui(locale, "parent_constants").get(
+                name, translations.get(locale, "")
+            ))
             found = {
                 part for _, part, _, _ in Formatter().parse(message)
                 if part is not None
