@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "locale": "es",
+  "name": "Spanish",
+  "native_name": "Español",
+  "flag": "🇪🇸",
+  "order": 20,
+  "direction": "ltr"
+}
