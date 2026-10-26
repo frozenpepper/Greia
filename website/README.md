@@ -24,4 +24,4 @@ When a verified installer exists, replace the disabled control for its specific 
 
 For a verified individual Activity, set that item's `packageUrl` in `library-data.js` to its durable `.greiaactivity` URL after review. The library script then exposes its Download link in both the card and detail view. Keep Activity identity and screenshot provenance tied to the corresponding source manifest and package.
 
-The old visual studies remain under `docs/design/website_mocks_2026-09-23/`. Their first-concept URL redirects here, while `storybook-historical.html` preserves the last mock for historical review.
+The superseded September 2026 website mockups are no longer part of the maintained source tree. The first direction was selected and developed here; the other two remain design history. See `docs/archive/reviews/2026-09-23_WEBSITE_DESIGN_STUDIES.md` (repository-root path) for the decision and exact Git revision containing the original prototype files.
