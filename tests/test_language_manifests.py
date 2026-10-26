@@ -217,7 +217,7 @@ class ManifestLanguageTests(unittest.TestCase):
             demo = root / "activities" / "demo"
             (demo / "locales").mkdir(parents=True)
             (demo / "activity.toml").write_text(
-                '[activity]\\nlanguages = ["en", "de"]\\n', encoding="utf-8"
+                '[activity]\nlanguages = ["en", "de"]\n', encoding="utf-8"
             )
             (demo / "locales" / "en.json").write_text(
                 json.dumps({"schema_version": 1, "locale": "en",
