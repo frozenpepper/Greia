@@ -325,6 +325,35 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-26 — Release docs and cleanup consolidation continuation (SOURCE-REVIEWED)
+
+Continued owner-requested audit from the previous source-cleanup HEAD.
+Repository inventory confirmed the prior 21 retired September website study
+files and nine retired August visual review screenshots (30 tracked files
+removed, recoverable through Git history); no obvious tracked Python caches,
+logs, temporary archives or package directories remained. No further old
+A/B, Encyclopedia golden-master or owner-approved voice evidence was deleted
+because its ongoing value/reference status is not yet proven disposable.
+
+Cross-checked current user/agent language instructions and amended
+`docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md` so its frozen 2026-10-19
+Whisper corpus evidence is not confused with new VoiceEngine generation's
+Parakeet-TDT v3 default. Linked release-safe documentation cleanup practice
+from `CONTRIBUTING.md` and `docs/development/README.md`.
+
+Consolidation: `tools/audit_repository_docs.py` and
+`tests/test_repository_docs_audit.py` already existed at this HEAD.
+A duplicate audit CLI/test briefly introduced during review was immediately
+removed; no competing tool remains. Use the existing read-only audit's
+`--scope maintained` and `--scope all` modes. **This latest cleanup
+commit has NOT been tested locally**; the previous remote source-level
+link review and the earlier 59/59 language verification do not constitute
+the current checkout's documented test pass. Recommended single follow-up:
+run those two doc audit modes and the existing three-unit-test suite on a
+clean checkout, record broken current links separately from historical ones.
+Do not rebuild/flash or interfere with ongoing A/B acceptance for docs-only
+verification.
+
 ### 2026-10-26 — Documentation and historical capture hygiene, source-reviewed
 
 Release documentation cleanup continued on GitHub after the original
