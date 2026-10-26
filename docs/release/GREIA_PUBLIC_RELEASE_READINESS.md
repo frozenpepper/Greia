@@ -827,9 +827,20 @@ Prove:
 
 Arabic additionally requires real RTL/shaping/layout acceptance. Chinese, Devanagari and Bengali require actual font/glyph/shaping evidence where claimed.
 
-## First-release simplification is allowed
+## First-release simplification is allowed — via the manifest set
 
-If only English and Italian, for example, meet the complete acceptance bar, the first release may publicly support only those languages while other selectable locales remain explicitly preview/fallback behavior — provided this matches accepted product policy and the UI does not mislead the parent.
+As of 2026-10-26 Greia offers English, Italian, Spanish and French via
+`src/greia_platform/languages/<locale>/manifest.json`. The currently offered
+four all need the appropriate text/audio and installed-image acceptance before
+the product claims full support; focused source checks alone are insufficient.
+If the owner intentionally reduces release scope, remove the not-yet-approved
+language manifests **from the release image** before shipping. Do not keep
+unaccepted choices visible in the installer and describe them as full support,
+or rely on English fallback to serve a pre-reader who needs native speech.
+Verify persisted former choices fall back without damage. A fifth language
+must pass staging checks and rendered/audio/hardware acceptance before its
+manifest is promoted. The maintained contributor workflow is
+`docs/development/ADD_A_GREIA_LANGUAGE.md`.
 
 ## Accessibility/usability baseline
 
