@@ -6,7 +6,7 @@ from typing import Any
 from greia_platform.localization import LocalizationError, LocaleTag
 
 from .i18n_es_fr import FRENCH, SPANISH
-from greia_platform.system_language import DEFAULT_SYSTEM_LOCALE
+from greia_platform.system_language import DEFAULT_SYSTEM_LOCALE, SUPPORTED_SYSTEM_LOCALES, language_ui
 
 
 # Installer copy is deliberately owned separately from installer state/disk logic.
@@ -236,7 +236,9 @@ _DYNAMIC_MESSAGES: dict[str, dict[str, str]] = {
 
 def _dynamic_text(value: str, language: str) -> str:
     """Translate exact known dynamic templates; preserve raw data verbatim."""
-    msg = _DYNAMIC_MESSAGES[language]
+    msg = language_ui(language, "installer_dynamic") or _DYNAMIC_MESSAGES.get(language, {})
+    if not msg:
+        return value
     if value.startswith("Press the key that types “") and value.endswith("”"):
         return msg["press_key"].format(value=value[len("Press the key that types “"):-1])
     if value.startswith("Connecting to ") and value.endswith("…"):
@@ -302,10 +304,10 @@ class InstallerTranslator:
 
     def __post_init__(self) -> None:
         try:
-            language = LocaleTag.parse(self.locale).language
+            language = LocaleTag.parse(self.locale).value
         except (LocalizationError, ValueError):
             language = DEFAULT_SYSTEM_LOCALE
-        if language not in ("en", "it", "es", "fr"):
+        if language not in SUPPORTED_SYSTEM_LOCALES:
             language = DEFAULT_SYSTEM_LOCALE
         object.__setattr__(self, "locale", language)
 
@@ -316,10 +318,8 @@ class InstallerTranslator:
     def text(self, value: str) -> str:
         if not value:
             return value
-        table = _TRANSLATIONS.get(self.language)
-        if table is None:
-            return value
-        translated = table.get(value)
+        table = _TRANSLATIONS.get(self.language, {})
+        translated = language_ui(self.language, "installer").get(value, table.get(value))
         if translated is not None:
             return translated
         return _dynamic_text(value, self.language)
