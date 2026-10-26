@@ -25,7 +25,7 @@ src/greia_platform/languages/
     ui.json                  # text resources for installer and OS
 ```
 
-An English reference manifest looks like this (substitute the new locale and names):
+Example manifest **for German** (use the exact locale tag, native name and appropriate emblem for your new language):
 
 ```json
 {
