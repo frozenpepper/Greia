@@ -34,6 +34,19 @@ class DocumentationAuditTests(unittest.TestCase):
         self.assertTrue(maintained(Path("docs/archive/README.md")))
         self.assertFalse(maintained(Path("docs/reviews/2026-08-01.md")))
 
+    def test_maintained_repository_documentation_links_resolve(self):
+        """Keep current user, contributor, agent and skill link rot out of release."""
+        root = Path(__file__).resolve().parents[1]
+        count, errors = audit(root, "maintained")
+        self.assertGreater(count, 50)
+        self.assertEqual(
+            errors, (),
+            "\\n".join(
+                f"{issue.source}:{issue.line}: {issue.target}"
+                for issue in errors[:30]
+            ),
+        )
+
     def test_invalid_relative_paths_are_reported_without_modification(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
