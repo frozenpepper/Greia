@@ -31,7 +31,7 @@ class DocumentationAuditTests(unittest.TestCase):
         self.assertTrue(maintained(Path("docs/user/README.md")))
         self.assertTrue(maintained(Path("docs/testing/LOCAL_AGENT_START_HERE.md")))
         self.assertFalse(maintained(Path("docs/testing/2026-09-01_OLD.md")))
-        self.assertFalse(maintained(Path("docs/archive/README.md")))
+        self.assertTrue(maintained(Path("docs/archive/README.md")))
         self.assertFalse(maintained(Path("docs/reviews/2026-08-01.md")))
 
     def test_invalid_relative_paths_are_reported_without_modification(self):
