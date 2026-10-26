@@ -129,7 +129,7 @@ def achievement_ui_strings(locale: str | None) -> AchievementUiStrings:
     overrides = language_ui(canonical, "achievements")
     return AchievementUiStrings(**{
         key: overrides.get(key, getattr(original, key))
-        for key in ("title", "empty", "new_label", "new_badge")
+        for key in ("library_title", "empty_library", "new_label", "new_badge")
     })
 
 
