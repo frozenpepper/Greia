@@ -6,8 +6,8 @@ Session 04 OPEN**
 Work order: `docs/testing/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC.md`
 Source at the gate stop:
 `abd9f5045ba65d07edb567fa47a66d1dffa7d8b7` (clean `main`)
-Current `main` during push reconciliation:
-`56f871148` (broader localization source; see §5)
+Current `main` during push reconciliation (at last check):
+`d4c9c9df9` (broader localization source; the workstream was still advancing; see §5)
 Evidence:
 `/var/tmp/greia-ab-stage-preflight-abd9f5045ba65d07edb567fa47a66d1dffa7d8b7-20261026T171039Z/`
 
@@ -70,7 +70,7 @@ Healthy B remains unproven; Session 04 remains OPEN.
 ## 5. Concurrent main advancement (post-stop)
 
 The first push was rejected because `origin/main` advanced during this work.
-The local evidence commit was rebased onto `56f871148`, which includes the
+The local evidence commit was rebased onto `d4c9c9df9`, which includes the
 broader localization implementation. The source diff from `1275e0be1` now
 contains additional non-allowlisted production source, including:
 
@@ -82,11 +82,13 @@ contains additional non-allowlisted production source, including:
 - `src/greia_launcher/parent_panel.py`
 - `src/greia_platform/languages/{en,es,fr,it}/manifest.json`
 - `src/greia_platform/system_language.py`
+- `tools/audit_greia_language_coverage.py` (outside the
+  `tools/x8_qemu/`-only allowlist)
 
 These are shipped installer/launcher/platform inputs, not harness, tests,
 docs or root collaboration documents. The source-reuse gate therefore remains
 failed and is broader than the initial two-manifest stop. The write-only
-80-test preflight passed at `abd9f5045`; it was not rerun at `56f871148`
+80-test preflight passed at `abd9f5045`; it was not rerun at `d4c9c9df9`
 because the source gate already blocks the stage boot. No VM, install, arm,
 B boot, update replay or collector ran. The same review/rebuild decision in §4
 is required before any reuse.

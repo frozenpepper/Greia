@@ -3530,7 +3530,7 @@ boot. No VM, install, arm, B boot, update replay or collector ran.
 
 The new files are selector metadata (locale/name/native/flag/order/direction);
 they are not in the accepted-A image or next bundle from `1275e0be1`. During
-push reconciliation, main advanced to `56f871148` with the broader
+push reconciliation, main advanced to `d4c9c9df9` with the broader
 localization implementation (installer/launcher/platform source plus
 en/es/fr/it manifests), so the source gate is unchanged and broader. Whether
 any of it is irrelevant to the updater-stage target is a review decision, not a

@@ -160,7 +160,7 @@ request, child/server cleanup is bounded and synchronized, and the final
 then stopped at the source-reuse allowlist: the pull added
 `src/greia_platform/languages/en/manifest.json` and `.../it/manifest.json`,
 production source outside the allowed harness/tests/docs/skills/root-doc
-paths. The one-stage boot was **not** started. Current main (`56f871148`) also
+paths. The one-stage boot was **not** started. Current main (`d4c9c9df9`) also
 adds installer/launcher/platform localization source plus en/es/fr/it
 manifests, so the gate is unchanged and broader. The language files are
 selector metadata and are not in the accepted-A image or next bundle, but the
