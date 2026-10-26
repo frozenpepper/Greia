@@ -13,7 +13,9 @@ Speech is prerecorded only (no TTS). A missing clip resolves through
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
+
+from greia_platform.system_language import SUPPORTED_SYSTEM_LOCALES, language_ui
 from pathlib import Path
 
 from greia_platform.localization import LocalizationError, LocaleTag
@@ -34,7 +36,7 @@ FIRST_PROFILE_CUES: tuple[str, ...] = (
     "first_boot.try_again",
 )
 
-FIRST_PROFILE_LOCALES: tuple[str, ...] = ("en", "it", "es", "fr")
+FIRST_PROFILE_LOCALES: tuple[str, ...] = SUPPORTED_SYSTEM_LOCALES
 
 
 @dataclass(frozen=True, slots=True)
@@ -115,7 +117,7 @@ def copy_locale(locale: str | None) -> str:
     except LocalizationError:
         chain = []
     for candidate in chain:
-        if candidate in _COPY:
+        if candidate in FIRST_PROFILE_LOCALES:
             return candidate
     return "en"
 
@@ -123,7 +125,18 @@ def copy_locale(locale: str | None) -> str:
 def first_profile_copy(locale: str | None) -> FirstProfileCopy:
     """Resolve the wizard copy for an effective UI locale (never process LANG)."""
 
-    return _COPY[copy_locale(locale)]
+    selected = copy_locale(locale)
+    original = _COPY.get(selected, _COPY["en"])
+    additional = language_ui(selected, "first_profile")
+    if not additional:
+        return original
+    values = {
+        field.name: additional.get(field.name, getattr(original, field.name))
+        for field in fields(FirstProfileCopy) if field.name != "extra_letters"
+    }
+    extra = additional.get("extra_letters")
+    values["extra_letters"] = tuple(letter.strip() for letter in extra.split(",") if letter.strip()) if extra is not None else original.extra_letters
+    return FirstProfileCopy(**values)
 
 
 def cue_clip_name(cue_id: str) -> str:
