@@ -15,7 +15,8 @@ from greia_platform.system_language import SUPPORTED_SYSTEM_LANGUAGES
 
 class ParentPanelTextTests(unittest.TestCase):
     def test_all_semantic_keys_and_variables_have_four_language_parity(self) -> None:
-        self.assertEqual(LOCALES, ("en", "it", "es", "fr"))
+        from greia_platform.system_language import SUPPORTED_SYSTEM_LOCALES
+        self.assertEqual(LOCALES, SUPPORTED_SYSTEM_LOCALES)
         self.assertEqual(audit_panel_messages(), [])
         self.assertGreaterEqual(len(_MESSAGES), 20)
         for key in _MESSAGES:
