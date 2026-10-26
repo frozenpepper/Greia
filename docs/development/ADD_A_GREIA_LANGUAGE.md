@@ -69,7 +69,7 @@ Before adding the manifest, audit the staged translation as often as useful:
 PYTHONPATH=src python3 tools/check_greia_language.py de --staged
 ```
 
-This checks source catalog completeness and interpolation keys **without** adding the new language to any device picker. It does not decide whether copied English text has been translated correctly, and Activity TOML declarations must already include the new locale for full source coverage.
+This checks the `ui.json` schema and section types, source catalog completeness, and interpolation keys (including **nested** Python-format fields such as `{count:{width}}`) **without** adding the new language to any device picker. It does not decide whether copied English text has been translated correctly, and Activity TOML declarations must already include the new locale for full source coverage.
 
 ## Record and verify spoken material
 
