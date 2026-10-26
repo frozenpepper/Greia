@@ -9,6 +9,17 @@ This is an operating router, not an architecture or evidence archive. Exact curr
 
 ---
 
+## Manifest-based language tasks (2026-10-26)
+
+When asked to add a language, read `skills/greia-language-expansion/SKILL.md`
+and `docs/development/ADD_A_GREIA_LANGUAGE.md`. Add candidate translated
+`ui.json` and Activity locale JSON through the non-overwriting scaffold.
+Only placing `src/greia_platform/languages/<locale>/manifest.json` makes the
+language selectable on installer/Shell/Parent startup. Never insert languages
+into Python tuples or claim real-device/voice acceptance from source tests.
+The current four shipped manifests are unchanged; a new manifest requires
+author-reviewed text, audio, fonts and runtime/layout acceptance.
+
 ## 1. Mandatory start
 
 Before substantive work:
