@@ -93,7 +93,7 @@ is the running service's inbox discovery/path contract. No healthy B boot,
 rollback, 507, Parent-stop, applying-cut, Mobile or physical leg ran.
 
 Evidence: `/var/tmp/greia-ab-smoke-866ba68277be8500db62de55a9189d78c9ea704b-20261025T162521Z/`;
-details appended to `docs/reviews/2026-10-25_SOFTWARE_UPDATE_LINUX_RETRY.md`.
+details appended to `docs/reviews/2026-10-25_SOFTWARE_UPDATE_LINUX_RETRY.md`; the detailed retry report is `docs/reviews/2026-10-26_AB_SMOKE_RETRY_EVIDENCE.md`.
 Session 04 remains OPEN.
 
 ## 2026-10-25 — A/B first-boot health ACCEPTED; active-slot isolation blocker

@@ -3278,3 +3278,6 @@ rerun healthy A-to-B. No B health, rollback/failure, 507, Parent-stop,
 applying-cut, Mobile or physical leg ran. Evidence is under
 `/var/tmp/greia-ab-smoke-866ba68277be8500db62de55a9189d78c9ea704b-20261025T162521Z/`.
 Session 04 remains OPEN.
+
+Detailed retry evidence and root-cause analysis:
+`docs/reviews/2026-10-26_AB_SMOKE_RETRY_EVIDENCE.md`.
