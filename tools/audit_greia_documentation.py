@@ -39,7 +39,9 @@ def is_historical(path: Path, root: Path = ROOT) -> bool:
     if len(parts) >= 2 and parts[0] == "docs":
         if parts[1] in {"archive", "reviews"}:
             return True
-        if parts[1] in {"testing", "plans"} and (
+        # Dated test runbooks may be old snapshots; plans stay live while
+        # their owner-authorized workstream is active, despite dated names.
+        if parts[1] == "testing" and (
             any(DATED.match(part) for part in parts[2:])
         ):
             return True
