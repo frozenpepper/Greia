@@ -30,7 +30,8 @@ Start the installed shared service, then probe Greia:
 
 ```bash
 voxstage start
-python3 tools/greia_voice.py doctor
+voice_python="$HOME/Library/Application Support/Greia/voice-production/venv/bin/python"
+"$voice_python" tools/greia_voice.py doctor
 ```
 
 `doctor` checks active reference bytes, packaging and provider/verifier readiness;
