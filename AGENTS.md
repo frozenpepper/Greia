@@ -12,6 +12,10 @@ This repository implements a child-first educational Linux appliance/platform. T
 - For the owner/core coding agents, pull requests or branch-based review workflows are used only when the repository owner explicitly requests them; they are the default for external volunteer contributors.
 - External volunteer contributors with private-repository access work on their own branches and open pull requests as described in `CONTRIBUTING.md`; a private fork is also acceptable where supported. They must not push directly to `main`. The rules above govern the core team and its agents.
 
+## New-language contributor route
+
+When asked to add, translate, stage or release a new Greia language, start with `skills/greia-language-expansion/SKILL.md` and `docs/development/ADD_A_GREIA_LANGUAGE.md`. Read the voice-production skill for speech work. The current four released languages remain en/it/es/fr; a new language is not a config-only product feature yet and must not be advertised before coverage and owner approval.
+
 ## Authoritative read order and active plan
 
 Before installing or configuring any Greia toolchain, repository skill, simulator dependency, Parent App checkout, voice backend, developer remote-control environment or OS/image build host, read **`SETUP.md`**. It is the canonical setup index and readiness ledger; the narrower documents it references remain authoritative for their exact procedures.
