@@ -21,6 +21,7 @@ from greia_launcher import catalogue_view, panel_localization, panel_strings
 from greia_launcher.achievement_localization import _UI_STRINGS
 from greia_launcher.first_profile_copy import _COPY as FIRST_COPY
 from greia_launcher.launch_feedback import _COPY as LAUNCH_COPY
+from greia_launcher.usage_limit_presentation import _MESSAGES as TIME_COPY
 from greia_platform.creation_gallery_painter import _GALLERY_TEXT
 
 
@@ -66,6 +67,7 @@ def reference_sections() -> dict[str, dict[str, str]]:
             "overlay": feedback.overlay, "badge": feedback.badge, "wait": feedback.wait
         },
         "gallery": {key: vals["en"] for key, vals in _GALLERY_TEXT.items()},
+        "usage_limit": dict(TIME_COPY["en"]),
         "achievements": {
             "library_title": achievement.library_title,
             "empty_library": achievement.empty_library,
