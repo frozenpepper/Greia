@@ -3517,3 +3517,24 @@ No production/harness implementation or image inputs changed. Next rerun the
 existing single-stage work-order preflight; if green continue directly to its
 one scoped stage diagnostic boot and report. No rebuild or new approval loop.
 Actual stage cause/healthy B remain UNPROVEN; Session 04 remains OPEN.
+
+## 2026-10-26 — Single-stage diagnostic source-gate stop
+
+Reran the work order from current main. The corrected source preflight passed
+**80 tests OK** with parent `PYTHONUNBUFFERED=1`. The work order's own
+`git pull --ff-only` advanced main to `abd9f5045` and added
+`src/greia_platform/languages/en/manifest.json` plus
+`.../it/manifest.json`. These are shipped `src/` files outside the strict A/B
+reuse allowlist, so the work order stopped before the one-stage diagnostic
+boot. No VM, install, arm, B boot, update replay or collector ran.
+
+The new files are selector metadata (locale/name/native/flag/order/direction);
+they are not in the accepted-A image or next bundle from `1275e0be1`. Whether
+they are irrelevant to the updater-stage target is a review decision, not a
+safe assumption under the gate. Read-only input checks pass: accepted-A and
+next-bundle hashes OK, holder status 1 with empty output, zero old-evidence
+loops. Report:
+`docs/reviews/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC_SOURCE_GATE_FAILURE.md`.
+Next: record an explicit reuse exception for the manifests or rebuild the next
+bundle/image; do not boot until that decision is recorded. Actual stage cause
+and healthy B remain UNPROVEN; Session 04 OPEN.

@@ -125,17 +125,20 @@ boot or full acceptance matrix. The host timeout is 2,400 s above the existing
 1,800 s client stage bound. The result is diagnostic-only, with input hashes,
 service error/response evidence and collection failures retained. Report and stop.
 
-The preflight has now been run and **failed**: the closed-stderr positive
-control left its fake-server thread alive after `server.join(timeout=5)` (80
-tests, one failure; the other 79 passed). The one-stage boot was not started,
-per the work order. Read-only allowlist/hash/holder/loop checks passed. Report:
-`docs/reviews/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC_PREFLIGHT_FAILURE.md`.
-That test fixture is now corrected and the final 80-test preflight passes
-under `PYTHONUNBUFFERED=1`. The fix is tests-only: synchronize actual request/
-response before the buffered-flush check, EOF handling and bounded teardown.
-Rerun the existing work-order preflight on the host; if green continue to its
-one already-scoped stage boot without a separate new approval step.
-Do not rebuild the OS for this harness-only failure.
+The preflight has now been run twice. The first run failed in the closed-stderr
+positive control (fake-server thread still alive after `server.join`; 80
+tests, one failure). That test fixture is corrected and the final **80-test
+preflight passes** under `PYTHONUNBUFFERED=1`. The second run then stopped at
+the source-reuse allowlist: the pull added
+`src/greia_platform/languages/en/manifest.json` and `.../it/manifest.json`,
+production source outside the allowed harness/tests/docs/skills/root-doc
+paths. The one-stage boot was **not** started. The files are selector metadata
+and absent from the accepted-A image/next bundle, but the work order requires
+an explicit review decision before reuse. Report:
+`docs/reviews/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC_SOURCE_GATE_FAILURE.md`.
+Record a reuse exception for the selector manifests or rebuild the next
+bundle/image; do not boot until then. Do not rebuild the OS automatically for
+this gate, and do not treat the test fixture fix as stage evidence.
 
 Use sudo reads for root-owned 0600 inputs, never chmod. PSmisc holder checks
 must use its supported syntax and reject status-1 usage output. The old

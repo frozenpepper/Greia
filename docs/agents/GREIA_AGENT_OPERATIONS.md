@@ -156,12 +156,22 @@ an installed-updater result. Report:
 
 The fixture is now corrected: buffered stderr is exercised after a real stage
 request, child/server cleanup is bounded and synchronized, and the final
-80-test preflight passes under `PYTHONUNBUFFERED=1`. Rerun the existing
-work-order preflight on the host; if green continue directly with its already-
-scoped single `update-stage` boot and return the saved error/result. Do not rebuild the OS for this harness-only
-failure, repeat the old offline read or resume the full healthy-update retry.
-The actual stage cause and healthy B remain UNPROVEN; Session 04 remains OPEN.
-No production updater source changed in this follow-up.
+80-test preflight passes under `PYTHONUNBUFFERED=1`. Rerunning the work order
+then stopped at the source-reuse allowlist: the pull added
+`src/greia_platform/languages/en/manifest.json` and `.../it/manifest.json`,
+production source outside the allowed harness/tests/docs/skills/root-doc
+paths. The one-stage boot was **not** started. The files are selector metadata
+and are not in the accepted-A image or next bundle, but the work order requires
+an explicit review decision before reuse. Read-only hashes/holder/loop checks
+passed. Report:
+`docs/reviews/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC_SOURCE_GATE_FAILURE.md`.
+
+Record an explicit reuse exception for the selector manifests or rebuild the
+next bundle/image; do not boot the stage diagnostic until then. Do not rebuild
+the OS automatically, repeat the old offline read or resume the full
+healthy-update retry. The actual stage cause and healthy B remain UNPROVEN;
+Session 04 remains OPEN. No production updater source changed in this
+follow-up.
 
 The PSmisc 23.7 holder check must use `fuser -v <absolute-file>` without `--`.
 Accept no-holder status 1 only with empty output: usage errors also return 1.

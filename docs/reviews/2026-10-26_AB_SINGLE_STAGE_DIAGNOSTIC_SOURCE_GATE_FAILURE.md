@@ -1,0 +1,66 @@
+# Single-stage diagnostic — source-reuse gate failure
+
+Date: 2026-10-26 · Status: **SOURCE-REUSE GATE FAILED; one-stage boot NOT RUN;
+Session 04 OPEN**
+
+Work order: `docs/testing/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC.md`
+Source after the work order's pull:
+`abd9f5045ba65d07edb567fa47a66d1dffa7d8b7` (clean `main`)
+Evidence:
+`/var/tmp/greia-ab-stage-preflight-abd9f5045ba65d07edb567fa47a66d1dffa7d8b7-20261026T171039Z/`
+
+## 1. Test gate now passes
+
+With the documented parent `PYTHONUNBUFFERED=1`, the work order's source
+preflight passed:
+
+```text
+Ran 80 tests in 2.248s
+OK
+```
+
+The previous closed-stderr test-fixture failure is fixed. No VM boot occurred.
+
+## 2. Reuse allowlist stopped the run
+
+`git pull --ff-only` inside the work order advanced main with two new
+**production source** files:
+
+- `src/greia_platform/languages/en/manifest.json` (`265acd873`)
+- `src/greia_platform/languages/it/manifest.json` (`abd9f5045`)
+
+These paths are outside the work order's allowlist
+(`tools/x8_qemu/`, `tests/`, `docs/`, `skills/`, `HANDOVER.md`, `AGENTS.md`,
+`CONTRIBUTING.md`, `README.md`, `SETUP.md`, `.github/CODEOWNERS`). The
+work order says any other changed path may affect the image: stop and inspect,
+do not rebuild blindly.
+
+The files are selector metadata (`locale`, `name`, `native_name`, `flag`,
+`order`, `direction`) under the shipped `src/` tree. They are not in the
+accepted-A image or the next bundle, both produced from `1275e0be1`. Whether
+that makes them irrelevant to the updater-stage diagnostic is a review
+decision; the strict reuse gate does not authorize assuming it.
+
+## 3. Read-only input facts
+
+- Accepted-A SHA-256 `83d693d9…`: **OK**.
+- Next-bundle SHA-256 `3ae9cdea…`: **OK**.
+- Input holder check: `fuser` status 1 with **empty output** (offline).
+- Owned loops under the old evidence root: **0**.
+
+No one-stage `RUN_ROOT`, command log, `result.json` or collector output was
+created. No install, arm, B boot, update replay or fault matrix ran. Inputs and
+permissions were preserved.
+
+## 4. Next decision
+
+Before the single stage boot can be authorized, the owner/reviewer must either:
+
+1. explicitly record that the new language-selector manifests do not affect
+   the A/B updater-stage target and amend the reuse exception; or
+2. rebuild the next bundle/image from current `main` so they are part of the
+   tested release.
+
+Do not run the stage diagnostic until that decision is recorded. Do not treat
+this report as a stage result or as authorization to rebuild automatically.
+Healthy B remains unproven; Session 04 remains OPEN.

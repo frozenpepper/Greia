@@ -17,6 +17,14 @@ main; if the preflight passes, continue directly with the one diagnostic boot
 already scoped here. Do not stop just to request another approval, and do not
 rebuild the OS for this tests-only correction.
 
+**Latest source-reuse stop (2026-10-26, `abd9f5045`):** the 80-test preflight
+passed, but the pull added `src/greia_platform/languages/en/manifest.json` and
+`.../it/manifest.json`, which are production source outside the reuse
+allowlist. Per the stop rule, the one-stage boot was **not** started. A reviewer
+must either record that the selector manifests do not affect the A/B
+updater-stage target or rebuild the next bundle/image. Report:
+[`2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC_SOURCE_GATE_FAILURE.md`](../reviews/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC_SOURCE_GATE_FAILURE.md).
+
 This work order boots **only `update-stage` once**, using the corrected capture.
 It reuses accepted A and the next bundle, writes only a fresh disposable clone,
 then collects its saved response/error and slot facts automatically. It does
