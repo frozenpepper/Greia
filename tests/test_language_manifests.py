@@ -72,6 +72,30 @@ class ManifestLanguageTests(unittest.TestCase):
                 self.assertEqual(language.language_ui("en", "parent")["parent.title"], "Grown-up controls")
             language._language_ui_cached.cache_clear()
 
+    def test_scaffolding_stages_json_without_offering_new_language(self):
+        import sys
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
+        from scaffold_greia_language import prepare
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            example = root / "activities" / "demo" / "locales"
+            example.mkdir(parents=True)
+            (example / "en.json").write_text(json.dumps({
+                "schema_version": 1, "locale": "en",
+                "strings": {"activity.title": "A new game"}, "audio": {"intro": {"path": "intro.wav"}},
+            }), encoding="utf-8")
+            created = prepare("de", root)
+            self.assertEqual(len(created), 2)
+            ui = json.loads((root / "src/greia_platform/languages/de/ui.json").read_text())
+            self.assertIn("parent", ui)
+            self.assertIn("installer", ui)
+            translated = json.loads((example / "de.json").read_text())
+            self.assertEqual(translated["locale"], "de")
+            self.assertEqual(translated["audio"], {})
+            self.assertFalse((root / "src/greia_platform/languages/de/manifest.json").exists())
+            with self.assertRaises(FileExistsError):
+                prepare("de", root)
+
     def test_bad_optional_catalogue_cannot_inject_object_values(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
