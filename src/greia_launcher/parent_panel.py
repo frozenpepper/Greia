@@ -2194,7 +2194,7 @@ class ParentSettingsOverlay:
                 self._targets.append(PanelHitTarget("language_page", (page - 1) * page_size, previous))
             if page + 1 < pages:
                 following = pygame.Rect(card.right - pad - 86, y, 86, nav_h)
-                self._kit_button(screen, following, "Next", typography, pygame)
+                self._kit_button(screen, following, "▶", typography, pygame)
                 self._targets.append(PanelHitTarget("language_page", (page + 1) * page_size, following))
             y += nav_h + 6
         self._draw_status(
