@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from greia_platform.system_language import language_ui
+
 
 @dataclass(frozen=True, slots=True)
 class LaunchFeedback:
@@ -28,4 +30,10 @@ _COPY: dict[str, LaunchFeedback] = {
 def launch_feedback(locale: str | None) -> LaunchFeedback:
     """Resolve typed feedback for an effective UI locale, never process LANG."""
     base = str(locale or "en").strip().replace("_", "-").split("-", 1)[0].lower()
-    return _COPY.get(base, _COPY["en"])
+    source = _COPY.get(base, _COPY["en"])
+    translated = language_ui(base, "launcher_feedback")
+    return LaunchFeedback(
+        translated.get("overlay", source.overlay),
+        translated.get("badge", source.badge),
+        translated.get("wait", source.wait),
+    )
