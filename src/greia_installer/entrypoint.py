@@ -105,7 +105,7 @@ class LanguageChooser:
             screen,
             pygame,
             frame,
-            title="Language  •  Lingua  •  Idioma  •  Langue",
+            title=InstallerTranslator(self.locale).text("Choose your language"),
             title_size=title_px,
             pose="pose_wave",
         )
