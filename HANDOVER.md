@@ -322,6 +322,46 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-26 — Release documentation and repository hygiene (GitHub source review)
+
+Owner-directed cleanup audited repository tree metadata (15,753 tracked blobs
+before cleanup, including 136 maintained Markdown manuals/skills/docs in the
+live scope and dated historical plans/reviews). Read and source-compared
+living language, installer, family, voice, Parent, Activity and release
+guidance; reviewed the **136 maintained Markdown documents for repository
+relative link targets via GitHub**: no missing in-repository paths found.
+Historical evidence links in archived/daterun docs were **not** rewritten to
+claim present-day correctness. Added
+`tools/audit_repository_docs.py --scope maintained|all` and focused
+`tests/test_repository_docs_audit.py` for repeatable, read-only local runs.
+Those newly added Python tests and the full-checkout audit **have not yet
+been executed**.
+
+Reconciled manifest-based language support/maintenance and existing language
+switching across the Activity-authoring and voice skills, product/first-party
+release gate, developer and family guides, and agent routing. Corrected
+historical Whisper/Chatterbox advice versus present VoxStage/VoxCPM2 and
+Parakeet-TDT v3, and fixed the stale network-HTTP statement in the family
+Parents guide. Browser Parents chrome is still an independent EN/IT/ES/FR
+localization catalog in the separate pinned HTML repository and needs its
+own new-locale work.
+
+**Safe cleanup:** moved the superseded twelve-language proposal from live
+`docs/product/` to `docs/archive/plans/`; retired 21 September website
+prototype files (3,518,032 bytes) after verifying `website/` uses none,
+and preserved a concise dated archived design decision with exact Git
+recovery SHA; condensed this handover from 290,542 to 43,508 characters
+(before adding this entry), with older entries recoverable through Git
+history. Added ignores for disposable logs, coverage, test-result and
+dependency-cache folders. No tracked test suite, actively relevant A/B
+report, approved audio asset, canonical art master or release build payload
+was deleted. Git/source docs review does **not** constitute full source gate,
+browser acceptance, USB image/hardware testing, or approved new-language
+readiness. Current next step: one bounded read-only local documentation
+link audit and its three-unit-test suite on the exact new main commit;
+report live errors separately from historical links, do not bulk-delete
+evidence. Other in-progress A/B and voice work is unaffected.
+
 ### 2026-10-26 — Manifest language fixes: 59/59 focused tests PASS (SOURCE-VERIFIED)
 
 The owner's local agent verified exact `main` HEAD
