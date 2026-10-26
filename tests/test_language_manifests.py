@@ -161,13 +161,13 @@ class ManifestLanguageTests(unittest.TestCase):
             patch.object(panel_localization, "LOCALES", original_panel + ("de",)),
             patch.object(panel_localization, "language_ui", side_effect=lambda locale, section: {
                 "parent": {"parent.title": "Elterneinstellungen"},
-                "parent_constants": {"TAB_LANGUAGE": "Sprache"},
+                "parent_constants": {"AUDIO_TITLE": "Mikrofonpegel"},
             }.get(section, {})),
         ):
             self.assertEqual(i18n.InstallerTranslator("de").text("Continue"), "Weiter")
             self.assertEqual(i18n.InstallerTranslator("de").text("Connecting to Home…"), "Verbinde mit Home…")
             self.assertEqual(panel_localization.panel_message("parent.title", "de"), "Elterneinstellungen")
-            self.assertEqual(panel_localization.panel_constant("TAB_LANGUAGE", "de"), "Sprache")
+            self.assertEqual(panel_localization.panel_constant("AUDIO_TITLE", "de"), "Mikrofonpegel")
 
     def test_bad_optional_catalogue_cannot_inject_object_values(self):
         with tempfile.TemporaryDirectory() as tmp:
