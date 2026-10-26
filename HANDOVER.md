@@ -4,7 +4,7 @@
 **Public-source readiness:** IN PROGRESS. Root entry points exist (`LICENSE`, `NOTICE.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`); the licensing/provenance audit is open (see `NOTICE.md`).
 **Ordinary-family release:** NOT READY (`docs/release/GREIA_PUBLIC_RELEASE_READINESS.md`).
 **Current A/B action (2026-10-26 follow-up):** the corrected 80-test preflight
-passes, but current main (`d4c9c9df9`) adds production installer/launcher/
+passes, but current main (`ef8eb3415`) adds production installer/launcher/
 platform localization source and en/es/fr/it language manifests outside the
 reuse allowlist. The one-stage diagnostic boot was **not** started. A reviewer
 must record an explicit reuse exception or rebuild the next bundle/image. No
@@ -318,7 +318,7 @@ The corrected preflight passes: 80 tests OK with parent
 `PYTHONUNBUFFERED=1`, and the prior closed-stderr fixture failure is fixed.
 However, the work order's `git pull --ff-only` advanced main to `abd9f5045`
 with two production source language manifests. During push reconciliation main
-advanced again to `d4c9c9df9`, adding the broader localization implementation
+advanced again to `ef8eb3415`, adding the broader localization implementation
 (installer/launcher/platform source plus en/es/fr/it manifests). All of these
 are outside the strict A/B image-reuse allowlist, so the work order stopped
 before the one-stage diagnostic boot. No VM, install, arm, B boot, update
