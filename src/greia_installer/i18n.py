@@ -282,7 +282,7 @@ def _dynamic_text(value: str, language: str) -> str:
             return msg["hold_keys_seconds"].format(value=count)
     if value.startswith("Not adjustable on this touchpad: "):
         # Each listed control is installer copy; translate item by item.
-        table = _TRANSLATIONS[language]
+        table = {**_TRANSLATIONS.get(language, {}), **language_ui(language, "installer")}
         items = value[len("Not adjustable on this touchpad: "):].split(" · ")
         return msg["not_adjustable"].format(
             value=" · ".join(table.get(item, item) for item in items)
