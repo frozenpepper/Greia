@@ -61,3 +61,47 @@ The first stage error is **unrecoverable from this image**. Healthy B is not
 acceptance and remains UNPROVEN. Do not format or rebuild anything from this
 result. A later bounded diagnostic boot with the corrected capture needs a
 separate work order; do not run a blind full retry. Session 04 remains OPEN.
+
+## Follow-up — one captured stage operation, no rebuild
+
+The offline question is answered; repeat reads cannot recover a volatile error
+that was not saved. Missing B identity establishes no finalized release identity,
+not absence of all candidate payload bytes. A source audit found no supported
+capacity, missing-zstd or launcher-readiness explanation: stage probes sysfs
+inventory directly, uses the shared capacity/finalization path, and preserves
+UPDATE_STAGED across accepted-A boots. No speculative production fix was made.
+
+The next scoped work order is
+[`2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC.md`](../testing/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC.md).
+The new `tools/x8_qemu/stage_diagnostic.py` clones the verified accepted-A image,
+injects the bundle into clone PERSIST offline, injects the corrected control
+into A, boots exactly `update-stage` once and always collects the stopped clone.
+The control disk is phase-only 64 MiB; host bound is 2,400 seconds above the
+existing client stage bound of 1,800 seconds. No install/build/arm/B boot/matrix
+is performed. A normal QEMU return is not reported as stage or health acceptance.
+The helper preserves raw collector evidence, phase/collector failures and both
+inputs' before/after hashes; error and cleanup outcomes propagate to CLI status.
+
+Source evidence on the Mac worktree based on `4bd024410`:
+
+- New helper: **8 tests PASS**, independently rerun/reviewed by Luna with no
+  blocking findings. Tests run the real default ProductHarness branch with
+  external I/O faked, assert one stage call and its 2,400-second configuration,
+  validate actual nested collector schema, collect after stage failure, and
+  reject collector errors, failed cleanup or source/bundle mutation.
+- Broader integration selectors: **288 tests PASS in 14.295 s**, covering
+  stage diagnostic/control/collector/runbook, install/boot-health/identity,
+  Session 04, system-update service and production seam composition.
+- `make verify`: **5,961 tests in 286.264 s; 6 failures, 3 errors, 9 skips;
+  NOT GREEN**. IDs are the previous Mac groups: Foresta en/es/fr (3), MBR
+  wording (1), Parent Wi-Fi assertions (2); ARM64 profile support (1 error)
+  and missing macOS `lsblk` (2 errors). No full-suite PASS is claimed.
+- Separate `make validate` stops at the existing ARM64 builder error;
+  `make shell-check footprint`, diff whitespace checks and work-order Bash
+  syntax pass. Temporary logs: `/tmp/greia-single-stage-followup/`.
+
+No Linux image build, mount, QEMU boot or update ran here. The actual installed
+stage cause and healthy B remain UNPROVEN. Session 04 remains OPEN. The newer
+collaboration policy/CODEOWNERS commits were preserved and are exactly allowed
+as non-image documentation in the reuse preflight. No production source or
+image-build input changed in this follow-up.

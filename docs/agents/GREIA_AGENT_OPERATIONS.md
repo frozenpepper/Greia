@@ -137,19 +137,24 @@ Offline failed-image read completed
 (`docs/testing/2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS.md`). Focused
 diagnostics/handoff suites passed (14); the collector exited 0 with cleanup ok.
 Facts: A is the accepted base 0.13.0 slot; B mounted but has **no release
-identity**, so it does not contain the next release; PERSIST still accepts A
+identity**, so no finalized next-release identity is established; PERSIST still accepts A
 and update status remains `received`; old control diagnostics are absent.
 The stage failed before B finalization, but the first stage error is
 **unrecoverable from this image**; the facts cannot distinguish a service
 refusal, crash, or lost control error. Report:
 `docs/reviews/2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS_RESULT.md`.
 
-Do not rebuild, boot QEMU, replay the update or start a fault matrix from this
-result. A later bounded diagnostic boot with the corrected durable capture
-needs a separate work order. Preserve the failed clone, accepted A and the
-bundles. The previous stage-retry work order remains on hold until the first
-failure is understood or explicitly recorded as unrecoverable from old logs.
-No production updater code changed in this follow-up. Session 04 remains OPEN.
+The newly scoped next work order is
+`docs/testing/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC.md`: reuse verified
+accepted A and the next bundle, make a fresh clone, boot only `update-stage`
+once, and always collect the stopped clone's saved response/error and state.
+No image build/install/arm/B boot or larger matrix. The control disk is phase-
+only 64 MiB; the bundle is injected into PERSIST offline. The helper records
+both inputs before/after and propagates collection and cleanup failures. Its
+result is diagnostic-only; a QEMU return is not stage or health acceptance.
+Record the first concrete cause and stop. Do not repeat the old offline read
+or automatically resume the full healthy-update retry. No production updater
+source changed in this follow-up. Session 04 remains OPEN.
 
 The PSmisc 23.7 holder check must use `fuser -v <absolute-file>` without `--`.
 Accept no-holder status 1 only with empty output: usage errors also return 1.

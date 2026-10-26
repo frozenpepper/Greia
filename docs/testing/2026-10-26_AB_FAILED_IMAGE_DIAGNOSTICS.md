@@ -13,6 +13,11 @@ stage error is unrecoverable from this image. Report:
 Do not rebuild or replay blindly; a later bounded diagnostic boot with
 corrected capture needs a separate work order.
 
+**Completed:** see [the committed result](../reviews/2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS_RESULT.md).
+Do not repeat this collection. The next scoped step is
+[one captured stage operation](2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC.md), not a
+full retry or image rebuild. The procedure below remains its executed record.
+
 The stage error was lost, and the control incorrectly continued to arm.
 The marker/parser and error capture are corrected in source, but **the actual
 installed stage failure is still unknown**. Do not rebuild images, boot QEMU,

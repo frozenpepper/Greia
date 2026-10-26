@@ -115,24 +115,24 @@ The old signed `.greiaupdate` v2 flow and release signing keys are
 superseded by ADR 0036 and are not the normal production route; older
 references to them are historical only.
 
-The offline failed-image read is complete
-(`docs/testing/2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS.md`). A is the accepted
-base 0.13.0 slot; B has **no release identity**, so it does not contain the
-next release; PERSIST still accepts A and update status remains `received`.
-The stage failed before B finalization, but the first stage error is
-**unrecoverable from this image**; the old control's durable files are absent.
-Report: `docs/reviews/2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS_RESULT.md`. Do not
-rebuild, boot QEMU, replay an update or launch a fault matrix. A later bounded
-diagnostic boot with corrected capture needs a separate work order.
+The offline failed-image read is complete; its first error is unrecoverable.
+Current next work order:
+`docs/testing/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC.md`. Its helper
+`python -m tools.x8_qemu.stage_diagnostic` uses the verified accepted-A image
+and bundle, clones A, injects the candidate offline, boots only `update-stage`
+once and always collects the stopped clone. There is no build/install/arm/B
+boot or full acceptance matrix. The host timeout is 2,400 s above the existing
+1,800 s client stage bound. The result is diagnostic-only, with input hashes,
+service error/response evidence and collection failures retained. Report and stop.
 
-Use sudo reads for root-owned 0600 artifacts; never chmod to satisfy a check.
-PSmisc `fuser -v <absolute-file>` has no `--`; status 1 means no holders only
-when output is empty. A usage error must not pass the offline preflight.
-The collector does not claim acceptance, and missing new diagnostic files in
-an old image do not establish a cause. Preserve the old input images and
-existing reports. The prior healthy-update retry is on hold, not an automatic
-next step. Separate stage/poweroff/arm boots preserve UPDATE_STAGED in the
-current state machine; no production source changed in this follow-up.
+Use sudo reads for root-owned 0600 inputs, never chmod. PSmisc holder checks
+must use its supported syntax and reject status-1 usage output. The old
+collection and healthy-update work orders are not automatic extra steps.
+Preserve accepted A and the verified bundle; host pressure is not a rebuild
+trigger. No production source changed in this follow-up. Source tests exercise
+the real default helper branch with fake external I/O; they do not prove stage
+on a device. The static audit found no established cause; healthy B remains
+unproven and Session 04 remains OPEN.
 
 The installed updater discovers the fixed published bundle directly. Status
 is reporting/recovery progress, not a package-admission requirement. Device

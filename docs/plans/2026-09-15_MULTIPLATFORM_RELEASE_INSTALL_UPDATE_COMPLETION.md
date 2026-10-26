@@ -3463,3 +3463,23 @@ a possible loss mechanism, not proof. Do not rebuild or replay blindly. A
 later bounded diagnostic boot with corrected capture needs a separate work
 order. Healthy B remains UNPROVEN; Session 04 OPEN. Report:
 `docs/reviews/2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS_RESULT.md`.
+
+## 2026-10-26 — Offline facts received; bounded stage-only diagnostic
+
+The offline result at `10de26ce8` confirms accepted A, missing B release
+identity and received update status; old first-error logs are unrecoverable.
+Source audit found no established capacity, dependency or boot-order cause.
+The next work order is `docs/testing/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC.md`:
+reuse verified inputs, make a fresh clone, inject the candidate offline, boot
+only stage once, then collect response/error and offline facts even on failure.
+No rebuild/install/arm/B boot/full matrix. New helper/tests live under
+`tools/x8_qemu` / `tests/test_x8_qemu`; no production source changed.
+
+The helper uses the actual default ProductHarness phase executor with a
+2,400-second bound, a phase-only 64 MiB control disk, and the existing collector.
+It retains errors, collector state and source/bundle before/after hashes without
+claiming stage or health acceptance. New collaboration policy/CODEOWNERS commits
+are preserved and exactly allowlisted as non-image source for artifact reuse.
+Evidence is appended to `docs/reviews/2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS_RESULT.md`.
+No Linux boot executed on this Mac; actual stage cause and healthy B unproven.
+Session 04 remains OPEN.

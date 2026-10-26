@@ -3,12 +3,11 @@
 **Purpose:** the short current state for contributors and agents: active workstreams, recent results, blockers and next steps. It is not an archive.
 **Public-source readiness:** IN PROGRESS. Root entry points exist (`LICENSE`, `NOTICE.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`); the licensing/provenance audit is open (see `NOTICE.md`).
 **Ordinary-family release:** NOT READY (`docs/release/GREIA_PUBLIC_RELEASE_READINESS.md`).
-**Current A/B action (2026-10-26 follow-up):** the offline read of the failed
-image is complete. A is accepted; B has no release identity; update status is
-still `received`; the first stage error is unrecoverable from this image. No
-rebuild or VM replay. The next step needs a separate bounded diagnostic boot
-with the corrected durable capture. See
-`docs/reviews/2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS_RESULT.md`.
+**Current A/B action (2026-10-26 follow-up):** offline evidence collection is
+complete and the original stage error is unrecoverable. Run only the bounded
+stage-only diagnostic in `docs/testing/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC.md`
+using the verified accepted-A image and bundle, then report and stop. No rebuild,
+install, arm or B boot. The installed stage cause remains unknown.
 
 Entries dated before 2026-10-15 were removed from this file in the 2026-10-16 open-source cleanup. Read them with `git show 101e332a:HANDOVER.md`; lessons from that period are indexed in `docs/archive/README.md`.
 
@@ -310,6 +309,31 @@ PRESERVED; the 4 first-run DONE, all 16 earlier retakes, and all 143 evidence-ga
 rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
+
+### 2026-10-26 — Offline answer received; one captured stage operation next
+
+`10de26ce8` records successful offline collection: A remains accepted; B has
+no finalized release identity; update status is still received. Old logs were
+not persisted, so the first stage cause is unrecoverable. Absence of B's identity
+does not prove no payload bytes were written. Source audit found no supported
+capacity, missing-zstd or launcher-inventory ordering cause; no speculative
+production fix was made.
+
+The next exact work order is
+`docs/testing/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC.md`. Its new helper clones
+verified accepted A, injects the candidate into offline PERSIST and the control
+into A, boots only `update-stage` once (2,400 s host / 1,800 s client bounds),
+then always collects the stopped clone's response/error and state. The control
+disk is phase-only 64 MiB. It does not arm, boot B, install or rebuild. Its
+result is diagnostic-only; a QEMU return is not stage/health acceptance. Both
+source inputs are checked before/after, and collection/cleanup errors propagate.
+
+Source checks and independent review are appended to
+`docs/reviews/2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS_RESULT.md`. No Linux boot
+executed here; actual stage cause/healthy B remain UNPROVEN. Session 04 OPEN.
+The newer collaboration-policy commits were preserved; core agents still use
+main, and exact AGENTS/CONTRIBUTING/CODEOWNERS documentation changes do not
+invalidate unchanged image inputs.
 
 ### 2026-10-26 — Failed-image read: B not next release; stage cause unrecoverable
 
