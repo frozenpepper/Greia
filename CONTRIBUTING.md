@@ -114,7 +114,7 @@ where it ran.
 
 ## Pull requests
 
-1. Fork the repository and create a branch for your change.
+1. If you have access to the private Greia repository, create your own branch for the contribution (or use a private fork if GitHub permits it). External contributors must not commit directly to `main`.
 2. Keep each pull request focused on one problem.
 3. In the description, say what changed, why, and exactly which checks you
    ran and where (desktop, Simulator, VM or which device).
@@ -123,6 +123,12 @@ where it ran.
 
 GitHub-hosted Actions are manual-only in this repository; maintainers run
 verification locally or on owner-approved machines.
+
+## Repository approval policy
+
+External contributors have access to the full repository so they can run Greia and test their work. They submit pull requests for owner review; `@frozenpepper` is named in `.github/CODEOWNERS`.
+
+**Enforcement depends on GitHub settings, not this text or the CODEOWNERS file alone.** Before inviting external collaborators, the owner must enable branch protection on `main`, require pull requests and at least one approval, require code-owner review, and disable force pushes and branch deletion. The owner may keep the administrator bypass for normal core development. If GitHub reports that private-repository protection requires Pro or Team, upgrade before inviting collaborators; until protection is active, invited users with write access can push to `main`.
 
 ## Coding agents
 
