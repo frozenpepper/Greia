@@ -3,6 +3,16 @@
 **Status:** manifest-based language selection implemented in source (2026-10-26). Physical installer/OS acceptance of an extra language is still unverified. 
 **Audience:** human translators or their local agents working with the full Greia checkout.
 
+## Quick route
+
+**Add a language:** run `PYTHONPATH=src python3 tools/scaffold_greia_language.py <locale>`, translate the generated JSON and Activity TOML, record/review required speech, validate with `PYTHONPATH=src python3 tools/check_greia_language.py <locale> --staged`, then add `<locale>/manifest.json` **only when approved for release**. The installer, OS and on-device Parents UI read the offered manifests automatically at next startup. No Python language list needs editing.
+
+**Maintain an existing language:** edit values in its UI/Activity locale files or update its existing manifest metadata; recheck placeholders, speech references and actual screens. Do not run the scaffold over an existing language: it deliberately refuses to overwrite translations.
+
+**Retire an offered language:** owner-approved removal of the manifest stops it being selectable in the next release; saved old preferences fall back according to the platform policy. Preserve approved recordings and historic evidence.
+
+For a family changing language, use [the Greia Parents guide](../user/GREIA_PARENTS.md#change-greias-language). For product behavior, see [the language policy](../product/SYSTEM_LANGUAGE_AND_LOCALIZATION.md); for voice authoring, use the voice-production skill linked below.
+
 ## Tell your agent
 
 > Let's add a new Greia language: German (`de`). Prepare all OS, installer, Parent and Activity text, phonics/curriculum work and the missing audio. Use the canonical Voice Studio with the selected masters and Parakeet verification. Do not offer the unfinished language in the installer until it has been reviewed.
