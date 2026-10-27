@@ -36,6 +36,24 @@ Current owner: `src/greia_platform/system_updates.py`, `_block_node_size_bytes` 
 - Add focused tests for both ioctl encodings, absent executable, valid/missing/malformed/zero sysfs, command failure and mismatch. Tests must not require real devices.
 - A short **read-only** guest probe of both ioctl requests, sysfs and `blockdev` may help distinguish hypotheses, but it is **not** a mandatory prerequisite to implementing the clearly portable fallback. Do not patch the frozen `1275` guest. There is no value in repeating the failed historical stage diagnostic.
 
+## Pre-release compatibility cleanup within this assignment
+
+Greia has **never shipped**. Do not implement backwards compatibility for
+older development images, obsolete format readers or historical release
+identities. The one-time receiver bridge CLI, implementation and dedicated
+tests have already been removed from current `main`. Do **not** recreate
+them. Use new current-source images rather than migrating historical test
+installations. As part of the ordinary source review, retire any other
+*demonstrably unused* development-version compatibility branches that add
+maintenance burden, but do not destabilize the first-install bootstrap,
+hardware compatibility checks, normal update recovery or rollback.
+
+Because bridge-only tests were deleted, ensure current-language snapshot and
+current Python/combined update coverage remains in the focused package and
+generation suites; add a simple current-source replacement test if needed.
+Do not run a `build-receiver-bridge` command or claim its historical PASS as
+a result of the current test run.
+
 ## Consolidated installed acceptance — two separate lanes
 
 Use the existing repository tools and retained detailed examples, checking CLI help and current source before execution. Do not copy historical SHAs, old expected bundle hashes or outdated gating blocks. Existing supporting procedures are [A/B Linux test details](2026-10-23_SYSTEM_UPDATE_LINUX_ACCEPTANCE.md), [application package details](2026-10-24_SOFTWARE_UPDATE_ACCEPTANCE.md), [language-resource package details](2026-10-27_LANGUAGE_UPDATE_PACKAGE_ACCEPTANCE.md), and [package operator guide](../development/GREIA_SOFTWARE_UPDATE_PACKAGES.md).
