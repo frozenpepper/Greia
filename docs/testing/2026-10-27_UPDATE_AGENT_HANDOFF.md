@@ -10,6 +10,11 @@ This document formerly contained a 264-line, single-stage procedure using frozen
 - [Source-path analysis and hypotheses](../reviews/2026-10-27_AB_OLD_RELEASE_STAGE_REFUSAL_ANALYSIS.md).
 - [Current single update implementation and Linux acceptance work order](GREIA_UPDATE_RELEASE_ACCEPTANCE.md).
 
-The old `1275` application reader also could not receive the new language JSON directly. The current source implements paired manifest/UI packaging and a **source-matched one-time receiver bridge**; see [language update package acceptance](2026-10-27_LANGUAGE_UPDATE_PACKAGE_ACCEPTANCE.md).
+Earlier source snapshots temporarily added a one-time receiver bridge to
+handle the frozen 1275 development image. **That experiment is retired.** The
+owner confirmed Greia has never been released, so historical receivers are
+not supported update targets. The bridge module, CLI and dedicated tests
+were deleted. See [current package acceptance](2026-10-27_LANGUAGE_UPDATE_PACKAGE_ACCEPTANCE.md).
+
 
 **Current owner direction:** fix current `main` and run consolidated installed scenarios on disposable Linux/QEMU systems. No new source freezes, allowlist exceptions, redundant single-stage-only handoffs, or repeated old-guest diagnostics are prerequisites. Production update integrity, slot identity, atomicity, health/rollback and data preservation still apply.
