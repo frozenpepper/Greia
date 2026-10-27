@@ -104,7 +104,7 @@ Dated October 23–27 procedures are detailed **reference material**, not indepe
 
 Use the Linux host's disposable QEMU disks; never guess a physical target. Keep the real product invariants: layout/device identity, bounded writes, PERSIST preservation, application generation atomicity, child-session fence, health and rollback. Run focused tests while fixing, full verification once after coherent changes, and consolidated installed acceptance. Record unrelated pre-existing full-suite failures without blocking relevant disposable-device tests; never misstate evidence.
 
-The two independent lanes are (1) current-source blank-disk A/B install -> first A -> stage B -> activate -> healthy B -> rollback/interrupt recovery and (2) current application `.greia_update` Python/Activity/combined -> applied/health -> bad-candidate rollback and Parent disconnect continuation. The exact 1275 receiver bridge is an **additional** compatibility test, only when the disposable guest actually matches that legacy base. Implementation for language manifest/UI JSON packaging and the bridge is already committed; Linux installed acceptance remains pending. Session 04 remains OPEN until measured.
+The two independent lanes are (1) current-source blank-disk A/B install -> first A -> stage B -> activate -> healthy B -> rollback/interrupt recovery and (2) current application `.greia_update` Python/Activity/combined -> applied/health -> bad-candidate rollback and Parent disconnect continuation. There are no pre-release upgrade targets: do not build, stage or test old-receiver bridges or historical image migrations. Normal language manifest/UI JSON packaging is implemented, but Linux installed acceptance remains pending. Session 04 remains OPEN until measured.
 
 ### Linux acceptance follow-up (2026-10-24)
 
@@ -150,14 +150,11 @@ building or sending one. An image must contain
 `/usr/local/lib/greia-os/software-update-bootstrap.py`; no manual bootstrap
 CLI exists. Builder/source tests are not installed Linux acceptance.
 
-Pre-manifest package readers reject the new JSON destinations. For a known
-installed source base with the existing update engine, use the guide's
-`build-receiver-bridge --base-ref …` once, wait for `applied`, then send the
-normal current Python/combined package. The bridge preserves that base's
-application code except for the two update-reader/generation modules; it is
-not a universal upgrade for unknown bases. No image rebuild is needed for
-this language-data delivery change. The bounded source and installed follow-up
-procedure is `docs/testing/2026-10-27_LANGUAGE_UPDATE_PACKAGE_ACCEPTANCE.md`.
+There is no supported backward-compatibility route from older development
+images. For release acceptance, fresh-install a current image containing the
+current receiver, then apply a normal current Python/Activity/combined package.
+The earlier `build-receiver-bridge` CLI and its source/test module have been
+removed as obsolete. Application rollback remains required.
 
 Fresh BIOS A/B installation now has a mandatory `FreshAbInstallSeams.bios_bootloader_installer`
 seam, supplied in production by `device_seams.build_bios_bootloader_installer`.
