@@ -87,14 +87,10 @@ remaining non-lifecycle obligations.
 
 Session 03 was closed by the Linux owner-command release build on 2026-09-23.
 Session 04 remains OPEN: fresh A/B install, first acceptance, alternating
-updates and rollback must execute using real current bundles. The owner-
-requested external-machine work orders are:
-
-`docs/testing/2026-10-23_SYSTEM_UPDATE_LINUX_ACCEPTANCE.md`
-for BIOS/A-B/PERSIST/slot lifecycle acceptance, and
-`docs/testing/2026-10-24_SOFTWARE_UPDATE_ACCEPTANCE.md`
-for typed application packages, durable receipt, single-root operation and
-generation recovery.
+updates and rollback must execute using real current bundles. The current consolidated Linux test route is
+`docs/testing/GREIA_UPDATE_RELEASE_ACCEPTANCE.md`. Older dated A/B and
+application-package work orders remain detailed reference material, not
+additional stop/reuse gates.
 
 The 2026-10-23 Parent delivery, persistent mounts and restart integration are
 source work. Do not call them installed/device acceptance before that work
@@ -126,66 +122,20 @@ The old signed `.greiaupdate` v2 flow and release signing keys are
 superseded by ADR 0036 and are not the normal production route; older
 references to them are historical only.
 
-The offline failed-image read is complete; its first error is unrecoverable.
-The scoped work order is
-`docs/testing/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC.md`. Its helper
-`python -m tools.x8_qemu.stage_diagnostic` uses the verified accepted-A image
-and bundle, clones A, injects the candidate offline, boots only `update-stage`
-once and always collects the stopped clone. There is no build/install/arm/B
-boot or full acceptance matrix. The host timeout is 2,400 s above the existing
-1,800 s client stage bound. The result is diagnostic-only, with input hashes,
-service error/response evidence and collection failures retained. Report and stop.
-
-The preflight has now been run twice. The first run failed in the closed-stderr
-positive control (fake-server thread still alive after `server.join`; 80
-tests, one failure). That test fixture is corrected and the final **80-test
-preflight passes** under `PYTHONUNBUFFERED=1`. The second run then stopped at
-the source-reuse allowlist: the pull added
-`src/greia_platform/languages/en/manifest.json` and `.../it/manifest.json`,
-production source outside the allowed harness/tests/docs/skills/root-doc
-paths. The one-stage boot was **not** started. Current main has continued to advance (at last check `ef8eb3415`) and also
-adds installer/launcher/platform localization source plus en/es/fr/it
-manifests, so the gate is unchanged and broader. The language files are
-selector metadata and absent from the accepted-A image/next bundle, but the
-work order requires an explicit review decision before reuse. Report:
-`docs/reviews/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC_SOURCE_GATE_FAILURE.md`.
-The 2026-10-27 review records the old-release-only reuse exception in
-`docs/testing/2026-10-27_UPDATE_AGENT_HANDOFF.md`. That is the current next
-work order; it supersedes the old blanket source gate for one diagnostic only,
-not current-release/current-language image acceptance. Keep reviewed host source,
-actual host HEAD and old guest source separate. No rebuild/install/arm/B boot.
-
-The handoff was executed from the reviewed host source `78f07861` in an
-isolated clean checkout. Preflight and EN/IT/ES/FR checks passed. The one
-`update-stage` boot was refused by the installed updater:
-`inactive-slot filesystem is unavailable: block topology observation failed:
-slot device capacity is unobservable: sda2`. `phase-result.json` captured the
-`ERROR`/`REFUSED` response; no arm or B boot ran. Report:
-`docs/reviews/2026-10-27_AB_OLD_RELEASE_STAGE_DIAGNOSTIC_RESULT.md`. Source-path
-analysis and the recommended read-only probe are in
-`docs/reviews/2026-10-27_AB_OLD_RELEASE_STAGE_REFUSAL_ANALYSIS.md`: probe
-`/sys/class/block/*/size`, both `BLKGETSIZE64` encodings, `blockdev`, `lsblk`
-and the service capability/device policy before another boot, then fix in
-current main with i386/fallback tests. Healthy B and current-language image
-acceptance remain UNPROVEN; Session 04 OPEN. Stop; do not retry the frozen
-guest or automatically rebuild, arm or boot B.
-
-Current language source checks pass, but current Python/combined packages cannot
-carry the newly required language manifest/UI JSON to a pre-manifest base.
-Builder inventory and inspector paths exclude it. Block that known-bad app
-update combination until bounded data delivery/compatibility is addressed; do
-not learn it through a startup-failure trial or manually bypass the package
-validator. The new handoff records exact owners. No source correction is made
-here, and source/GUI/audio/image acceptance remain separate.
-
-Use sudo reads for root-owned 0600 inputs, never chmod. PSmisc holder checks
-must use its supported syntax and reject status-1 usage output. The old
-collection and healthy-update work orders are not automatic extra steps.
-Preserve accepted A and the verified bundle; host pressure is not a rebuild
-trigger. No production source changed in this follow-up. Source tests exercise
-the real default helper branch with fake external I/O; they do not prove stage
-on a device. The static audit found no established cause; healthy B remains
-unproven and Session 04 remains OPEN.
+**2026-10-27 owner-authorized update implementation/acceptance:** use the
+single current [update release acceptance guide](../../docs/testing/GREIA_UPDATE_RELEASE_ACCEPTANCE.md).
+The former 1275-era single-stage source gate is historical, not an active
+constraint. Its diagnostic already captured a real `sda2` capacity-observation
+refusal ([result](../../docs/reviews/2026-10-27_AB_OLD_RELEASE_STAGE_DIAGNOSTIC_RESULT.md),
+[analysis](../../docs/reviews/2026-10-27_AB_OLD_RELEASE_STAGE_REFUSAL_ANALYSIS.md)).
+Implement a portable block-capacity observation with i386 coverage in current
+`main`, then run consolidated current-source A/B and lightweight package tests
+on disposable Linux/QEMU installations. One work session may fix, retry and
+proceed through the complete relevant matrix; do not stop after every ordinary
+failure or require new frozen-source approvals. Do not weaken disk identity,
+bounded writes, startup health, recovery, PERSIST protection or child-session
+safety. Language JSON delivery and the exact-legacy receiver bridge already
+have source-level tests; installed acceptance remains to do.
 
 The installed updater discovers the fixed published bundle directly. Status
 is reporting/recovery progress, not a package-admission requirement. Device
