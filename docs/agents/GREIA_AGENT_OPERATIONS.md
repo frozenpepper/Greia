@@ -96,128 +96,15 @@ explicit procedure.
 
 ---
 
-## System-update source and external-machine acceptance (2026-10-24)
+## System-update implementation and Linux acceptance (2026-10-27)
 
-The lifecycle work orders are
-`docs/testing/2026-10-23_SYSTEM_UPDATE_LINUX_ACCEPTANCE.md` for BIOS/A-B/PERSIST
-and slot lifecycle acceptance, and
-`docs/testing/2026-10-24_SOFTWARE_UPDATE_ACCEPTANCE.md` for typed Python,
-Activity, combined and full-system `.greia_update` packages. Both remain under
-Session 04 of the 2026-09-15 plan. The owner explicitly deferred image builds,
-QEMU, installation and hardware execution from the Mac to another
-agent/machine. Keep these results separate from local Python/Node source
-checks.
+**Current owner-authorized execution:** [single update release acceptance](../testing/GREIA_UPDATE_RELEASE_ACCEPTANCE.md). The local coding agent may fix code, add tests, build current-source disposable Linux/QEMU images, test full A/B and application updates, diagnose failures and commit coherent repairs in **one session**. Do not apply the testing-only source-edit restrictions from the unrelated delayed Activity queue to this owner-authorized work.
 
-For the typed-package Linux run, the 2026-10-24 work order supplies the
-file-backed QEMU GUI install/boot commands, guest SSH and Parent port forwards,
-and the launcher-failure canary recipe. Its interactive single-root RC proof
-is distinct from the A/B `ProductHarness` control-seam install; the latter
-masks the GUI and proves shipped services plus disk observations, not rendered
-installer screens. Statements in the 2026-10-23 work order about v3-only
-online updates and no application delta/data-only route do not supersede ADR
-0038's application-package route. Use the work order's file-backed raw-clone
-recipes for partial upload, observed `applying` power cut and Parent receive-
-reserve HTTP 507. Root-only job/apply
-records are extracted offline from the stopped clone; no guest root shell or
-new `greia-devctl` verb is permitted. Only unreachable internal journal cut
-windows and generation/PERSIST staging-space cases remain NOT RUN with their
-specific missing observation/control.
+Dated October 23–27 procedures are detailed **reference material**, not independent mandatory gates. Do **not** use the frozen 1275 guest, duplicate source-difference allowlists, one-stage-only stop orders or fixed old artifact hashes as current instructions. The prior diagnostic already identified a real failure: i386 guest updater stage refused because `sda2` capacity was unobservable. See [captured result](../reviews/2026-10-27_AB_OLD_RELEASE_STAGE_DIAGNOSTIC_RESULT.md) and [root-cause analysis](../reviews/2026-10-27_AB_OLD_RELEASE_STAGE_REFUSAL_ANALYSIS.md).
 
-### A/B package discovery retry (2026-10-26)
+Use the Linux host's disposable QEMU disks; never guess a physical target. Keep the real product invariants: layout/device identity, bounded writes, PERSIST preservation, application generation atomicity, child-session fence, health and rollback. Run focused tests while fixing, full verification once after coherent changes, and consolidated installed acceptance. Record unrelated pre-existing full-suite failures without blocking relevant disposable-device tests; never misstate evidence.
 
-The installed updater discovers the published fixed-name bundle from its own
-manifest; `status.json` is reporting state, not an admission requirement.
-Missing/malformed/stale status must not require operator repair. The harness
-uses normal inbox publication, without host-to-guest receipt path projection.
-Ownership, atomic publication, transfer checks and bounded failure diagnostics
-remain. Durable application jobs and A/B journals still own recovery.
-
-Latest installed results: from `1275e0be1`, install and first-A passed and
-the updater returned STATUS/VERIFIED, but staging hit a harness 30-second
-timeout and leaked loops. Those harness fixes are in `abb11b0a0`; the
-authorized single retry from `abb11b0a0` then passed focused suites (176),
-status and verify, but `update-stage` reported `phase update-stage failed
-(exit 120)`. The failure line was prefixed by `greia login:`, so the harness's
-`_control_phase_failure` parser missed it and booted arm, which correctly
-refused `update transaction is accepted, not staged`. The shipped client's
-1800 s stage bound is present in the immutable payload, so this is not the old
-30 s client timeout; the stage service error was not captured before poweroff.
-Do not call it a production refusal.
-
-Offline failed-image read completed
-(`docs/testing/2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS.md`). Focused
-diagnostics/handoff suites passed (14); the collector exited 0 with cleanup ok.
-Facts: A is the accepted base 0.13.0 slot; B mounted but has **no release
-identity**, so no finalized next-release identity is established; PERSIST still accepts A
-and update status remains `received`; old control diagnostics are absent.
-The stage failed before B finalization, but the first stage error is
-**unrecoverable from this image**; the facts cannot distinguish a service
-refusal, crash, or lost control error. Report:
-`docs/reviews/2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS_RESULT.md`.
-
-The scoped single-stage work order is
-`docs/testing/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC.md`. Its preflight stopped
-at the source-test gate: 80 tests ran, one failed because the
-closed-stderr positive control left its fake-server thread alive after
-`server.join(timeout=5)`; the other 79 passed. Per the work order the
-one-stage VM boot was **not** started. The read-only allowlist/hash/holder/
-loop checks passed and inputs were preserved. This is a test-control race, not
-an installed-updater result. Report:
-`docs/reviews/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC_PREFLIGHT_FAILURE.md`.
-
-The fixture is now corrected: buffered stderr is exercised after a real stage
-request, child/server cleanup is bounded and synchronized, and the final
-80-test preflight passes under `PYTHONUNBUFFERED=1`. Rerunning the work order
-then stopped at the source-reuse allowlist: the pull added
-`src/greia_platform/languages/en/manifest.json` and `.../it/manifest.json`,
-production source outside the allowed harness/tests/docs/skills/root-doc
-paths. The one-stage boot was **not** started. Current main has continued to advance (at last check `ef8eb3415`) and also
-adds installer/launcher/platform localization source plus en/es/fr/it
-manifests, so the gate is unchanged and broader. The language files are
-selector metadata and are not in the accepted-A image or next bundle, but the
-work order requires an explicit review decision before reuse. Read-only
-hashes/holder/loop checks passed. Report:
-`docs/reviews/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC_SOURCE_GATE_FAILURE.md`.
-
-**Current review decision (2026-10-27):** the explicit old-release-only reuse
-exception is recorded in `docs/testing/2026-10-27_UPDATE_AGENT_HANDOFF.md`.
-Use that new handoff, not the old blanket `1275..HEAD` source gate. It pins
-reviewed host source separately from guest artifact source, permits one stage
-only on a fresh clone and collects the saved response/cause. The handoff was
-then executed from the reviewed host source `78f07861` in an isolated clean
-checkout: the 80-test preflight and EN/IT/ES/FR checks passed, and the one
-`update-stage` boot was refused by the installed updater with
-`inactive-slot filesystem is unavailable: block topology observation failed:
-slot device capacity is unobservable: sda2`. `phase-result.json` captured the
-`ERROR`/`REFUSED` response; no arm or B boot ran. This is a production
-refusal, not a capture/host failure. Report:
-`docs/reviews/2026-10-27_AB_OLD_RELEASE_STAGE_DIAGNOSTIC_RESULT.md`. Source-path
-analysis and the recommended read-only probe are in
-`docs/reviews/2026-10-27_AB_OLD_RELEASE_STAGE_REFUSAL_ANALYSIS.md`: probe
-`/sys/class/block/*/size`, both `BLKGETSIZE64` encodings, `blockdev`, `lsblk`
-and the service capability/device policy before another boot, then fix in
-current main with i386/fallback tests. Healthy B and current-language image
-acceptance remain UNPROVEN; Session 04 remains OPEN. Do not retry the frozen
-guest or automatically rebuild, arm or boot B.
-
-There is also a source compatibility blocker before application-package trials:
-Python/combined package builder/inspector omit and reject the new language JSON
-paths, while new registry code requires those files at import. Do not trial
-current registry code on a pre-manifest base or hand-copy files to evade the
-package validator. The new handoff names the required data/compatibility source
-work; no production correction or image rebuild is performed here.
-
-The PSmisc 23.7 holder check must use `fuser -v <absolute-file>` without `--`.
-Accept no-holder status 1 only with empty output: usage errors also return 1.
-Use sudo to read root-owned 0600 build artifacts; do not chmod them for checks.
-Never infer update acceptance from the collector's JSON.
-
-The active root stays writable. Hashes spanning its boot are retained for
-diagnosis, not checked for equality. First-boot B remains untouched and must
-match. Production SlotWriter active/accepted-slot refusal, expected release,
-root/default/journal/PERSIST and health checks are still required. This is a
-correction to the harness evidence scope, not proof of runtime byte isolation
-or completed rollback/hardware acceptance.
+The two independent lanes are (1) current-source blank-disk A/B install -> first A -> stage B -> activate -> healthy B -> rollback/interrupt recovery and (2) current application `.greia_update` Python/Activity/combined -> applied/health -> bad-candidate rollback and Parent disconnect continuation. The exact 1275 receiver bridge is an **additional** compatibility test, only when the disposable guest actually matches that legacy base. Implementation for language manifest/UI JSON packaging and the bridge is already committed; Linux installed acceptance remains pending. Session 04 remains OPEN until measured.
 
 ### Linux acceptance follow-up (2026-10-24)
 
