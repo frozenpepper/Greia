@@ -3647,3 +3647,36 @@ then a bounded sysfs/parent-disk capacity fallback in current main with i386
 and fallback tests; then a current fixture/image and the real install →
 first-A → stage → arm → B health route. Do not patch the frozen 1275 guest.
 No new runtime evidence; healthy B and Session 04 remain OPEN.
+
+## 2026-10-27 — Owner-directed update test simplification (documentation only)
+
+The owner requested removal of redundant procedural gates and rapid installed
+confirmation of the two Greia update mechanisms before release. The **current
+single executable work order** is
+[`docs/testing/GREIA_UPDATE_RELEASE_ACCEPTANCE.md`](../../testing/GREIA_UPDATE_RELEASE_ACCEPTANCE.md).
+It supersedes the frozen-source, one-stage-only update diagnostic instructions
+and old retry command sets **for execution**, while their recorded failures,
+fixture examples and detailed fault-case procedures remain available as history
+and reference. Neither the old 1275 guest nor its artifact-hash/source allowlist
+is a prerequisite to proving a coherent **current** source release in a
+disposable Linux/QEMU target.
+
+The local coding agent is authorized to implement the portable active-slot
+capacity probe fix in current `src/greia_platform/system_updates.py`, add
+cross-architecture regression tests, build matching current-source A/B fixtures,
+and continue through install -> A health -> stage B -> arm -> healthy B and
+rollback/fault cases in one consolidated session. In parallel, confirm
+`.greia_update` Python, Activity and combined packages, language JSON,
+health/recovery and detached Parent continuation. The source-matched 1275
+receiver bridge remains an optional *separate* legacy compatibility test only
+when that precise installed receiver is available. Debug and retry ordinary
+failures; stop only when a potentially destructive target is not disposable,
+real data could be lost, or the host is unrecoverably unable to proceed.
+Never waive genuine storage/identity/rollback protections to get a green test.
+
+This tranche modifies **documentation/workflow only**. The block-capacity
+production code has not been repaired here; no additional Linux boots,
+successful B health, rollback or installed application update has been
+demonstrated by these edits. Session 04 remains OPEN pending the consolidated
+agent's measured results. Record one acceptance report, actual source/artifact
+identities and narrow remaining gaps rather than many new single-step handoffs.
