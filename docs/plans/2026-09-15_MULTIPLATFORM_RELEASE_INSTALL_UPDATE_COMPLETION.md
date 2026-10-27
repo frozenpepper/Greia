@@ -3653,7 +3653,7 @@ No new runtime evidence; healthy B and Session 04 remain OPEN.
 The owner requested removal of redundant procedural gates and rapid installed
 confirmation of the two Greia update mechanisms before release. The **current
 single executable work order** is
-[`docs/testing/GREIA_UPDATE_RELEASE_ACCEPTANCE.md`](../../testing/GREIA_UPDATE_RELEASE_ACCEPTANCE.md).
+[`docs/testing/GREIA_UPDATE_RELEASE_ACCEPTANCE.md`](../testing/GREIA_UPDATE_RELEASE_ACCEPTANCE.md).
 It supersedes the frozen-source, one-stage-only update diagnostic instructions
 and old retry command sets **for execution**, while their recorded failures,
 fixture examples and detailed fault-case procedures remain available as history
