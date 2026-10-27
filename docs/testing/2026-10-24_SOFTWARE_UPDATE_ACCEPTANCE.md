@@ -1,5 +1,7 @@
 # Software update package Linux acceptance
 
+> **2026-10-27 UPDATE — DETAILED REFERENCE, NOT THE CURRENT TOP-LEVEL EXECUTION GATE.** Use the [single current update release acceptance guide](GREIA_UPDATE_RELEASE_ACCEPTANCE.md) for the owner's consolidated repair and Linux/QEMU test run. Keep this document's useful Parent API, update generation, negative and fault-test recipes; don't apply its old per-session source freeze, sequential stop orders or historic fixture identities as mandatory gates. Report application-update success separately from A/B success.
+
 **Date:** 2026-10-24
 **Status:** UNPROVEN; external Linux-agent handoff
 **Authority:** ADR 0038 plus ADR 0036 for full-system A/B behavior
