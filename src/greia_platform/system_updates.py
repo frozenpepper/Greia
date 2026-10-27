@@ -7,6 +7,7 @@ import re
 import shutil
 import socket
 import stat
+import struct
 import tempfile
 import zipfile
 from dataclasses import dataclass, field
@@ -58,6 +59,14 @@ _MAX_PERSIST_SCHEMA = 2_147_483_647
 _ZSTD_MAGIC = b"\x28\xb5\x2f\xfd"
 _DETERMINISTIC_ZIP_DATE = (1980, 1, 1, 0, 0, 0)
 _IDENTIFIER = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+_BLOCK_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+# BLKGETSIZE64 is _IOR(0x12, 114, size_t); the encoded length follows the
+# userspace pointer width, so i386 (4-byte size_t) and x86_64 (8-byte) differ.
+_BLKGETSIZE64_IOCTL_32BIT = 0x80041272
+_BLKGETSIZE64_IOCTL_64BIT = 0x80081272
+_SYSFS_BLOCK_ROOT = Path("/sys/class/block")
+_MIN_BLOCK_NODE_BYTES = 512
+_MAX_BLOCK_NODE_BYTES = 1 << 48
 #: Installed PERSIST contract schema (not a bundle member in v3; the bundle
 #: carries only the three readable/writable schema integers). Kept so the
 #: installed-state helpers below stay importable for persistent_layout.
@@ -2930,6 +2939,9 @@ def _observe_production_topology(
                     mapping=mapping,
                     dev_root=dev_root,
                     filesystem_runner=filesystem_runner,
+                    expected_size_bytes=(
+                        record.slot_bytes if role in ("system-a", "system-b") else None
+                    ),
                 )
             )
         except UpdateBackendUnavailable:
@@ -2956,6 +2968,7 @@ def _probe_role_fact(
     mapping: dict[str, str],
     dev_root: Path,
     filesystem_runner: object,
+    expected_size_bytes: int | None = None,
 ) -> object:
     """Probe one layout role back to its partition device (fail closed)."""
     from .block_slots import _normalize_partuuid_best_effort, blkid_device_partuuid
@@ -3001,50 +3014,134 @@ def _probe_role_fact(
         role=role,
         partuuid=_normalize_partuuid_best_effort(probed_partuuid),
         filesystem_uuid=observed_uuid,
-        size_bytes=_block_node_size_bytes(node),
+        size_bytes=_block_node_size_bytes(
+            node, expected_bytes=expected_size_bytes
+        ),
         disk_id=_parent_disk_name(node),
     )
 
 
-def _block_node_size_bytes(node: Path) -> int:
-    """Re-observe a block device capacity (ioctl first, binary fallback)."""
-    try:
-        import fcntl
-        import struct
+def _blkgetsize64_ioctl_requests(
+    pointer_size: int | None = None,
+) -> tuple[int, int]:
+    """Return the native BLKGETSIZE64 request, then the alternate encoding.
 
-        with node.open("rb") as handle:
-            raw = fcntl.ioctl(handle.fileno(), 0x80081272, b"\x00" * 8)
-        (size,) = struct.unpack("Q", raw)
-        if size <= 0:
-            raise UpdateBackendUnavailable(
-                f"slot device capacity is outside Greia bounds: {node.name}"
-            )
-        return int(size)
-    except UpdateBackendUnavailable:
-        raise
-    except Exception:
-        pass
-    try:
-        result = _PlatformCommandAdapter(timeout_seconds=30.0).run(
-            ["blockdev", "--getsize64", "--", str(node)], check=False
-        )
-    except Exception as exc:
-        raise UpdateBackendUnavailable(
-            f"slot device capacity is unobservable: {node.name}"
-        ) from exc
-    if result.returncode != 0:  # type: ignore[union-attr]
-        raise UpdateBackendUnavailable(
-            f"slot device capacity is unobservable: {node.name}"
-        )
-    try:
-        size = int(result.stdout.strip().splitlines()[0])  # type: ignore[union-attr]
-    except (IndexError, ValueError) as exc:
-        raise UpdateBackendUnavailable(
-            f"slot device capacity is not authoritative: {node.name}"
-        ) from exc
-    if size <= 0:
-        raise UpdateBackendUnavailable(
+    ``size_t`` is four bytes on i386 and eight on x86_64, which changes the
+    ``_IOR`` encoded request. Trying the native width first and the other
+    width second keeps one binary usable in both userspace/kernel pairings.
+    """
+    if pointer_size is None:
+        pointer_size = struct.calcsize("P")
+    if pointer_size == 4:
+        return (_BLKGETSIZE64_IOCTL_32BIT, _BLKGETSIZE64_IOCTL_64BIT)
+    return (_BLKGETSIZE64_IOCTL_64BIT, _BLKGETSIZE64_IOCTL_32BIT)
+
+
+def _require_capacity_in_bounds(node: Path, size: object) -> int:
+    if (
+        not isinstance(size, int)
+        or isinstance(size, bool)
+        or size < _MIN_BLOCK_NODE_BYTES
+        or size > _MAX_BLOCK_NODE_BYTES
+    ):
+        raise ValueError(
             f"slot device capacity is outside Greia bounds: {node.name}"
+        )
+    return size
+
+
+def _read_ioctl_capacity(node: Path, request: int) -> int:
+    import fcntl
+
+    with node.open("rb") as handle:
+        raw = fcntl.ioctl(handle.fileno(), request, b"\x00" * 8)
+    if not isinstance(raw, (bytes, bytearray)) or len(raw) != 8:
+        raise ValueError("ioctl returned a short capacity")
+    (size,) = struct.unpack("Q", bytes(raw))
+    return _require_capacity_in_bounds(node, int(size))
+
+
+def _read_sysfs_capacity(node: Path, sysfs_root: Path) -> int:
+    name = node.name
+    if not isinstance(name, str) or not _BLOCK_NAME.fullmatch(name):
+        raise ValueError("device name is outside the sysfs block form")
+    path = Path(sysfs_root) / name / "size"
+    with path.open("r", encoding="ascii", errors="strict") as handle:
+        raw = handle.read(65)
+    if len(raw) > 64:
+        raise ValueError("sysfs capacity is not bounded")
+    value = raw.strip()
+    if not value.isdigit():
+        raise ValueError("sysfs capacity is not an integer")
+    size = int(value) * 512
+    return _require_capacity_in_bounds(node, size)
+
+
+def _read_blockdev_capacity(node: Path, command_runner: object | None) -> int:
+    runner = command_runner or _PlatformCommandAdapter(timeout_seconds=30.0)
+    result = runner.run(  # type: ignore[union-attr]
+        ["blockdev", "--getsize64", "--", str(node)], check=False
+    )
+    if result.returncode != 0:  # type: ignore[union-attr]
+        raise ValueError(
+            f"blockdev exited {result.returncode}"  # type: ignore[union-attr]
+        )
+    lines = result.stdout.strip().splitlines()  # type: ignore[union-attr]
+    if len(lines) != 1 or not lines[0].isdigit():
+        raise ValueError("blockdev capacity is not an integer")
+    return _require_capacity_in_bounds(node, int(lines[0]))
+
+
+def _block_node_size_bytes(
+    node: Path,
+    *,
+    expected_bytes: int | None = None,
+    sysfs_root: Path = _SYSFS_BLOCK_ROOT,
+    command_runner: object | None = None,
+) -> int:
+    """Re-observe a block device capacity (ioctl, sysfs, then blockdev).
+
+    The ioctl request width follows the process pointer size so installed
+    i386 images and x86_64 developer hosts both work. The read-only sysfs
+    sector count is the primary fallback; ``blockdev`` remains an optional
+    last resort. Every method is bounded, and a successful observation is
+    still checked against the installed slot capacity (fail closed).
+    """
+    causes: list[str] = []
+    for request in _blkgetsize64_ioctl_requests():
+        try:
+            size = _read_ioctl_capacity(node, request)
+        except Exception as exc:
+            causes.append(
+                f"ioctl 0x{request:08x}: {_bounded_reason(exc, 80)}"
+            )
+            continue
+        return _require_expected_capacity(node, size, expected_bytes)
+    try:
+        size = _read_sysfs_capacity(node, sysfs_root)
+    except Exception as exc:
+        causes.append(f"sysfs: {_bounded_reason(exc, 80)}")
+    else:
+        return _require_expected_capacity(node, size, expected_bytes)
+    try:
+        size = _read_blockdev_capacity(node, command_runner)
+    except Exception as exc:
+        causes.append(f"blockdev: {_bounded_reason(exc, 80)}")
+    else:
+        return _require_expected_capacity(node, size, expected_bytes)
+    detail = "; ".join(causes) if causes else "no capacity method was attempted"
+    raise UpdateBackendUnavailable(
+        f"slot device capacity is unobservable: {node.name} ({detail})"
+    )
+
+
+def _require_expected_capacity(
+    node: Path, size: int, expected_bytes: int | None
+) -> int:
+    if expected_bytes is not None and size != expected_bytes:
+        raise UpdateBackendUnavailable(
+            "slot device capacity does not match the installed layout: "
+            f"{node.name} (observed {size} bytes, expected {expected_bytes} bytes)"
         )
     return size
 
