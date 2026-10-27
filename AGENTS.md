@@ -67,6 +67,20 @@ Do not resolve contradictions by choosing whichever document is convenient. Iden
 
 The architecture-remediation plan remains the active **blocking implementation** plan for its remaining non-lifecycle obligations until its final completion criteria are satisfied. It does **not** own install/update/release lifecycle routing: that route is `docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md` (ADR 0036 successor). Resume non-lifecycle work from the first incomplete blocking phase in the remediation plan; route all install/update/release/multiplatform lifecycle work from the 2026-09-15 plan. Do not create a competing implementation plan or jump ahead to a more visible feature while an earlier authority/safety prerequisite remains open. The old signed `.greiaupdate` v2 / release-signing-key route is superseded by ADR 0036 and must not be treated as the normal production route.
 
+**Owner-authorized update release campaign (2026-10-27):** fixing and
+confirming Greia's A/B and lightweight application updates is the immediate
+lifecycle priority. The one current execution route is
+`docs/testing/GREIA_UPDATE_RELEASE_ACCEPTANCE.md`. The local coding agent
+is expressly authorized to implement, test, repair, build *disposable* Linux
+QEMU images, run consolidated installed update acceptance, and commit coherent
+fixes to `main` without seeking a new approval after each ordinary failed test.
+The old one-stage/1275 source-reuse procedures are historical diagnostic records,
+not new prerequisites. Restrictions belonging to the separate delayed
+`GREIA_LOCAL_AGENT_TASK_QUEUE.md` do not restrict this implementation task.
+Continue preserving real disk selection, slot identity, atomic update/rollback,
+child data and profile-session boundaries; never use family/physical disks for
+disposable image work. Installed success is not family-release certification.
+
 **Scoped owner-authorized workstreams** (the Creations Library and Activity release programme, and the four-language localization and voice-production rollout) are listed with their plans, progress files, current work orders and owner approvals in `HANDOVER.md` § Active workstreams. They coordinate product/source work in parallel but do **not** supersede the remediation and lifecycle authorities above, which still govern safety prerequisites, installation, update, rollback and hardware acceptance. Do not start a competing catalogue, picker, creative-media, language-registry or voice plan. Standing decisions from those workstreams:
 
 - committed recordings are owner-reviewed and accepted; never regenerate them for perceived provenance problems. New speech goes through `tools/greia_voice.py` and needs fresh human acceptance;
