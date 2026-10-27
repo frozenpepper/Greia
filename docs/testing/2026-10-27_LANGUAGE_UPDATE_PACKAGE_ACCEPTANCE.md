@@ -1,5 +1,7 @@
 # Language update package acceptance — 2026-10-27
 
+> **Current execution route:** [one consolidated update release acceptance guide](GREIA_UPDATE_RELEASE_ACCEPTANCE.md). This document remains the specialized source and exact-legacy-bridge reference; it does not require a separate single-use agent handoff. The one-time receiver bridge applies **only** to an installed test image verified to match the specific `1275` source base.
+
 **Scope:** source proof for language JSON delivery through Python application
 updates, plus the bounded installed follow-up. This is not Linux image,
 A/B-slot, current-language image, or physical-device acceptance.
