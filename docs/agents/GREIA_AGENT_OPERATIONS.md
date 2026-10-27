@@ -239,7 +239,8 @@ fence or infer boot acceptance from a successful upload/stage reply.
 
 ADR 0038 adds `tools/greia_software_update.py` for source-built typed
 `.greia_update` packages. Its Python type is a complete production source
-snapshot and fixed runtime-config allowlist; Activity packages reuse existing
+snapshot, fixed runtime-config allowlist and offered locale `manifest.json` /
+`ui.json` pairs; Activity packages reuse existing
 `.greiaactivity` validation and preserve built-in vs Parent trust. Application
 packages use one durable upload acknowledgement and continue on the device
 after the phone closes. A full-system wrapper retains the existing v3/A-B
@@ -248,6 +249,15 @@ building or sending one. An image must contain
 `/etc/greia-os/software-update-bootstrap.json` and the stable
 `/usr/local/lib/greia-os/software-update-bootstrap.py`; no manual bootstrap
 CLI exists. Builder/source tests are not installed Linux acceptance.
+
+Pre-manifest package readers reject the new JSON destinations. For a known
+installed source base with the existing update engine, use the guide's
+`build-receiver-bridge --base-ref …` once, wait for `applied`, then send the
+normal current Python/combined package. The bridge preserves that base's
+application code except for the two update-reader/generation modules; it is
+not a universal upgrade for unknown bases. No image rebuild is needed for
+this language-data delivery change. The bounded source and installed follow-up
+procedure is `docs/testing/2026-10-27_LANGUAGE_UPDATE_PACKAGE_ACCEPTANCE.md`.
 
 Fresh BIOS A/B installation now has a mandatory `FreshAbInstallSeams.bios_bootloader_installer`
 seam, supplied in production by `device_seams.build_bios_bootloader_installer`.

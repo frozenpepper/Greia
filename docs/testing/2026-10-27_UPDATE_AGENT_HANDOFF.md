@@ -1,8 +1,20 @@
 # Update-testing agent handoff — 2026-10-27
 
-**Immediate job:** run one captured **old-release stage diagnostic**, using the
-verified existing images. Do not rebuild, reinstall, arm, boot B, or repeat the
-full update/fault matrix. Stop after one result.
+**Status: old-release stage diagnostic PAUSED on current main. Do not start
+that diagnostic from this checkout.** The source
+reuse review below covered only frozen host source
+`78f07861c0ddfad6ed51fb2e1c564d3f95e70115` and guest source
+`1275e0be1a9e0cda724ce18151ae65a25f03c98c`. Current main has since changed
+the updater/package builder and adds the receiver bridge, so the old source gate
+must stop. Do not run its Linux command blocks from current main or bypass that
+gate. Current package delivery has its own source and installed acceptance
+route in [the language update package acceptance note](2026-10-27_LANGUAGE_UPDATE_PACKAGE_ACCEPTANCE.md).
+
+**Old-release job:** one captured stage diagnostic was proposed for the
+verified existing images, but is now paused because its reviewed host-source
+gate does not pass on current main. The historical instructions below are not
+executable from current main. Do not rebuild, reinstall, arm, boot B, or repeat
+the full update/fault matrix under that paused handoff.
 
 Read `AGENTS.md`, `SETUP.md` and agent operations. This is for the Linux agent
 whose previous attempt stopped at the source-reuse gate. If an installer/A-B
@@ -22,7 +34,7 @@ inference, translation/audio edits, new language promotion or physical deploymen
 - Current main has real production localization changes. They are **absent
   from the old images**, not magically validated by this diagnostic.
 
-## Explicit reuse decision for this diagnostic
+## Frozen reuse decision for this diagnostic
 
 Reviewed source: `78f07861c0ddfad6ed51fb2e1c564d3f95e70115`.
 Old guest/artifact source: `1275e0be1a9e0cda724ce18151ae65a25f03c98c`.
@@ -35,12 +47,11 @@ runtime, Activity and asset inputs are unchanged. The current host helper
 injects its **test control** into a new clone; it does not inject new localization
 code into the old guest.
 
-**Decision: reuse is permitted for diagnosing this old release's stage failure.**
-This explicitly resolves the decision requested by the source-gate report.
-Do not run the old `1275..HEAD` blanket allowlist as an additional gate here;
-use the reviewed-snapshot checks below. Do not broaden an allowlist by hand.
-A new post-review executable/image change means stop and report the paths;
-it does not authorize a speculative rebuild.
+The original review permitted one old-release stage diagnostic from that
+reviewed source snapshot. That permission does not cover current main: the
+changed updater/package files fail the old source-reuse check. Resuming the
+diagnostic requires renewed review of the exact host source; do not bypass the
+source gate, alter the frozen guest, or respond with a speculative rebuild.
 
 This does **not** waive the current-release gate. A later planned build is
 needed to test the improved language implementation in an installed image.
@@ -66,39 +77,23 @@ Parents browser chrome still has separate client localization work; RTL,
 complex-script/font coverage, audio/listening and image acceptance remain
 separate. Do not add a fifth production manifest or generate speech here.
 
-## Application-update compatibility blocker — do not trial this combination
+## Application-update compatibility fix
 
-**Do not send a current `python_platform` or `combined` package to the old
-pre-manifest `1275e0be1` image as a test of the new language implementation.**
-This is a source-proven packaging gap, not an invitation to test a likely crash:
+The former JSON-delivery blocker is fixed in source. A normal current Python or
+combined package carries the complete managed locale manifest/UI snapshot, and
+the receiver validates it before generation activation. The frozen 1275-era
+receiver still cannot read those paths directly, so it requires the one-time
+bridge first. Use it only after confirming the installed application matches
+the exact 1275 base. It replaces that full declared Python/runtime snapshot,
+with only the package reader and generation validator overlaid; it carries no
+current language code or JSON. Never apply it to an arbitrary or newer image.
+After it reaches normal applied/health-accepted state, send a current
+Python/combined package.
 
-- `software_update_package_builder._collect_python_snapshot` selects only `.py`
-  files and the fixed `PYTHON_RUNTIME_ALLOWLIST`. The language `manifest.json`
-  and `ui.json` files are not included. The package inspector's `_package_path`
-  rejects adding these JSON paths by hand.
-- Generation staging preserves existing data but cannot invent missing language
-  files. Its syntax/root checks do not import the new language registry.
-- Updated `system_language.py` loads manifests during import; a pre-manifest
-  base has no such directory. The package cannot deliver the required new data.
-  Startup would fail; do not rely on a trial/rollback to discover this.
-
-Record this blocker separately. Before application-update testing resumes,
-core source work must provide the required bounded language data through the
-existing package builder/inspector and validate it before switching generations,
-or explicitly establish a compatible base. No manual copying into the guest,
-JSON injection outside the inspector, automatic full-image rebuild, or package
-format redesign belongs in this diagnostic run. The desired lightweight route
-needs to carry its required data; this work order changes no implementation.
-
-A compatible current image may already contain the original four language
-folders, but adding a fifth folder through Python packages is also blocked by
-the same data-inventory restriction. Edits to existing UI JSON are likewise absent from these Python packages.
-Activity-specific JSON/TOML does not replace the platform language manifests. The manifest tests passing on current source
-therefore do not establish delivery through application-update packages.
-
-This does not block the **old-release full-system stage diagnostic below**:
-its two old frozen images carry their original code/data together and do not
-receive the new Python registry. Do not mix these two test questions.
+The source-only bridge chain and separate installed acceptance procedure are
+in [the language update package acceptance note](2026-10-27_LANGUAGE_UPDATE_PACKAGE_ACCEPTANCE.md).
+These package checks do not resume or prove the paused old-release A/B stage
+diagnostic above.
 
 ## Execute on the existing Linux host
 
@@ -258,7 +253,7 @@ remain OPEN. Keep the unchanged `.greia_update` Python/Activity route separate:
 [package operator guide](../development/GREIA_SOFTWARE_UPDATE_PACKAGES.md).
 Routine application updates do not require a full A/B image rebuild.
 
-Include the application-package/language-data blocker in the returned report.
-Do not try a current Python package on an old image to reproduce what the
-source already demonstrates. No source-only language result or successful
-old-release stage clears that blocker.
+The application-package/language-data source blocker described in earlier
+reports is resolved by the bridge and complete-snapshot route. This old
+diagnostic neither tests nor blocks that route; report the two acceptance lanes
+separately. Do not try a current Python package on the frozen pre-bridge reader.

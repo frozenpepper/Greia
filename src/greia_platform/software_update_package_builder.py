@@ -33,6 +33,7 @@ from .software_update_package import (
     SoftwareUpdateType,
     _identifier,
     _package_path,
+    is_language_resource_path,
     _require_regular_source,
     _text,
     ensure_software_update_filename,
@@ -240,6 +241,29 @@ def _collect_python_snapshot(root: Path) -> dict[str, Path]:
         if source.is_symlink() or not source.is_file():
             raise SoftwareUpdatePackageError(f"allowlisted runtime file is not regular: {relative}")
         files[relative] = source
+    language_root = root / "src" / "greia_platform" / "languages"
+    if language_root.is_symlink() or not language_root.is_dir():
+        raise SoftwareUpdatePackageError("required language resource directory is missing or not regular")
+    for locale_dir in sorted(language_root.iterdir(), key=lambda item: item.name):
+        if locale_dir.is_symlink() or not locale_dir.is_dir():
+            raise SoftwareUpdatePackageError("language resource inventory contains a non-directory entry")
+        manifest = locale_dir / "manifest.json"
+        if manifest.is_symlink():
+            raise SoftwareUpdatePackageError("language manifest must be a regular file")
+        if not manifest.exists():
+            continue  # Unoffered language scaffolds are not package data.
+        for filename in ("manifest.json", "ui.json"):
+            source = locale_dir / filename
+            relative = source.relative_to(root).as_posix()
+            if not is_language_resource_path(relative):
+                raise SoftwareUpdatePackageError(f"language resource path is not canonical: {relative}")
+            if source.is_symlink() or not source.is_file():
+                raise SoftwareUpdatePackageError(f"required language resource is not a regular file: {relative}")
+            files[relative] = source
+    if not any(
+        path == "src/greia_platform/languages/en/manifest.json" for path in files
+    ):
+        raise SoftwareUpdatePackageError("Python snapshot must include offered English language data")
     if not files:
         raise SoftwareUpdatePackageError("Python source snapshot is empty")
     missing = REQUIRED_PYTHON_ENTRYPOINTS - files.keys()

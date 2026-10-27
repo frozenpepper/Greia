@@ -8,17 +8,21 @@ The privileged updater revalidates each declared component before apply.
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import re
 import stat
 import tempfile
 import zipfile
+from string import Formatter
+from types import SimpleNamespace
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path, PurePosixPath
 from typing import Mapping, Sequence
 
 from .activity_package_format import ACTIVITY_PACKAGE_EXTENSION
+from .localization import LocaleTag, LocalizationError
 from .system_updates import (
     MAX_BUNDLE_BYTES,
     UpdateBundleError,
@@ -36,6 +40,9 @@ MAX_SOFTWARE_UPDATE_ENTRIES = 8192
 MAX_PYTHON_FILES = 4096
 MAX_PYTHON_FILE_BYTES = 32 * 1024 * 1024
 MAX_PYTHON_TOTAL_BYTES = 256 * 1024 * 1024
+MAX_LANGUAGE_MANIFEST_BYTES = 4096
+MAX_LANGUAGE_UI_BYTES = 256 * 1024
+MAX_LANGUAGE_RESOURCE_LOCALES = 32
 MAX_ACTIVITY_PACKAGE_BYTES = 128 * 1024 * 1024
 MAX_ACTIVITY_TOTAL_BYTES = 1536 * 1024 * 1024
 MAX_ACTIVITY_PACKAGES = 64
@@ -435,6 +442,7 @@ def inspect_software_update_package(
                 raise SoftwareUpdatePackageError("package members do not match manifest order")
             _validate_declared_member_sizes(archive, manifest)
             _verify_all_digests(archive, manifest)
+            _validate_language_resources(archive, manifest)
             for activity in manifest.activity_items:
                 assert manifest.activity_source is not None
                 _validate_nested_activity(
@@ -560,9 +568,169 @@ def _validate_python_file(item: SoftwareUpdatePythonFile) -> None:
     _package_path(item.path)
     if item.member != f"python/{item.path}":
         raise SoftwareUpdatePackageError("Python archive member does not match fixed destination")
-    if not 0 <= item.size <= MAX_PYTHON_FILE_BYTES:
+    maximum = (
+        MAX_LANGUAGE_MANIFEST_BYTES if item.path.endswith("/manifest.json")
+        else MAX_LANGUAGE_UI_BYTES if item.path.endswith("/ui.json")
+        else MAX_PYTHON_FILE_BYTES
+    )
+    if not 0 <= item.size <= maximum:
         raise SoftwareUpdatePackageError("Python file size is outside Greia bounds")
     _digest(item.sha256)
+
+
+def _validate_language_resources(
+    archive: zipfile.ZipFile, manifest: SoftwareUpdatePackageManifest
+) -> None:
+    resources = {item.path: item for item in manifest.python_files if is_language_resource_path(item.path)}
+    if not resources:
+        return
+    locales = {PurePosixPath(path).parts[3] for path in resources}
+    if len(locales) > MAX_LANGUAGE_RESOURCE_LOCALES:
+        raise SoftwareUpdatePackageError("language resource count exceeds the runtime limit")
+    if "en" not in locales:
+        raise SoftwareUpdatePackageError("language resource package must include English")
+    decoded: dict[str, object] = {}
+    for locale in locales:
+        manifest_path = f"src/greia_platform/languages/{locale}/manifest.json"
+        ui_path = f"src/greia_platform/languages/{locale}/ui.json"
+        if manifest_path not in resources or ui_path not in resources:
+            raise SoftwareUpdatePackageError("language package must include both manifest.json and ui.json per locale")
+        for path in (manifest_path, ui_path):
+            try:
+                value = json.loads(archive.read(resources[path].member).decode("utf-8"), object_pairs_hook=_unique_object)
+            except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
+                raise SoftwareUpdatePackageError(f"{path} is not valid unique-key UTF-8 JSON") from exc
+            if not isinstance(value, dict) or type(value.get("schema_version")) is not int or value["schema_version"] != 1:
+                raise SoftwareUpdatePackageError(f"{path} must be a schema_version 1 JSON object")
+            decoded[path] = value
+        data = decoded[manifest_path]
+        if data.get("locale") != locale:
+            raise SoftwareUpdatePackageError(f"{manifest_path} locale must match its canonical directory")
+        if any(not isinstance(data.get(key), str) or not data[key].strip() or len(data[key]) > 80 for key in ("name", "native_name", "flag")):
+            raise SoftwareUpdatePackageError(f"{manifest_path} display metadata is invalid")
+        if type(data.get("order", 1000)) is not int or not 0 <= data.get("order", 1000) <= 10000:
+            raise SoftwareUpdatePackageError(f"{manifest_path} order is invalid")
+        if data.get("direction", "ltr") not in ("ltr", "rtl"):
+            raise SoftwareUpdatePackageError(f"{manifest_path} direction is invalid")
+        catalog = decoded[ui_path]
+        for section, mapping in catalog.items():
+            if section == "schema_version":
+                continue
+            if not isinstance(section, str) or not isinstance(mapping, dict) or any(
+                not isinstance(key, str) or not isinstance(value, str) or len(key) > 160 or len(value) > 8192
+                for key, value in mapping.items()
+            ):
+                raise SoftwareUpdatePackageError(f"{ui_path} contains an invalid UI section or string")
+    reference_path = "src/greia_platform/languages/en/ui.json"
+    reference = decoded.get(reference_path)
+    for locale in locales:
+        catalog = decoded[f"src/greia_platform/languages/{locale}/ui.json"]
+        for section, mapping in catalog.items():
+            if section == "schema_version":
+                continue
+            for key, text in mapping.items():
+                try:
+                    _format_fields(text)
+                except ValueError as exc:
+                    raise SoftwareUpdatePackageError(f"{locale} UI has an invalid format string in {section}/{key}") from exc
+    if reference is not None:
+        for locale in locales - {"en"}:
+            catalog = decoded[f"src/greia_platform/languages/{locale}/ui.json"]
+            for section, english_values in reference.items():
+                if section == "schema_version":
+                    continue
+                translated_values = catalog.get(section)
+                if not isinstance(translated_values, dict) or not set(english_values).issubset(translated_values):
+                    raise SoftwareUpdatePackageError(f"{locale} UI omits English keys in section {section}")
+                for key in english_values:
+                    english = english_values[key]
+                    try:
+                        if _format_fields(translated_values[key]) != _format_fields(english):
+                            raise SoftwareUpdatePackageError(f"{locale} UI placeholder mismatch in {section}/{key}")
+                    except SoftwareUpdatePackageError:
+                        raise
+                    except ValueError as exc:
+                        raise SoftwareUpdatePackageError(f"{locale} UI has an invalid format string in {section}/{key}") from exc
+
+
+def validate_language_resource_tree(language_root: Path) -> tuple[str, ...]:
+    """Validate offered locale JSON files without importing registry code.
+
+    Manifest-less locale directories are unoffered staging scaffolds. Offered
+    locales require the paired UI file and return in runtime `(order, locale)`
+    order so generation validation can compare the package inventory directly.
+    """
+    root = Path(language_root)
+    if root.is_symlink() or not root.is_dir():
+        raise SoftwareUpdatePackageError("language resource root is missing or unsafe")
+    records: list[SoftwareUpdatePythonFile] = []
+    orders: dict[str, int] = {}
+    content: dict[str, bytes] = {}
+    for directory in sorted(root.iterdir(), key=lambda item: item.name):
+        if directory.is_symlink():
+            raise SoftwareUpdatePackageError("language resource directory is a symlink")
+        if not directory.is_dir():
+            raise SoftwareUpdatePackageError("language resource root contains a non-directory entry")
+        manifest_path = directory / "manifest.json"
+        if manifest_path.is_symlink():
+            raise SoftwareUpdatePackageError("language manifest is a symlink")
+        if not manifest_path.exists():
+            continue
+        locale = directory.name
+        if not is_language_resource_path(f"src/greia_platform/languages/{locale}/manifest.json"):
+            raise SoftwareUpdatePackageError("language directory is not a canonical locale")
+        manifest_data: object = None
+        for filename, maximum in (("manifest.json", MAX_LANGUAGE_MANIFEST_BYTES), ("ui.json", MAX_LANGUAGE_UI_BYTES)):
+            path = directory / filename
+            if path.is_symlink() or not path.is_file() or path.stat().st_size > maximum:
+                raise SoftwareUpdatePackageError(f"language resource is missing, unsafe or oversized: {path}")
+            raw = path.read_bytes()
+            relative = f"src/greia_platform/languages/{locale}/{filename}"
+            content[relative] = raw
+            if filename == "manifest.json":
+                try:
+                    manifest_data = json.loads(raw.decode("utf-8"), object_pairs_hook=_unique_object)
+                except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
+                    raise SoftwareUpdatePackageError(f"invalid language manifest {path}") from exc
+        if not isinstance(manifest_data, dict):
+            raise SoftwareUpdatePackageError(f"invalid language manifest {manifest_path}")
+        order = manifest_data.get("order", 1000)
+        if type(order) is not int or not 0 <= order <= 10000:
+            raise SoftwareUpdatePackageError(f"language manifest has invalid order: {locale}")
+        orders[locale] = order
+        for filename in ("manifest.json", "ui.json"):
+            relative = f"src/greia_platform/languages/{locale}/{filename}"
+            records.append(SoftwareUpdatePythonFile(relative, f"python/{relative}", len(content[relative]), hashlib.sha256(content[relative]).hexdigest()))
+    if records and "en" not in orders:
+        raise SoftwareUpdatePackageError("English language manifest is required")
+    if len(orders) > MAX_LANGUAGE_RESOURCE_LOCALES:
+        raise SoftwareUpdatePackageError("language resource count exceeds the runtime limit")
+    if records:
+        package = SimpleNamespace(python_files=tuple(records))
+        archive_bytes = io.BytesIO()
+        with zipfile.ZipFile(archive_bytes, "w", compression=zipfile.ZIP_STORED) as writer:
+            for record in records:
+                relative = record.path
+                writer.writestr(record.member, content[relative])
+        with zipfile.ZipFile(io.BytesIO(archive_bytes.getvalue()), "r") as reader:
+            _validate_language_resources(reader, package)
+    return tuple(sorted(orders, key=lambda locale: (orders[locale], locale)))
+
+
+def _format_fields(value: str) -> frozenset[str]:
+    fields: set[str] = set()
+
+    def visit(template: str, depth: int) -> None:
+        if depth > 8:
+            raise ValueError("format placeholders are nested too deeply")
+        for _, name, format_spec, _ in Formatter().parse(template):
+            if name is not None:
+                fields.add(name)
+            if format_spec and "{" in format_spec:
+                visit(format_spec, depth + 1)
+
+    visit(value, 0)
+    return frozenset(fields)
 
 
 def _parse_activity(value: object) -> SoftwareUpdateActivity:
@@ -930,13 +1098,27 @@ def _activity_archive_path(name: str, *, allow_directory: bool) -> str:
 
 def _package_path(value: object) -> str:
     name = _archive_path(value)
-    if not name.endswith(".py") and name not in PYTHON_RUNTIME_ALLOWLIST:
+    if not name.endswith(".py") and name not in PYTHON_RUNTIME_ALLOWLIST and not is_language_resource_path(name):
         raise SoftwareUpdatePackageError("Python destination is outside the code/runtime allowlist")
     if not any(name.startswith(root) for root in PYTHON_SOURCE_ROOTS) and name not in PYTHON_RUNTIME_ALLOWLIST:
         raise SoftwareUpdatePackageError("Python destination is outside the production source trees")
     if any(part.startswith(".") for part in PurePosixPath(name).parts):
         raise SoftwareUpdatePackageError("hidden Python source paths are not packageable")
     return name
+
+
+def is_language_resource_path(value: object) -> bool:
+    """Return whether a destination is one of Greia's fixed locale JSON files."""
+    if not isinstance(value, str):
+        return False
+    parts = PurePosixPath(value).parts
+    if len(parts) != 5 or parts[:3] != ("src", "greia_platform", "languages"):
+        return False
+    try:
+        locale = str(LocaleTag.parse(parts[3]))
+    except LocalizationError:
+        return False
+    return locale == parts[3] and parts[4] in {"manifest.json", "ui.json"}
 
 
 def _archive_path(value: object) -> str:
@@ -1018,4 +1200,6 @@ __all__ = [
     "build_software_update_package",
     "ensure_software_update_filename",
     "inspect_software_update_package",
+    "is_language_resource_path",
+    "validate_language_resource_tree",
 ]

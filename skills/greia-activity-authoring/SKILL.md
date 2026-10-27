@@ -518,7 +518,7 @@ LAUNCH_ACCEPTANCE.md          detailed final launch/evidence procedure
 
 Parent-installed package storage is owned by `greiapanel`; root-side software updates must preserve that owner and leave published Activities readable but not writable by the child. For the Linux permission regression and clean-image rerun, follow `docs/testing/2026-10-24_SOFTWARE_UPDATE_ACCEPTANCE.md`.
 
-For visual asset creation/adaptation load `skills/greia-visual-authoring/SKILL.md`. For `.greiaactivity` packaging use `docs/architecture/GREIA_ACTIVITY_PACKAGE_FORMAT.md`, `src/greia_platform/activity_packages.py` and `src/greia_platform/activity_package_format.py`. To distribute a typed one/set/all Activity update, read `docs/development/GREIA_SOFTWARE_UPDATE_PACKAGES.md` and use `tools/greia_software_update.py`; keep built-in and Parent-source trust separate, and never package an Activity update as a Python filesystem destination.
+For visual asset creation/adaptation load `skills/greia-visual-authoring/SKILL.md`. For `.greiaactivity` packaging use `docs/architecture/GREIA_ACTIVITY_PACKAGE_FORMAT.md`, `src/greia_platform/activity_packages.py` and `src/greia_platform/activity_package_format.py`. To distribute a typed one/set/all Activity update, read `docs/development/GREIA_SOFTWARE_UPDATE_PACKAGES.md` and use `tools/greia_software_update.py`; keep built-in and Parent-source trust separate, and never package an Activity update as a Python filesystem destination. Combined packages now carry platform language manifest/UI JSON alongside Python; Activity translations remain inside the selected Activity archive. Old pre-manifest receivers need the guide's one-time source-matched bridge before a current combined package.
 
 ## 16. Definition of done
 

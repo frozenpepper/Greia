@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import shutil
+import hashlib
 import importlib.util
 import json
 import os
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -25,8 +27,10 @@ from greia_platform.software_update_package import (
     PYTHON_RUNTIME_ALLOWLIST,
     PYTHON_SOURCE_ROOTS,
     SoftwareUpdateType,
+    SoftwareUpdatePackageError,
     build_software_update_package,
     inspect_software_update_package,
+    validate_language_resource_tree,
 )
 from greia_platform.software_update_jobs import SoftwareUpdateJobStore
 from greia_platform.trust import ActivitySource, PackageTrust
@@ -75,6 +79,34 @@ def _activity_archive(source: Path, destination: Path, version: str) -> Path:
     return destination
 
 
+def _rewrite_language_package(
+    package: Path,
+    destination: Path,
+    replacements: dict[str, bytes | None],
+) -> Path:
+    """Rewrite package data and matching inventory hashes for rejection tests."""
+    with zipfile.ZipFile(package, "r") as source:
+        members = {name: source.read(name) for name in source.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    records = manifest["python_platform"]["files"]
+    for relative, payload in replacements.items():
+        record = next(item for item in records if item["path"] == relative)
+        if payload is None:
+            records.remove(record)
+            members.pop(record["member"])
+        else:
+            members[record["member"]] = payload
+            record["size"] = len(payload)
+            record["sha256"] = hashlib.sha256(payload).hexdigest()
+    members["manifest.json"] = json.dumps(
+        manifest, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    ).encode("utf-8")
+    with zipfile.ZipFile(destination, "w", compression=zipfile.ZIP_DEFLATED) as output:
+        for name, payload in members.items():
+            output.writestr(name, payload)
+    return destination
+
+
 class SoftwareUpdateGenerationTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temporary = tempfile.TemporaryDirectory(prefix="greia-app-generation-")
@@ -88,6 +120,9 @@ class SoftwareUpdateGenerationTests(unittest.TestCase):
             Path("greia-software/generations/base"), target_is_directory=True
         )
         _copy_python_snapshot(PROJECT_ROOT, self.base)
+        # Model candidate installation over a base generation without language
+        # data. The separate bridge tests cover the real old receiver source.
+        shutil.rmtree(self.base / "src/greia_platform/languages", ignore_errors=True)
         activities = self.base / "activities"
         activities.mkdir()
         for folder in ("painting", "writing"):
@@ -178,6 +213,207 @@ class SoftwareUpdateGenerationTests(unittest.TestCase):
         self.assertEqual(old_launcher.stat().st_size, (candidate / "src/greia_launcher/main.py").stat().st_size)
         self.assertEqual(old_asset.read_bytes(), (candidate / "assets/generation-sentinel.bin").read_bytes())
         self.assertEqual(old_pin.read_bytes(), (candidate / "runtime/parent-app-client.toml").read_bytes())
+        self.assertEqual("keep", (self.profile_data / "saved.txt").read_text("utf-8"))
+
+    def test_candidate_language_registry_imports_in_fresh_process_from_base_without_language_data(self) -> None:
+        package = self.root / "python-language-upgrade.greia_update"
+        source = self._changed_python_source()
+        build_software_update_package(
+            package,
+            version="1.1.1",
+            release_id="greia-python-language-1.1.1",
+            python_source_root=source,
+        )
+        staged = ApplicationGenerationBuilder(self.layout).stage(
+            package, job_id="d" * 32
+        )
+        expected = validate_language_resource_tree(source / "src/greia_platform/languages")
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-c",
+                "from greia_platform.system_language import SUPPORTED_SYSTEM_LOCALES; print(','.join(SUPPORTED_SYSTEM_LOCALES))",
+            ],
+            env={**os.environ, "PYTHONPATH": str(staged.generation_path / "src")},
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=15,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(tuple(result.stdout.strip().split(",")), expected)
+
+    def test_fifth_locale_survives_full_package_and_real_registry_import(self) -> None:
+        source = self._changed_python_source()
+        locale_root = source / "src/greia_platform/languages/pt-BR"
+        locale_root.mkdir()
+        (locale_root / "manifest.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "locale": "pt-BR",
+                    "name": "Portuguese",
+                    "native_name": "Português",
+                    "flag": "🇧🇷",
+                    "order": 40,
+                    "direction": "ltr",
+                }
+            ),
+            encoding="utf-8",
+        )
+        catalog = json.loads(
+            (source / "src/greia_platform/languages/en/ui.json").read_text("utf-8")
+        )
+        section = next(key for key, value in catalog.items() if isinstance(value, dict))
+        catalog[section]["fifth-locale-extra"] = "Extra Portuguese text"
+        (locale_root / "ui.json").write_text(json.dumps(catalog), encoding="utf-8")
+        package = self.root / "python-fifth-locale.greia_update"
+        build_software_update_package(
+            package,
+            version="1.1.4",
+            release_id="greia-python-language-1.1.4",
+            python_source_root=source,
+        )
+        expected = validate_language_resource_tree(source / "src/greia_platform/languages")
+        self.assertEqual(expected[-1], "pt-BR")
+        staged = ApplicationGenerationBuilder(self.layout).stage(package, job_id="1" * 32)
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-c",
+                "from greia_platform.system_language import SUPPORTED_SYSTEM_LOCALES; print(','.join(SUPPORTED_SYSTEM_LOCALES))",
+            ],
+            env={**os.environ, "PYTHONPATH": str(staged.generation_path / "src")},
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=15,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(tuple(result.stdout.strip().split(",")), expected)
+        self.assertIn("fifth-locale-extra", json.loads(
+            (staged.generation_path / "src/greia_platform/languages/pt-BR/ui.json").read_text("utf-8")
+        )[section])
+
+    def test_current_registry_without_language_json_fails_before_publish(self) -> None:
+        source = self._changed_python_source()
+        shutil.rmtree(source / "src/greia_platform/languages")
+        (source / "src/greia_platform/languages").mkdir(parents=True)
+        package = self.root / "missing-language-data.greia_update"
+        previous_inode = (self.base / "src/greia_platform/software_update_apply.py").stat().st_ino
+        with self.assertRaisesRegex(SoftwareUpdateGenerationError, "omits required language JSON"):
+            ApplicationGenerationBuilder._validate_language_resources(
+                source, {"src/greia_platform/system_language.py"}
+            )
+        with self.assertRaisesRegex(SoftwareUpdatePackageError, "offered English"):
+            build_software_update_package(
+                package,
+                version="1.1.3",
+                release_id="greia-python-language-1.1.3",
+                python_source_root=source,
+            )
+        self.assertEqual(self.application_root.resolve(), self.base.resolve())
+        self.assertFalse((self.generations / ("app-" + "f" * 32)).exists())
+        self.assertEqual(
+            previous_inode,
+            (self.base / "src/greia_platform/software_update_apply.py").stat().st_ino,
+        )
+        self.assertEqual("keep", (self.profile_data / "saved.txt").read_text("utf-8"))
+
+    def test_missing_ui_bad_schema_and_placeholder_mismatch_reject_before_activation(self) -> None:
+        source = self._changed_python_source()
+        valid = self.root / "valid-language-data.greia_update"
+        build_software_update_package(
+            valid,
+            version="1.1.5",
+            release_id="greia-python-language-1.1.5",
+            python_source_root=source,
+        )
+        english = "src/greia_platform/languages/en/ui.json"
+        french = "src/greia_platform/languages/fr/ui.json"
+        with zipfile.ZipFile(valid) as archive:
+            en_data = json.loads(archive.read("python/" + english))
+            fr_data = json.loads(archive.read("python/" + french))
+            spanish = "src/greia_platform/languages/es/ui.json"
+            italian = "src/greia_platform/languages/it/ui.json"
+            es_data = json.loads(archive.read("python/" + spanish))
+            it_data = json.loads(archive.read("python/" + italian))
+        section = next(key for key, value in en_data.items() if isinstance(value, dict))
+        bad_en, bad_fr, good_es, good_it = [json.loads(json.dumps(item)) for item in (en_data, fr_data, es_data, it_data)]
+        probe = "generation-placeholder-probe"
+        bad_en[section][probe] = "Hello {name}"
+        bad_fr[section][probe] = "Bonjour {person}"
+        good_es[section][probe] = "Hola {name}"
+        good_it[section][probe] = "Ciao {name}"
+        cases = (
+            (
+                "missing-ui",
+                {f"src/greia_platform/languages/fr/ui.json": None},
+                "language package must include both",
+            ),
+            (
+                "bad-schema",
+                {english: json.dumps({"schema_version": 2}).encode("utf-8")},
+                "schema_version 1",
+            ),
+            (
+                "bad-placeholder",
+                {
+                    english: json.dumps(bad_en).encode("utf-8"),
+                    french: json.dumps(bad_fr).encode("utf-8"),
+                    spanish: json.dumps(good_es).encode("utf-8"),
+                    italian: json.dumps(good_it).encode("utf-8"),
+                },
+                "placeholder mismatch",
+            ),
+        )
+        previous_inode = (self.base / "src/greia_platform/software_update_apply.py").stat().st_ino
+        for suffix, replacements, message in cases:
+            with self.subTest(case=suffix):
+                candidate = _rewrite_language_package(
+                    valid, self.root / f"{suffix}.greia_update", replacements
+                )
+                with self.assertRaisesRegex(SoftwareUpdatePackageError, message):
+                    inspect_software_update_package(candidate)
+                self.assertEqual(self.application_root.resolve(), self.base.resolve())
+                self.assertEqual(
+                    previous_inode,
+                    (self.base / "src/greia_platform/software_update_apply.py").stat().st_ino,
+                )
+                self.assertEqual("keep", (self.profile_data / "saved.txt").read_text("utf-8"))
+
+    def test_language_snapshot_respects_order_and_removes_stale_locale_resources_only_in_candidate(self) -> None:
+        stale = self.base / "src/greia_platform/languages/fr"
+        stale.mkdir(parents=True)
+        for filename in ("manifest.json", "ui.json"):
+            shutil.copy2(PROJECT_ROOT / "src/greia_platform/languages/fr" / filename, stale / filename)
+        (stale / "owner-note.txt").write_text("preserve unrelated content", encoding="utf-8")
+        source = self._changed_python_source()
+        shutil.rmtree(source / "src/greia_platform/languages/fr")
+        english = source / "src/greia_platform/languages/en/manifest.json"
+        data = json.loads(english.read_text("utf-8"))
+        data["order"] = 100
+        english.write_text(json.dumps(data), encoding="utf-8")
+        spanish = source / "src/greia_platform/languages/es/manifest.json"
+        data = json.loads(spanish.read_text("utf-8"))
+        data["order"] = 0
+        spanish.write_text(json.dumps(data), encoding="utf-8")
+        package = self.root / "invalid-language.greia_update"
+        build_software_update_package(
+            package,
+            version="1.1.2",
+            release_id="greia-python-language-1.1.2",
+            python_source_root=source,
+        )
+        staged = ApplicationGenerationBuilder(self.layout).stage(package, job_id="e" * 32)
+        self.assertFalse((staged.generation_path / "src/greia_platform/languages/fr/manifest.json").exists())
+        self.assertTrue((staged.generation_path / "src/greia_platform/languages/fr/owner-note.txt").is_file())
+        self.assertTrue((stale / "manifest.json").is_file())
+        self.assertTrue((stale / "ui.json").is_file())
+        self.assertEqual(self.application_root.resolve(), self.base.resolve())
+        self.assertTrue((self.generations / ("app-" + "e" * 32)).is_dir())
+        from greia_platform.system_language import load_system_languages
+        self.assertEqual(tuple(item.locale for item in load_system_languages(staged.generation_path / "src/greia_platform/languages"))[0], "es")
         self.assertEqual("keep", (self.profile_data / "saved.txt").read_text("utf-8"))
 
     def test_builtin_one_update_preserves_unlisted_activities_and_reuses_assets(self) -> None:

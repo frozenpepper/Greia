@@ -3562,3 +3562,40 @@ route. A bounded package-data/validation fix or compatible-base contract is
 needed before those trials; do not infer that a full image rebuild is the
 normal solution for lightweight updates. This is documentation/source review
 only; no implementation or Linux acceptance is added. Session 04 remains OPEN.
+
+## 2026-10-27 — Language resources delivered by application packages
+
+Implemented the bounded missing data path in ADR 0038's existing ZIP route.
+Normal Python/combined snapshots include every offered canonical locale's
+manifest/UI pair; schema, English coverage and placeholders are checked before
+publication. Stale managed JSON is removed only from private staging, preserving
+the prior generation and child data. No production locale/audio edits or new
+registry were introduced.
+
+The actual pre-manifest `1275e0be1` reader rejects JSON. A one-time
+`build-receiver-bridge --base-ref …` exports that exact old Python/runtime
+snapshot and overlays only the reader and generation modules. The old reader
+can stage this ordinary code-only v1 package, then the bridged reader can stage
+the normal current JSON-bearing package. This source chain is tested through
+isolated old/bridged processes and a fresh candidate-registry import. A separate
+temporary fifth-locale test changes only data. The bridge must not be sent to
+an unknown/newer base and cannot supply an absent update bootstrap.
+
+Source verification on the worktree based on `d1d6b60ad`, Python 3.12.7/macOS:
+121 focused update/language tests PASS; four offered-language checkers zero
+problems; real-source normal/bridge CLI builds PASS; fresh Luna review PASS;
+427-document link audit and four auditor tests PASS. The required `make verify`
+run remains RED with 5,990 tests, six failures, three errors and nine skips in
+the recorded unrelated voice-review, MBR assertion, Parent JS assertion,
+ARM-builder and missing-macOS-`lsblk` cases. The initial concurrent focused
+invocation raced bytecode cleanup; its final sequential rerun passed all 121.
+Evidence logs: `/tmp/greia-language-update-20261027/` on the Mac.
+
+Updated package guide, ADR, operations and skills; the precise next installed
+check is `docs/testing/2026-10-27_LANGUAGE_UPDATE_PACKAGE_ACCEPTANCE.md`, using
+an existing idle matching disposable target, with no OS rebuild or interference
+with another test. Old A/B diagnostic instructions are explicitly paused on
+current main after updater source changed; no stale gate rerun is requested.
+Installed health/Parent-disconnection acceptance and A/B stage diagnosis remain
+UNPROVEN. Session 04 remains OPEN; this is source completion of the language
+package-data gap, not image/device or lifecycle closure.

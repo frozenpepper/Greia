@@ -27,6 +27,7 @@ from .software_update_package import (
     PYTHON_RUNTIME_ALLOWLIST,
     PYTHON_SOURCE_ROOTS,
     REQUIRED_PYTHON_ENTRYPOINTS,
+    is_language_resource_path,
     InspectedSoftwareUpdatePackage,
     SoftwareUpdateActivity,
     SoftwareUpdatePackageManifest,
@@ -194,6 +195,10 @@ class ApplicationGenerationBuilder:
                             previous_root,
                             staging,
                         )
+                    self._validate_language_resources(
+                        staging,
+                        {item.path for item in manifest.python_files},
+                    )
                     self._remove_obsolete_python_sources(staging, declared_python_paths)
                     self._validate_python_sources(staging)
                 if manifest.activity_items:
@@ -267,6 +272,58 @@ class ApplicationGenerationBuilder:
                     raise SoftwareUpdateGenerationError(
                         f"Python source does not compile: {path.name}"
                     ) from exc
+
+    @staticmethod
+    def _validate_language_resources(
+        staging_root: Path, declared_paths: set[str]
+    ) -> None:
+        """Validate the candidate's JSON registry and UI catalog before publication.
+
+        The bootstrap validates staged JSON through the package validator. It
+        never imports Python from the candidate tree.
+        """
+        declared = {path for path in declared_paths if is_language_resource_path(path)}
+        language_root = staging_root / "src/greia_platform/languages"
+        _remove_obsolete_language_resources(language_root, declared)
+        registry_source = staging_root / "src/greia_platform/system_language.py"
+        expects_registry = False
+        try:
+            expects_registry = (
+                registry_source.is_file()
+                and "load_system_languages" in registry_source.read_text(encoding="utf-8")
+            )
+        except (OSError, UnicodeError) as exc:
+            raise SoftwareUpdateGenerationError("cannot inspect staged language registry source") from exc
+        if not declared and not expects_registry:
+            return  # Historical code snapshots without a manifest registry remain valid.
+        if not declared:
+            raise SoftwareUpdateGenerationError("Python update omits required language JSON resources")
+        try:
+            from .software_update_package import (
+                SoftwareUpdatePackageError,
+                validate_language_resource_tree,
+            )
+
+            locales = validate_language_resource_tree(language_root)
+            expected_paths = {
+                f"src/greia_platform/languages/{locale}/{name}"
+                for locale in locales
+                for name in ("manifest.json", "ui.json")
+            }
+            if declared != expected_paths:
+                missing = sorted(expected_paths - declared)
+                extra = sorted(declared - expected_paths)
+                raise ValueError(
+                    f"language resource snapshot mismatch (missing={missing}, extra={extra})"
+                )
+        except (
+            OSError,
+            ValueError,
+            UnicodeError,
+            TypeError,
+            SoftwareUpdatePackageError,
+        ) as exc:
+            raise SoftwareUpdateGenerationError(f"candidate language resources are invalid: {exc}") from exc
 
     def _estimate_changed_bytes(
         self,
@@ -518,6 +575,7 @@ def _safe_python_destination(value: str) -> PurePosixPath:
     if not (
         any(candidate.startswith(root) for root in PYTHON_SOURCE_ROOTS)
         or candidate in PYTHON_RUNTIME_ALLOWLIST
+        or is_language_resource_path(candidate)
     ):
         raise SoftwareUpdateGenerationError(
             "Python update destination is outside the fixed Greia allowlist"
@@ -530,6 +588,38 @@ def _safe_python_destination(value: str) -> PurePosixPath:
             "the installed Parent web client integrity pins are outside Python updates"
         )
     return path
+
+
+def _remove_obsolete_language_resources(language_root: Path, declared: set[str]) -> None:
+    """Apply the package's complete locale snapshot inside private staging only."""
+    from .localization import LocaleTag
+
+    if not language_root.exists():
+        return
+    if language_root.is_symlink() or not language_root.is_dir():
+        raise SoftwareUpdateGenerationError("language resource root is unsafe")
+    for directory in language_root.iterdir():
+        if directory.is_symlink():
+            raise SoftwareUpdateGenerationError("language resource directory is a symbolic link")
+        if not directory.is_dir():
+            continue
+        try:
+            locale = LocaleTag.parse(directory.name).value
+        except ValueError:
+            continue  # Non-locale authoring content is outside the managed snapshot.
+        if locale != directory.name:
+            continue
+        for filename in ("manifest.json", "ui.json"):
+            relative = f"src/greia_platform/languages/{locale}/{filename}"
+            if relative not in declared:
+                resource = directory / filename
+                if resource.is_symlink():
+                    raise SoftwareUpdateGenerationError("language resource file is a symbolic link")
+                resource.unlink(missing_ok=True)
+        try:
+            directory.rmdir()  # Remove only if no unrelated content remains.
+        except OSError:
+            pass
 
 
 def _is_job_id(value: str) -> bool:

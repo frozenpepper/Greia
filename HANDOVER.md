@@ -3,13 +3,16 @@
 **Purpose:** the short current state for contributors and agents: active workstreams, recent results, blockers and next steps. It is not an archive.
 **Public-source readiness:** IN PROGRESS. Root entry points exist (`LICENSE`, `NOTICE.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`); the licensing/provenance audit is open (see `NOTICE.md`).
 **Ordinary-family release:** NOT READY (`docs/release/GREIA_PUBLIC_RELEASE_READINESS.md`).
-**Current update-agent handoff (2026-10-27):**
-`docs/testing/2026-10-27_UPDATE_AGENT_HANDOFF.md` records the explicit reuse
-decision for one **old-release** stage diagnostic using the verified 1275-era
-images. It replaces the prior blanket source gate for that diagnostic only;
-no current-language image acceptance is claimed. Current Python/combined
-packages cannot deliver the newly required language JSON to pre-manifest bases;
-do not trial that incompatible combination. No automatic image rebuild.
+**Current application-package handoff (2026-10-27):**
+Python/combined packages now include and validate the offered language manifest
+and UI JSON snapshot with the code. For the exact pre-manifest 1275-era base,
+the one-time source-matched receiver bridge precedes the normal current package.
+Read `docs/testing/2026-10-27_LANGUAGE_UPDATE_PACKAGE_ACCEPTANCE.md` and the
+package operator guide. Source tests exercise the real old reader through both
+steps; installed service/health acceptance remains UNPROVEN. No OS rebuild is
+needed for this delivery change. The separate old A/B diagnostic handoff is
+paused on current main because its frozen reviewed host boundary has changed;
+do not run its stale gate or infer that a rebuild is required.
 **Last recorded A/B diagnostic checkpoint (2026-10-26; not a current HEAD claim):**
 the corrected 80-test preflight passed for the earlier candidate, but main
 subsequently gained production installer/launcher/platform localization changes
@@ -345,6 +348,46 @@ PRESERVED; the 4 first-run DONE, all 16 earlier retakes, and all 143 evidence-ga
 rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
+
+### 2026-10-27 — Language data in lightweight application packages
+
+Python and combined `.greia_update` builders now carry offered locale
+`manifest.json` / `ui.json` pairs with the complete Python/runtime snapshot.
+Inspection and generation staging validate schema, locale metadata, required
+English keys and placeholders before publication. A replacement snapshot
+removes stale managed locale JSON only inside the candidate generation.
+The four released manifests/translations/audio were not edited.
+
+For the exact `1275e0be1a9e0cda724ce18151ae65a25f03c98c` receiver, the
+source-bound `build-receiver-bridge` first delivers the old complete Python/
+runtime snapshot with only the package-reader and generation modules updated.
+After that job is `applied`, send the ordinary current JSON-bearing package.
+The source regression runs both staging steps through their actual respective
+receivers, then imports the new candidate registry in a fresh process. A
+separate temporary fifth-locale test requires no registry/chooser source edits.
+Fresh Luna read-only review found no correctness/data-loss blocker.
+
+Verification on the implementation worktree based on `d1d6b60ad`, Python
+3.12.7 `/opt/anaconda3/bin/python3`, macOS with SDL dummy and no bytecode:
+**121 focused update/language tests PASS** (package 18, generation 10, bridge
+5, remaining update/CLI/localization suites 88); all four offered-language
+source checks report zero problems. Real-source current/bridge CLI builds and
+the documentation auditor pass (427 Markdown documents, zero unresolved links;
+four auditor tests). `make verify` remains RED: 5,990 tests, six failures,
+three errors, nine skips in the previously recorded voice-review, ARM-builder,
+Mac `lsblk`, MBR-message and Parent-JS assertions. No affected update/language
+test failed in the final sequential run. An initial concurrent focused run
+collided with `make`'s bytecode cleanup; the sequential 121-test rerun above
+supersedes that invocation. Local logs: `/tmp/greia-language-update-20261027/`.
+
+Next installed step: follow
+`docs/testing/2026-10-27_LANGUAGE_UPDATE_PACKAGE_ACCEPTANCE.md` on an idle,
+existing disposable supported target with the confirmed matching base. No
+automatic image build or OS reinstall; no concurrent installer/A-B job may be
+disturbed. The previous old-release A/B diagnostic instructions are explicitly
+paused on current main rather than asking another agent to fail their stale
+source gate again. Installed service, disconnected-Parent continuation and
+health acceptance of this change remain UNPROVEN; Session 04 remains OPEN.
 
 ### 2026-10-27 — Update-agent handoff after language and documentation changes
 

@@ -653,7 +653,15 @@ docs/development/GREIA_SYSTEM_UPDATE_RELEASE_WORKFLOW.md
 
 Use `tools/greia_software_update.py` for typed Python/Activity/combined
 packages and full-system wrappers. Keep Python snapshots within the curated
-source/runtime allowlist; do not ship venvs, wheels, native dependencies,
+source/runtime allowlist, including offered locale `manifest.json` / `ui.json`
+pairs under `src/greia_platform/languages/<locale>/`. These files are validated
+and published with the code in one application generation. For a known
+pre-manifest source base with the existing update engine, follow the operator
+guide's one-time `build-receiver-bridge` procedure before sending the current
+JSON-bearing package. Do not send that package directly to an old reader or
+rebuild an OS image merely to deliver language JSON. See
+`docs/testing/2026-10-27_LANGUAGE_UPDATE_PACKAGE_ACCEPTANCE.md` for source and
+installed evidence boundaries. Do not ship venvs, wheels, native dependencies,
 global assets or the Parent HTML integrity-pin pair. Built-in and Parent
 Activity sources retain separate trust. Only `full_system` uses the explicit
 restart affordance, and only on an A/B-ready image. Builder/inspect tests do

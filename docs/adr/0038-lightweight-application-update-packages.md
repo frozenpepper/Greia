@@ -24,10 +24,18 @@ Python and Activity updates are supported on single-root and A/B installations
 that include the new update bootstrap. This is an application-code update,
 not a conversion to A/B or an authorization to rewrite a live Linux image.
 An old installation without this updater does not advertise the package API.
-There is no manual bootstrap command: use a current installer/reimage or, on
-an already supported A/B installation, its existing full-system upgrade
-route to an image that includes the helper. A software package upload cannot
-create a missing service/API.
+A package cannot create a missing service/API; use a current installer/reimage
+or, on an already supported A/B installation, its existing full-system
+upgrade route. For the frozen 1275-era receiver that already has the package
+API but rejects language JSON destinations, the source-owned
+`build-receiver-bridge` command may build a one-time code-only package from
+that exact source base, after confirming the installed application matches
+that source. It replaces the complete declared Python/runtime snapshot with
+the frozen base snapshot and overlays only the package reader and generation
+validator. Never use it on an arbitrary supported image or a newer application
+generation. After its normal application-generation health acceptance, a
+second current Python/combined package may deliver language resources. This
+exception does not bootstrap an installation lacking the existing updater.
 
 ## Parent interaction and ownership
 
@@ -55,6 +63,15 @@ complete declared change first. Publish a complete application generation by
 an atomic pointer switch; unchanged assets may be reused without duplicating
 their bytes. Combined Python/Activity changes use the same transaction so
 partially updated code and Activities are not exposed together.
+
+Python and combined packages include the complete managed language-resource
+snapshot under `src/greia_platform/languages/`: paired canonical locale
+`manifest.json` and `ui.json` files, English required, and at most 32 offered
+locales. Manifest-less staging scaffolds are not offered or packaged. The
+receiver validates the staged locale order and UI schema, English key coverage
+and interpolation placeholders before switching the pointer. Stale managed
+locale JSON is removed only from the private candidate generation; unrelated
+files and data outside the application generation remain untouched.
 
 Preserve the previous application generation through startup acceptance.
 Broken replacement code or interrupted activation restores it. Bootstrap and

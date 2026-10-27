@@ -25,6 +25,7 @@ from greia_platform.software_update_package import (
     build_software_update_package,
     ensure_software_update_filename,
     inspect_software_update_package,
+    validate_language_resource_tree,
 )
 from greia_platform.system_updates import (
     MAX_BUNDLE_BYTES,
@@ -66,6 +67,16 @@ def _python_root(root: Path) -> Path:
     (root / "src" / "greia_platform" / "native.c").write_text("int x;\n", encoding="utf-8")
     (root / "src" / "greia_platform" / "update_logic.py").write_text("VALUE = 7\n", encoding="utf-8")
     (root / "src" / "greia_platform" / "empty.py").write_bytes(b"")
+    language = root / "src" / "greia_platform" / "languages" / "en"
+    language.mkdir(parents=True)
+    (language / "manifest.json").write_text(
+        json.dumps({"schema_version": 1, "locale": "en", "name": "English", "native_name": "English", "flag": "🇬🇧", "order": 0}),
+        encoding="utf-8",
+    )
+    (language / "ui.json").write_text(json.dumps({"schema_version": 1, "example": {"hello": "Hello {name}"}}), encoding="utf-8")
+    scaffold = root / "src" / "greia_platform" / "languages" / "de"
+    scaffold.mkdir(parents=True)
+    (scaffold / "ui.json").write_text(json.dumps({"schema_version": 1, "draft": {"title": "Nicht angeboten"}}), encoding="utf-8")
     return root
 
 
@@ -174,6 +185,9 @@ class SoftwareUpdatePackageFormatTests(unittest.TestCase):
             inspected = inspect_software_update_package(first_path)
             paths = {item.path for item in inspected.manifest.python_files}
             self.assertIn("src/greia_platform/update_logic.py", paths)
+            self.assertIn("src/greia_platform/languages/en/manifest.json", paths)
+            self.assertIn("src/greia_platform/languages/en/ui.json", paths)
+            self.assertNotIn("src/greia_platform/languages/de/ui.json", paths)
             self.assertIn("runtime/child-runtime.toml", paths)
             self.assertNotIn("runtime/parent-app-client.toml", paths)
             self.assertNotIn("runtime/parent-app-client.manifest.json", paths)
@@ -193,6 +207,82 @@ class SoftwareUpdatePackageFormatTests(unittest.TestCase):
                     release_id="greia-app-1.4.0",
                     python_source_root=root,
                 )
+
+    def test_inspector_rejects_arbitrary_json_and_malformed_language_metadata(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = _python_root(Path(directory) / "project")
+            package = root / "good.greia_update"
+            build_software_update_package(package, version="1.4.0", release_id="greia-app-1.4.0", python_source_root=root)
+            with zipfile.ZipFile(package) as archive:
+                manifest = json.loads(archive.read("manifest.json"))
+                payloads = {name: archive.read(name) for name in archive.namelist()[1:]}
+            files = manifest["python_platform"]["files"]
+            record = next(item for item in files if item["path"].endswith("/languages/en/manifest.json"))
+            payloads[record["member"]] = json.dumps({"schema_version": 1, "locale": "it", "name": "English", "native_name": "English", "flag": "x"}).encode()
+            record["size"] = len(payloads[record["member"]])
+            record["sha256"] = hashlib.sha256(payloads[record["member"]]).hexdigest()
+            bad = root / "bad.greia_update"
+            _write_raw_package(bad, manifest, payloads)
+            with self.assertRaisesRegex(SoftwareUpdatePackageError, "locale must match"):
+                inspect_software_update_package(bad)
+
+            files[0]["path"] = "src/greia_platform/anything.json"
+            _write_raw_package(bad, manifest, payloads)
+            with self.assertRaisesRegex(SoftwareUpdatePackageError, "allowlist"):
+                inspect_software_update_package(bad)
+
+    def test_inspector_rejects_mismatched_language_placeholders(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = _python_root(Path(directory) / "project")
+            package = root / "good.greia_update"
+            build_software_update_package(package, version="1.4.0", release_id="greia-app-1.4.0", python_source_root=root)
+            with zipfile.ZipFile(package) as archive:
+                manifest = json.loads(archive.read("manifest.json"))
+                payloads = {name: archive.read(name) for name in archive.namelist()[1:]}
+            record = next(item for item in manifest["python_platform"]["files"] if item["path"].endswith("/languages/en/ui.json"))
+            payloads[record["member"]] = json.dumps({"schema_version": 1, "example": {"hello": "Hello"}}).encode()
+            record["size"] = len(payloads[record["member"]])
+            record["sha256"] = hashlib.sha256(payloads[record["member"]]).hexdigest()
+            bad = root / "bad.greia_update"
+            _write_raw_package(bad, manifest, payloads)
+            # English reference is within this same package; use a sibling locale to
+            # exercise the checker that guards translated placeholder contracts.
+            files = manifest["python_platform"]["files"]
+            translated_manifest = {"schema_version": 1, "locale": "it", "name": "Italian", "native_name": "Italiano", "flag": "🇮🇹"}
+            translated_ui = {"schema_version": 1, "example": {"hello": "Ciao {other}"}}
+            for filename, value in (("manifest.json", translated_manifest), ("ui.json", translated_ui)):
+                path = f"src/greia_platform/languages/it/{filename}"
+                member = f"python/{path}"
+                content = json.dumps(value).encode()
+                files.append({"path": path, "member": member, "size": len(content), "sha256": hashlib.sha256(content).hexdigest()})
+                payloads[member] = content
+            _write_raw_package(bad, manifest, payloads)
+            with self.assertRaisesRegex(SoftwareUpdatePackageError, "placeholder mismatch"):
+                inspect_software_update_package(bad)
+
+    def test_language_tree_rejects_more_than_runtime_locale_limit(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            locales = [f"{first}{second}" for first in "abcdefghijklmnopqrstuvwxyz" for second in "abcdefghijklmnopqrstuvwxyz"]
+            for index, locale in enumerate(["en", *[item for item in locales if item != "en"][:32]]):
+                folder = root / locale
+                folder.mkdir()
+                (folder / "manifest.json").write_text(
+                    json.dumps({"schema_version": 1, "locale": locale, "name": locale, "native_name": locale, "flag": "x", "order": index}),
+                    encoding="utf-8",
+                )
+                (folder / "ui.json").write_text(json.dumps({"schema_version": 1, "example": {"hello": "Hello {name}"}}), encoding="utf-8")
+            with self.assertRaisesRegex(SoftwareUpdatePackageError, "runtime limit"):
+                validate_language_resource_tree(root)
+
+    def test_language_tree_rejects_invalid_english_format_string(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = _python_root(Path(directory) / "project") / "src/greia_platform/languages"
+            ui = json.loads((root / "en/ui.json").read_text("utf-8"))
+            ui["example"]["hello"] = "Unclosed {name"
+            (root / "en/ui.json").write_text(json.dumps(ui), encoding="utf-8")
+            with self.assertRaisesRegex(SoftwareUpdatePackageError, "invalid format string"):
+                validate_language_resource_tree(root)
 
     def test_python_targets_match_exactly_and_default_is_portable(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -370,6 +460,8 @@ class SoftwareUpdatePackageFormatTests(unittest.TestCase):
             self.assertEqual(len(inspected.manifest.activity_items), 1)
             with zipfile.ZipFile(package) as archive:
                 manifest = json.loads(archive.read("manifest.json"))
+                self.assertIn("python/src/greia_platform/languages/en/manifest.json", archive.namelist())
+                self.assertIn("python/src/greia_platform/languages/en/ui.json", archive.namelist())
             self.assertEqual(set(manifest), {"schema_version", "type", "version", "release_id", "targets", "python_platform", "activities"})
             manifest["activities"]["source"] = "parent"
             with self.assertRaisesRegex(SoftwareUpdatePackageError, "combined packages may only update built-in"):
