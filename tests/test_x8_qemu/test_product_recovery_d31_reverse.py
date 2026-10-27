@@ -734,6 +734,20 @@ class StageInspectorTests(unittest.TestCase):
             self.assertIn("automatic-reboot", post["journal_note"])  # type: ignore[operator]
             self.assertEqual(post["last_booted"], "B")
 
+            # The product harness observes all stages after the recovery
+            # reboot. The prefailure inspector must also accept the terminal
+            # FAILED journal as evidence that the candidate booted and the
+            # deadline trigger recovered it, rather than requiring a live
+            # pre-reboot snapshot that no longer exists.
+            late = inspect_recovery_prefailure_roots(
+                backend_state_dir=work / "boot",
+                journal_dir=journal_dir,
+                accepted_slot="B",
+                candidate_slot="A",
+            )
+            self.assertEqual(late["journal_state"], "failed")
+            self.assertEqual(late["last_booted"], "B")
+
             with self.assertRaisesRegex(LifecycleHarnessError, "accepted release"):
                 inspect_recovery_postrecovery_roots(
                     backend_state_dir=work / "boot",

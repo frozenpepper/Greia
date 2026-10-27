@@ -39,6 +39,8 @@ PENDING_PATH = STATE_ROOT / "pending"
 JOURNAL_PATH = STATE_ROOT / "apply-journal.json"
 ACTIVE_PROFILE_PATH = Path("/run/greia-os/active-profile.json")
 ROOT_FILESYSTEM_UUID_PATH = Path("/etc/greia-os/root-filesystem-uuid")
+LAYOUT_RECORD_PATH = Path("/etc/greia-os/layout/installed-layout.json")
+PROC_CMDLINE_PATH = Path("/proc/cmdline")
 ACTIVE_PROFILE_LOCK = Path("/run/greia-update-authority/profile-session.lock")
 RESTART_FENCE_PATH = Path("/run/greia-update-authority/restart-pending.json")
 BOOT_MARKER_SPOOL = Path("/run/greia-os/boot-markers.log")
@@ -76,6 +78,8 @@ class BootstrapPaths:
     journal: Path = JOURNAL_PATH
     active_profile: Path = ACTIVE_PROFILE_PATH
     root_filesystem_uuid: Path = ROOT_FILESYSTEM_UUID_PATH
+    layout_record: Path = LAYOUT_RECORD_PATH
+    proc_cmdline: Path = PROC_CMDLINE_PATH
     active_profile_lock: Path = ACTIVE_PROFILE_LOCK
     restart_fence: Path = RESTART_FENCE_PATH
     boot_marker_spool: Path = BOOT_MARKER_SPOOL
@@ -227,6 +231,8 @@ def _current_root_uuid(paths: BootstrapPaths) -> str:
     flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
     try:
         descriptor = os.open(paths.root_filesystem_uuid, flags)
+    except FileNotFoundError:
+        return _current_ab_slot_root_uuid(paths)
     except OSError as exc:
         raise BootstrapError("installed root filesystem identity is unavailable") from exc
     try:
@@ -250,6 +256,58 @@ def _current_root_uuid(paths: BootstrapPaths) -> str:
     except ValueError as exc:
         raise BootstrapError("installed root filesystem identity is invalid") from exc
     if canonical != value.lower():
+        raise BootstrapError("installed root filesystem identity is invalid")
+    return canonical
+
+
+def _current_ab_slot_root_uuid(paths: BootstrapPaths) -> str:
+    """Resolve the booted A/B slot's filesystem UUID from the layout record.
+
+    Single-root builds carry ``/etc/greia-os/root-filesystem-uuid``. A/B
+    images do not: their root identity is the booted slot's filesystem UUID
+    from installed-layout authority. Match the kernel ``root=PARTUUID=``
+    command line against the record so a candidate boot is bound to its own
+    slot even while the accepted slot is still the other one.
+    """
+    try:
+        layout = _read_regular_json(paths.layout_record, MAX_SMALL_JSON_BYTES)
+    except BootstrapError as exc:
+        raise BootstrapError("installed root filesystem identity is unavailable") from exc
+    if layout.get("schema_version") != 1:
+        raise BootstrapError("installed root filesystem identity is invalid")
+    try:
+        cmdline = Path(paths.proc_cmdline).read_text(encoding="ascii", errors="strict")
+    except (OSError, UnicodeDecodeError) as exc:
+        raise BootstrapError("installed root filesystem identity is unavailable") from exc
+    if len(cmdline) > 64 * 1024:
+        raise BootstrapError("installed root filesystem identity is invalid")
+    root_tokens = [
+        token[len("root=PARTUUID="):]
+        for token in cmdline.split()
+        if token.startswith("root=PARTUUID=")
+    ]
+    if len(root_tokens) != 1 or not root_tokens[0]:
+        raise BootstrapError("installed root filesystem identity is unavailable")
+    booted_partuuid = root_tokens[0].lower()
+    matches = []
+    for slot in ("system_a", "system_b"):
+        identity = layout.get(slot)
+        if not isinstance(identity, dict):
+            continue
+        partuuid = identity.get("partuuid")
+        filesystem_uuid = identity.get("filesystem_uuid")
+        if not isinstance(partuuid, str) or not isinstance(filesystem_uuid, str):
+            continue
+        if partuuid.lower() != booted_partuuid:
+            continue
+        matches.append(filesystem_uuid)
+    if len(matches) != 1 or not ROOT_UUID_RE.fullmatch(matches[0]):
+        raise BootstrapError("installed root filesystem identity is invalid")
+    try:
+        canonical = str(uuid.UUID(matches[0]))
+    except ValueError as exc:
+        raise BootstrapError("installed root filesystem identity is invalid") from exc
+    if canonical != matches[0].lower():
         raise BootstrapError("installed root filesystem identity is invalid")
     return canonical
 
@@ -328,7 +386,12 @@ def _read_job_locked(paths: BootstrapPaths) -> dict[str, object]:
 
 
 def _update_job_locked(
-    paths: BootstrapPaths, *, state: str | None = None, fields: Mapping[str, object] | None = None
+    paths: BootstrapPaths,
+    *,
+    state: str | None = None,
+    fields: Mapping[str, object] | None = None,
+    expected_job_id: str | None = None,
+    clear_candidate: bool = False,
 ) -> dict[str, object]:
     lock_fd = os.open(
         paths.job_lock,
@@ -346,6 +409,8 @@ def _update_job_locked(
         ):
             raise BootstrapError("software update job identity is invalid")
         job = dict(original_job)
+        if expected_job_id is not None and job.get("job_id") != expected_job_id:
+            raise BootstrapError("software update job changed during activation")
         if state is not None:
             job["state"] = state
         if fields:
@@ -385,6 +450,12 @@ def _update_job_locked(
         except BaseException:
             temporary.unlink(missing_ok=True)
             raise
+        if clear_candidate:
+            # Keep the candidate cleanup inside the job lock that publishes
+            # the terminal state. Otherwise a new upload can publish a fresh
+            # candidate between the two operations and this worker deletes it.
+            _clear_candidate(paths)
+            _clear_pending(paths)
         return job
     finally:
         fcntl.flock(lock_fd, fcntl.LOCK_UN)
@@ -689,10 +760,23 @@ def _reconcile_job_marker(paths: BootstrapPaths) -> None:
             _clear_candidate(paths)
 
 
-def _job_state_update(paths: BootstrapPaths, state: str, **fields: object) -> dict[str, object]:
+def _job_state_update(
+    paths: BootstrapPaths,
+    state: str,
+    *,
+    expected_job_id: str | None = None,
+    clear_candidate: bool = False,
+    **fields: object,
+) -> dict[str, object]:
     if state not in ACTIVE_JOB_STATES | TERMINAL_JOB_STATES | {"ready_to_restart"}:
         raise BootstrapError("software update state is not supported")
-    return _update_job_locked(paths, state=state, fields=fields)
+    return _update_job_locked(
+        paths,
+        state=state,
+        fields=fields,
+        expected_job_id=expected_job_id,
+        clear_candidate=clear_candidate,
+    )
 
 
 def _fresh_launcher_ready(paths: BootstrapPaths, after_monotonic_ns: int) -> bool:
@@ -1109,12 +1193,17 @@ def _activate_generation(paths: BootstrapPaths, job: Mapping[str, object], plan:
                     "candidate_generation": candidate,
                 },
             )
-            _job_state_update(paths, "applied", error_code=None, error_message=None)
-            _clear_pending(paths)
+            _job_state_update(
+                paths,
+                "applied",
+                error_code=None,
+                error_message=None,
+                expected_job_id=job_id,
+                clear_candidate=True,
+            )
             _clear_restart_fence(paths)
             if phase == "trial":
                 _prune_generations(paths, keep={previous, candidate})
-            _clear_candidate(paths)
             return
     except Exception:
         ready = False
@@ -1151,12 +1240,12 @@ def _activate_generation(paths: BootstrapPaths, job: Mapping[str, object], plan:
             "rolled_back",
             error_code="launcher_not_ready",
             error_message="the previous software generation was restored",
+            expected_job_id=job_id,
+            clear_candidate=True,
         )
-        _clear_pending(paths)
         _clear_restart_fence(paths)
         if phase == "trial":
             _prune_generations(paths, keep={previous})
-        _clear_candidate(paths)
     except Exception as exc:
         _job_state_update(
             paths,
@@ -1407,10 +1496,15 @@ def _reconcile_application_trial(paths: BootstrapPaths, job: Mapping[str, object
                 )
             committed_phase = "committed_parent_activities" if parent_update else "committed"
             _write_journal(paths, {**journal, "phase": committed_phase})
-            _job_state_update(paths, "applied", error_code=None, error_message=None)
-            _clear_pending(paths)
+            _job_state_update(
+                paths,
+                "applied",
+                error_code=None,
+                error_message=None,
+                expected_job_id=str(job.get("job_id", "")),
+                clear_candidate=True,
+            )
             _clear_restart_fence(paths)
-            _clear_candidate(paths)
             if not parent_update and GENERATION_ID_RE.fullmatch(previous) and GENERATION_ID_RE.fullmatch(candidate):
                 _prune_generations(paths, keep={previous, candidate})
             return 0

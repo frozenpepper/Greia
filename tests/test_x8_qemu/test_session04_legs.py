@@ -112,6 +112,11 @@ class ReportShapeTests(unittest.TestCase):
         self.assertIn("recovery-boot-B", report["observed_steps"])
         with self.assertRaises(Exception):
             build_userspace_failure_lifecycle_report(observed_default="A")
+        a_start = build_userspace_failure_lifecycle_report(
+            observed_default="A", accepted_slot="A"
+        )
+        self.assertEqual(a_start["accepted_slot"], "A")
+        self.assertIn("recovery-boot-A", a_start["observed_steps"])
 
     def test_nonboot_failure_lands_on_accepted(self) -> None:
         report = build_nonboot_failure_lifecycle_report(observed_default="B")

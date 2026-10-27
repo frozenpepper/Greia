@@ -5637,9 +5637,22 @@ class ProductHarness:
                 f"{accepted_release_id!r}"
             )
         report = build_userspace_failure_lifecycle_report(
-            observed_default=str(recovered.get("default_slot", ""))
+            observed_default=str(recovered.get("default_slot", "")),
+            accepted_slot=accepted_slot,
         )
-        assert_lifecycle_transitions(report)
+        if accepted_slot == "B":
+            assert_lifecycle_transitions(report)
+        else:
+            steps = report.get("steps")
+            if (
+                not isinstance(steps, list)
+                or not steps
+                or steps[-1].get("default_slot") != accepted_slot
+            ):
+                raise LifecycleHarnessError(
+                    "userspace-failure A-start report does not recover the "
+                    f"accepted slot {accepted_slot!r}"
+                )
         return {
             "ok": True,
             "leg": "userspace-failure-product",
@@ -7171,17 +7184,39 @@ def build_first_boot_lifecycle_report(*, observed_default: str) -> dict[str, obj
 
 
 def build_userspace_failure_lifecycle_report(
-    *, observed_default: str
+    *, observed_default: str, accepted_slot: str = "B"
 ) -> dict[str, object]:
-    """Userspace-failure leg: broken staged, health withheld, B recovered."""
-    if observed_default != "B":
+    """Userspace-failure leg: broken staged, health withheld, accepted recovered."""
+    if accepted_slot not in ("A", "B"):
+        raise LifecycleHarnessError(
+            f"userspace-failure leg accepted slot {accepted_slot!r} is invalid"
+        )
+    if observed_default != accepted_slot:
         raise LifecycleHarnessError(
             f"userspace-failure leg observed default {observed_default!r}, "
-            "expected 'B' (accepted slot stays accepted)"
+            f"expected accepted {accepted_slot!r}"
         )
-    return _session04_report(
-        observed_default="B", observed_steps=USERSPACE_FAILURE_OBSERVED_STEPS
-    )
+    if accepted_slot == "B":
+        return _session04_report(
+            observed_default="B", observed_steps=USERSPACE_FAILURE_OBSERVED_STEPS
+        )
+    # The frozen Session 04 report shape starts from accepted B. The same
+    # leg may be run from accepted A; record the A-start transition without
+    # relabeling it as the B-start contract.
+    recovered = f"recovery-boot-{accepted_slot}"
+    return {
+        "accepted_slot": accepted_slot,
+        "candidate_slot": "B",
+        "steps": [
+            {"step": "accepted-boot", "default_slot": accepted_slot, "observed": True},
+            {"step": "stage-broken-candidate", "default_slot": "A", "observed": True},
+            {"step": "boot-broken-candidate", "default_slot": accepted_slot, "observed": True},
+            {"step": recovered, "default_slot": accepted_slot, "observed": True},
+        ],
+        "shipped_update_legs": ["stage-broken-candidate", "boot-broken-candidate"],
+        "launcher_acceptance_legs": [recovered],
+        "observed_steps": ["stage-broken-candidate", "boot-broken-candidate", recovered],
+    }
 
 
 def build_nonboot_failure_lifecycle_report(
@@ -8008,6 +8043,7 @@ def inspect_recovery_prefailure_roots(
     """
     from greia_platform.boot_transaction import (
         BootTransactionJournal,
+        BootTransactionState,
         RECOVERY_TRIGGER_STATES,
     )
     from greia_platform.grub_ab import GrubEnvBackend
@@ -8025,23 +8061,42 @@ def inspect_recovery_prefailure_roots(
             f"{state.default_slot!r}, expected accepted {accepted_slot!r}: "
             "the accepted default moved before the failure decision"
         )
-    if state.last_booted_slot != candidate_slot:
-        raise LifecycleHarnessError(
-            f"recovery prefailure last_booted is {state.last_booted_slot!r}, "
-            f"expected candidate {candidate_slot!r}: the boot observer must "
-            "establish the candidate boot before health withholding"
-        )
     journal = BootTransactionJournal.load(Path(journal_dir))
     if journal.is_terminal:
-        raise LifecycleHarnessError(
-            "recovery prefailure journal is already terminal: health was "
-            "not withheld before the failure decision"
-        )
-    if journal.state not in RECOVERY_TRIGGER_STATES:
-        raise LifecycleHarnessError(
-            "recovery prefailure journal is "
-            f"{journal.state.value!r}, expected a recovery-trigger state"
-        )
+        # The failure legs collect host evidence after the recovery reboot,
+        # so the live observer fact is already back on the accepted slot and
+        # the journal has terminally recorded FAILED. The deadline trigger
+        # only writes this note after it observed the candidate boot; accept
+        # that authoritative history instead of demanding the impossible
+        # pre-reboot live snapshot.
+        if state.last_booted_slot != accepted_slot:
+            raise LifecycleHarnessError(
+                "recovery prefailure last_booted is "
+                f"{state.last_booted_slot!r}, expected recovered accepted "
+                f"{accepted_slot!r}"
+            )
+        note = journal.transitions[-1].note
+        if (
+            journal.state is not BootTransactionState.FAILED
+            or "health-service-failure" not in note
+            or "automatic-reboot" not in note
+        ):
+            raise LifecycleHarnessError(
+                "recovery prefailure journal is terminal without the "
+                "health-deadline automatic-reboot evidence"
+            )
+    else:
+        if state.last_booted_slot != candidate_slot:
+            raise LifecycleHarnessError(
+                f"recovery prefailure last_booted is {state.last_booted_slot!r}, "
+                f"expected candidate {candidate_slot!r}: the boot observer must "
+                "establish the candidate boot before health withholding"
+            )
+        if journal.state not in RECOVERY_TRIGGER_STATES:
+            raise LifecycleHarnessError(
+                "recovery prefailure journal is "
+                f"{journal.state.value!r}, expected a recovery-trigger state"
+            )
     if journal.candidate_slot != candidate_slot:
         raise LifecycleHarnessError(
             "recovery prefailure journal does not bind the candidate slot"

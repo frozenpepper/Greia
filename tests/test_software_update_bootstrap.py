@@ -664,3 +664,98 @@ class SoftwareUpdateBootstrapRecoveryTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class AbRootFilesystemIdentityTests(unittest.TestCase):
+    def _ab_paths(self, root: Path, *, cmdline: str, layout: dict[str, object] | None = None):
+        paths = _paths(root)
+        paths.root_filesystem_uuid.unlink()
+        layout_path = root / "etc/greia-os/layout/installed-layout.json"
+        layout_path.parent.mkdir(parents=True, exist_ok=True)
+        document = layout or {
+            "schema_version": 1,
+            "accepted_slot": "A",
+            "system_a": {
+                "partuuid": "deadbeef-02",
+                "filesystem_uuid": "11111111-1111-4111-8111-111111111111",
+            },
+            "system_b": {
+                "partuuid": "deadbeef-03",
+                "filesystem_uuid": "22222222-2222-4222-8222-222222222222",
+            },
+        }
+        layout_path.write_text(json.dumps(document), encoding="utf-8")
+        cmdline_path = root / "proc/cmdline"
+        cmdline_path.parent.mkdir(parents=True, exist_ok=True)
+        cmdline_path.write_text(cmdline, encoding="ascii")
+        from dataclasses import replace
+
+        return replace(
+            paths,
+            layout_record=layout_path,
+            proc_cmdline=cmdline_path,
+        )
+
+    def test_booted_slot_uuid_is_used_when_single_root_file_is_absent(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            paths = self._ab_paths(
+                Path(tmp), cmdline="BOOT_IMAGE=/boot/vmlinuz root=PARTUUID=deadbeef-02 ro\n"
+            )
+            self.assertEqual(
+                bootstrap._current_root_uuid(paths),
+                "11111111-1111-4111-8111-111111111111",
+            )
+
+    def test_candidate_boot_binds_its_own_slot_not_the_accepted_slot(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            paths = self._ab_paths(
+                Path(tmp), cmdline="root=PARTUUID=DEADBEEF-03 ro\n"
+            )
+            self.assertEqual(
+                bootstrap._current_root_uuid(paths),
+                "22222222-2222-4222-8222-222222222222",
+            )
+
+    def test_unknown_or_ambiguous_booted_partuuid_fails_closed(self) -> None:
+        for cmdline in (
+            "root=PARTUUID=deadbeef-99 ro\n",
+            "root=PARTUUID=deadbeef-02 root=PARTUUID=deadbeef-03\n",
+            "root=/dev/sda2 ro\n",
+        ):
+            with self.subTest(cmdline=cmdline), tempfile.TemporaryDirectory() as tmp:
+                paths = self._ab_paths(Path(tmp), cmdline=cmdline)
+                with self.assertRaises(bootstrap.BootstrapError):
+                    bootstrap._current_root_uuid(paths)
+
+
+class TerminalCandidateCleanupTests(unittest.TestCase):
+    def test_terminal_update_clears_candidate_under_the_same_job_lock(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            paths = _paths(Path(tmp))
+            job = _job(paths, "a" * 32)
+            paths.candidate.write_bytes(b"package")
+            updated = bootstrap._job_state_update(
+                paths,
+                "applied",
+                expected_job_id=job["job_id"],
+                clear_candidate=True,
+            )
+            self.assertEqual(updated["state"], "applied")
+            self.assertFalse(paths.candidate.exists())
+            self.assertFalse(paths.pending.exists())
+
+    def test_expected_job_identity_prevents_marking_a_new_upload(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            paths = _paths(Path(tmp))
+            job = _job(paths, "b" * 32)
+            paths.candidate.write_bytes(b"new-package")
+            with self.assertRaises(bootstrap.BootstrapError):
+                bootstrap._job_state_update(
+                    paths,
+                    "applied",
+                    expected_job_id="c" * 32,
+                    clear_candidate=True,
+                )
+            self.assertTrue(paths.candidate.exists())
+            self.assertEqual(bootstrap._read_job_locked(paths)["state"], "applying")
+            self.assertTrue(job)
