@@ -2209,6 +2209,18 @@ def materialize_control_disk(
     }
 
 
+def control_disk_size_for(*bundles: Path) -> int:
+    """Return a bounded control-disk size that can carry these bundles.
+
+    The failure-leg control seam transports the unsigned v3 candidate as a
+    control-disk input. A 64 MiB disk cannot carry the ~700 MiB reference
+    bundle, so size the sparse image from the actual candidates plus a
+    bounded filesystem/metadata margin.
+    """
+    sizes = [Path(bundle).stat().st_size for bundle in bundles if Path(bundle).is_file()]
+    return max(64 * 1024 * 1024, max(sizes, default=0) + 128 * 1024 * 1024)
+
+
 def _rebuild_live_squashfs(
     mountpoint: Path,
     work_dir: Path,
@@ -5191,24 +5203,33 @@ class ProductHarness:
         qemu_binary = select_install_qemu_binary()
         shipped_units = record_shipped_recovery_units()
         control_image = root / "control-disk.img"
+        control_size = control_disk_size_for(unhealthy, reverse)
         staged_rounds = 0
+        staged_for_round: int | None = None
 
         def _boot_phase(phase: str) -> None:
-            nonlocal staged_rounds
+            nonlocal staged_rounds, staged_for_round
             inputs: dict[str, object] = {}
             if phase in RECOVERY_D31_REVERSE_UPDATE_PHASES:
                 inputs = {"candidate_bundle": CANDIDATE_BUNDLE_FILE}
             write_control_phase(control_dir, phase=phase, inputs=inputs)
-            if phase == "update-stage":
+            if (
+                phase in ("update-verify", "update-stage")
+                and staged_for_round != staged_rounds
+            ):
                 bundle = unhealthy if staged_rounds == 0 else reverse
-                staged_rounds += 1
                 self._stage_candidate_onto_control(
                     control_dir, bundle, control_image=None
                 )
+                staged_for_round = staged_rounds
+            if phase == "update-stage":
+                staged_rounds += 1
             if materialize_fn is not None:
                 materialize_fn(control_dir, control_image)
             else:
-                materialize_control_disk(control_dir, control_image)
+                materialize_control_disk(
+                    control_dir, control_image, size_bytes=control_size
+                )
             argv, serial_log, host_log = product_boot_qemu_argv(
                 installed_clone=clone_path,
                 control_image=control_image,
@@ -5545,6 +5566,7 @@ class ProductHarness:
         active_before = str(digest_fn(accepted_slot, "before"))
         inactive_before = str(digest_fn(candidate_slot, "before"))
         control_image = root / "control-disk.img"
+        control_size = control_disk_size_for(unhealthy)
         boots: list[str] = []
         candidate_staged = False
         for phase in USERSPACE_FAILURE_LEG_PHASES:
@@ -5552,7 +5574,7 @@ class ProductHarness:
             if phase in RECOVERY_D31_REVERSE_UPDATE_PHASES:
                 inputs = {"candidate_bundle": CANDIDATE_BUNDLE_FILE}
             write_control_phase(control_dir, phase=phase, inputs=inputs)
-            if phase == "update-stage" and not candidate_staged:
+            if phase in ("update-verify", "update-stage") and not candidate_staged:
                 self._stage_candidate_onto_control(
                     control_dir, unhealthy, control_image=None
                 )
@@ -5560,7 +5582,9 @@ class ProductHarness:
             if materialize_fn is not None:
                 materialize_fn(control_dir, control_image)
             else:
-                materialize_control_disk(control_dir, control_image)
+                materialize_control_disk(
+                    control_dir, control_image, size_bytes=control_size
+                )
             argv, serial_log, host_log = product_boot_qemu_argv(
                 installed_clone=clone_path,
                 control_image=control_image,
@@ -5787,6 +5811,7 @@ class ProductHarness:
         active_before = str(digest_fn(accepted_slot, "before"))
         inactive_before = str(digest_fn(candidate_slot, "before"))
         control_image = root / "control-disk.img"
+        control_size = control_disk_size_for(nonboot)
         boots: list[str] = []
         candidate_staged = False
 
@@ -5794,7 +5819,7 @@ class ProductHarness:
             nonlocal candidate_staged
             inputs: dict[str, object] = {"candidate_bundle": CANDIDATE_BUNDLE_FILE}
             write_control_phase(control_dir, phase=phase, inputs=inputs)
-            if phase == "update-stage" and not candidate_staged:
+            if phase in ("update-verify", "update-stage") and not candidate_staged:
                 self._stage_candidate_onto_control(
                     control_dir, nonboot, control_image=None
                 )
@@ -5802,7 +5827,9 @@ class ProductHarness:
             if materialize_fn is not None:
                 materialize_fn(control_dir, control_image)
             else:
-                materialize_control_disk(control_dir, control_image)
+                materialize_control_disk(
+                    control_dir, control_image, size_bytes=control_size
+                )
             argv, serial_log, host_log = product_boot_qemu_argv(
                 installed_clone=clone_path,
                 control_image=control_image,
@@ -6032,6 +6059,7 @@ class ProductHarness:
             clone_path, observe_work, tag="before"
         )
         control_image = root / "control-disk.img"
+        control_size = control_disk_size_for(refused)
         boots: list[str] = []
         candidate_staged = False
         for phase in PERSIST_REFUSAL_LEG_PHASES:
@@ -6041,7 +6069,10 @@ class ProductHarness:
             ):
                 inputs = {"candidate_bundle": CANDIDATE_BUNDLE_FILE}
             write_control_phase(control_dir, phase=phase, inputs=inputs)
-            if phase == "update-stage-expect-refused" and not candidate_staged:
+            if (
+                phase in ("update-verify", "update-stage-expect-refused")
+                and not candidate_staged
+            ):
                 self._stage_candidate_onto_control(
                     control_dir, refused, control_image=None
                 )
@@ -6049,7 +6080,9 @@ class ProductHarness:
             if materialize_fn is not None:
                 materialize_fn(control_dir, control_image)
             else:
-                materialize_control_disk(control_dir, control_image)
+                materialize_control_disk(
+                    control_dir, control_image, size_bytes=control_size
+                )
             argv, serial_log, host_log = product_boot_qemu_argv(
                 installed_clone=clone_path,
                 control_image=control_image,

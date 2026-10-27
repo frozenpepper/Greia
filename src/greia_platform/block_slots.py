@@ -444,9 +444,14 @@ class SubprocessBlockFilesystemRunner:
             shell=False,
         )
         if completed.returncode != 0:
+            detail = (
+                completed.stderr.strip()
+                or completed.stdout.strip()
+                or "command failed"
+            )[:200]
             raise BlockSlotError(
                 f"filesystem command failed ({' '.join(list(command)[:3])}): "
-                f"{completed.stderr.strip() or 'command failed'}"
+                f"{detail}"
             )
         return completed.stdout
 

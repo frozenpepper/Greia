@@ -9,6 +9,7 @@ through the fake-mount fixture pattern (no loop contact).
 from __future__ import annotations
 
 import hashlib
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -517,6 +518,47 @@ class LegOrderingTests(unittest.TestCase):
             )
             self.assertTrue(result["ok"])
             self.assertEqual("B", result["accepted_slot"])
+
+    def test_failure_legs_place_the_candidate_before_verify(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            calls: list[str] = []
+            clone_fn, _materialize, boot_fn, digest_fn = self._fakes(calls)
+            seen: dict[str, bool] = {}
+
+            def materialize_fn(control_dir: Path, image: Path) -> None:
+                phase = json.loads(
+                    (control_dir / "phase.json").read_text(encoding="utf-8")
+                )["phase"]
+                seen[phase] = (control_dir / "candidate.greiaupdate").is_file()
+                Path(image).write_bytes(b"control")
+
+            image = Path(tmp) / "committed.img"
+            image.write_bytes(b"committed")
+            bundle = Path(tmp) / "broken.greiaupdate"
+            bundle.write_bytes(b"broken")
+            stages = {
+                "stage-broken-candidate": {"journal_state": "one_shot_armed"},
+                "boot-broken-candidate": {"journal_state": "candidate_booting"},
+                "recovery-boot-accepted": {
+                    "default_slot": "B",
+                    "journal_state": "failed",
+                    "accepted_release_id": "greia-0.13.0-s04-b",
+                },
+            }
+            _harness(tmp).run_userspace_failure_product(
+                installed_image=image,
+                unhealthy_bundle=bundle,
+                accepted_release_id="greia-0.13.0-s04-b",
+                candidate_release_id="greia-0.13.0-s04-broken",
+                clone_fn=clone_fn,
+                materialize_fn=materialize_fn,
+                boot_fn=boot_fn,
+                observe_fn=lambda stage: dict(stages[stage]),
+                slot_digest_fn=digest_fn,
+                serial_fn=lambda c: {"serial": "fake"},
+            )
+            self.assertTrue(seen["update-verify"])
+            self.assertTrue(seen["update-stage"])
 
     def test_persist_refusal_leaves_journal(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

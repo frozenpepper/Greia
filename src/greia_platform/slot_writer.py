@@ -1412,8 +1412,13 @@ class SlotFinalizer:
 
         mounted = False
         try:
-            filesystem.bind_filesystem_uuid(filesystem_uuid)
+            # Check/expand first: a payload copied from a packaged fixture may
+            # carry a journal that needs replay, and tune2fs refuses a UUID
+            # change until that check has run. Expansion does not consume the
+            # role UUID; binding it immediately afterwards keeps the mount
+            # identity check below authoritative.
             filesystem.expand_to_capacity()
+            filesystem.bind_filesystem_uuid(filesystem_uuid)
             mountpoint = filesystem.mount()
             mounted = True
             if not isinstance(mountpoint, Path):

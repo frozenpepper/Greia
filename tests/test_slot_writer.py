@@ -756,10 +756,11 @@ class SlotFinalizerTests(unittest.TestCase):
             self.assertNotEqual(bound, _UUID_A_FS)
             self.assertNotEqual(bound, _TEMPLATE_UUID)
             self.assertTrue(filesystem.expanded)
-            # Strict staging order: bind -> expand -> mount -> writes ->
-            # health -> unmount -> sync.
-            self.assertEqual(filesystem.ops[0], "bind")
-            self.assertEqual(filesystem.ops[1], "expand")
+            # Strict staging order: expand/check -> bind -> mount -> writes ->
+            # health -> unmount -> sync. The payload journal must be clean
+            # before tune2fs accepts the role UUID.
+            self.assertEqual(filesystem.ops[0], "expand")
+            self.assertEqual(filesystem.ops[1], "bind")
             self.assertEqual(filesystem.ops[2], "mount")
             self.assertEqual(filesystem.ops[-3], "health")
             self.assertEqual(filesystem.ops[-2], "unmount")

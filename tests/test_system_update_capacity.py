@@ -312,6 +312,30 @@ if __name__ == "__main__":
     unittest.main()
 
 
+class BlockFilesystemRunnerDiagnosticsTests(unittest.TestCase):
+    def test_stdout_is_reported_when_stderr_is_empty(self) -> None:
+        from subprocess import CompletedProcess
+
+        from greia_platform.block_slots import (
+            BlockSlotError,
+            SubprocessBlockFilesystemRunner,
+        )
+
+        completed = CompletedProcess(
+            ["tune2fs"],
+            1,
+            stdout="This operation requires a freshly checked filesystem.\n",
+            stderr="",
+        )
+        with mock.patch("subprocess.run", return_value=completed), self.assertRaises(
+            BlockSlotError
+        ) as ctx:
+            SubprocessBlockFilesystemRunner().set_uuid(
+                Path("/dev/example"), "3b4a9cf7-3e29-4055-9c5c-676d57983cd1"
+            )
+        self.assertIn("freshly checked", str(ctx.exception))
+
+
 class MountTrackingFilesystemTests(unittest.TestCase):
     def test_production_wrapper_exposes_the_finalizer_filesystem_seam(self) -> None:
         from greia_platform.system_updates import _MountTrackingFilesystem
