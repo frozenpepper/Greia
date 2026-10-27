@@ -3,33 +3,34 @@
 **Purpose:** the short current state for contributors and agents: active workstreams, recent results, blockers and next steps. It is not an archive.
 **Public-source readiness:** IN PROGRESS. Root entry points exist (`LICENSE`, `NOTICE.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`); the licensing/provenance audit is open (see `NOTICE.md`).
 **Ordinary-family release:** NOT READY (`docs/release/GREIA_PUBLIC_RELEASE_READINESS.md`).
-**Current application-package handoff (2026-10-27):**
-Python/combined packages now include and validate the offered language manifest
-and UI JSON snapshot with the code. For the exact pre-manifest 1275-era base,
-the one-time source-matched receiver bridge precedes the normal current package.
-Read `docs/testing/2026-10-27_LANGUAGE_UPDATE_PACKAGE_ACCEPTANCE.md` and the
-package operator guide. Source tests exercise the real old reader through both
-steps; installed service/health acceptance remains UNPROVEN. No OS rebuild is
-needed for this delivery change. The separate old A/B diagnostic handoff is
-paused on current main because its frozen reviewed host boundary has changed;
-do not run its stale gate or infer that a rebuild is required.
-**Last recorded A/B diagnostic checkpoint (2026-10-27; not a current HEAD claim):**
-the paused old-release diagnostic was resumed from the reviewed host source
-`78f07861` in an isolated clean checkout, not current main. The 80-test
-preflight and EN/IT/ES/FR checks passed; the one `update-stage` boot was then
-refused by the installed updater with
-`inactive-slot filesystem is unavailable: block topology observation failed:
-slot device capacity is unobservable: sda2`. No arm or B boot ran. This is a
-captured production refusal, not a harness capture failure. Report:
-`docs/reviews/2026-10-27_AB_OLD_RELEASE_STAGE_DIAGNOSTIC_RESULT.md`.
-Source-path analysis and the recommended read-only probe are in
-`docs/reviews/2026-10-27_AB_OLD_RELEASE_STAGE_REFUSAL_ANALYSIS.md`. Healthy B
-remains unproven; Session 04 stays OPEN. Do not retry the frozen guest.
-Before any new boot/install attempt, consult the latest exact A/B work order,
-recheck source and artifact identities, and obtain the existing gate's explicit
-reuse decision or rebuild. No B-boot/rollback or ordinary-family release
-acceptance is established by this checkpoint. See
-`docs/reviews/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC_SOURCE_GATE_FAILURE.md`.
+**CURRENT UPDATE IMPLEMENTATION + ACCEPTANCE ROUTE (2026-10-27):**
+`docs/testing/GREIA_UPDATE_RELEASE_ACCEPTANCE.md` is the **single executable
+work order** for the owner-authorized Linux agent. Implement/fix on current
+`main`, use focused tests during repairs, then run consolidated disposable-QEMU
+A/B and lightweight `.greia_update` acceptance; keep reporting evidence by
+lane. Historic one-stage/source-reuse handoffs are completed diagnostics, **not**
+live prerequisites. This cleanup changes documentation and authorizes the next
+agent's work; it **does not** fix the updater or establish device success.
+
+**A/B defect to fix first:** a frozen 1275-era installed i386 updater returned
+`STAGE_CURRENT_CANDIDATE` / `ERROR REFUSED` because `sda2` capacity was
+unobservable. Source traces it to a hard-coded 64-bit `BLKGETSIZE64` request
+and unsuccessful `blockdev` fallback; the exact low-level failure is not yet
+proven. Fix capacity observation portably in current source, preserve layout
+identity/size checks, and verify on current-source QEMU install → A → B →
+healthy acceptance → failure rollback. Saved evidence and reasoning:
+`docs/reviews/2026-10-27_AB_OLD_RELEASE_STAGE_DIAGNOSTIC_RESULT.md`,
+`docs/reviews/2026-10-27_AB_OLD_RELEASE_STAGE_REFUSAL_ANALYSIS.md`.
+
+**Application updates:** source now packages and validates paired EN/IT/ES/FR
+locale manifest/UI JSON with Python/combined payloads. For an *exactly matched*
+old `1275e0be1` receiver, a one-time source-matched bridge exists before the
+normal current package. 121 focused source tests were reported passing, but
+installed service, health acceptance, Parent continuation, rollback and
+application generation recovery still need the Linux run. Reference:
+`docs/testing/2026-10-27_LANGUAGE_UPDATE_PACKAGE_ACCEPTANCE.md`.
+**Session 04 remains OPEN;** family release, hardware/USB acceptance and healthy
+B have not been demonstrated by this documentation pass.
 
 Entries dated before 2026-10-15 were removed from this file in the 2026-10-16 open-source cleanup. Read them with `git show 101e332a:HANDOVER.md`; lessons from that period are indexed in `docs/archive/README.md`.
 
@@ -355,6 +356,23 @@ PRESERVED; the 4 first-run DONE, all 16 earlier retakes, and all 143 evidence-ga
 rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
+
+### 2026-10-27 — Simplify update execution and retire stale gates (documentation only)
+
+Owner-directed workflow consolidation: added
+`docs/testing/GREIA_UPDATE_RELEASE_ACCEPTANCE.md`; retired the executable
+body of `2026-10-27_UPDATE_AGENT_HANDOFF.md`; updated the live agent
+operations/OS-work skill and testing router to name **one** current implementation
+and acceptance route. Removed obsolete stop-after-one-stage and old-snapshot
+allowlist instructions from current entry points; older evidence reports and
+detailed historical procedures remain available for investigation. On the
+existing Linux test host, the local coding agent can now implement the portable
+i386/x86_64 capacity fix, build disposable current-source fixtures, and
+confirm A/B as well as application updates in one coherent campaign. Preserve
+real disk identity, bounded writes, health/rollback and user-data protection.
+**No code fix, Linux execution, healthy B or release certification is claimed
+in this documentation commit.**
+
 
 ### 2026-10-27 — Old-release stage refusal analysis and probe plan
 
