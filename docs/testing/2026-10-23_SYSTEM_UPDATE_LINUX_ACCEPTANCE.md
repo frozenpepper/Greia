@@ -1,5 +1,7 @@
 # System-update Linux build, install and Parent acceptance
 
+> **2026-10-27 UPDATE — DETAILED REFERENCE, NOT THE CURRENT TOP-LEVEL EXECUTION GATE.** For owner-authorized current-source A/B repair and consolidated Linux/QEMU acceptance, use [Greia update release acceptance](GREIA_UPDATE_RELEASE_ACCEPTANCE.md). This older document retains useful low-level build, boot, rollback and fault-case details, but its pinned SHAs, historical "current" retry links and required stop/rebuild stages do not override the single live guide. Do not reuse old-source bundles as proof of current behavior.
+
 Date: 2026-10-23. Status: **UNPROVEN runtime work order**, under Session 04 of
 `docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md`.
 Implementation source freeze: `4eaad25471fe47b72e900ea2f34777f41be5542b` (770 affected tests
