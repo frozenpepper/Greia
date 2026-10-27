@@ -23,19 +23,15 @@ rollback mechanisms. There is no second OS/image updater.
 Python and Activity updates are supported on single-root and A/B installations
 that include the new update bootstrap. This is an application-code update,
 not a conversion to A/B or an authorization to rewrite a live Linux image.
-An old installation without this updater does not advertise the package API.
-A package cannot create a missing service/API; use a current installer/reimage
-or, on an already supported A/B installation, its existing full-system
-upgrade route. For the frozen 1275-era receiver that already has the package
-API but rejects language JSON destinations, the source-owned
-`build-receiver-bridge` command may build a one-time code-only package from
-that exact source base, after confirming the installed application matches
-that source. It replaces the complete declared Python/runtime snapshot with
-the frozen base snapshot and overlays only the package reader and generation
-validator. Never use it on an arbitrary supported image or a newer application
-generation. After its normal application-generation health acceptance, a
-second current Python/combined package may deliver language resources. This
-exception does not bootstrap an installation lacking the existing updater.
+Because Greia has not been released, no compatibility layer or migration
+mechanism is required for historical development images, old package readers
+or previous test package formats. Release candidates must contain the current
+application-update bootstrap and supported package format. Development
+installations built before that baseline can be discarded/reinstalled; they
+are not supported upgrade targets. This does **not** remove normal
+candidate-failure rollback to the previously healthy generation, nor package
+target/architecture validation.
+
 
 ## Parent interaction and ownership
 
