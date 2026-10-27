@@ -25,9 +25,16 @@ follows that notice.
 Independent Activities may use any license their authors choose. Using the
 Greia Activity API does not by itself put an Activity under the MPL.
 
-The names Greia, Greia OS, Greia Shell and Greia Parents, the Greia logo
-artwork and any "Greia Approved" mark are not licensed by the terms above.
-See section 10 of the licensing policy.
+The Greia name and distinctive wordmarks/logos, plus any future official
+approval marks, are governed by the separate [trademark guide](TRADEMARK.md)
+and [full policy](docs/governance/LICENSING_AND_TRADEMARK.md). Anyone may
+commercially redistribute Greia code under its applicable open-source
+licenses without paying the project. Truthful identification such as
+“Runs Greia OS” on a product box is allowed; official partner/certification
+claims and prominent official product branding are different and may
+require authorization. No registration or certification is claimed.
+Distinctive identity/logo assets are excluded from the proposed CC BY 4.0
+default for reusable non-brand media.
 
 ## Third-party material in this repository
 

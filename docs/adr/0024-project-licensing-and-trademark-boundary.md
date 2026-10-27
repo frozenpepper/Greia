@@ -125,6 +125,25 @@ The project must maintain a separate trademark/use policy covering at least:
 
 This ADR does not claim that any mark is formally registered in any jurisdiction. Registration strategy is a separate legal/business decision.
 
+### 8a. 2026-10-27 trademark-use clarification
+
+Commercial use and sale of Greia under MPL-2.0 do not require a project fee or
+commercial software license. Truthful identification such as “Runs Greia OS”
+(including on packaging), normal distribution with existing in-software marks
+and ordinary community references are permitted without a separate trademark
+agreement, provided they do not imply official endorsement.
+
+Prominent Greia logo **product branding** on a manufacturer's own packaging,
+official partner/certification claims, and endorsement are different matters:
+they may require explicit optional authorization and a commercial agreement.
+Substantial forks may describe their origins but cannot masquerade as official
+Greia releases; a practical rebranding path is required. This does not alter
+open-source code rights.
+
+The [practical trademark-use policy](../governance/LICENSING_AND_TRADEMARK.md)
+provides the operative detail. No mark registration or official certification
+programme is claimed and public-release legal review is pending.
+
 ### 9. Licensing must be mechanically explicit before public release
 
 License selection is not enough. Before the repository is made public or an official release is distributed, Greia must complete a licensing/provenance audit and make licensing machine- and human-readable.

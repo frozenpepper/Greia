@@ -149,5 +149,10 @@ Greia-owned source code is licensed under the
 CC BY 4.0, and third-party fonts and media keep their own licenses. The
 licensing audit is still in progress: [NOTICE.md](NOTICE.md) lists the
 default terms, the third-party material and the media whose provenance is
-under review. The Greia name and logo are not covered by these licenses
-([policy](docs/governance/LICENSING_AND_TRADEMARK.md)).
+under review. The Greia name and distinctive logo are governed separately by the
+[trademark guide](TRADEMARK.md) and
+[full policy](docs/governance/LICENSING_AND_TRADEMARK.md). Greia may be
+redistributed commercially under its open-source licenses, and sellers may
+truthfully identify the software they include. Official product co-branding,
+certification and endorsement are separate optional agreements; no
+registration or certification programme is claimed yet.
