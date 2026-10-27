@@ -10,6 +10,16 @@ must stop. Do not run its Linux command blocks from current main or bypass that
 gate. Current package delivery has its own source and installed acceptance
 route in [the language update package acceptance note](2026-10-27_LANGUAGE_UPDATE_PACKAGE_ACCEPTANCE.md).
 
+**Executed result (2026-10-27, reviewed source `78f07861`):** the one
+`update-stage` boot was run from an isolated clean checkout of the reviewed
+host source against the verified 1275 guest. Preflight and EN/IT/ES/FR checks
+passed. The installed updater **refused** `STAGE_CURRENT_CANDIDATE` with
+`inactive-slot filesystem is unavailable: block topology observation failed:
+slot device capacity is unobservable: sda2`. `phase-result.json` captured the
+`ERROR`/`REFUSED` response; no arm or B boot ran. Report:
+[`2026-10-27_AB_OLD_RELEASE_STAGE_DIAGNOSTIC_RESULT.md`](../reviews/2026-10-27_AB_OLD_RELEASE_STAGE_DIAGNOSTIC_RESULT.md).
+Healthy B remains untested.
+
 **Old-release job:** one captured stage diagnostic was proposed for the
 verified existing images, but is now paused because its reviewed host-source
 gate does not pass on current main. The historical instructions below are not

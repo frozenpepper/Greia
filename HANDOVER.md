@@ -13,11 +13,16 @@ steps; installed service/health acceptance remains UNPROVEN. No OS rebuild is
 needed for this delivery change. The separate old A/B diagnostic handoff is
 paused on current main because its frozen reviewed host boundary has changed;
 do not run its stale gate or infer that a rebuild is required.
-**Last recorded A/B diagnostic checkpoint (2026-10-26; not a current HEAD claim):**
-the corrected 80-test preflight passed for the earlier candidate, but main
-subsequently gained production installer/launcher/platform localization changes
-and language manifests outside that candidate's artifact-reuse allowlist.
-The one-stage diagnostic boot was **not** started under that evidence.
+**Last recorded A/B diagnostic checkpoint (2026-10-27; not a current HEAD claim):**
+the paused old-release diagnostic was resumed from the reviewed host source
+`78f07861` in an isolated clean checkout, not current main. The 80-test
+preflight and EN/IT/ES/FR checks passed; the one `update-stage` boot was then
+refused by the installed updater with
+`inactive-slot filesystem is unavailable: block topology observation failed:
+slot device capacity is unobservable: sda2`. No arm or B boot ran. This is a
+captured production refusal, not a harness capture failure. Report:
+`docs/reviews/2026-10-27_AB_OLD_RELEASE_STAGE_DIAGNOSTIC_RESULT.md`.
+Healthy B remains unproven; Session 04 stays OPEN.
 Before any new boot/install attempt, consult the latest exact A/B work order,
 recheck source and artifact identities, and obtain the existing gate's explicit
 reuse decision or rebuild. No B-boot/rollback or ordinary-family release
@@ -348,6 +353,33 @@ PRESERVED; the 4 first-run DONE, all 16 earlier retakes, and all 143 evidence-ga
 rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
+
+### 2026-10-27 — Old-release stage diagnostic captured the refusal
+
+Resumed the paused old-release diagnostic from the reviewed host source
+`78f07861` in an isolated clean checkout, not current main. The 80-test update
+preflight passed in 4.183 s; EN/IT/ES/FR checks each reported zero source/
+placeholder problems; the frozen-source gate, critical-owner diff, input
+hashes and holder/loop checks passed.
+
+The single `update-stage` boot was attempted and its stopped clone collected.
+The installed updater **refused** `STAGE_CURRENT_CANDIDATE`:
+
+```text
+inactive-slot filesystem is unavailable:
+block topology observation failed:
+slot device capacity is unobservable: sda2
+```
+
+`phase-result.json` records `ERROR`/`REFUSED` with an empty `cause_chain`; the
+service snapshot shows the update service active and healthy otherwise. This
+is a captured production refusal, not a capture/host failure. A remains the
+accepted 0.13.0 slot; B has no finalized release identity; status remains
+`received`; input and bundle hashes are unchanged. Collector cleanup was ok
+(loop `/dev/loop13`, no owned loops after); `command.exit`/`final.exit` are 1
+because staging was refused. No arm or B boot ran. Report:
+`docs/reviews/2026-10-27_AB_OLD_RELEASE_STAGE_DIAGNOSTIC_RESULT.md`.
+Healthy B, current-language image acceptance and Session 04 remain OPEN.
 
 ### 2026-10-27 — Language data in lightweight application packages
 

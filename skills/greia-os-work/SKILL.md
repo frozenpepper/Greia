@@ -155,6 +155,16 @@ work order; it supersedes the old blanket source gate for one diagnostic only,
 not current-release/current-language image acceptance. Keep reviewed host source,
 actual host HEAD and old guest source separate. No rebuild/install/arm/B boot.
 
+The handoff was executed from the reviewed host source `78f07861` in an
+isolated clean checkout. Preflight and EN/IT/ES/FR checks passed. The one
+`update-stage` boot was refused by the installed updater:
+`inactive-slot filesystem is unavailable: block topology observation failed:
+slot device capacity is unobservable: sda2`. `phase-result.json` captured the
+`ERROR`/`REFUSED` response; no arm or B boot ran. Report:
+`docs/reviews/2026-10-27_AB_OLD_RELEASE_STAGE_DIAGNOSTIC_RESULT.md`. Healthy B
+and current-language image acceptance remain UNPROVEN; Session 04 OPEN. Stop;
+do not automatically rebuild, retry, arm or boot B.
+
 Current language source checks pass, but current Python/combined packages cannot
 carry the newly required language manifest/UI JSON to a pre-manifest base.
 Builder inventory and inspector paths exclude it. Block that known-bad app

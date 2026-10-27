@@ -183,9 +183,17 @@ hashes/holder/loop checks passed. Report:
 exception is recorded in `docs/testing/2026-10-27_UPDATE_AGENT_HANDOFF.md`.
 Use that new handoff, not the old blanket `1275..HEAD` source gate. It pins
 reviewed host source separately from guest artifact source, permits one stage
-only on a fresh clone and collects the saved response/cause. No current-
-language image acceptance, rebuild/install/arm/B boot or larger matrix.
-The actual stage cause and healthy B remain UNPROVEN; Session 04 remains OPEN.
+only on a fresh clone and collects the saved response/cause. The handoff was
+then executed from the reviewed host source `78f07861` in an isolated clean
+checkout: the 80-test preflight and EN/IT/ES/FR checks passed, and the one
+`update-stage` boot was refused by the installed updater with
+`inactive-slot filesystem is unavailable: block topology observation failed:
+slot device capacity is unobservable: sda2`. `phase-result.json` captured the
+`ERROR`/`REFUSED` response; no arm or B boot ran. This is a production
+refusal, not a capture/host failure. Report:
+`docs/reviews/2026-10-27_AB_OLD_RELEASE_STAGE_DIAGNOSTIC_RESULT.md`.
+Healthy B and current-language image acceptance remain UNPROVEN; Session 04
+remains OPEN. Do not automatically rebuild, retry, arm or boot B.
 
 There is also a source compatibility blocker before application-package trials:
 Python/combined package builder/inspector omit and reject the new language JSON

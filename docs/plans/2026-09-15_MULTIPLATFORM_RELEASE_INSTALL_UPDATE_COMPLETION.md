@@ -3599,3 +3599,34 @@ current main after updater source changed; no stale gate rerun is requested.
 Installed health/Parent-disconnection acceptance and A/B stage diagnosis remain
 UNPROVEN. Session 04 remains OPEN; this is source completion of the language
 package-data gap, not image/device or lifecycle closure.
+
+## 2026-10-27 — Old-release stage diagnostic executed; updater refused
+
+Resumed the paused old-release diagnostic from the reviewed host source
+`78f07861` in an isolated clean checkout, not current main. Preflight passed:
+80 update tests OK in 4.183 s; EN/IT/ES/FR checkers each reported zero source/
+placeholder problems; frozen-source and critical-owner gates clean; accepted-A
+and next-bundle hashes OK; holder status 1; no owned loops before the leg.
+
+The one `update-stage` boot was attempted and the stopped clone collected.
+`STAGE_CURRENT_CANDIDATE` was **refused** by the installed updater:
+
+```text
+inactive-slot filesystem is unavailable:
+block topology observation failed:
+slot device capacity is unobservable: sda2
+```
+
+`phase-result.json` records `ERROR`/`REFUSED`, empty `cause_chain`; the service
+snapshot shows the update service active and otherwise healthy. This is a
+captured production refusal, not a capture/host failure. A remains accepted
+0.13.0; B has no finalized release identity; PERSIST status remains `received`;
+input and bundle hashes are unchanged. Collector cleanup was ok (loop
+`/dev/loop13`, no owned loops after); command/final exits are 1 because staging
+was refused. No arm or B boot ran. Report:
+`docs/reviews/2026-10-27_AB_OLD_RELEASE_STAGE_DIAGNOSTIC_RESULT.md`.
+
+This diagnoses only `1275`-era updater behavior on the disposable image.
+Healthy B, current-language image acceptance, rollback/fault matrix and
+physical/USB acceptance remain UNPROVEN; Session 04 OPEN. Do not automatically
+rebuild, retry, arm or boot B.
