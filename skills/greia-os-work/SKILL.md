@@ -134,8 +134,9 @@ on disposable Linux/QEMU installations. One work session may fix, retry and
 proceed through the complete relevant matrix; do not stop after every ordinary
 failure or require new frozen-source approvals. Do not weaken disk identity,
 bounded writes, startup health, recovery, PERSIST protection or child-session
-safety. Language JSON delivery and the exact-legacy receiver bridge already
-have source-level tests; installed acceptance remains to do.
+safety. Language JSON delivery has source-level tests; installed acceptance on fresh
+current images remains to do. The pre-release legacy receiver bridge was
+removed: no old-development-image upgrade/migration acceptance is required.
 
 The installed updater discovers the fixed published bundle directly. Status
 is reporting/recovery progress, not a package-admission requirement. Device
