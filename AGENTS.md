@@ -67,6 +67,14 @@ Do not resolve contradictions by choosing whichever document is convenient. Iden
 
 The architecture-remediation plan remains the active **blocking implementation** plan for its remaining non-lifecycle obligations until its final completion criteria are satisfied. It does **not** own install/update/release lifecycle routing: that route is `docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md` (ADR 0036 successor). Resume non-lifecycle work from the first incomplete blocking phase in the remediation plan; route all install/update/release/multiplatform lifecycle work from the 2026-09-15 plan. Do not create a competing implementation plan or jump ahead to a more visible feature while an earlier authority/safety prerequisite remains open. The old signed `.greiaupdate` v2 / release-signing-key route is superseded by ADR 0036 and must not be treated as the normal production route.
 
+**Pre-release compatibility policy (owner decision, 2026-10-27):** Greia has
+never been publicly released. Do **not** build or preserve backward-compatibility
+mechanisms for old development snapshots, historical package formats or
+legacy receiver bridges. Reinstall fresh current development images rather
+than maintaining upgrade paths from them. Current-generation update recovery
+and rollback to the last healthy installed release **are required** product
+features and must not be confused with backward compatibility.
+
 **Owner-authorized update release campaign (2026-10-27):** fixing and
 confirming Greia's A/B and lightweight application updates is the immediate
 lifecycle priority. The one current execution route is
