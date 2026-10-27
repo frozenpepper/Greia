@@ -2,6 +2,8 @@
 
 **Status:** CURRENT execution guide (2026-10-27). **Owner direction:** fix the updater and confirm working updates promptly, in consolidated runs. **Authority:** ADR 0036 (A/B), ADR 0038 (application generations), and the September lifecycle plan. This document replaces dated update-diagnostic handoffs as the **execution router**, not their factual findings. The previous `1275` diagnostic already captured the failure; there is no need to run its frozen-source comparison or repeat its old single-stage job.
 
+**Pre-release policy:** Greia has no released installed base to preserve. Do not build or test migration bridges, legacy reader paths, old image upgrades or upgrade-format backwards compatibility. Test only fresh images from the current code and updates between coherent *current* acceptance releases. Retain rollback to the previous healthy installation or application generation: rollback is correctness, not backwards compatibility.
+
 **Execution target:** the existing Linux test host and **disposable virtual disks**, using the current committed `main`. Do not flash or overwrite a physical/family disk, or touch real family profiles. Actual production protections (partition identity, compatibility, bounded writes, atomic activation, health and rollback, child-data preservation) remain in force. Remove **process ceremony**, not these protections.
 
 ## Working rules — minimize time-to-answer
@@ -36,7 +38,7 @@ Current owner: `src/greia_platform/system_updates.py`, `_block_node_size_bytes` 
 
 ## Consolidated installed acceptance — two separate lanes
 
-Use the existing repository tools and retained detailed examples, checking CLI help and current source before execution. Do not copy historical SHAs, old expected bundle hashes or outdated gating blocks. Existing supporting procedures are [A/B Linux test details](2026-10-23_SYSTEM_UPDATE_LINUX_ACCEPTANCE.md), [application package details](2026-10-24_SOFTWARE_UPDATE_ACCEPTANCE.md), [language/bridge details](2026-10-27_LANGUAGE_UPDATE_PACKAGE_ACCEPTANCE.md), and [package operator guide](../development/GREIA_SOFTWARE_UPDATE_PACKAGES.md).
+Use the existing repository tools and retained detailed examples, checking CLI help and current source before execution. Do not copy historical SHAs, old expected bundle hashes or outdated gating blocks. Existing supporting procedures are [A/B Linux test details](2026-10-23_SYSTEM_UPDATE_LINUX_ACCEPTANCE.md), [application package details](2026-10-24_SOFTWARE_UPDATE_ACCEPTANCE.md), [language-resource package details](2026-10-27_LANGUAGE_UPDATE_PACKAGE_ACCEPTANCE.md), and [package operator guide](../development/GREIA_SOFTWARE_UPDATE_PACKAGES.md).
 
 ### Lane A — Full-system A/B, disposable i386 QEMU
 
@@ -49,7 +51,6 @@ Use the existing repository tools and retained detailed examples, checking CLI h
 
 - Verify Python/platform, Activities and combined package builder/inspector using the current [operator guide](../development/GREIA_SOFTWARE_UPDATE_PACKAGES.md), especially paired `languages/<locale>/manifest.json` and `ui.json` for `en,it,es,fr`.
 - On a **current** installed baseline, use normal Parent **Upload & install** for Python/platform update, Activity update and a combined update. Check job transitions to `applied`, code/Activity versions and locale inventory, runtime health, continued operation after closing/disconnecting Parent, and preservation of profiles/saves/unlisted Activities. Include one rejected/broken update and successful prior-generation recovery.
-- For the **specific** legacy `1275e0be1` receiver only, where an already installed disposable guest truly matches that source and has the package endpoint, test the existing **one-time receiver bridge** -> await `applied`/health -> current Python language package -> await `applied`. Never send current locale JSON directly to its unbridged reader and never apply that bridge to another baseline. This compatibility test is **additional**, not a reason to block normal current-base tests.
 - A/B system-slot acceptance and application generation acceptance are independent; do not withhold one lane's valid results because the other lane fails.
 
 ## Single final report and commit
@@ -57,7 +58,7 @@ Use the existing repository tools and retained detailed examples, checking CLI h
 Commit implementation and tests to `main` (no branch/PR unless the owner requests one); preserve concurrent work. Publish **one concise** `docs/reviews/<date>_UPDATE_RELEASE_ACCEPTANCE_RESULT.md` containing:
 
 - tested source SHA(s), host/guest architecture, artifact/package identities, evidence/log paths;
-- a compact PASS/FAIL/NOT RUN table: A/B install, A first boot, stage B, arm, B healthy acceptance, rollback, interruption recovery; Python, Activity, combined, rejected update/recovery, Parent disconnected continuation, exact-legacy bridge;
+- a compact PASS/FAIL/NOT RUN table: A/B install, A first boot, stage B, arm, B healthy acceptance, rollback, interruption recovery; Python, Activity, combined, rejected update/recovery, Parent disconnected continuation;
 - first concrete cause and fix for any failure; targeted tests and actual `make verify` result (with unrelated known failures separately stated);
 - outstanding blockers/physical acceptance gaps, if any.
 
