@@ -310,3 +310,36 @@ class BlockNodeCapacityTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class MountTrackingFilesystemTests(unittest.TestCase):
+    def test_production_wrapper_exposes_the_finalizer_filesystem_seam(self) -> None:
+        from greia_platform.system_updates import _MountTrackingFilesystem
+
+        class _Inner:
+            def __init__(self) -> None:
+                self.links: list[tuple[str, str]] = []
+
+            def link_file(self, source: str, target: str) -> None:
+                self.links.append((source, target))
+
+        inner = _Inner()
+        wrapper = _MountTrackingFilesystem(inner)
+        for name in (
+            "bind_filesystem_uuid",
+            "expand_to_capacity",
+            "mount",
+            "unmount",
+            "sync",
+            "write_file",
+            "link_file",
+            "missing_files",
+            "check_completeness",
+            "check_health",
+        ):
+            self.assertTrue(callable(getattr(wrapper, name)), name)
+        wrapper.link_file("boot/vmlinuz-generic", "boot/vmlinuz-greia")
+        self.assertEqual(
+            inner.links,
+            [("boot/vmlinuz-generic", "boot/vmlinuz-greia")],
+        )

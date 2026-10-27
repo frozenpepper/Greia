@@ -3234,6 +3234,11 @@ class _MountTrackingFilesystem:
     def write_file(self, relative_path: str, data: bytes) -> None:
         self._inner.write_file(relative_path, data)  # type: ignore[union-attr]
 
+    def link_file(self, source_relative_path: str, target_relative_path: str) -> None:
+        self._inner.link_file(  # type: ignore[union-attr]
+            source_relative_path, target_relative_path
+        )
+
     def missing_files(self, required: tuple[str, ...]) -> tuple[str, ...]:
         return self._inner.missing_files(required)  # type: ignore[union-attr]
 
