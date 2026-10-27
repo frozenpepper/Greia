@@ -1,5 +1,7 @@
 # A/B candidate-only healthy-update retry
 
+> **HISTORICAL CANDIDATE RETRY (superseded 2026-10-27):** The previous frozen-image attempt has been diagnosed. Do not run its old-source/hash gates as prerequisites. For implementation and current-source Linux/QEMU testing use [GREIA_UPDATE_RELEASE_ACCEPTANCE.md](GREIA_UPDATE_RELEASE_ACCEPTANCE.md); preserve this file for prior evidence and tool examples.
+
 Date: 2026-10-26 · Status: **HISTORICAL — superseded by installed-updater simplification**
 
 **Do not execute this artifact-reuse procedure for the current change.** The
