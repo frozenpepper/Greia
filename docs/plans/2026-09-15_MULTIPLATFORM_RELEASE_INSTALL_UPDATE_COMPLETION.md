@@ -3680,3 +3680,23 @@ successful B health, rollback or installed application update has been
 demonstrated by these edits. Session 04 remains OPEN pending the consolidated
 agent's measured results. Record one acceptance report, actual source/artifact
 identities and narrow remaining gaps rather than many new single-step handoffs.
+
+## 2026-10-27 — Owner correction: eliminate development-version compatibility
+
+Greia has **not been released**. The owner explicitly rejected all
+backwards-compatibility work for previous development builds, historical
+application package readers and one-time receiver bridges. The legacy
+`build-receiver-bridge` command, bridge implementation and dedicated tests
+were deleted, along with the active execution instructions. Historical 1275
+test findings still inform root-cause diagnosis but are **not** upgrade targets.
+
+Acceptance therefore starts from a **fresh current** installed fixture:
+deliver and health-accept a newer system release in the A/B route, and
+deliver normal current `.greia_update` Python, Activity and combined
+packages on a freshly installed candidate. Keep failure rollback and
+interruption recovery to the previous working generation/slot. These are
+normal update correctness properties, **not backwards compatibility**.
+
+This is repository source/guide cleanup, not a Linux runtime acceptance.
+The local agent must rerun focused CLI/package tests because deleting
+the bridge changes the available command set. Session 04 remains OPEN.
