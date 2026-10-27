@@ -22,7 +22,9 @@ refused by the installed updater with
 slot device capacity is unobservable: sda2`. No arm or B boot ran. This is a
 captured production refusal, not a harness capture failure. Report:
 `docs/reviews/2026-10-27_AB_OLD_RELEASE_STAGE_DIAGNOSTIC_RESULT.md`.
-Healthy B remains unproven; Session 04 stays OPEN.
+Source-path analysis and the recommended read-only probe are in
+`docs/reviews/2026-10-27_AB_OLD_RELEASE_STAGE_REFUSAL_ANALYSIS.md`. Healthy B
+remains unproven; Session 04 stays OPEN. Do not retry the frozen guest.
 Before any new boot/install attempt, consult the latest exact A/B work order,
 recheck source and artifact identities, and obtain the existing gate's explicit
 reuse decision or rebuild. No B-boot/rollback or ordinary-family release
@@ -353,6 +355,25 @@ PRESERVED; the 4 first-run DONE, all 16 earlier retakes, and all 143 evidence-ga
 rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
+
+### 2026-10-27 — Old-release stage refusal analysis and probe plan
+
+Added a reviewable source-path analysis for the captured old-release stage
+refusal:
+`docs/reviews/2026-10-27_AB_OLD_RELEASE_STAGE_REFUSAL_ANALYSIS.md`. The refusal
+flows through `_observe_production_topology` / `_probe_role_fact` /
+`_block_node_size_bytes`; the active `sda2` capacity probe fails before the
+inactive-slot write. The strongest cheap hypothesis is the hard-coded
+64-bit `BLKGETSIZE64` ioctl request on an i386 guest; the `blockdev` fallback
+and service device policy are the other candidates.
+
+The analysis recommends a read-only guest probe first (`/sys/class/block/*/size`,
+both ioctl encodings, `blockdev`, `lsblk`, service capability/device policy),
+then a bounded sysfs/parent-disk capacity fallback in **current main** with
+i386/fallback tests. Do not patch the frozen 1275 guest. After the fix, build a
+current fixture/image and run the real install → first-A → stage → arm → B
+health route. This produced no new runtime evidence; healthy B and Session 04
+remain OPEN.
 
 ### 2026-10-27 — Old-release stage diagnostic captured the refusal
 

@@ -3630,3 +3630,20 @@ This diagnoses only `1275`-era updater behavior on the disposable image.
 Healthy B, current-language image acceptance, rollback/fault matrix and
 physical/USB acceptance remain UNPROVEN; Session 04 OPEN. Do not automatically
 rebuild, retry, arm or boot B.
+
+## 2026-10-27 — Old-release stage refusal analysis
+
+Added `docs/reviews/2026-10-27_AB_OLD_RELEASE_STAGE_REFUSAL_ANALYSIS.md`, a
+reviewable source-path analysis of the captured refusal. It traces the failure
+through `_observe_production_topology` / `_probe_role_fact` /
+`_block_node_size_bytes`; active `sda2` capacity is unobservable before the
+inactive-slot write. The cheapest hypothesis is the hard-coded 64-bit
+`BLKGETSIZE64` ioctl request on an i386 guest; the `blockdev` fallback and
+service device policy are alternatives.
+
+Recommended order: a read-only guest probe of `/sys/class/block/*/size`, both
+ioctl encodings, `blockdev`, `lsblk` and the service capability/device policy;
+then a bounded sysfs/parent-disk capacity fallback in current main with i386
+and fallback tests; then a current fixture/image and the real install →
+first-A → stage → arm → B health route. Do not patch the frozen 1275 guest.
+No new runtime evidence; healthy B and Session 04 remain OPEN.

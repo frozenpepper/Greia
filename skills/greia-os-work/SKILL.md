@@ -161,9 +161,14 @@ isolated clean checkout. Preflight and EN/IT/ES/FR checks passed. The one
 `inactive-slot filesystem is unavailable: block topology observation failed:
 slot device capacity is unobservable: sda2`. `phase-result.json` captured the
 `ERROR`/`REFUSED` response; no arm or B boot ran. Report:
-`docs/reviews/2026-10-27_AB_OLD_RELEASE_STAGE_DIAGNOSTIC_RESULT.md`. Healthy B
-and current-language image acceptance remain UNPROVEN; Session 04 OPEN. Stop;
-do not automatically rebuild, retry, arm or boot B.
+`docs/reviews/2026-10-27_AB_OLD_RELEASE_STAGE_DIAGNOSTIC_RESULT.md`. Source-path
+analysis and the recommended read-only probe are in
+`docs/reviews/2026-10-27_AB_OLD_RELEASE_STAGE_REFUSAL_ANALYSIS.md`: probe
+`/sys/class/block/*/size`, both `BLKGETSIZE64` encodings, `blockdev`, `lsblk`
+and the service capability/device policy before another boot, then fix in
+current main with i386/fallback tests. Healthy B and current-language image
+acceptance remain UNPROVEN; Session 04 OPEN. Stop; do not retry the frozen
+guest or automatically rebuild, arm or boot B.
 
 Current language source checks pass, but current Python/combined packages cannot
 carry the newly required language manifest/UI JSON to a pre-manifest base.

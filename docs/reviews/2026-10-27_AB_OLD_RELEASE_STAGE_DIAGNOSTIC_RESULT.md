@@ -75,7 +75,8 @@ observation refusal** while resolving the inactive slot; the reason names
 previous control timeout and not a missing diagnostic capture. The exact
 lower-level cause is not specified by the empty `cause_chain`; a focused
 old-release slot-topology correction/review would be required before another
-stage attempt.
+stage attempt. Source-path analysis and the recommended read-only probe are in
+[`2026-10-27_AB_OLD_RELEASE_STAGE_REFUSAL_ANALYSIS.md`](2026-10-27_AB_OLD_RELEASE_STAGE_REFUSAL_ANALYSIS.md).
 
 This proves only `1275`-era updater behavior on this disposable image. Healthy
 B, arm, rollback, current-language image acceptance, full-system/fault matrix
