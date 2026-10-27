@@ -47,6 +47,13 @@ class RunnerRefusalTests(unittest.TestCase):
 
         self.assertIn("update-stage-expect-refused", _product.CONTROL_PHASES)
 
+    def test_runner_treats_settled_failed_journal_as_recovered(self) -> None:
+        from tools.x8_qemu import product as _product
+
+        text = _product.control_runner_text()
+        self.assertIn("settled_states = ('accepted', 'failed', 'rolled_back')", text)
+        self.assertIn("state() in settled_states", text)
+
     def test_runner_inverts_expectation_for_refused_stage(self) -> None:
         from tools.x8_qemu import product as _product
 

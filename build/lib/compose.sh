@@ -876,6 +876,10 @@ compose_configure_systemd() {
     # unit fail in namespace setup before its process starts.
     if [[ "$STORAGE_LAYOUT_ADAPTER" == *-ab-v1 ]]; then
       target_services+=(greia-boot-observer.service)
+      # TAKEOVER-4/D55: without this timer a candidate that boots but never
+      # becomes healthy stays on the candidate slot forever instead of
+      # rolling back to the accepted slot after the health deadline.
+      target_services+=(greia-candidate-recovery.timer)
     fi
     systemctl --root="$rootfs" enable "${target_services[@]}"
     systemctl --root="$rootfs" mask \

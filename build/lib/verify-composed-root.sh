@@ -189,6 +189,10 @@ PY
     _greia_root_fail "$label" "software-update retry timer is not bounded to 15-second intervals"
   [[ -L "$root/etc/systemd/system/timers.target.wants/greia-software-update-apply.timer" ]] || \
     _greia_root_fail "$label" "software-update retry timer is not enabled"
+  if [[ -L "$root/etc/systemd/system/multi-user.target.wants/greia-boot-observer.service" ]]; then
+    [[ -L "$root/etc/systemd/system/timers.target.wants/greia-candidate-recovery.timer" ]] || \
+      _greia_root_fail "$label" "A/B candidate health-deadline timer is not enabled"
+  fi
 
   # Wi-Fi: iwd's bus policy admits root and netdev only.
   grep -Eq '^SupplementaryGroups=(.*[[:space:]])?netdev([[:space:]]|$)' \

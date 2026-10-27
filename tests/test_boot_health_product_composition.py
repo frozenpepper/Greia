@@ -343,6 +343,10 @@ class BootHealthProductCompositionTests(unittest.TestCase):
             "target_services+=(greia-boot-observer.service)",
             build_text,
         )
+        self.assertIn(
+            "target_services+=(greia-candidate-recovery.timer)",
+            build_text,
+        )
 
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
