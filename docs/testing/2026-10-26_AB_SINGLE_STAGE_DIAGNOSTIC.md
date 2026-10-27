@@ -1,5 +1,7 @@
 # One captured stage operation on a fresh clone
 
+> **HISTORICAL / DO NOT EXECUTE:** This isolated, one-stage `1275` diagnostic has been completed and the production refusal recorded. Its fixed-SHA reuse checks and "stage once then stop" commands are superseded by the [single current update release acceptance guide](GREIA_UPDATE_RELEASE_ACCEPTANCE.md). Read the [captured outcome](../reviews/2026-10-27_AB_OLD_RELEASE_STAGE_DIAGNOSTIC_RESULT.md) rather than repeating old guest testing. The instructions below remain historical context only.
+
 **Current next-action handoff:**
 [`2026-10-27_UPDATE_AGENT_HANDOFF.md`](2026-10-27_UPDATE_AGENT_HANDOFF.md)
 records the reviewed old-release-only reuse decision after language changes.
