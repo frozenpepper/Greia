@@ -1,5 +1,7 @@
 # Acer A/B clean-source smoke retry
 
+> **HISTORICAL RETRY PROCEDURE (superseded 2026-10-27):** For current source fixes and consolidated A/B update acceptance, use [GREIA_UPDATE_RELEASE_ACCEPTANCE.md](GREIA_UPDATE_RELEASE_ACCEPTANCE.md). This older command sequence and its pinned fixture assumptions are reference material only, not an additional mandatory gate.
+
 Date: 2026-10-25 · Status: **UNPROVEN; Linux VM work order; Session 04 OPEN**
 
 **Latest result (2026-10-26, current-source rerun from `1275e0be1`):**
