@@ -33,7 +33,6 @@ from greia_platform.software_update_package import (  # noqa: E402
     ensure_software_update_filename,
     inspect_software_update_package,
 )
-from greia_platform.software_update_bridge import build_receiver_bridge  # noqa: E402
 
 
 BUILT_IN_SOURCE_ID = "greia-system"
@@ -54,13 +53,6 @@ def _parser() -> argparse.ArgumentParser:
     python.add_argument("--source-root", type=Path, default=PROJECT_ROOT)
     python.add_argument("--output", type=Path, required=True)
     _add_target_arguments(python)
-
-    bridge = commands.add_parser("build-receiver-bridge", help="build a one-time JSON-capable receiver from an exact base source commit")
-    _add_app_identity(bridge)
-    bridge.add_argument("--base-ref", required=True, help="exact installed source commit or resolvable Git ref")
-    bridge.add_argument("--git-root", type=Path, default=PROJECT_ROOT, help="repository containing the base commit")
-    bridge.add_argument("--python-root", type=Path, default=PROJECT_ROOT, help="current source containing the receiver modules to overlay")
-    bridge.add_argument("--output", type=Path, required=True)
 
     activities = commands.add_parser("build-activities", help="build one/set/all Activity updates")
     _add_app_identity(activities)
@@ -393,23 +385,6 @@ def main(argv: list[str] | None = None) -> int:
             )
             output = ensure_software_update_filename(args.output)
             _print_result(output, inspect_software_update_package(output))
-            return 0
-        if args.command == "build-receiver-bridge":
-            base_sha, manifest = build_receiver_bridge(
-                args.output,
-                base_ref=args.base_ref,
-                repository_root=args.git_root,
-                python_source_root=args.python_root,
-                version=args.version,
-                release_id=args.release_id,
-            )
-            output = ensure_software_update_filename(args.output)
-            _print_result(output, inspect_software_update_package(output))
-            print(json.dumps({
-                "bridge_base_commit": base_sha,
-                "required_order": "Install this code-only bridge first; after it is accepted, send a normal current Python/combined package carrying language JSON.",
-                "bridge_payload_has_language_json": any("/languages/" in item.path for item in manifest.python_files),
-            }, sort_keys=True))
             return 0
         return _build_app_command(args, combined=args.command == "build-combined")
     except (ActivityIndexError, SoftwareUpdatePackageError, UpdateBundleError, OSError, ValueError) as exc:
