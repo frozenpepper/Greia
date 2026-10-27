@@ -22,13 +22,15 @@ healthy acceptance → failure rollback. Saved evidence and reasoning:
 `docs/reviews/2026-10-27_AB_OLD_RELEASE_STAGE_DIAGNOSTIC_RESULT.md`,
 `docs/reviews/2026-10-27_AB_OLD_RELEASE_STAGE_REFUSAL_ANALYSIS.md`.
 
-**Application updates:** source now packages and validates paired EN/IT/ES/FR
-locale manifest/UI JSON with Python/combined payloads. For an *exactly matched*
-old `1275e0be1` receiver, a one-time source-matched bridge exists before the
-normal current package. 121 focused source tests were reported passing, but
-installed service, health acceptance, Parent continuation, rollback and
-application generation recovery still need the Linux run. Reference:
-`docs/testing/2026-10-27_LANGUAGE_UPDATE_PACKAGE_ACCEPTANCE.md`.
+**Application updates:** current Python/combined packages include and
+validate paired EN/IT/ES/FR locale manifest/UI JSON. No backwards compatibility
+for pre-release development installations is required (owner decision
+2026-10-27). The one-time receiver bridge source/CLI and its five focused
+tests have been **deleted**; previously reported 121-test totals remain
+historical and are not current runnable coverage. Test only freshly installed
+current release candidates and normal packages. Installed service, health,
+Parent continuation and rollback/recovery acceptance are still pending.
+Reference: `docs/testing/2026-10-27_LANGUAGE_UPDATE_PACKAGE_ACCEPTANCE.md`.
 **Session 04 remains OPEN;** family release, hardware/USB acceptance and healthy
 B have not been demonstrated by this documentation pass.
 
@@ -356,6 +358,22 @@ PRESERVED; the 4 first-run DONE, all 16 earlier retakes, and all 143 evidence-ga
 rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
+
+### 2026-10-27 — Owner decision: no prerelease backwards compatibility
+
+Greia has not shipped to users. No legacy development-image upgrade path,
+receiver-bridge package or test is required. Removed
+`src/greia_platform/software_update_bridge.py` and
+`tests/test_software_update_bridge.py`, and removed the
+`build-receiver-bridge` CLI option. Updated the accepted lightweight-update
+ADR, current operator guide and consolidated Linux acceptance plan.
+Continue with fresh current candidate -> current update -> healthy acceptance
+and rollback. The old 1275 stage refusal is still useful as a root-cause
+diagnostic, **not** a supported upgrade target. No post-deletion runtime
+test or installed acceptance has been executed by this GitHub-only cleanup.
+The local agent must run focused CLI/build/package tests after pulling
+the change, as part of the same consolidated update campaign.
+
 
 ### 2026-10-27 — Simplify update execution and retire stale gates (documentation only)
 
