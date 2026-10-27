@@ -41,25 +41,32 @@ not source edits or hardware access. The queue does not supersede
 the exact dated Creations acceptance or the independent installer
 and first-boot lifecycle authorization.
 
-## 2. Current blocking route
+## 2. Current install/update/release route
 
-Install/update/release work follows the ADR 0036 successor plan,
-`docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md`.
-Session 03 closed on 2026-09-23; Session 04 remains OPEN. Run both external
-work orders on the other Linux machine requested by the owner:
+The September lifecycle plan remains the architectural authority; Session 04
+is OPEN pending installed evidence. **For the owner's current update repair and
+release-acceptance assignment, execute only the consolidated
+[Greia update release acceptance](GREIA_UPDATE_RELEASE_ACCEPTANCE.md) as the
+top-level work order.** It covers both A/B full-system and typed
+`.greia_update` application packages in one coherent Linux/QEMU campaign.
+Older dated procedures (especially
+[2026-10-23 A/B](2026-10-23_SYSTEM_UPDATE_LINUX_ACCEPTANCE.md) and
+[2026-10-24 application](2026-10-24_SOFTWARE_UPDATE_ACCEPTANCE.md)) provide
+details and historical evidence; they are **not additional prerequisites or
+source-freeze/stop-after-one-stage gates**.
 
-- `docs/testing/2026-10-23_SYSTEM_UPDATE_LINUX_ACCEPTANCE.md` owns BIOS
-  installation/boot, PERSIST, A/B slot transitions, v3 full-system update,
-  interruption and rollback.
-- `docs/testing/2026-10-24_SOFTWARE_UPDATE_ACCEPTANCE.md` owns typed
-  `.greia_update` Python, built-in/Parent Activities, combined generation,
-  durable Parent receipt, single-root operation and application recovery.
+The owner expressly authorizes this local agent to implement fixes and tests,
+build disposable fixtures, run installed update acceptance and commit coherent
+changes on `main`. The [delayed local testing queue](GREIA_LOCAL_AGENT_TASK_QUEUE.md)
+retains its *separate* evidence-only restriction for Time/Creations and other
+queued tasks; that restriction does **not** apply to this update assignment.
 
-Keep each proof separate; physical media installation still requires an
-identified disposable target.
-
+Keep measured A/B versus application acceptance distinct, and never target an
+actual family disk or data. Don't rerun the frozen 1275-era single-stage job:
+its refusal is captured in
+[the diagnostic result](../reviews/2026-10-27_AB_OLD_RELEASE_STAGE_DIAGNOSTIC_RESULT.md).
 Old POSTR1-P1/Gate-P5 sequencing does not supersede Session 04. The
-architecture-remediation plan remains active for its non-lifecycle work.
+architecture-remediation plan remains active for non-lifecycle obligations.
 
 Do not automatically run an old R7 closure procedure merely because it remains under `docs/testing/`. Use `HANDOVER.md` and the active plan to choose the exact gate for the work being accepted.
 
