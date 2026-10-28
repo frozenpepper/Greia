@@ -14,6 +14,7 @@ browser upload, the 7-failure/3-error full gate, and media redistribution
 clearance are outstanding. The separate Parents source repo now carries the
 selected MPL-2.0 license and a pending-provenance notice; runtime still pins
 `a1da70e6c69b907b128147ac876cc3cf17053d47`.
+
 **Public-source readiness:** IN PROGRESS. Root entry points exist (`LICENSE`, `NOTICE.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`); the licensing/provenance audit is open (see `NOTICE.md`).
 **Ordinary-family release:** NOT READY (`docs/release/GREIA_PUBLIC_RELEASE_READINESS.md`).
 **UPDATE ACCEPTANCE RESULT (2026-10-28, tested source `810caa91f`; rebased
