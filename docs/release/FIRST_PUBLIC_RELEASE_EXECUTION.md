@@ -54,11 +54,16 @@ The reference candidate is the `acer-aspire-one-i386-ab` A/B profile, without
    history removal. Keep legitimate tests and indispensable accepted-media
    provenance. No blind `git clean`, mass history rewrite, LFS migration or
    mass-deletion of voice assets.
-2. Explicitly settle the `NOTICE.md` flags: macOS `say` output redistribution,
-   character reference/derived speech rights and reusable/generated artwork.
-   Owner listening approval is **not** a substitute for rights clearance.
-   Either document a permitted redistribution basis or replace/exclude the
-   affected material *and verify the public source and built image work*.
+2. Treat the `NOTICE.md` macOS `say` recordings as an active **likely
+   public-release blocker**: Apple's published macOS System Voices license
+   expressly restricts recording/publishing/redistribution in public,
+   nonprofit and commercial contexts (see the Apple macOS Tahoe §2.F link
+   in `NOTICE.md`). Establish the exact applicable license/permission for
+   the generating voices; otherwise **replace** them with content whose
+   public redistribution rights are documented. Also resolve character
+   reference/derived-speech rights and reusable/generated artwork. Owner
+   listening approval is **not** a rights grant. Verify the resulting
+   public tree **and Git history** as well as the final image.
    Confirm MPL/CC BY/third-party notices and redistribution obligations;
    include source/attribution terms for OS package dependencies.
 3. Bring `frozenpepper/Greia-Parent-App-Html` into public-source shape too:
