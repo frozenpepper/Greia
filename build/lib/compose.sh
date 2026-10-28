@@ -330,6 +330,31 @@ compose_apply_overlay() {
   fi
 }
 
+# Canonical GRUB presentation assets. The theme itself comes from the role
+# overlay; the PNG is generated artwork kept under assets/boot/static and must
+# be installed into both the target slot and the live installer root so the
+# A/B boot-control menu can carry the same branded first frame.
+compose_install_boot_branding() {
+  local rootfs="$1"
+  local project_root="${2:-${COMPOSE_PROJECT_ROOT:-$_COMPOSE_PROJECT_ROOT_DEFAULT}}"
+  local source="$project_root/assets/boot/static/greia-boot-logo.png"
+  [[ -f "$source" && ! -L "$source" ]] || {
+    echo "Canonical boot artwork is missing or unsafe: $source" >&2
+    return 1
+  }
+  install -d -m 0755 "$rootfs/boot/grub"
+  install -m 0644 "$source" "$rootfs/boot/grub/greia-boot-logo.png"
+  # The live-installer overlay intentionally does not carry the target GRUB
+  # theme, but the A/B boot-control copy is sourced from the live root. Install
+  # the same canonical theme into both roles so the branded menu is complete.
+  local theme="$project_root/build/overlay/boot/grub/greia-theme.txt"
+  [[ -f "$theme" && ! -L "$theme" ]] || {
+    echo "Canonical boot theme is missing or unsafe: $theme" >&2
+    return 1
+  }
+  install -m 0644 "$theme" "$rootfs/boot/grub/greia-theme.txt"
+}
+
 compose_write_build_info() {
   local rootfs="$1"
   local role="$2"
@@ -1287,6 +1312,7 @@ compose_root() {
   compose_mount_apt_cache "$rootfs" || return 1
   compose_debootstrap "$rootfs" || return 1
   compose_apply_overlay "$rootfs" "$role" || return 1
+  compose_install_boot_branding "$rootfs" "$project_root" || return 1
   compose_write_build_info "$rootfs" "$role" || return 1
   compose_write_boot_console_policy "$rootfs" || return 1
   compose_write_sources_hostname_hosts "$rootfs" "$role" || return 1

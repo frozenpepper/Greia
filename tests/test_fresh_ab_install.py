@@ -381,6 +381,15 @@ class FreshAbInstallTests(unittest.TestCase):
         persist_stage.mkdir()
         boot_control = root / "boot-control"
         boot_control.mkdir()
+        branding = root / "branding"
+        branding.mkdir()
+        (branding / "greia-theme.txt").write_text(
+            'title-text: ""\ndesktop-image: "greia-boot-logo.png"\n',
+            encoding="utf-8",
+        )
+        (branding / "greia-boot-logo.png").write_bytes(
+            b"\x89PNG\r\n\x1a\n" + b"0" * 64
+        )
         backend_state = boot_control / "grub"
         journal = persist_stage / "greia" / "boot-journal"
         mount_dir = root / "slot-a-mnt"
@@ -413,6 +422,9 @@ class FreshAbInstallTests(unittest.TestCase):
                 raise AssertionError("BIOS GRUB install ran outside the boot-control mount")
             if not (boot_directory / "grub" / "grub.cfg").is_file():
                 raise AssertionError("BIOS GRUB install ran before config was written")
+            for name in ("greia-theme.txt", "greia-boot-logo.png"):
+                if not (boot_directory / "grub" / name).is_file():
+                    raise AssertionError(f"BIOS GRUB install ran before {name} was copied")
             if GrubEnvBackend.attach(boot_directory / "grub").inspect().default_slot != "A":
                 raise AssertionError("BIOS GRUB install ran before grubenv was initialized")
             boot_installs.append((target, boot_directory))
@@ -430,6 +442,7 @@ class FreshAbInstallTests(unittest.TestCase):
             persist_stage_dir=persist_stage,
             persist_uuid_factory=lambda: uuid.UUID(_PERSIST_FS_UUID),
             boot_control_dir=boot_control,
+            boot_branding_dir=branding,
             post_layout_identity_observer=_observer,
             bios_bootloader_installer=_install_bios_bootloader,
         )
@@ -463,6 +476,7 @@ class FreshAbInstallTests(unittest.TestCase):
                 "boot_control": boot_control,
                 "backend_state": backend_state,
                 "journal": journal,
+                "branding": branding,
             },
         }
 
@@ -474,6 +488,14 @@ class FreshAbInstallTests(unittest.TestCase):
         result = execute_fresh_ab_install(harness["request"], harness["seams"])
         harness["result"] = result
         return harness
+
+    def test_missing_boot_branding_fails_closed(self) -> None:
+        directory = tempfile.mkdtemp(prefix="x8-install-branding-")
+        self.addCleanup(shutil.rmtree, directory, True)
+        harness = self._harness(Path(directory), _payload())
+        (harness["dirs"]["branding"] / "greia-boot-logo.png").unlink()
+        with self.assertRaisesRegex(FreshAbInstallError, "boot branding"):
+            execute_fresh_ab_install(harness["request"], harness["seams"])
 
     # -- happy path ------------------------------------------------------
 
@@ -518,6 +540,12 @@ class FreshAbInstallTests(unittest.TestCase):
         validate_grub_ab_text(text)
         self.assertIn(observed["system-a"]["partuuid"], text)
         self.assertIn(observed["system-b"]["partuuid"], text)
+        for name in ("greia-theme.txt", "greia-boot-logo.png"):
+            self.assertEqual(
+                (harness["dirs"]["boot_control"] / "grub" / name).read_bytes(),
+                (harness["dirs"]["branding"] / name).read_bytes(),
+            )
+        self.assertIn("set theme=$prefix/greia-theme.txt", text)
         backend = GrubEnvBackend.attach(harness["dirs"]["backend_state"])
         self.assertEqual(backend.inspect().default_slot, "A")
         self.assertIsNone(backend.inspect().one_shot_slot)

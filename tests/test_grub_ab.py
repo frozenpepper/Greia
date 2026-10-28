@@ -135,6 +135,21 @@ class ConfigGenerationTests(unittest.TestCase):
         self.assertIn("${next_entry}", text)
         self.assertIn("${saved_entry}", text)
 
+    def test_release_quiet_precedes_loglevel_and_brands_the_menu(self) -> None:
+        text = _config()
+        # Kernel parameters are applied in order; ``quiet`` sets loglevel 4,
+        # so it must precede the explicit loglevel=0.
+        for line in text.splitlines():
+            if line.strip().startswith("linux "):
+                arguments = line.split()
+                self.assertLess(
+                    arguments.index("quiet"), arguments.index("loglevel=0")
+                )
+        self.assertIn("insmod gfxterm", text)
+        self.assertIn("set theme=$prefix/greia-theme.txt", text)
+        self.assertIn("set gfxpayload=keep", text)
+        validate_grub_ab_text(text)
+
     def test_generation_is_deterministic(self) -> None:
         self.assertEqual(_config(), _config())
 

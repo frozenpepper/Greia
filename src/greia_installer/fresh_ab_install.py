@@ -136,6 +136,15 @@ _HEX64_RE = re.compile(r"^[0-9a-f]{64}$")
 #: GRUB config and environment are stored on the shared boot-control volume.
 GRUB_CONFIG_NAME = "grub.cfg"
 GRUB_CONFIG_REL_PATH = "grub/grub.cfg"
+#: Branding files copied beside the A/B config on the shared boot-control
+#: volume. The GRUB theme is the same canonical white composition used by the
+#: single-root appliance path and the early framebuffer cover.
+GRUB_THEME_NAME = "greia-theme.txt"
+GRUB_LOGO_NAME = "greia-boot-logo.png"
+_BOOT_BRANDING_BOUNDS = (
+    (GRUB_THEME_NAME, 64 * 1024),
+    (GRUB_LOGO_NAME, 2 * 1024 * 1024),
+)
 
 
 def _require_hex64(value: object, *, field_name: str) -> str:
@@ -274,6 +283,10 @@ class FreshAbInstallSeams:
     persist_stage_dir: Path | None = None
     persist_uuid_factory: Callable[[], uuid.UUID] | None = None
     boot_control_dir: Path | None = None
+    #: Live-installer directory carrying the canonical GRUB theme and logo.
+    #: Production binds ``/boot/grub``; tests may bind a temp fixture. ``None``
+    #: keeps source-only install fakes free of branding files.
+    boot_branding_dir: Path | None = None
     firmware_packages: tuple[str, ...] = ()
     microcode_packages: tuple[str, ...] = ()
     payload_stream_factory: Callable[[], BinaryIO] | None = None
@@ -305,6 +318,12 @@ class FreshAbInstallSeams:
             value = getattr(self, field_name)
             if isinstance(value, bool) or not isinstance(value, int) or value < 0:
                 raise FreshAbInstallError(f"{field_name} must be a non-negative integer")
+        if self.boot_branding_dir is not None:
+            branding = Path(self.boot_branding_dir)
+            if not branding.is_absolute() or branding.is_symlink():
+                raise FreshAbInstallError(
+                    "boot branding directory must be an absolute non-symlink path"
+                )
         if self.post_layout_identity_observer is not None and not callable(
             self.post_layout_identity_observer
         ):
@@ -984,6 +1003,7 @@ def execute_fresh_ab_install(
             filesystem_uuid=boot_control_uuid,
             mountpoint=Path(seams.boot_control_dir),
             grub_text=grub_text,
+            branding_dir=seams.boot_branding_dir,
             target=request.target,
             bios_bootloader_installer=bios_bootloader_installer,
         )
@@ -1401,6 +1421,79 @@ def _write_boot_control_config(boot_control_dir: Path, text: str) -> None:
         raise FreshAbInstallError(f"installed GRUB config is not readable: {exc}") from exc
 
 
+def _atomic_write_boot_control_file(target: Path, payload: bytes) -> None:
+    """Write one boot-control asset atomically with verified readback."""
+    import tempfile as _tempfile
+
+    if target.is_symlink():
+        raise FreshAbInstallError(f"boot-control asset may not be a symlink: {target.name}")
+    descriptor, temporary_name = _tempfile.mkstemp(
+        prefix=f".{target.name}.", dir=str(target.parent)
+    )
+    try:
+        with os.fdopen(descriptor, "wb") as handle:
+            handle.write(payload)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.chmod(temporary_name, 0o644)
+        os.replace(temporary_name, target)
+        try:
+            descriptor_dir = os.open(str(target.parent), os.O_RDONLY | os.O_DIRECTORY)
+        except OSError:
+            descriptor_dir = None
+        if descriptor_dir is not None:
+            try:
+                os.fsync(descriptor_dir)
+            finally:
+                os.close(descriptor_dir)
+    finally:
+        try:
+            Path(temporary_name).unlink(missing_ok=True)
+        except OSError:
+            pass
+    try:
+        if target.read_bytes() != payload:
+            raise FreshAbInstallError(
+                f"boot-control asset re-read mismatch: {target.name}"
+            )
+    except OSError as exc:
+        raise FreshAbInstallError(
+            f"boot-control asset is not readable: {target.name}: {exc}"
+        ) from exc
+
+
+def _copy_boot_branding(branding_dir: Path, grub_dir: Path) -> None:
+    """Copy the canonical GRUB theme and logo onto the boot-control volume.
+
+    The A/B entries live on the shared boot-control partition, not in either
+    system slot. GRUB can only show the branded frame when the theme and its
+    image are present beside ``grub.cfg``. Source files are the live-installer
+    canonical copies; every file is bounded, regular (never a symlink) and
+    read back after an atomic write.
+    """
+    source_dir = Path(branding_dir)
+    if (
+        not source_dir.is_absolute()
+        or source_dir.is_symlink()
+        or not source_dir.is_dir()
+    ):
+        raise FreshAbInstallError("boot branding source is not an absolute directory")
+    destination = Path(grub_dir)
+    if destination.is_symlink() or not destination.is_dir():
+        raise FreshAbInstallError("boot-control GRUB directory is unusable")
+    for name, limit in _BOOT_BRANDING_BOUNDS:
+        source = source_dir / name
+        if source.is_symlink() or not source.is_file():
+            raise FreshAbInstallError(f"boot branding file is missing or unsafe: {name}")
+        try:
+            payload = source.read_bytes()
+        except OSError as exc:
+            raise FreshAbInstallError(f"boot branding file is unreadable: {name}: {exc}") from exc
+        if not payload or len(payload) > limit:
+            raise FreshAbInstallError(f"boot branding file is outside Greia bounds: {name}")
+        _atomic_write_boot_control_file(destination / name, payload)
+
+
 def _write_verified_boot_control(
     *,
     runner: object,
@@ -1408,6 +1501,7 @@ def _write_verified_boot_control(
     filesystem_uuid: str,
     mountpoint: Path,
     grub_text: str,
+    branding_dir: Path | None = None,
     target: DeviceObservation,
     bios_bootloader_installer: Callable[[DeviceObservation, Path], None] | None,
 ) -> None:
@@ -1439,6 +1533,8 @@ def _write_verified_boot_control(
             mountpoint=mountpoint,
         ) as mounted:
             _write_boot_control_config(mounted, grub_text)
+            if branding_dir is not None:
+                _copy_boot_branding(branding_dir, mounted / "grub")
             backend = GrubEnvBackend.initialize(mounted / "grub", default_slot="A")
             if backend.inspect().default_slot != "A":
                 raise FreshAbInstallError(

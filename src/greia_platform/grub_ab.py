@@ -192,7 +192,16 @@ def _kernel_arguments(
     """Deterministic kernel arguments for one slot entry (sorted pools)."""
     pool = set(COMMON_REQUIRED_ARGUMENTS)
     pool |= _effective_policy(developer, console_policy).required_arguments
-    return ("ro", f"root=PARTUUID={root_partuuid}", *sorted(pool))
+    ordered = sorted(pool)
+    # ``quiet`` lowers the console log level to 4; a later ``loglevel=0`` must
+    # win over that default. Kernel parameters are applied in order, so a
+    # stable alphabetic sort (``loglevel=0`` before ``quiet``) silently made
+    # release boots verbose. Keep ``quiet`` first while preserving a
+    # deterministic remainder.
+    if "quiet" in ordered:
+        ordered.remove("quiet")
+        ordered.insert(0, "quiet")
+    return ("ro", f"root=PARTUUID={root_partuuid}", *ordered)
 
 
 def _check_artifact_pair(
@@ -354,6 +363,21 @@ def _render_entries(
         "fi\n"
         "set timeout=0\n"
         "set timeout_style=hidden\n"
+        # Brand the shared boot-control menu exactly like the single-root
+        # appliance path. Without this preamble the A/B image showed raw
+        # GRUB text ("Booting Greia Slot A") before the kernel started.
+        "if loadfont unicode ; then\n"
+        "  set gfxmode=auto\n"
+        "  insmod all_video\n"
+        "  insmod gfxterm\n"
+        "  terminal_output gfxterm\n"
+        "fi\n"
+        "if [ -f $prefix/greia-theme.txt ]; then\n"
+        "  insmod png\n"
+        "  set theme=$prefix/greia-theme.txt\n"
+        "  export theme\n"
+        "  set gfxpayload=keep\n"
+        "fi\n"
         + _entry("A", partuuid_a, fs_uuid_a)
         + _entry("B", partuuid_b, fs_uuid_b)
     )

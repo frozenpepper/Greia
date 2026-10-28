@@ -642,6 +642,7 @@ def build_production_seam_pair(
             persist_stage_dir=Path(config.persist_stage_dir),
             persist_uuid_factory=None,
             boot_control_dir=Path(config.boot_control_dir),
+            boot_branding_dir=Path("/boot/grub"),
             firmware_packages=firmware_packages,
             microcode_packages=microcode_packages,
             payload_stream_factory=None,

@@ -36,7 +36,12 @@ fi
 
 # Ensure early KMS graphics driver is available in initramfs when provided by
 # the target kernel so /dev/fb0 is active before root filesystem mount.
-for module in i915 intel_agp; do
+# Include the small set of framebuffer drivers that can own the display
+# before the root filesystem exists. i915 covers the reference Acer; bochs
+# and virtio_gpu cover common QEMU/virtual displays (and keep the release
+# boot-cover acceptance bootable in the project's disposable VM); cirrus_qemu
+# covers the older QEMU VGA model. Each module is optional and probed.
+for module in i915 intel_agp bochs cirrus_qemu virtio_gpu; do
     if modinfo -k "${version:-$(uname -r)}" "$module" >/dev/null 2>&1; then
         manual_add_modules "$module"
     fi
