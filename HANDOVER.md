@@ -66,6 +66,40 @@ Follow-up in this update-agent handoff review: the all-scope auditor inspected
 repository links, and its four tests passed. This is source/documentation
 verification only; no device test is required for these Markdown changes.
 
+## 2026-10-28 — Public-release preparation: green gate and boot presentation
+
+`make verify` is **GREEN**: 6,013 tests, OK, 5 skipped at source
+`8bac176bd3d3b562fcf6785cdf663aecf0dcceec`. The former 7 failures / 3 errors
+were repaired at their causes (Foresta waiver receipts, MBR wording, ARM64
+builder refusal, optional voice-provider skips, Linux first-frame budget).
+
+Boot presentation fixes: the A/B boot-control menu now loads the canonical
+Greia GRUB theme/logo, installer/boot-control copy is complete, the initramfs
+includes generic QEMU framebuffer drivers, and `quiet` is ordered before
+`loglevel=0` so release boots stay silent. The Parent client pin is
+`51d6b589d6a1703fd3681f46ab373a19b201ac8f`; the Parent API accepts
+`Expect: 100-continue`, and the login screen no longer prints the default
+password.
+
+The macOS System Voice rights review is now precise: **627** committed
+recordings, 257 of which would remain even in the 32-activity draft roster.
+See `docs/release/2026-10-28_MACOS_SYSTEM_VOICE_AUDIO_INVENTORY.md`. Public
+source/binary distribution remains **blocked** by that rights issue.
+
+The technical-preview candidate is installer
+`b81279afe4c8d72bb458670efda95c6a422deddbceef69051a5e6da309c2bd80`
+(2,270,167,040 bytes) with matching bundle
+`2572bf0829152c24aaf0e82f897b9ba651f871f30c4c9ad5d4f9349729dab3d0`
+(714,551,308 bytes), built from runtime source
+`8bac176bd3d3b562fcf6785cdf663aecf0dcceec` and installer composition
+`fc2af2103`, version `0.13.1-preview.1`. Fresh A/B install and installed A
+first-boot health acceptance passed on the exact image. It is an experimental
+acceptance fixture (`release_eligible: false`), **not** a public or family
+release. Full report:
+`docs/reviews/2026-10-28_FIRST_PUBLIC_RELEASE_PREPARATION_RESULT.md`.
+Physical Acer/USB acceptance and the owner's Activity-roster/media-rights
+decisions remain open.
+
 ## Active workstreams
 
 Blocking and lifecycle authorities (rules in `AGENTS.md`):

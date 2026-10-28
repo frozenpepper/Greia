@@ -40,15 +40,16 @@ their Git-history copies and is not treated as rights remediation.
 
 ## 3. Verification results
 
-- `make verify`: **6,013 tests, OK, 5 skipped** at runtime source
-  `8bac176bd3d3b562fcf6785cdf663aecf0dcceec` (Linux host, Python 3.12.3).
+- `make verify`: **6,013 tests, OK, 5 skipped** on the final release-preparation
+  policy tree (runtime source `8bac176bd3d3b562fcf6785cdf663aecf0dcceec`;
+  later commits are documentation/gate policy only). Linux host, Python 3.12.3.
 - The former 7 failures / 3 errors were repaired at their actual causes:
   Foresta waiver receipts; MBR adapter wording; ARM64 schema-valid/builder-
   refused expectations; optional `huggingface_hub`/`mlx_audio` skips; and the
   representative-Activity first-frame budget calibrated at 0.30 s on this
   host (still below the old eager-synthesis cost).
 - `tools/validate_project.py`: PASS, 45 Activities, 14 image profiles.
-- Documentation audit: **437 Markdown documents, 0 unresolved repository
+- Documentation audit: **440 Markdown documents, 0 unresolved repository
   links** (`--scope all`).
 - Parents source: **`npm test` 105/105 pass**; runtime-manifest generation
   pass. Installed browser/device acceptance is reported separately below.
@@ -230,7 +231,7 @@ modified.
 |---|---|
 | Audio rights inventory | `docs/release/2026-10-28_MACOS_SYSTEM_VOICE_AUDIO_INVENTORY.{md,csv}` |
 | Boot-cover acceptance | `docs/release/2026-10-28_BOOT_COVER_ACCEPTANCE.md` |
-| Full source gate | `/tmp/greia-release-prep/make-verify-current.log` (6013 tests, OK) |
+| Full source gate | `/tmp/greia-release-prep/make-verify-final.log` (6013 tests, OK, 5 skipped) |
 | Installed install leg | `/var/tmp/greia-boot-cover-acceptance-final/install-report.json` |
 | Boot screenshots | `/tmp/greia-release-prep/boot-cover/final-installer/`, `.../installed-final2/` |
 | Prior full update acceptance | `docs/reviews/2026-10-27_UPDATE_RELEASE_ACCEPTANCE_RESULT.md` |

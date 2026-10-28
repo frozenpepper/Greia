@@ -3739,3 +3739,62 @@ Session 04 remains OPEN for physical Acer/USB installation and rollback,
 HTML/Mobile browser click-through, reverse B→A, the `full_system`
 `.greia_update` wrapper and HTTP 507 low-space. Installed QEMU acceptance is
 not family-release or hardware certification.
+
+## 2026-10-28 — Public-release preparation: verification baseline green; boot presentation repaired
+
+Source baseline for this entry: `8bac176bd3d3b562fcf6785cdf663aecf0dcceec`
+(later documentation/policy-only commits do not change the runtime tree).
+
+**Verification:** `make verify` now runs **6,013 tests, OK, 5 skipped** on the
+Linux verification host. The previous 7 failures / 3 errors were repaired at
+their actual causes rather than waived:
+
+- Foresta receipts honestly distinguish `APPROVED`, `PENDING` and
+  `WAIVED_BY_OWNER` replacement clips;
+- the MBR refusal names the expected `legacy-bios-ab-v1` /
+  `pi-mbr-tryboot-ab-v1` adapters;
+- ARM64 profiles remain schema-valid but the Phase 0 builder refusal is
+  asserted explicitly in both the profile test and `validate_project.py`;
+- optional `huggingface_hub` / `mlx_audio` provider tests skip when those
+  authoring dependencies are absent;
+- the representative-Activity first-frame guard is calibrated at 0.30 s for
+  the three borderline activities on the Linux/Python 3.12 host, still below
+  the old eager-synthesis cost;
+- the launcher S+T hint and the Parent upload/Expect path have focused
+  regression coverage.
+
+**Boot presentation defects found and fixed:**
+
+1. A/B boot-control `grub.cfg` had no graphical theme, so the first visible
+   frame was raw GRUB text. The generated config now loads the canonical
+   Greia theme/logo, keeps the graphical payload, and the installer copies
+   both assets onto the boot-control volume.
+2. The initramfs cover included only `i915`/`intel_agp`; generic QEMU
+   framebuffers had no `/dev/fb0` and never painted. Both roles now include
+   optional `bochs`, `cirrus_qemu` and `virtio_gpu` modules when present.
+3. The A/B kernel argument pool was sorted alphabetically, placing
+   `loglevel=0` before `quiet`; `quiet` then restored loglevel 4 and kernel
+   text appeared. `quiet` is now emitted before `loglevel=0`.
+
+**Parents/UX:** the Parent client pin advanced to the tested source with
+connected-Wi-Fi state and refresh-on-device-view; the login screen no longer
+prints the initial default password. The Parent API now acknowledges
+`Expect: 100-continue` as HTTP/1.1 before a package body, which fixes the
+browser upload stall seen in the installed QEMU guest.
+
+**Evidence boundary:** the visible boot-cover acceptance and final installed
+candidate are recorded in the dated first-public-release result review;
+physical Acer/USB acceptance remains open, and the macOS System Voice media
+rights inventory is an active public-distribution blocker.
+
+**Technical-preview candidate (not a release):** installer
+`b81279afe4c8d72bb458670efda95c6a422deddbceef69051a5e6da309c2bd80`
+(2,270,167,040 bytes), release bundle
+`2572bf0829152c24aaf0e82f897b9ba651f871f30c4c9ad5d4f9349729dab3d0`
+(714,551,308 bytes), runtime source `8bac176bd3d3b562fcf6785cdf663aecf0dcceec`,
+installer composition `fc2af2103`, profile `acer-aspire-one-i386-ab`,
+version `0.13.1-preview.1`. Fresh blank-disk A/B install, installed A
+first-boot health acceptance and default-A journal acceptance passed on the
+exact image. QEMU boot-cover screenshots are preserved under
+`docs/reviews/acer/2026-10-28_BOOT_COVER_QEMU/`. The acceptance-fixture report
+is `release_eligible: false`; the ordinary release roster remains draft.
