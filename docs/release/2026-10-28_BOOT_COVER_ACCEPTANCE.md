@@ -38,9 +38,10 @@ evidence is not a hardware certification.
 Evidence root:
 `/var/tmp/greia-boot-cover-acceptance-final/`
 (`install-report.json` and `product/*serial.log`).
-Screenshot sets:
-`/tmp/greia-release-prep/boot-cover/final-installer/` and
-`/tmp/greia-release-prep/boot-cover/installed-final2/`.
+Curated screenshots are committed under
+[`docs/reviews/acer/2026-10-28_BOOT_COVER_QEMU/`](../reviews/acer/2026-10-28_BOOT_COVER_QEMU/README.md);
+raw screendumps remain in `/tmp/greia-release-prep/boot-cover/final-installer/`
+and `/tmp/greia-release-prep/boot-cover/installed-final2/`.
 
 ## Observed presentation
 
