@@ -193,11 +193,17 @@ Tested behavior:
 
 ## 9. Tasks requiring physical Acer access
 
-Not performed; no physical disk was written and the attached LaCie USB was not
-modified.
+The attached LaCie key was subsequently flashed with the candidate after
+explicit owner authorization. It is `/dev/sdc` (LaCie iamaKey, serial
+`eca3505216d7d3`, 7,753.9 MiB usable); the first 2,270,167,040 bytes read back
+with SHA-256 `b81279afe4c8d72bb458670efda95c6a422deddbceef69051a5e6da309c2bd80`,
+matching the installer exactly. The written media exposes `GREIA_EFI` (64 MiB)
+and `PIP_INSTALL` (2.1 GiB) partitions and carries release bundle
+`2572bf0829152c24aaf0e82f897b9ba651f871f30c4c9ad5d4f9349729dab3d0`. The Acer
+itself was **not** touched or installed.
 
-1. Flash a positively identified disposable USB stick with the candidate;
-   verify model/capacity and checksum.
+1. ~~Flash a positively identified disposable USB stick with the candidate;
+   verify model/capacity and checksum.~~ **DONE** (exact readback match).
 2. Install on the authorized Acer Aspire One; confirm graphical installer
    language/disk/confirmation flow and first boot.
 3. Repeat the visual boot-cover review at 1024×600 and with the real i915
