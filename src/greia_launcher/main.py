@@ -1666,6 +1666,7 @@ class LauncherApplication:
             self._profile_selected,
             tuple(p.profile_id for p in self.profiles),
             hovered_target,
+            getattr(self, "_active_locale", "en"),
             theme.background,
             theme.panel,
             theme.accent,
@@ -1823,6 +1824,44 @@ class LauncherApplication:
             next_action="profile_page",
             total=len(self.profiles),
         )
+        self._draw_parent_hold_hint(screen, theme, pygame, width, height)
+
+    def _draw_parent_hold_hint(
+        self, screen: Any, theme: Any, pygame: Any, width: int, height: int
+    ) -> None:
+        """Small adult-facing S + T hint required on the profile picker.
+
+        It is not a control and owns no hit target. The hint is deliberately
+        word-light and localized through the same device-language catalog as
+        the rest of the Shell.
+        """
+        from greia_platform.system_language import language_ui
+
+        text = language_ui(
+            getattr(self, "_active_locale", "en"), "shell"
+        ).get("parent_hold_hint", "").strip()
+        if not text:
+            text = "For parents: hold S + T for 5 seconds"
+        font_size = max(10, min(14, height // 40))
+        font = self._font(font_size, pygame)
+        label = font.render(text, True, theme.text)
+        padding_x = max(8, font_size // 2)
+        padding_y = max(4, font_size // 3)
+        pill = pygame.Rect(
+            10,
+            10,
+            min(width - 20, label.get_width() + padding_x * 2),
+            label.get_height() + padding_y * 2,
+        )
+        pygame.draw.rect(screen, theme.panel, pill, border_radius=max(8, height // 60))
+        pygame.draw.rect(
+            screen,
+            _mix(theme.text, theme.panel, 0.72),
+            pill,
+            width=1,
+            border_radius=max(8, height // 60),
+        )
+        screen.blit(label, label.get_rect(center=pill.center))
 
     def _draw_profile_card(
         self,

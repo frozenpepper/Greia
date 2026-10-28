@@ -2,5 +2,8 @@
   "schema_version": 1,
   "installer": {
     "Choose your language": "Elige el idioma"
+  },
+  "shell": {
+    "parent_hold_hint": "Para los padres: mantén pulsadas S + T durante 5 segundos"
   }
 }

@@ -197,6 +197,20 @@ class LauncherShellProductizationContractTests(unittest.TestCase):
             for t in act_targets:
                 self.assertTrue(screen.get_rect().contains(t.rect))
 
+    def test_profile_picker_carries_localized_parent_hold_hint(self) -> None:
+        import json
+
+        source = (REPO_ROOT / "src/greia_launcher/main.py").read_text(encoding="utf-8")
+        self.assertIn("_draw_parent_hold_hint", source)
+        self.assertIn("parent_hold_hint", source)
+        for locale in ("en", "it", "es", "fr"):
+            catalog = json.loads(
+                (REPO_ROOT / f"src/greia_platform/languages/{locale}/ui.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            self.assertTrue(catalog["shell"]["parent_hold_hint"].strip(), locale)
+
     def test_profile_picker_pagination_targets_and_navigation(self) -> None:
         from unittest.mock import MagicMock
 

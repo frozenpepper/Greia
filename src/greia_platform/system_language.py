@@ -121,7 +121,7 @@ def language_ui(locale: str, section: str) -> dict[str, str]:
     """Optional per-language UI text resources (loaded only once per process).
 
     Source sections: installer, installer_dynamic, parent, parent_constants,
-    parent_audio_presets, launcher_feedback, collections, discoveries.
+    parent_audio_presets, launcher_feedback, collections, discoveries, shell.
     Unknown keys/sections never become executable format or filesystem paths.
     """
     try:
