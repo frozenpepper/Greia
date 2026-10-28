@@ -2,6 +2,20 @@
 
 **Purpose:** the short current state for contributors and agents: active workstreams, recent results, blockers and next steps. It is not an archive.
 
+**Physical Acer installer boot blocker (2026-10-29):** The exact SHA-256
+`b81279af...` LaCie USB image failed to launch the graphical installer:
+systemd logged `status=216/GROUP` / `Failed to determine supplementary groups`.
+The live-installer image role never created `netdev`, even though the UI
+unit requested `video input tty netdev audio`; target group provisioning
+does not apply to the live root. Source now explicitly provisions the
+unit's declared groups, includes the group-management package, validates
+the composed root and tests the regression. **Corrected image rebuild,
+live-root inspection, default-service QEMU boot and physical Acer re-test
+are still PENDING.** Existing USB remains broken; do not claim physical
+installer acceptance or install to the Acer disk. Details:
+[2026-10-29_ACER_USB_INSTALLER_216_GROUP.md](docs/reviews/2026-10-29_ACER_USB_INSTALLER_216_GROUP.md).
+
+
 **First public release preparation (2026-10-28):** Follow
 [the release execution sheet](docs/release/FIRST_PUBLIC_RELEASE_EXECUTION.md).
 This is a concise checklist subordinate to the existing lifecycle plan and
