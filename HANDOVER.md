@@ -13,6 +13,8 @@ Parent HTTPS API; EN/IT/ES/FR, real profiles/saves/settings and unrelated
 Activities survive; a broken Python package rolls back; jobs continue after the
 upload client disconnects. Report:
 [`2026-10-27_UPDATE_RELEASE_ACCEPTANCE_RESULT.md`](docs/reviews/2026-10-27_UPDATE_RELEASE_ACCEPTANCE_RESULT.md).
+Detailed situation/first-image report:
+[`2026-10-28_UPDATE_SYSTEMS_SITUATION_AND_FIRST_IMAGE.md`](docs/reviews/2026-10-28_UPDATE_SYSTEMS_SITUATION_AND_FIRST_IMAGE.md).
 `docs/testing/GREIA_UPDATE_RELEASE_ACCEPTANCE.md` remains the rerun router.
 No backwards compatibility for pre-release development images is required or
 implemented.
