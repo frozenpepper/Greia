@@ -3,36 +3,23 @@
 **Purpose:** the short current state for contributors and agents: active workstreams, recent results, blockers and next steps. It is not an archive.
 **Public-source readiness:** IN PROGRESS. Root entry points exist (`LICENSE`, `NOTICE.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`); the licensing/provenance audit is open (see `NOTICE.md`).
 **Ordinary-family release:** NOT READY (`docs/release/GREIA_PUBLIC_RELEASE_READINESS.md`).
-**CURRENT UPDATE IMPLEMENTATION + ACCEPTANCE ROUTE (2026-10-27):**
-`docs/testing/GREIA_UPDATE_RELEASE_ACCEPTANCE.md` is the **single executable
-work order** for the owner-authorized Linux agent. Implement/fix on current
-`main`, use focused tests during repairs, then run consolidated disposable-QEMU
-A/B and lightweight `.greia_update` acceptance; keep reporting evidence by
-lane. Historic one-stage/source-reuse handoffs are completed diagnostics, **not**
-live prerequisites. This cleanup changes documentation and authorizes the next
-agent's work; it **does not** fix the updater or establish device success.
+**UPDATE ACCEPTANCE RESULT (2026-10-28, source `810caa91f`):**
+Both installed Linux/QEMU lanes **PASS**. A fresh A/B image installs, boots A,
+stages/arms/boots healthy B, rolls back a health-failing candidate to A, and
+recovers from a power cut during the inactive-slot write. Python, built-in
+Activity and combined `.greia_update` packages apply through the installed
+Parent HTTPS API; EN/IT/ES/FR, real profiles/saves/settings and unrelated
+Activities survive; a broken Python package rolls back; jobs continue after the
+upload client disconnects. Report:
+[`2026-10-27_UPDATE_RELEASE_ACCEPTANCE_RESULT.md`](docs/reviews/2026-10-27_UPDATE_RELEASE_ACCEPTANCE_RESULT.md).
+`docs/testing/GREIA_UPDATE_RELEASE_ACCEPTANCE.md` remains the rerun router.
+No backwards compatibility for pre-release development images is required or
+implemented.
 
-**A/B defect to fix first:** a frozen 1275-era installed i386 updater returned
-`STAGE_CURRENT_CANDIDATE` / `ERROR REFUSED` because `sda2` capacity was
-unobservable. Source traces it to a hard-coded 64-bit `BLKGETSIZE64` request
-and unsuccessful `blockdev` fallback; the exact low-level failure is not yet
-proven. Fix capacity observation portably in current source, preserve layout
-identity/size checks, and verify on current-source QEMU install → A → B →
-healthy acceptance → failure rollback. Saved evidence and reasoning:
-`docs/reviews/2026-10-27_AB_OLD_RELEASE_STAGE_DIAGNOSTIC_RESULT.md`,
-`docs/reviews/2026-10-27_AB_OLD_RELEASE_STAGE_REFUSAL_ANALYSIS.md`.
-
-**Application updates:** current Python/combined packages include and
-validate paired EN/IT/ES/FR locale manifest/UI JSON. No backwards compatibility
-for pre-release development installations is required (owner decision
-2026-10-27). The one-time receiver bridge source/CLI and its five focused
-tests have been **deleted**; previously reported 121-test totals remain
-historical and are not current runnable coverage. Test only freshly installed
-current release candidates and normal packages. Installed service, health,
-Parent continuation and rollback/recovery acceptance are still pending.
-Reference: `docs/testing/2026-10-27_LANGUAGE_UPDATE_PACKAGE_ACCEPTANCE.md`.
-**Session 04 remains OPEN;** family release, hardware/USB acceptance and healthy
-B have not been demonstrated by this documentation pass.
+**Remaining update gaps:** physical Acer/USB install and rollback; HTML/Mobile
+browser click-through (the installed Parent API was used); reverse B→A;
+`full_system` `.greia_update` wrapper; HTTP 507 low-space. Session 04's
+physical/hardware closure remains OPEN; ordinary-family release is NOT READY.
 
 Entries dated before 2026-10-15 were removed from this file in the 2026-10-16 open-source cleanup. Read them with `git show 101e332a:HANDOVER.md`; lessons from that period are indexed in `docs/archive/README.md`.
 
@@ -125,6 +112,33 @@ This scope does not override ADR 0028, accepted architecture,
 installer/first-boot/lifecycle test gates or the Creations/Activity
 audit programme. Do not invent a second language registry or silently
 promote unvoiced locales.
+
+## 2026-10-28 — Installed A/B and application update acceptance PASS
+
+Final acceptance source `810caa91f363a5eb39676f68862a8bef276a6998` on the
+disposable i386 QEMU fixture. Evidence root:
+`/var/tmp/greia-update-acceptance-810caa91f363a5eb39676f68862a8bef276a6998-20261027T204906Z/`.
+Report: `docs/reviews/2026-10-27_UPDATE_RELEASE_ACCEPTANCE_RESULT.md`.
+
+Production fixes in this tranche: architecture-correct `BLKGETSIZE64` plus
+bounded sysfs/`blockdev` capacity fallback; the finalizer wrapper now exposes
+`link_file` so staged slots publish `vmlinuz-greia`/`initramfs-greia.img`;
+staged filesystems are checked/expanded before role-UUID binding; A/B images
+enable `greia-candidate-recovery.timer`; the stable application bootstrap
+resolves an A/B root from the layout record and `root=PARTUUID=`; terminal job
+publication and candidate cleanup share one job lock with an expected job ID;
+filesystem errors include bounded stdout diagnostics.
+
+Installed results: install/first-A, stage/arm/healthy-B, failed-B rollback to A,
+and interrupted-stage recovery all PASS. Python/Activity/combined packages
+reach `applied`; the broken launcher package reaches `rolled_back` with
+`launcher_not_ready` and restores the previous generation. A real Parent-created
+profile, save marker, PERSIST settings and the other profile survived; all four
+locales remained paired. Focused suites: **353 PASS**. `make verify`:
+**6,009 tests, 7 failures, 3 errors, 3 skips**, matching the documented Linux
+baseline (Foresta ×3, Parent Wi-Fi ×2, MBR wording, `morbidi` timing; ARM64
+profile + two optional voice-module errors). Physical/USB, browser-client
+click-through, reverse B→A, full-system wrapper and 507 remain NOT RUN.
 
 ## 2026-10-26 — Stage retry: status/verify PASS, stage failure masked by login prefix
 

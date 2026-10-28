@@ -1,6 +1,8 @@
 # Greia update release acceptance — one practical work order
 
-**Status:** CURRENT execution guide (2026-10-27). **Owner direction:** fix the updater and confirm working updates promptly, in consolidated runs. **Authority:** ADR 0036 (A/B), ADR 0038 (application generations), and the September lifecycle plan. This document replaces dated update-diagnostic handoffs as the **execution router**, not their factual findings. The previous `1275` diagnostic already captured the failure; there is no need to run its frozen-source comparison or repeat its old single-stage job.
+**Status:** EXECUTED 2026-10-27/28 at source `810caa91f`; both lanes passed.
+See [`2026-10-27_UPDATE_RELEASE_ACCEPTANCE_RESULT.md`](../reviews/2026-10-27_UPDATE_RELEASE_ACCEPTANCE_RESULT.md).
+This document remains the execution router for reruns. **Owner direction:** fix the updater and confirm working updates promptly, in consolidated runs. **Authority:** ADR 0036 (A/B), ADR 0038 (application generations), and the September lifecycle plan. This document replaces dated update-diagnostic handoffs as the **execution router**, not their factual findings. The previous `1275` diagnostic already captured the failure; there is no need to run its frozen-source comparison or repeat its old single-stage job.
 
 **Pre-release policy:** Greia has no released installed base to preserve. Do not build or test migration bridges, legacy reader paths, old image upgrades or upgrade-format backwards compatibility. Test only fresh images from the current code and updates between coherent *current* acceptance releases. Retain rollback to the previous healthy installation or application generation: rollback is correctness, not backwards compatibility.
 

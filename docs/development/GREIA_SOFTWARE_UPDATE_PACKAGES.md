@@ -411,10 +411,16 @@ session or application services are live. The helper's only accepted modes
 remain the systemd-owned `--recover` and `--apply` invocations.
 
 Application-generation journal phases record the current root-filesystem UUID
-and the package `job_id`. Recovery checks the UUID before using a slot-local
-generation pointer instruction, and checks the current job ID before
-finalizing that job or cleaning its candidate. This prevents shared boot/PERSIST
-state from replaying a stale pointer instruction onto a different A/B root.
+and the package `job_id`. Single-root builds read that UUID from
+`/etc/greia-os/root-filesystem-uuid`; A/B images resolve it from the installed
+layout record and the kernel `root=PARTUUID=` command line, so a candidate B
+boot is bound to B even while the accepted slot is still A. Recovery checks the
+UUID before using a slot-local generation pointer instruction, and checks the
+current job ID before finalizing that job or cleaning its candidate. This
+prevents shared boot/PERSIST state from replaying a stale pointer instruction
+onto a different A/B root. A terminal job update and its candidate cleanup are
+one job-lock transaction, so a package uploaded immediately after `applied`
+cannot be deleted by the previous job.
 If the worker stops between the durable `switching` journal and the `trial`
 journal, the next apply tick reconciles the same job and matching idle fence;
 on a later boot, the recovery unit resolves the journal before launcher or

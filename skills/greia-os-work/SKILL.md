@@ -625,7 +625,13 @@ and published with the code in one application generation. For release acceptanc
 current source with the current receiver. No support for old development images,
 pre-manifest reader migrations or legacy bridge packages is required.
 See `docs/testing/2026-10-27_LANGUAGE_UPDATE_PACKAGE_ACCEPTANCE.md`
-for current-source and installed evidence boundaries. Do not ship venvs, wheels, native dependencies,
+for current-source and installed evidence boundaries, and
+`docs/reviews/2026-10-27_UPDATE_RELEASE_ACCEPTANCE_RESULT.md` for the installed
+A/B plus application-package result. A/B application updates resolve the
+booted slot UUID from the installed layout plus `root=PARTUUID=`; terminal job
+publication and candidate cleanup share the job lock. A/B images must enable
+`greia-candidate-recovery.timer` so a candidate that boots but never becomes
+healthy rolls back after the deadline. Do not ship venvs, wheels, native dependencies,
 global assets or the Parent HTML integrity-pin pair. Built-in and Parent
 Activity sources retain separate trust. Only `full_system` uses the explicit
 restart affordance, and only on an A/B-ready image. Builder/inspect tests do

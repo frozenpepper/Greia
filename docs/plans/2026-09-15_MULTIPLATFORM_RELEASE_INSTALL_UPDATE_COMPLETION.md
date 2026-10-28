@@ -3700,3 +3700,40 @@ normal update correctness properties, **not backwards compatibility**.
 This is repository source/guide cleanup, not a Linux runtime acceptance.
 The local agent must rerun focused CLI/package tests because deleting
 the bridge changes the available command set. Session 04 remains OPEN.
+
+## 2026-10-28 — Installed A/B and application update acceptance PASS
+
+Source: `810caa91f363a5eb39676f68862a8bef276a6998`. Result report:
+[`2026-10-27_UPDATE_RELEASE_ACCEPTANCE_RESULT.md`](../reviews/2026-10-27_UPDATE_RELEASE_ACCEPTANCE_RESULT.md).
+Evidence root:
+`/var/tmp/greia-update-acceptance-810caa91f363a5eb39676f68862a8bef276a6998-20261027T204906Z/`.
+
+The consolidated disposable-QEMU acceptance in
+`docs/testing/GREIA_UPDATE_RELEASE_ACCEPTANCE.md` now passes both lanes:
+
+- **A/B:** fresh install, first healthy A, stage/verify/arm into B, healthy B
+  acceptance, failed-B automatic rollback to A, and recovery after a power cut
+  during the inactive-slot write.
+- **Applications:** Python, built-in Activity and combined `.greia_update`
+  packages reach `applied` through the installed Parent HTTPS API; the broken
+  launcher package reaches `rolled_back` and restores the previous generation.
+  Jobs continue after the upload client disconnects. A real Parent-created
+  profile, a profile save marker, PERSIST settings and another profile survive;
+  EN/IT/ES/FR locale pairs remain present in every updated generation.
+
+Production fixes: architecture-correct i386/x86_64 block-capacity observation
+with sysfs fallback and cause diagnostics; finalizer boot-alias publication
+through the production wrapper; filesystem check/expand before role-UUID write;
+candidate health-deadline timer enabled in A/B images; A/B root identity for
+the application bootstrap from layout + `root=PARTUUID=`; atomic terminal job
+cleanup with job-ID checking. Test-only harness fixes cover candidate control
+transport, control-disk sizing and post-recovery observation.
+
+Verification: focused update/lifecycle suites **353 PASS**; full `make verify`
+**6,009 tests, 7 failures, 3 errors, 3 skips**, matching the documented Linux
+baseline and containing no update-area regression.
+
+Session 04 remains OPEN for physical Acer/USB installation and rollback,
+HTML/Mobile browser click-through, reverse B→A, the `full_system`
+`.greia_update` wrapper and HTTP 507 low-space. Installed QEMU acceptance is
+not family-release or hardware certification.
