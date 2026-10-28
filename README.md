@@ -1,9 +1,10 @@
 # Greia OS
 
-Greia is an educational operating system for young children. It turns old
-and low-cost computers, from a first-generation Acer Aspire One netbook to a
-Raspberry Pi 400/500, into something closer to a small learning console than
-a desktop PC.
+Greia is an educational operating system for young children, designed to
+turn recycled and low-cost computers into small learning consoles rather than
+ordinary desktops. The first release target is a legacy-BIOS Acer Aspire One
+class PC; Raspberry Pi 400/500 support is planned but **not yet buildable or
+publicly supported**.
 
 ```text
 power on
