@@ -11,6 +11,7 @@ kbd
 kmod
 live-boot
 parted
+passwd
 python3
 python3-dbus
 python3-pil
