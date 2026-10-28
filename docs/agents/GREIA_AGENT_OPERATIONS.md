@@ -478,6 +478,26 @@ For the reference Acer, do not substitute the generic raw GRUB/MBR installer for
 
 Developer-image convenience must not leak into normal/release profiles.
 
+### Physical Acer installer GROUP failure (2026-10-29)
+
+The 2026-10-28 LaCie candidate's physical GRUB diagnostic log showed
+`greia-installer.service` `status=216/GROUP` before `ExecStartPre`.
+The live installer unit requests `video input tty netdev audio`, but
+`compose_create_users_groups` creates `netdev` only in the target role.
+`compose_create_live_installer_groups` now provisions each live service
+supplementary group after installing the live package set. `passwd` supplies
+`groupadd`. The live composed-root verifier checks the actual `/etc/group`
+for **every** declared group; test `tests/test_live_installer_groups.py`
+guards this failure. See
+[the physical failure review](../reviews/2026-10-29_ACER_USB_INSTALLER_216_GROUP.md).
+
+The previously flashed image remains broken. The next image must be checked
+inside its **actual live squashfs**, not just by reading service declarations.
+Boot its default `greia-installer.service` in QEMU and observe the interactive
+UI; an install through only the transaction socket is insufficient evidence.
+Reflash of a physical key and any internal-disk install require their own
+confirmed target identity and authorization.
+
 ### Live installer quiet-screen recovery (source contract, 2026-10-17)
 
 Live boot entries include `nonetworking` to prevent live-boot's ifupdown
