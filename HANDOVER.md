@@ -1,6 +1,19 @@
 # Greia — Current Engineering Handover
 
 **Purpose:** the short current state for contributors and agents: active workstreams, recent results, blockers and next steps. It is not an archive.
+
+**First public release preparation (2026-10-28):** Follow
+[the release execution sheet](docs/release/FIRST_PUBLIC_RELEASE_EXECUTION.md).
+This is a concise checklist subordinate to the existing lifecycle plan and
+full release-readiness requirements. Source publication can precede a public
+binary **after** public-tree/history rights and privacy review. First binary
+scope recommendation: one non-developer i386 A/B hardware-tested image, not a
+universal/Pi promise. The current QEMU-tested fixture remains **non-release**:
+the early framebuffer cover is not accepted as release-safe; physical Acer,
+browser upload, the 7-failure/3-error full gate, and media redistribution
+clearance are outstanding. The separate Parents source repo now carries the
+selected MPL-2.0 license and a pending-provenance notice; runtime still pins
+`a1da70e6c69b907b128147ac876cc3cf17053d47`.
 **Public-source readiness:** IN PROGRESS. Root entry points exist (`LICENSE`, `NOTICE.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`); the licensing/provenance audit is open (see `NOTICE.md`).
 **Ordinary-family release:** NOT READY (`docs/release/GREIA_PUBLIC_RELEASE_READINESS.md`).
 **UPDATE ACCEPTANCE RESULT (2026-10-28, tested source `810caa91f`; rebased
