@@ -1148,7 +1148,10 @@ def observe_legacy_mbr_identities(
     :class:`greia_platform.persistent_layout.PartitionIdentity` consumes.
     """
     if plan.adapter_id not in (LEGACY_BIOS_AB_ADAPTER_ID, PI_MBR_TRYBOOT_AB_ADAPTER_ID):
-        raise LayoutError("MBR observation requires a registered DOS A/B plan")
+        raise LayoutError(
+            "MBR observation requires a registered DOS A/B plan "
+            f"({LEGACY_BIOS_AB_ADAPTER_ID} or {PI_MBR_TRYBOOT_AB_ADAPTER_ID})"
+        )
     if target.device_type != "disk":
         raise LayoutError("MBR observation requires a whole-disk target")
     device = target.path
@@ -1200,7 +1203,10 @@ def build_observed_mbr_topology(
     gaps so a partial observation can never validate.
     """
     if plan.adapter_id not in (LEGACY_BIOS_AB_ADAPTER_ID, PI_MBR_TRYBOOT_AB_ADAPTER_ID):
-        raise LayoutError("MBR topology requires a registered DOS A/B plan")
+        raise LayoutError(
+            "MBR topology requires a registered DOS A/B plan "
+            f"({LEGACY_BIOS_AB_ADAPTER_ID} or {PI_MBR_TRYBOOT_AB_ADAPTER_ID})"
+        )
     if set(identities) != set(OBSERVED_MBR_ROLES):
         raise LayoutError("observed MBR identities must cover system-a/system-b/persist")
     try:

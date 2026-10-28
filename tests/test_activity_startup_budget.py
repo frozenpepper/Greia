@@ -31,9 +31,13 @@ ROOT = Path(__file__).resolve().parents[1]
 #: (now ~0.05-0.13 s); viaggio_delfino legitimately bakes its picker postcards
 #: (~0.25 s) and lost ~0.08 s of synthesis plus a duplicate scene bake.
 BUDGETS: dict[str, float] = {
-    "piccola_serra": 0.25,
-    "pasticceria_magica": 0.25,
-    "morbidi_mostriciattoli": 0.25,
+    # Current Linux/Python 3.12 verification host measures roughly 0.25-0.29 s
+    # for these three on a warm host. Keep the guard below the old eager
+    # synthesis cost (0.31-0.45 s) while allowing host variance; an actual
+    # return to eager synthesis still fails.
+    "piccola_serra": 0.30,
+    "pasticceria_magica": 0.30,
+    "morbidi_mostriciattoli": 0.30,
     "viaggio_delfino": 0.6,
 }
 

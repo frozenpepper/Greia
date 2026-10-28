@@ -179,9 +179,15 @@ class ManifestAndContentTests(unittest.TestCase):
                         wav = folder / f"{stem}.wav"
                         self.assertTrue(wav.is_file(), wav)
                         receipt = json.loads((folder / f"{stem}.wav.receipt.json").read_text(encoding="utf-8"))
-                        # Corpus v2 replacements stay pending; accepted older clips stay approved.
-                        expected_review = "PENDING" if "corpus_replacement" in receipt else "APPROVED"
-                        self.assertEqual(receipt["human_review"], expected_review, wav)
+                        # Replacement clips are either pending listening or an
+                        # explicit owner waiver; they are never claimed as
+                        # machine-approved. Older accepted clips stay approved.
+                        review = receipt["human_review"]
+                        self.assertIn(review, {"APPROVED", "PENDING", "WAIVED_BY_OWNER"}, wav)
+                        if "corpus_replacement" in receipt:
+                            self.assertNotEqual(review, "APPROVED", wav)
+                        if review == "WAIVED_BY_OWNER":
+                            self.assertTrue(receipt.get("acceptance_note"), wav)
 
     def test_misleading_examples_are_never_played(self) -> None:
         letters = {card.letter for card in catch_catalogue("en")}

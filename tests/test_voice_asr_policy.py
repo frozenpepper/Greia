@@ -1,4 +1,5 @@
 """Base-default and comparison-only accent-policy regressions; no live ASR."""
+import importlib.util
 import math
 from pathlib import Path
 import struct
@@ -17,6 +18,8 @@ from greia_voice_core.review_policy import reassess_result
 from greia_voice_core.service import request_from_mapping
 from voice_carrier import extract, ExtractionRejected, validate_transcript_and_boundary
 
+HAS_HUGGINGFACE_HUB = importlib.util.find_spec("huggingface_hub") is not None
+
 
 def result(*words):
     """Small timestamp fixture usable under both package and discovery runners."""
@@ -27,6 +30,10 @@ def result(*words):
 
 
 class AsrPolicyTests(unittest.TestCase):
+    @unittest.skipUnless(
+        HAS_HUGGINGFACE_HUB,
+        "optional huggingface_hub voice-provider dependency is not installed",
+    )
     def test_base_is_default_and_pinned_cache_resolution_is_offline(self):
         self.assertEqual(WhisperVerifier().model_id, 'mlx-community/whisper-base-mlx')
         with patch('huggingface_hub.snapshot_download', return_value='/cached/base') as load:

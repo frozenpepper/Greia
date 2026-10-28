@@ -1,4 +1,5 @@
 """Pinned Parakeet adapter contract and strict target-negative controls."""
+import importlib.util
 from pathlib import Path
 from types import SimpleNamespace
 import tempfile
@@ -18,6 +19,8 @@ from greia_voice_core.models import SpeechKind, VerificationDisposition, VoiceRe
 from greia_voice_core.parakeet_asr import ParakeetTranscriber
 from greia_voice_core.verification import ParakeetVerifier, WhisperVerifier
 
+HAS_MLX_AUDIO = importlib.util.find_spec("mlx_audio") is not None
+
 
 class ParakeetContractTests(unittest.TestCase):
     def test_default_metadata_does_not_relabel_historical_whisper_receipts(self):
@@ -27,6 +30,10 @@ class ParakeetContractTests(unittest.TestCase):
         self.assertEqual(WhisperVerifier().verifier_id, "mlx-whisper-base")
         self.assertEqual(DEFAULT_ASR_REVISION, "1e3e249fb8d01c655324bd6841b1deadffd6d04c")
 
+    @unittest.skipUnless(
+        HAS_MLX_AUDIO,
+        "optional mlx_audio voice-provider dependency is not installed",
+    )
     def test_local_model_loader_uses_explicit_parakeet_architecture(self):
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary)

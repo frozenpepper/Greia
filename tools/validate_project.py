@@ -21,7 +21,7 @@ from greia_platform.history import HistoryPolicy, ProgressionPolicy
 from greia_platform.profiles import ProfilePolicy
 from greia_platform.storage import StoragePolicy
 from greia_platform.trust import ActivitySource, PackageTrust
-from build_profile import BuildProfile
+from build_profile import BuildProfile, BuildProfileError
 
 
 def main() -> int:
@@ -70,8 +70,24 @@ def main() -> int:
     required_runtime_families = {activity.runtime_type for activity in activities}
     for path in sorted((root / "build" / "profiles").glob("*.toml")):
         image_profile = BuildProfile.load(path)
-        image_profile.check_phase0_builder_support("target")
-        image_profile.check_phase0_builder_support("installer")
+        if image_profile.base.architecture == "arm64":
+            # The schema accepts ARM64, but the Phase 0 builder deliberately
+            # has no board boot adapter yet. Keep the declaration valid and
+            # require the refusal instead of pretending ARM images build.
+            for scope in ("target", "installer"):
+                try:
+                    image_profile.check_phase0_builder_support(scope)
+                except BuildProfileError as exc:
+                    if "does not implement architecture 'arm64'" not in str(exc):
+                        raise
+                else:
+                    raise ValueError(
+                        f"ARM64 profile {image_profile.identity.profile_id} was "
+                        "unexpectedly accepted by the Phase 0 builder"
+                    )
+        else:
+            image_profile.check_phase0_builder_support("target")
+            image_profile.check_phase0_builder_support("installer")
         image_profile.resolve_packages(package_root, "target")
         image_profile.resolve_packages(package_root, "installer")
         missing = required_runtime_families - set(image_profile.runtimes.enabled)

@@ -23,8 +23,18 @@ class BuildProfileTests(unittest.TestCase):
         self.assertEqual([], list((PROJECT_ROOT / "build/profiles").glob("*.env")))
         for path in profiles:
             profile = BuildProfile.load(path)
-            profile.check_phase0_builder_support("target")
-            profile.check_phase0_builder_support("installer")
+            if profile.base.architecture == "arm64":
+                # The typed profile schema accepts ARM64, but the Phase 0
+                # builder has no board boot adapter yet. Do not fake support;
+                # keep the declaration valid while the builder refuses it.
+                for scope in ("target", "installer"):
+                    with self.assertRaisesRegex(
+                        BuildProfileError, "does not implement architecture 'arm64'"
+                    ):
+                        profile.check_phase0_builder_support(scope)
+            else:
+                profile.check_phase0_builder_support("target")
+                profile.check_phase0_builder_support("installer")
             target = profile.resolve_packages(package_root, "target")
             installer = profile.resolve_packages(package_root, "installer")
             self.assertEqual(len(target), len(set(target)))
