@@ -3798,3 +3798,11 @@ first-boot health acceptance and default-A journal acceptance passed on the
 exact image. QEMU boot-cover screenshots are preserved under
 `docs/reviews/acer/2026-10-28_BOOT_COVER_QEMU/`. The acceptance-fixture report
 is `release_eligible: false`; the ordinary release roster remains draft.
+
+## 2026-10-29 — Physical Acer installer splash hang: missing live-service groups
+
+The verified LaCie image SHA-256 `b81279afe4c8d72bb458670efda95c6a422deddbceef69051a5e6da309c2bd80` **failed on the physical Acer before showing the graphical installer**. Owner GRUB diagnostics showed repeated `greia-installer.service` `status=216/GROUP` / `Failed to determine supplementary groups`; the unit exhausted its restart budget behind the branded cover. The previous QEMU install exercised the installer transaction socket, **not** systemd launch of the graphical UI service, so it could not certify this handoff.
+
+Source root cause: `SupplementaryGroups=video input tty netdev audio` in the live installer unit, but `compose_create_users_groups` provisioned `netdev` **only for the installed target**, not the live installer. Fix: `compose_create_live_installer_groups` now provisions all groups from the real unit in the live root before enabling it; `passwd` explicitly provides groupadd, the composed-image verifier rejects missing names, and a local mock-chroot test reproduces the omission.
+
+**Evidence boundary:** GitHub source repair only. Corrected-image build, exact squashfs group inspection, normal/default `greia-installer.service` QEMU launch, re-authorized USB flash/readback, and physical Acer graphical installer boot are still **NOT RUN**. Do not treat the previous image as install-ready. See `docs/reviews/2026-10-29_ACER_USB_INSTALLER_216_GROUP.md`.
