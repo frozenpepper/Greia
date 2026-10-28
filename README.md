@@ -19,13 +19,15 @@ Linux is the substrate, not the product. A child never sees a terminal,
 desktop, login prompt, file manager, package manager or browser chrome.
 **Greia Shell is the child's operating system.**
 
-> **Status: pre-release (`0.13.0-phase0-dev`).** There is no supported
-> family download yet. Installed i386 QEMU testing now confirms A/B system
-> updates, automatic rollback and application-package updates, but the first
-> image remains an **experimental fixture**, not a public release. Physical
-> hardware acceptance, the boot-cover release gate, the full source test gate
-> and the public media/licensing audit remain open. See the
-> [first public release execution sheet](docs/release/FIRST_PUBLIC_RELEASE_EXECUTION.md)
+> **Status: pre-release (`0.13.1-preview.1`).** There is no supported family
+> download yet. Installed i386 QEMU testing confirms A/B system updates,
+> automatic rollback and application-package updates. A technical-preview
+> release candidate is being built and tested from the committed source; it is
+> **not published**. Physical Acer/USB acceptance and the public media rights
+> audit remain open, and the macOS System Voice recordings are an active
+> public-release blocker. See the
+> [first public release execution sheet](docs/release/FIRST_PUBLIC_RELEASE_EXECUTION.md),
+> the [source rights inventory](docs/release/2026-10-28_MACOS_SYSTEM_VOICE_AUDIO_INVENTORY.md)
 > and [complete readiness requirements](docs/release/GREIA_PUBLIC_RELEASE_READINESS.md).
 
 ## What is in the box
@@ -136,6 +138,8 @@ tests/                 the unittest suite
 | Art and visual assets | [skills/greia-visual-authoring/SKILL.md](skills/greia-visual-authoring/SKILL.md) |
 | Recorded speech | [VoiceEngine usage](tools/greia_voice_core/README.md) · [agent skill](skills/greia-voice-production/SKILL.md) |
 | The Simulator | [docs/development/GREIA_ACTIVITY_SIMULATOR.md](docs/development/GREIA_ACTIVITY_SIMULATOR.md) |
+| Privacy | [PRIVACY.md](PRIVACY.md) |
+| Release changes | [CHANGELOG.md](CHANGELOG.md) |
 | Current work and next steps | [HANDOVER.md](HANDOVER.md) |
 | Lessons from earlier work | [docs/archive/README.md](docs/archive/README.md) |
 | Rules for contributors and coding agents | [AGENTS.md](AGENTS.md) |

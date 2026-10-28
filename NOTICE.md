@@ -52,21 +52,24 @@ carry the corresponding notices and source offers.
 These items need an explicit decision before they can be redistributed under
 an open license:
 
-- **Recorded speech made with macOS system voices — likely public-release
-  blocker.** About 1,350 committed recordings (pedagogical and system speech
-  in English, Italian, Spanish and French) were produced with the macOS
-  `say` command. Each recording's `.receipt.json` names the provider and
-  voice. Apple's published [macOS Tahoe 26 software license, §2.F](https://www.apple.com/legal/sla/docs/macOSTahoe.pdf) permits System Voices
+- **Recorded speech made with macOS system voices — public-release
+  blocker.** The current tree contains **627** recordings (pedagogical and
+  system speech in English, Italian, Spanish and French) produced with the
+  macOS `say` command; each `.receipt.json` names the provider and voice.
+  The exact files, voices and image usage are listed in the
+  [2026-10-28 inventory](docs/release/2026-10-28_MACOS_SYSTEM_VOICE_AUDIO_INVENTORY.md)
+  and its CSV. The 32-activity draft release roster alone would still ship
+  257 of them. Apple's published [macOS Tahoe 26 software license, §2.F](https://www.apple.com/legal/sla/docs/macOSTahoe.pdf) permits System Voices
   for personal/non-commercial creation but expressly restricts recording,
   publishing or redistribution in public, nonprofit or commercial contexts.
   Earlier Apple macOS licenses contain substantially similar restrictions.
   **Do not publish this content as open-licensed media without an applicable
   separate authorization or competent license review of the exact generating
-  system and assets.** Inventory the impacted files and their use in the
-  release image; seek permission or replace them with legally redistributable
-  alternatives. Owner approval of the audio's quality is distinct from
-  distribution rights. Removing files from HEAD does not remove Git-history
-  copies from a repository whose full history is made public.
+  system and assets.** Seek permission or replace them with legally
+  redistributable alternatives and fresh listening approval. Owner approval
+  of the audio's quality is distinct from distribution rights. Removing
+  files from HEAD does not remove Git-history copies from a repository whose
+  full history is made public.
 - **Character voice references.** The cloning references under
   `assets/audio/characters/canonical/v0.1/` and the source masters under
   `assets/source/audio/character-voice-masters/v0.1/` are synthetic
@@ -78,6 +81,12 @@ an open license:
   retain their exact v0.2 bytes. Selection and job provenance are in
   `assets/source/audio/character-voice-masters/v0.3/provenance.json`. Owner voice
   acceptance does not by itself settle the separate public-redistribution audit.
+  **Generation-stack rights:** OpenBMB VoxCPM2 code and weights are released
+  under Apache-2.0; Resemble AI Chatterbox is released under MIT. Neither
+  imposes Apple's System Voices restriction. The project-owned v0.3 design
+  masters are recorded as owner-selected synthetic output; the v0.1 masters
+  remain a project-owner-supplied asset whose CC BY 4.0 publication still
+  needs the owner's explicit asset-licence confirmation.
 - **Generated artwork.** Vector art in `assets/` and `activities/` was authored
   for the project, much of it with AI assistance, and is intended for CC BY 4.0.
   Provenance is recorded per pack in the asset READMEs and catalogues.

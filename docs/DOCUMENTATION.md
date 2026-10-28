@@ -293,7 +293,7 @@ For language contributors, [`docs/development/ADD_A_GREIA_LANGUAGE.md`](developm
 
 For contributors, [`docs/development/CREATE_AN_ACTIVITY.md`](development/CREATE_AN_ACTIVITY.md) introduces the canonical Activity skill, and [`docs/development/BUILD_A_GREIA_IMAGE.md`](development/BUILD_A_GREIA_IMAGE.md) explicitly links to [`docs/agents/GREIA_IMAGE_BUILD_AGENT.md`](agents/GREIA_IMAGE_BUILD_AGENT.md). These compact front doors never supersede implementation, release-gate or agent-operation authorities.
 
-Then route by task using `skills/*`. Licensing, security reporting and conduct start at the root `LICENSE`, `NOTICE.md`, `TRADEMARK.md`, `SECURITY.md` and `CODE_OF_CONDUCT.md`. ADR 0024 owns the architectural licensing/trademark boundary; `docs/governance/LICENSING_AND_TRADEMARK.md` owns practical mark-use permissions.
+Then route by task using `skills/*`. Licensing, privacy, changes, security reporting and conduct start at the root `LICENSE`, `NOTICE.md`, `PRIVACY.md`, `CHANGELOG.md`, `TRADEMARK.md`, `SECURITY.md` and `CODE_OF_CONDUCT.md`. ADR 0024 owns the architectural licensing/trademark boundary; `docs/governance/LICENSING_AND_TRADEMARK.md` owns practical mark-use permissions.
 
 Do not put current test counts, candidate SHAs or bulky evidence in README/SETUP. Those facts age quickly and belong in `HANDOVER.md`, a dated review or an immutable release record.
 

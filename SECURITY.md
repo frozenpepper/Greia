@@ -43,9 +43,15 @@ though details that make them worse are still welcome:
 - **Developer images** deliberately enable SSH with a shared development
   login so the team can test devices remotely. Base and release images keep
   that account locked and SSH off.
-- **Parent pairing and transport** on the local network are provisional.
-  Short-lived pairing challenges, on-device approval and encrypted transport
-  are required before an ordinary-family release (see
+- **The initial Parent password is a known development default (`greia`).**
+  The browser login no longer advertises it, but a fresh technical-preview
+  install will accept it until the parent changes it under This Greia. Change
+  it before connecting the device to a shared or untrusted network. An
+  ordinary-family release still needs a first-boot change/setup gate.
+- **Parent pairing and transport** use a device-owned self-signed HTTPS
+  certificate on the local network; browsers may warn on first connection.
+  Browser/device click-through acceptance and ordinary-family recovery wording
+  are still outstanding (see
   `docs/release/GREIA_PUBLIC_RELEASE_READINESS.md`).
 - **The production display/session architecture** still runs on a
   provisional Xorg compatibility backend.
