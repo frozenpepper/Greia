@@ -19,13 +19,13 @@ ADR 0012 distinguishes these concepts deliberately:
 - `[display]`: selected display adapter plus profile-specific video packages;
 - `[runtimes]`: platform-owned Activity runtime families included in the target image;
 - `[packages]`: general target/installer package sets and narrowly justified extra packages;
-- `[resources]`: profile-specific preferred/hard/architecture-review installed-core limits (single-root profiles: hard gate 1,500 MiB per the owner decision of 2026-10-21; the A/B profile stays at 1,000 MiB because its slot is 1 GiB).
+- `[resources]`: profile-specific preferred/hard/architecture-review installed-core limits (actual budgets are profile-specific: the current Acer A/B profile declares a 1,500 MiB installed-root build gate and two 1,664 MiB system slots; do not infer installed partition sizes from the intermediate image size).
 
 Adapter and runtime package sets are composed by `tools/build_profile.py`; profiles do not duplicate those implementation mappings.
 
 ## Current Phase 0 implementation boundary
 
-The profile schema recognizes `arm64` as an architecture, but the current image builders intentionally implement only the BIOS x86 path (`i386`/`amd64`, GRUB PC, one ext4 root, Xorg). An ARM profile must not be faked by pushing ARM values through x86 builder logic. A board-specific boot/image adapter is required first.
+The current proven installed release/update path is legacy-BIOS i386 A/B on **disposable QEMU**, alongside existing x86 single-root development builders. Recognizing `arm64` in the profile schema does not create a buildable/bootable Pi image: Pi requires its own verified board-specific builder, boot and install route. Do not translate an x86 artifact into an ARM release by changing manifest values.
 
 The experimental source-only `raspberry-pi-400-arm64` and `raspberry-pi-500-arm64` profiles declare board-specific Pi native A/B layout, installer and update adapters. Their package sets can be validated, but `check-phase0-builder` still correctly rejects ARM64. No bootable Pi media exists and user installation is not ready. See `docs/reviews/2026-10-19_RASPBERRY_PI_INSTALLER_SOURCE_REVIEW.md`.\n\nLikewise, the architecture recognizes a future `web` Activity runtime family, but no Web engine/package set is implemented yet. Declaring `web` therefore fails closed during package resolution until a measured platform-owned Web adapter exists.
 
