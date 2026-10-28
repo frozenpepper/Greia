@@ -52,12 +52,21 @@ carry the corresponding notices and source offers.
 These items need an explicit decision before they can be redistributed under
 an open license:
 
-- **Recorded speech made with macOS system voices.** About 1,350 committed
-  recordings (pedagogical and system speech in English, Italian, Spanish and
-  French) were produced with the macOS `say` command. Each recording's
-  `.receipt.json` names the provider and voice. The terms that govern
-  redistributing system-voice output must be checked, or these recordings
-  replaced with speech from a provider whose output can be shared openly.
+- **Recorded speech made with macOS system voices — likely public-release
+  blocker.** About 1,350 committed recordings (pedagogical and system speech
+  in English, Italian, Spanish and French) were produced with the macOS
+  `say` command. Each recording's `.receipt.json` names the provider and
+  voice. Apple's published [macOS Tahoe 26 software license, §2.F](https://www.apple.com/legal/sla/docs/macOSTahoe.pdf) permits System Voices
+  for personal/non-commercial creation but expressly restricts recording,
+  publishing or redistribution in public, nonprofit or commercial contexts.
+  Earlier Apple macOS licenses contain substantially similar restrictions.
+  **Do not publish this content as open-licensed media without an applicable
+  separate authorization or competent license review of the exact generating
+  system and assets.** Inventory the impacted files and their use in the
+  release image; seek permission or replace them with legally redistributable
+  alternatives. Owner approval of the audio's quality is distinct from
+  distribution rights. Removing files from HEAD does not remove Git-history
+  copies from a repository whose full history is made public.
 - **Character voice references.** The cloning references under
   `assets/audio/characters/canonical/v0.1/` and the source masters under
   `assets/source/audio/character-voice-masters/v0.1/` are synthetic
