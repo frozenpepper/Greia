@@ -100,8 +100,9 @@ No history rewrite or mass deletion was performed.
 - Source license/notice/README/PRIVACY/CHANGELOG/SECURITY/CONTRIBUTING/CODE_OF_CONDUCT
   entry points are present.
 - Runtime pin in the OS tree: `51d6b589d6a1703fd3681f46ab373a19b201ac8f`;
-  vendor and image overlay match the frozen manifest. The later Parents
-  documentation commit does not change runtime bytes.
+  vendor and image overlay match the frozen manifest. The Parents repository
+  HEAD is `9f306a2c1a3e9c8d65d12df0d85f839c2ef08deb`, documentation-only after
+  the runtime pin; it does not change the pinned runtime bytes.
 - Installed disposable QEMU guest browser flow was exercised with a real
   headless browser: Parent password login; Home, Children, Activities and
   This Greia views; four selectable languages (EN/IT/ES/FR) with live language
