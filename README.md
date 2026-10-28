@@ -19,10 +19,13 @@ desktop, login prompt, file manager, package manager or browser chrome.
 **Greia Shell is the child's operating system.**
 
 > **Status: pre-release (`0.13.0-phase0-dev`).** There is no supported
-> download for families yet. The source is being prepared for public
-> development; hardware certification, production Parent pairing, safe
-> updates and the licensing audit are still open. See
-> [docs/release/GREIA_PUBLIC_RELEASE_READINESS.md](docs/release/GREIA_PUBLIC_RELEASE_READINESS.md).
+> family download yet. Installed i386 QEMU testing now confirms A/B system
+> updates, automatic rollback and application-package updates, but the first
+> image remains an **experimental fixture**, not a public release. Physical
+> hardware acceptance, the boot-cover release gate, the full source test gate
+> and the public media/licensing audit remain open. See the
+> [first public release execution sheet](docs/release/FIRST_PUBLIC_RELEASE_EXECUTION.md)
+> and [complete readiness requirements](docs/release/GREIA_PUBLIC_RELEASE_READINESS.md).
 
 ## What is in the box
 
