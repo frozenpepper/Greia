@@ -3,7 +3,8 @@
 **Purpose:** the short current state for contributors and agents: active workstreams, recent results, blockers and next steps. It is not an archive.
 **Public-source readiness:** IN PROGRESS. Root entry points exist (`LICENSE`, `NOTICE.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`); the licensing/provenance audit is open (see `NOTICE.md`).
 **Ordinary-family release:** NOT READY (`docs/release/GREIA_PUBLIC_RELEASE_READINESS.md`).
-**UPDATE ACCEPTANCE RESULT (2026-10-28, source `810caa91f`):**
+**UPDATE ACCEPTANCE RESULT (2026-10-28, tested source `810caa91f`; rebased
+onto current main with only later licensing/trademark documentation changes):**
 Both installed Linux/QEMU lanes **PASS**. A fresh A/B image installs, boots A,
 stages/arms/boots healthy B, rolls back a health-failing candidate to A, and
 recovers from a power cut during the inactive-slot write. Python, built-in

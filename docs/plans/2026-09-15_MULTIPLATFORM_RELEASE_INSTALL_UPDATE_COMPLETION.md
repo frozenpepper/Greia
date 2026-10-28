@@ -3703,7 +3703,9 @@ the bridge changes the available command set. Session 04 remains OPEN.
 
 ## 2026-10-28 — Installed A/B and application update acceptance PASS
 
-Source: `810caa91f363a5eb39676f68862a8bef276a6998`. Result report:
+Tested source: `810caa91f363a5eb39676f68862a8bef276a6998`; rebased onto
+current main, whose only later changes are licensing/trademark documentation.
+Result report:
 [`2026-10-27_UPDATE_RELEASE_ACCEPTANCE_RESULT.md`](../reviews/2026-10-27_UPDATE_RELEASE_ACCEPTANCE_RESULT.md).
 Evidence root:
 `/var/tmp/greia-update-acceptance-810caa91f363a5eb39676f68862a8bef276a6998-20261027T204906Z/`.

@@ -1,8 +1,13 @@
 # Update release acceptance result — A/B and application packages
 
 Date: 2026-10-27/28 · Status: **INSTALLED LINUX/QEMU ACCEPTANCE PASS** for both
-current update mechanisms · Source: `810caa91f363a5eb39676f68862a8bef276a6998`
-· Work order: [`GREIA_UPDATE_RELEASE_ACCEPTANCE.md`](../testing/GREIA_UPDATE_RELEASE_ACCEPTANCE.md)
+current update mechanisms · Tested source:
+`810caa91f363a5eb39676f68862a8bef276a6998` · Work order:
+[`GREIA_UPDATE_RELEASE_ACCEPTANCE.md`](../testing/GREIA_UPDATE_RELEASE_ACCEPTANCE.md)
+
+The work was rebased onto concurrent `main`; the later commits there change only
+licensing/trademark documentation, so the tested production source tree is
+unchanged.
 
 Host: Ubuntu 24.04 x86_64 (kernel 7.0.0-38), Python 3.12.3, QEMU 8.2.2, KVM.
 Guest: disposable i386 Acer A/B fixture, 1024 MiB RAM, one vCPU.
