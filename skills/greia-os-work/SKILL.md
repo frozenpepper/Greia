@@ -76,7 +76,20 @@ Driver firmware for the installed target is found with `modinfo` (directly and t
 
 For Pi A/B release work, read `docs/reviews/2026-10-19_RASPBERRY_PI_RESEARCH_LED_VERIFICATION.md` before changing the firmware path. The `greia_platform.pi_boot_observation` module is read-only and **not** a boot-health verifier or production boot transaction: big-endian chosen-firmware values and a root= hint cannot establish the actual mounted root or boot-device ancestry. Pi kernel, DTB, EEPROM partition walk and FAT A/B success all need real-board proof. Preserve the no-erase Pi installer gate.
 
-## Pi 400/500 source-only adapter (owner-authorized, 2026-10-19)\n\nPi support is **not implemented as a bootable installer**. Experimental ARM64 profiles and native Pi A/B partition and boot-asset source now exist. The full installer deliberately refuses Pi before erasure, and the Phase 0 image composer refuses ARM64. For hard findings, precise tests and remaining required boot/update/hardware work, consult `docs/reviews/2026-10-19_RASPBERRY_PI_INSTALLER_SOURCE_REVIEW.md` and the authoritative 2026-09-15 lifecycle plan. Validate the **committed file**, not merely staged Git blobs or a review claim. No hosted Actions runs without owner opt-in.\n\n## Current blocking route: post-R1 product-composition closure + multiplatform lifecycle plan
+## Pi 400/500 source-only adapter (owner-authorized, 2026-10-19)\n\nPi support is **not implemented as a bootable installer**. Experimental ARM64 profiles and native Pi A/B partition and boot-asset source now exist. The full installer deliberately refuses Pi before erasure, and the Phase 0 image composer refuses ARM64. For hard findings, precise tests and remaining required boot/update/hardware work, consult `docs/reviews/2026-10-19_RASPBERRY_PI_INSTALLER_SOURCE_REVIEW.md` and the authoritative 2026-09-15 lifecycle plan. Validate the **committed file**, not merely staged Git blobs or a review claim. No hosted Actions runs without owner opt-in.\n\n## Physical installer boot: live-root service identities (2026-10-29)
+
+When reviewing the legacy-x86 USB installer, check the actual *live installer*
+`/etc/group` against `greia-installer.service`
+`SupplementaryGroups=` before claiming boot acceptance. The first physical
+Acer 2026-10-28 candidate failed at `216/GROUP`: target-role `netdev`
+provisioning did not apply to the live root, so the GUI never started.
+The shared composer now creates the live groups and the composed-root verifier
+rejects any missing identity. Route acceptance through
+`docs/reviews/2026-10-29_ACER_USB_INSTALLER_216_GROUP.md`. QEMU transaction-
+socket acceptance alone does **not** prove the systemd UI launches. Retest the
+actual default service in QEMU and on hardware after a corrected image rebuild.
+
+## Current blocking route: post-R1 product-composition closure + multiplatform lifecycle plan
 
 Install/update/release/multiplatform lifecycle work routes to
 `docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md`
