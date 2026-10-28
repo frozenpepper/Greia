@@ -46,10 +46,24 @@ class BuildProfileTests(unittest.TestCase):
             self.assertIn(profile.base.kernel_package, target)
             self.assertIn(profile.base.kernel_package, installer)
 
-    def test_provisional_boot_cover_is_not_release_eligible(self) -> None:
+    def test_release_boot_cover_is_explicit_and_unknown_backends_are_refused(self) -> None:
         profile = BuildProfile.load(PROJECT_ROOT / "build/profiles/acer-aspire-one-i386.toml")
-        with self.assertRaisesRegex(BuildProfileError, "not registered as release-safe"):
-            profile.check_release_eligibility()
+        profile.check_release_eligibility()
+        source = (PROJECT_ROOT / "build/profiles/acer-aspire-one-i386.toml").read_text(
+            encoding="utf-8"
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "unsafe-cover.toml"
+            path.write_text(
+                source.replace(
+                    'cover_backend = "greia-early-framebuffer-v1"',
+                    'cover_backend = "stock-plymouth-provisional"',
+                ),
+                encoding="utf-8",
+            )
+            unsafe = BuildProfile.load(path)
+            with self.assertRaisesRegex(BuildProfileError, "not registered as release-safe"):
+                unsafe.check_release_eligibility()
 
     def test_runtime_family_is_composed_separately_from_platform_shell(self) -> None:
         profile = BuildProfile.load(PROJECT_ROOT / "build/profiles/acer-aspire-one-i386.toml")

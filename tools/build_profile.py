@@ -70,9 +70,13 @@ _BOOT_COVER_PACKAGE_SETS: Mapping[str, str] = {
     # no external runtime packages for the cover itself.
     "greia-early-framebuffer-v1": "boot-cover-greia-early-framebuffer",
 }
-# Empty by design in Phase 0. A future backend must be deliberately registered
-# here only after its noninteractive/no-text failure behavior is accepted.
-_RELEASE_SAFE_BOOT_COVERS: frozenset[str] = frozenset()
+# A backend is registered here only after its noninteractive/no-text behavior
+# has an executed acceptance record. ``greia-early-framebuffer-v1`` passed the
+# 2026-10-28 QEMU visual acceptance for the technical-preview composition
+# (branded GRUB/cover on the graphical installer and installed A/B target, no
+# Linux console text). Physical Acer visual acceptance remains an
+# ordinary-family gate and must not be inferred from QEMU evidence.
+_RELEASE_SAFE_BOOT_COVERS: frozenset[str] = frozenset({"greia-early-framebuffer-v1"})
 # Boot console policy (greia_platform.boot_contract.BootConsolePolicy). It is
 # independent of the developer-remote capability: "diagnostic" keeps tty1
 # status output for hardware recovery and needs a developer profile; "quiet"

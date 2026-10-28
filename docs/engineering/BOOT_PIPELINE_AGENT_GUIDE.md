@@ -100,6 +100,12 @@ The normal Greia menu entry remains automatic and `--unrestricted`. GRUB edit/co
 4. fails soft if the framebuffer/pixel layout is unsupported;
 5. emits no console text of its own.
 
+**Release acceptance (2026-10-28):** the early framebuffer backend is
+registered release-safe for the technical-preview composition after the
+recorded QEMU visual acceptance in
+`docs/release/2026-10-28_BOOT_COVER_ACCEPTANCE.md`. Physical Acer visual
+acceptance and any ordinary-family release decision remain separate.
+
 The renderer currently still supports explicit milestone progress through `--progress`. That behavior is also reflected by `docs/design/GREIA_BOOT_PROGRESS.md` and `tests/test_boot_progress_contract.py`.
 
 **Do not claim the progress bar has been removed while those sources still draw and require it.** If the product decision is to remove progress presentation later, source, stage scripts, launcher handoff, tests and docs must change in one reviewed tranche and receive physical visual acceptance.

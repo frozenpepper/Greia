@@ -80,4 +80,4 @@ python3 tools/build_profile.py manifest acer-aspire-one-i386 --scope target
 python3 tools/build_profile.py check-phase0-builder acer-aspire-one-i386 --scope target
 ```
 
-`PIP_RELEASE_BUILD=1` additionally requires `check-release` to pass. No boot-cover backend is release-safe at present; the Greia early-framebuffer cover (`greia-early-framebuffer-v1`) is development-only/provisional until its physical acceptance gate passes.
+`PIP_RELEASE_BUILD=1` additionally requires `check-release` to pass. The Greia early-framebuffer cover (`greia-early-framebuffer-v1`) is registered release-safe for the technical-preview composition after the 2026-10-28 QEMU visual acceptance. Physical Acer visual acceptance remains an ordinary-family release gate.

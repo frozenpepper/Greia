@@ -115,7 +115,7 @@ new artifacts back to that owner without granting the child write access.
 For disposable Acer A/B acceptance only, use the explicit
 `tools/greia_release.py build-acceptance-fixture` command in the work orders.
 Its output is experimental and rejected by the public update-index builder.
-The ordinary release build still requires an accepted release-safe boot cover.
+The ordinary release build still requires an accepted release-safe boot cover. `greia-early-framebuffer-v1` is registered after the 2026-10-28 QEMU visual acceptance; physical Acer visual acceptance remains outstanding.
 Do not treat fixture build/boot success as release eligibility.
 
 The old signed `.greiaupdate` v2 flow and release signing keys are

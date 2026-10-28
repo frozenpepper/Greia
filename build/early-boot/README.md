@@ -4,6 +4,15 @@ This directory contains the Greia-owned renderer intended to replace Plymouth in
 
 The source is committed here before profile authority is switched so a Linux/local-hardware agent can integrate and prove it without leaving `main` in a knowingly half-built state.
 
+**Acceptance status (2026-10-28):** `greia-early-framebuffer-v1` passed the
+QEMU visual acceptance recorded in
+`docs/release/2026-10-28_BOOT_COVER_ACCEPTANCE.md`: the installer and the
+installed A/B target show the branded white frame/launcher handoff with no
+Linux console text. The registered release-safe status applies to the
+technical-preview composition; physical Acer visual acceptance remains an
+ordinary-family gate. Re-run the acceptance after changing the renderer,
+initramfs hooks, GRUB theme or boot arguments.
+
 ## Runtime contract
 
 `greia-fb-splash` must remain deliberately boring:

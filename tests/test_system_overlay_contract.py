@@ -122,13 +122,16 @@ class SystemOverlayContractTests(unittest.TestCase):
         self.assertNotIn("ext2|ext3|ext4|iso9660", mount_helper)
         self.assertIn("nosuid,nodev,noexec", mount_helper)
 
-    def test_release_build_is_blocked_until_boot_cover_is_physically_accepted(self) -> None:
+    def test_release_build_uses_an_explicit_accepted_boot_cover(self) -> None:
         for profile in (PROJECT_ROOT / "build/profiles").glob("*.toml"):
             text = profile.read_text()
             self.assertIn('cover_backend = "greia-early-framebuffer-v1"', text)
         profile_tool = (PROJECT_ROOT / "tools/build_profile.py").read_text()
         self.assertIn("_RELEASE_SAFE_BOOT_COVERS", profile_tool)
-        self.assertIn("frozenset()", profile_tool)
+        self.assertIn(
+            'frozenset({"greia-early-framebuffer-v1"})', profile_tool
+        )
+        self.assertIn("not registered as release-safe", profile_tool)
         # T02: live-installer release gating lives in the shared engine; both
         # thin consumers delegate (compose_resolve_profile) rather than
         # reimplement.

@@ -27,20 +27,31 @@ The reference candidate is the `acer-aspire-one-i386-ab` A/B profile, without
   Activity / combined application updates, Parent HTTPS API upload, and
   persistence/language preservation **passed**. The later documentation-only
   commits do not independently certify a newer image.
-- The installer candidate at
-  `/home/orb/Greia-Images/2026-10-28-first-public-candidate/` passed
-  blank-disk QEMU install and first healthy A boot. It was made through an
-  **experimental acceptance-fixture** route. Its report says
-  `release_eligible: false`. **It is not a distributable release.**
-- The ordinary release builder still refuses the
-  `greia-early-framebuffer-v1` boot cover: it has no accepted release-safe
-  noninteractive/no-text behavior. Resolve that by a focused real visual
-  acceptance and explicit, justified release eligibility decision, not by
-  disguising the fixture as production or globally disabling the gate.
-- `make verify` was **not green**: 6,009 tests, 7 failures, 3 errors,
-  3 skips. The 7 failures are Foresta (3), Parent Wi-Fi (2), MBR wording
-  (1), and `morbidi_mostriciattoli` first-frame timing (1); the errors
-  are ARM64 profile (1) and optional voice imports (2).
+- The current technical-preview candidate is the `final-installer2` image
+  built from runtime source `8bac176bd3d3b562fcf6785cdf663aecf0dcceec`
+  and installer composition `fc2af2103`. Its bundle SHA-256 is
+  `2572bf0829152c24aaf0e82f897b9ba651f871f30c4c9ad5d4f9349729dab3d0`;
+  the installer SHA-256 is
+  `b81279afe4c8d72bb458670efda95c6a422deddbceef69051a5e6da309c2bd80`.
+  It was made through the explicit experimental acceptance-fixture route,
+  so its report is `release_eligible: false`. **It is a technical preview,
+  not a distributable ordinary-family release.**
+- `greia-early-framebuffer-v1` passed the 2026-10-28 QEMU visual acceptance
+  (branded installer and installed A/B target, no Linux console text after
+  the Greia-owned graphical handoff) and is registered release-safe for the
+  technical-preview composition. Physical Acer visual acceptance remains an
+  ordinary-family gate. See
+  [the acceptance record](2026-10-28_BOOT_COVER_ACCEPTANCE.md).
+- `make verify` is **GREEN**: 6,013 tests, OK, 5 skipped at source
+  `8bac176bd3d3b562fcf6785cdf663aecf0dcceec`. The maintained documentation
+  audit reports 437 Markdown files and zero unresolved repository links.
+- The release Activity roster remains intentionally `draft`; the ordinary
+  `greia_release.py build` therefore still refuses. This is a product/content
+  acceptance decision, not a test waiver.
+- The macOS System Voice media inventory is precise: **627** committed
+  recordings, 257 of which remain in the 32-activity draft roster. Public
+  source and binary distribution remain blocked until replacement audio is
+  generated, listened to and accepted, or Apple permission is obtained.
 - The attached LaCie USB still has the **2026-10-22 legacy/single-root
   development image**. Do not assume it represents this candidate.
 
