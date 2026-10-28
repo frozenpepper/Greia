@@ -47,6 +47,12 @@ export function installDeviceViews(proto) {
   proto._wifiCard = function(snapshot) {
     const card = el("section", "card span-7");
     card.append(this._cardHeader("Wi-Fi", tr("device.wifi.connect_help")));
+    const connected = String(snapshot.wifi?.connected_ssid || "").trim();
+    card.append(this._statusRow(
+      "wifi",
+      connected ? tr("device.wifi.connected_state", { name: connected }) : tr("device.wifi.not_connected_state"),
+      "",
+    ));
     if (snapshot.featureErrors?.wifi) {
       card.append(
         this._empty(

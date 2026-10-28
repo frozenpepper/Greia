@@ -369,6 +369,30 @@ class ParentStatusApplication:
 
 class ParentRequestHandler(BaseHTTPRequestHandler):
     server_version = "PipParent/0.7"
+    # ``handle_expect_100`` is only invoked for an HTTP/1.1 handler. The
+    # response below still forces ``Connection: close`` so the low-resource
+    # one-request-per-connection policy does not change.
+    protocol_version = "HTTP/1.1"
+
+    def send_response(self, code: int, message: str | None = None) -> None:
+        self.close_connection = True
+        super().send_response(code, message)
+        self.send_header("Connection", "close")
+
+    def handle_expect_100(self) -> bool:  # noqa: N802
+        """Accept large browser uploads without waiting for the 120 s timeout.
+
+        Browsers send ``Expect: 100-continue`` for a package body and wait for
+        an interim response before transmitting it. The default handler emits
+        that interim line using this server's HTTP/1.0 protocol version, which
+        the browser does not accept as a valid continue; the request then
+        stalls until the socket timeout. Keep final responses on the existing
+        one-request-per-connection HTTP/1.0 policy, but acknowledge the
+        continue explicitly as HTTP/1.1.
+        """
+        self.wfile.write(b"HTTP/1.1 100 Continue\r\n\r\n")
+        self.wfile.flush()
+        return True
 
     @property
     def app(self) -> ParentStatusApplication:

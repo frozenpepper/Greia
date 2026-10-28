@@ -21,6 +21,7 @@ class GreiaParentApp {
     this.discoveryMode = false;
     this.activeDevice = null;
     this.route = currentRoute();
+    this._wifiRefreshRoute = null;
     this.view = document.getElementById("view");
     this.flash = document.getElementById("flash");
     this.connectionLabel = document.getElementById("connection-label");
@@ -171,6 +172,12 @@ class GreiaParentApp {
       this.view.replaceChildren(this._errorView(snapshot.error));
       return;
     }
+    if (this.route === "device" && this._wifiRefreshRoute !== "device") {
+      this._wifiRefreshRoute = "device";
+      void this._refreshWifiForDevice();
+    } else if (this.route !== "device") {
+      this._wifiRefreshRoute = null;
+    }
     const renderView = {
       home: () => this._home(snapshot),
       children: () => this._children(snapshot),
@@ -178,6 +185,16 @@ class GreiaParentApp {
       device: () => this._device(snapshot),
     }[this.route] || (() => this._home(snapshot));
     this.view.replaceChildren(renderView());
+  }
+
+  async _refreshWifiForDevice() {
+    if (this.route !== "device") return;
+    if (!this.state?.capability("network.manage")) return;
+    try {
+      await this.state.refreshWifi();
+    } catch {
+      // The state snapshot carries the feature error; keep the device view.
+    }
   }
 
   async _switchGreia() {

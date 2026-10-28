@@ -29,8 +29,11 @@ class ParentClientImageIntegrationTests(unittest.TestCase):
     def test_parent_app_renders_the_connected_wifi_state(self) -> None:
         js = (IMAGE_OVERLAY / "src" / "views_device.js").read_text(encoding="utf-8")
         self.assertIn("connected_ssid", js)
-        self.assertIn("Connected to", js)
-        self.assertIn("Not connected to Wi-Fi", js)
+        self.assertIn('tr("device.wifi.connected_state", { name: connected })', js)
+        self.assertIn('tr("device.wifi.not_connected_state")', js)
+        strings = (IMAGE_OVERLAY / "src" / "localization.js").read_text(encoding="utf-8")
+        self.assertIn('"en": "Connected to {name}"', strings)
+        self.assertIn('"en": "Not connected to Wi-Fi"', strings)
 
     def test_parent_app_refreshes_wifi_when_device_view_opens(self) -> None:
         js = (IMAGE_OVERLAY / "src" / "app.js").read_text(encoding="utf-8")

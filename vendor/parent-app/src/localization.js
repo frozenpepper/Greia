@@ -577,10 +577,10 @@ export const CHROME_TRANSLATIONS = Object.freeze({
     "fr": "ce Greia"
   },
   "auth.instructions": {
-    "en": "Enter the Greia password for {device}. New Greia systems start with the password “greia”.",
-    "it": "Inserisci la password di Greia per {device}. La password iniziale dei nuovi sistemi è “greia”.",
-    "es": "Introduce la contraseña de Greia para {device}. Los sistemas nuevos comienzan con la contraseña “greia”.",
-    "fr": "Saisissez le mot de passe Greia pour {device}. Le mot de passe initial des nouveaux systèmes est « greia »."
+    "en": "Enter the Greia password for {device}.",
+    "it": "Inserisci la password di Greia per {device}.",
+    "es": "Introduce la contraseña de Greia para {device}.",
+    "fr": "Saisissez le mot de passe Greia pour {device}."
   },
   "auth.device_label": {
     "en": "This device",
@@ -1715,6 +1715,18 @@ export const CHROME_TRANSLATIONS = Object.freeze({
     "it": "Connesso a {name}.",
     "es": "Conectado a {name}.",
     "fr": "Connecté à {name}."
+  },
+  "device.wifi.connected_state": {
+    "en": "Connected to {name}",
+    "it": "Connesso a {name}",
+    "es": "Conectado a {name}",
+    "fr": "Connecté à {name}"
+  },
+  "device.wifi.not_connected_state": {
+    "en": "Not connected to Wi-Fi",
+    "it": "Non connesso al Wi-Fi",
+    "es": "No conectado a Wi-Fi",
+    "fr": "Non connecté au Wi-Fi"
   },
   "device.wifi.failed": {
     "en": "Could not connect Wi-Fi.",
