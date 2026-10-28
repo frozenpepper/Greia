@@ -155,6 +155,9 @@ release-eligible and must not be published as a family product.
 | Installer | `/home/orb/Greia-Images/final-installer2/greia-os-installer-acer-aspire-one-i386-ab.img` |
 | Installer SHA-256 | `b81279afe4c8d72bb458670efda95c6a422deddbceef69051a5e6da309c2bd80` |
 | Installer bytes | 2,270,167,040 |
+| Compressed installer | `/home/orb/Greia-Images/final-installer2/greia-os-installer-acer-aspire-one-i386-ab.img.xz` |
+| Compressed SHA-256 | `76d8d3e7a14e4eada2f1aeb03357c8eb3b9d62e51dc3e88bc7f4360f1c37e7a3` |
+| Compressed verification | `xz -t` PASS |
 | Release bundle | `/home/orb/Greia-Images/final/greia-acceptance-fixture-0.13.1-preview.1/updates/acer-aspire-one-i386-ab.greiaupdate` |
 | Bundle SHA-256 | `2572bf0829152c24aaf0e82f897b9ba651f871f30c4c9ad5d4f9349729dab3d0` |
 | Bundle bytes | 714,551,308 |
@@ -182,7 +185,11 @@ Tested behavior:
   session; those remain technical-preview gaps and do not invalidate the
   installed update evidence at the equivalent source tree.
 - No default developer SSH, remote-control service or test credential is
-  present in the A/B product profile.
+  present in the A/B product profile. The per-image GRUB owner recovery code
+  is stored separately in `/home/orb/Greia-Images/private/` (mode 0600) and is
+  not part of the publishable artifact; do not include it in a release.
+- Artifact directory README and `SHA256SUMS`:
+  `/home/orb/Greia-Images/final-installer2/README.md` and `SHA256SUMS`.
 
 ## 9. Tasks requiring physical Acer access
 
