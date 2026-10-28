@@ -862,6 +862,37 @@ compose_build_early_framebuffer() {
   build_early_framebuffer "$rootfs_arg"
 }
 
+# The live installer runs as Debian's nobody/nogroup but systemd also
+# resolves every SupplementaryGroups= name *before* ExecStartPre. The
+# minimal debootstrap + installer package set does not guarantee netdev (and
+# potentially other device-access groups). If any one is absent, systemd
+# rejects greia-installer.service with status=216/GROUP and the splash is
+# left on screen forever. Target users/groups are created separately by
+# compose_create_users_groups; this is the live-installer-only counterpart.
+# Read the actual unit declaration to avoid a second drifting group list.
+compose_create_live_installer_groups() {
+  local rootfs="$1"
+  local unit="$rootfs/etc/systemd/system/greia-installer.service"
+  local names name
+  [[ -f "$unit" ]] || { echo "Missing live installer service: $unit" >&2; return 1; }
+  [[ -x "$rootfs/usr/sbin/groupadd" ]] || {
+    echo "Missing groupadd in live installer root (passwd package)." >&2
+    return 1
+  }
+  names="$(sed -n 's/^SupplementaryGroups=//p' "$unit")"
+  [[ -n "$names" ]] || {
+    echo "Live installer supplementary group declaration is empty." >&2
+    return 1
+  }
+  for name in $names; do
+    [[ "$name" =~ ^[a-z_][a-z0-9_-]*$ ]] || {
+      echo "Invalid live installer supplementary group: $name" >&2
+      return 1
+    }
+    chroot "$rootfs" /usr/sbin/groupadd --system --force "$name" || return 1
+  done
+}
+
 # System service composition (declarative per-role enable/mask lists).
 compose_configure_systemd() {
   local rootfs="$1"
@@ -914,6 +945,9 @@ compose_configure_systemd() {
       getty@tty4.service getty@tty5.service getty@tty6.service
     systemctl --root="$rootfs" set-default graphical.target
   else
+    # Ensure the live root can resolve the UI's supplementary groups before
+    # enabling the unit; otherwise first boot fails at GROUP (216/GROUP).
+    compose_create_live_installer_groups "$rootfs" || return 1
     systemctl --root="$rootfs" enable greia-installer.service greia-installer-finish.path
     systemctl --root="$rootfs" mask getty@.service autovt@.service console-getty.service debug-shell.service emergency.service rescue.service console-shell.service kbrequest.target getty@tty1.service getty@tty2.service getty@tty3.service getty@tty4.service getty@tty5.service getty@tty6.service
     systemctl --root="$rootfs" set-default graphical.target
