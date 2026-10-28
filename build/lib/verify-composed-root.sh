@@ -93,6 +93,19 @@ greia_verify_composed_root() {
 
   if [[ "$role" == "live-installer" ]]; then
     local unit="$root/etc/systemd/system/greia-installer.service"
+    # systemd resolves User/Group/SupplementaryGroups before ExecStartPre.
+    # A missing netdev (or any other requested group) prevents the *entire*
+    # graphical installer from starting: status=216/GROUP and endless cover.
+    # Verify the real composed image database, not just the service text.
+    grep -q '^nobody:' "$root/etc/passwd" || \
+      _greia_root_fail "$label" "installer service user nobody is missing"
+    local installer_group
+    for installer_group in $(sed -n -e 's/^Group=//p' -e 's/^SupplementaryGroups=//p' "$unit"); do
+      [[ "$installer_group" =~ ^[a-z_][a-z0-9_-]*$ ]] || \
+        _greia_root_fail "$label" "invalid installer group declaration: $installer_group"
+      grep -q "^$installer_group:" "$root/etc/group" || \
+        _greia_root_fail "$label" "installer group $installer_group missing from live /etc/group (216/GROUP)"
+    done
     grep -Fqx 'Environment=SDL_FRAMEBUFFER_ACCELERATION=0' "$unit" || \
       _greia_root_fail "$label" "installer unit lacks SDL_FRAMEBUFFER_ACCELERATION=0"
     grep -Fqx 'Environment=PYTHONPYCACHEPREFIX=/usr/lib/greia/pycache' "$unit" || \
