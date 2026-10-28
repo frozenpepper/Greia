@@ -254,6 +254,10 @@ compose_mount_apt_cache "$LIVE_ROOT"
 LIVE_POOL_CACHE_MOUNT="$(mount_pool_cache "$LIVE_ROOT")"; MOUNTS+=("$LIVE_POOL_CACHE_MOUNT")
 compose_debootstrap "$LIVE_ROOT"
 compose_apply_overlay "$LIVE_ROOT" "live-installer"
+# The A/B install copies the branded GRUB theme/logo from the live root onto
+# the boot-control partition. This thin live-root consumer does not run
+# compose_root, so install the same canonical assets here.
+compose_install_boot_branding "$LIVE_ROOT" "$PROJECT_ROOT" || exit 1
 compose_write_build_info "$LIVE_ROOT" "live-installer"
 compose_write_boot_console_policy "$LIVE_ROOT"
 # The live installer is a second Debian root carrying the target payload
