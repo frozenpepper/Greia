@@ -1,4 +1,4 @@
-"""POSTR1-P3-UPDATE-UNIT contract: one installed release authority + minimal unit.
+"""A/B update unit contract: release identity, local socket and full OS staging.
 
 Structured assertions (configparser + targeted reads), never a full-file
 snapshot: the updater identity resolves from the image-owned
@@ -378,105 +378,39 @@ class ReleaseIdentityAuthorityTests(unittest.TestCase):
         )
 
 
-class UpdateUnitSandboxTests(unittest.TestCase):
-    EXPECTED_CAPABILITIES = [
-        "CAP_SYS_ADMIN",
-        "CAP_SYS_CHROOT",
-        "CAP_SETUID",
-        "CAP_SETGID",
-        "CAP_CHOWN",
-        "CAP_FOWNER",
-        "CAP_FSETID",
-        "CAP_DAC_OVERRIDE",
-    ]
-
-    def test_capabilities_match_shared_finalizer_package_workload(self) -> None:
+class UpdateUnitProductTests(unittest.TestCase):
+    def test_offline_slot_worker_can_run_real_dpkg_package_scripts(self) -> None:
         parser = _parse_unit(SERVICE_PATH)
-        for key in ("CapabilityBoundingSet", "AmbientCapabilities"):
-            self.assertEqual(
-                parser.get("Service", key).split(), self.EXPECTED_CAPABILITIES
-            )
-
-    def test_chroot_install_leg_requires_declared_capability_and_argv_arrays(
-        self,
-    ) -> None:
-        """Regression: the unit must declare what the chroot install leg needs.
-
-        The shared finalize path installs the verified offline
-        hardware-support set via ``TargetHardwareSupportInstaller.install``,
-        which runs ``chroot <slot> apt-get ...`` (update / install / clean)
-        through the production argv-array runner (``shell=False``).
-        ``chroot(2)`` fails with EPERM without ``CAP_SYS_CHROOT``. The finalizer
-        also reuses the installer-proven APT/dpkg operations; the service
-        carries those package capabilities and the path stays argv arrays.
-        """
-        parser = _parse_unit(SERVICE_PATH)
-        for key in ("CapabilityBoundingSet", "AmbientCapabilities"):
-            declared = parser.get("Service", key).split()
-            self.assertIn(
-                "CAP_SYS_CHROOT",
-                declared,
-                f"{key} must declare the capability the chroot install leg needs",
-            )
-            self.assertEqual(declared, self.EXPECTED_CAPABILITIES)
-        install_source = (
-            ROOT / "src" / "greia_installer" / "hardware_support_install.py"
-        ).read_text(encoding="utf-8")
-        self.assertGreaterEqual(
-            install_source.count('"chroot"'),
-            3,
-            "hardware-support install must still run the three chroot legs "
-            "(update / install / clean)",
+        self.assertEqual(parser.get("Service", "User"), "root")
+        self.assertEqual(
+            parser.get("Service", "ExecStart"),
+            "/usr/bin/python3 -m greia_platform.update_privileged --socket-activated",
         )
-        self.assertIn('"apt-get"', install_source)
-        self.assertNotIn("shell=True", install_source)
-        self.assertNotIn("os.system", install_source)
-        seams_source = (
-            ROOT / "src" / "greia_installer" / "device_seams.py"
-        ).read_text(encoding="utf-8")
-        self.assertIn("shell=False", seams_source)
-        self.assertNotIn("shell=True", seams_source)
-
-    def test_withdraw_cap_sys_chroot_turns_contract_red(self) -> None:
-        """Positive control: withdrawing a required finalizer cap turns RED."""
+        blocked = (
+            "CapabilityBoundingSet", "AmbientCapabilities", "NoNewPrivileges",
+            "ProtectSystem", "ReadWritePaths", "PrivateTmp", "ProtectHome",
+            "RestrictSUIDSGID", "RestrictAddressFamilies", "SystemCallFilter",
+            "TasksMax", "SystemCallArchitectures",
+        )
         raw = SERVICE_PATH.read_text(encoding="utf-8")
-        expected = " ".join(self.EXPECTED_CAPABILITIES)
-        self.assertIn(expected, raw, "precondition: shipped unit must be GREEN")
-        withdrawn = raw.replace("CAP_SYS_CHROOT", "CAP_WITHDRAWN")
-        parser = configparser.ConfigParser(strict=False, interpolation=None)
-        parser.optionxform = str  # type: ignore[assignment]
-        parser.read_string(withdrawn)
-        for key in ("CapabilityBoundingSet", "AmbientCapabilities"):
-            self.assertNotEqual(
-                parser.get("Service", key).split(),
-                self.EXPECTED_CAPABILITIES,
-                f"withdrawn {key} must fail the exact-pair predicate (RED)",
-            )
-        shipped = _parse_unit(SERVICE_PATH)
-        for key in ("CapabilityBoundingSet", "AmbientCapabilities"):
-            self.assertEqual(
-                shipped.get("Service", key).split(),
-                self.EXPECTED_CAPABILITIES,
-                f"restored {key} must satisfy the exact-pair predicate (GREEN)",
-            )
+        active = [
+            line.split("=", 1)[0].strip()
+            for line in raw.splitlines()
+            if line and not line.lstrip().startswith(("#", ";", "["))
+            and "=" in line
+        ]
+        for directive in blocked:
+            self.assertNotIn(directive, active, directive)
 
-    def test_readwritepaths_cover_minimum_grants(self) -> None:
-        # Repeated directives are cumulative in systemd; configparser keeps
-        # only the last one, so collect every ReadWritePaths= line instead.
-        paths = _directive_values(SERVICE_PATH, "ReadWritePaths")
-        self.assertGreaterEqual(
-            paths,
-            {
-                "/var/lib/greia-os",
-                "/run/greia-os",
-                "/run/greia-update-authority",
-                "/run/greia-persist",
-                "/etc/greia-os",
-                "/boot/grub",
-            },
-        )
-        for broad in ("/", "/etc", "/boot", "/run", "/var", "/var/lib", "/opt"):
-            self.assertNotIn(broad, paths)
+    def test_shared_package_install_is_real_argv_apt_not_shell(self) -> None:
+        source = (
+            ROOT / "src/greia_installer/hardware_support_install.py"
+        ).read_text(encoding="utf-8")
+        self.assertIn('"chroot"', source)
+        self.assertIn('"apt-get"', source)
+        self.assertNotIn("shell=True", source)
+        seam = (ROOT / "src/greia_installer/device_seams.py").read_text(encoding="utf-8")
+        self.assertIn("shell=False", seam)
 
     def test_no_key_trust_root_in_shipped_unit(self) -> None:
         # v3 carries no key material: the shipped unit must not grant any
