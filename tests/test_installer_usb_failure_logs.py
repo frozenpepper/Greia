@@ -27,7 +27,7 @@ class InstallerUsbLoggingTests(unittest.TestCase):
     def test_failure_report_survives_on_fat_usb_and_includes_apt_stdout(self) -> None:
         captured: list[str] = []
         ops: list[str] = []
-        original_temporary = tempfile.TemporaryDirectory
+        original_mkdtemp = tempfile.mkdtemp
 
         def command(argv, **_kwargs):
             ops.append(argv[0] + ":" + argv[1])
@@ -46,8 +46,8 @@ class InstallerUsbLoggingTests(unittest.TestCase):
             mock.patch.object(diag, "_cmdline_media_id", return_value="test-greia-id"),
             mock.patch.object(
                 diag.tempfile,
-                "TemporaryDirectory",
-                side_effect=lambda **_kw: original_temporary(dir=self.root),
+                "mkdtemp",
+                side_effect=lambda **_kw: original_mkdtemp(dir=self.root),
             ),
             mock.patch.object(diag.subprocess, "run", side_effect=command),
         ):
@@ -71,7 +71,7 @@ class InstallerUsbLoggingTests(unittest.TestCase):
         self.assertIn("umount:", ops[-1])
 
     def test_wrong_usb_marker_never_remounts_rw_or_writes(self) -> None:
-        original_temporary = tempfile.TemporaryDirectory
+        original_mkdtemp = tempfile.mkdtemp
         commands: list[tuple[str, ...]] = []
 
         def command(argv, **_kwargs):
@@ -88,8 +88,8 @@ class InstallerUsbLoggingTests(unittest.TestCase):
             mock.patch.object(diag, "_cmdline_media_id", return_value="test-greia-id"),
             mock.patch.object(
                 diag.tempfile,
-                "TemporaryDirectory",
-                side_effect=lambda **_kw: original_temporary(dir=self.root),
+                "mkdtemp",
+                side_effect=lambda **_kw: original_mkdtemp(dir=self.root),
             ),
             mock.patch.object(diag.subprocess, "run", side_effect=command),
         ):
