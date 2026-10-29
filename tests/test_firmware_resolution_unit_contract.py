@@ -1,8 +1,8 @@
-"""Firmware resolvers must see module metadata.
+"""Offline installers and system-slot updates need readable module metadata.
 
-The offline installation worker deliberately has no systemd capability or
-syscall sandbox: it must run real Debian package maintainer scripts. The
-long-lived update service still keeps module loading disabled.
+Both one-time privileged workers must run actual Debian package maintainer
+scripts; they rely on local semantic sockets rather than a capability whitelist
+that previously broke real installer operations on the Acer.
 """
 
 from __future__ import annotations
@@ -39,22 +39,14 @@ class FirmwareResolvingUnitContractTests(unittest.TestCase):
                 inaccessible = " ".join(v for k, v in _directives(unit) if k == "InaccessiblePaths")
                 self.assertNotIn("modules", inaccessible)
 
-    def test_long_lived_update_service_keeps_module_loading_disabled(self) -> None:
-        unit = FIRMWARE_RESOLVING_UNITS[1]
-        directives = _directives(unit)
-        self.assertIn(("SystemCallFilter", "~@module"), directives)
-        bounding = " ".join(v for k, v in directives if k == "CapabilityBoundingSet")
-        ambient = " ".join(v for k, v in directives if k == "AmbientCapabilities")
-        self.assertTrue(bounding)
-        self.assertNotIn("CAP_SYS_MODULE", bounding)
-        self.assertNotIn("CAP_SYS_MODULE", ambient)
-
-    def test_one_time_offline_installer_has_no_package_blocking_syscall_filter(self) -> None:
-        directives = _directives(FIRMWARE_RESOLVING_UNITS[0])
-        keys = {name for name, _ in directives}
-        self.assertNotIn("SystemCallFilter", keys)
-        self.assertNotIn("CapabilityBoundingSet", keys)
-        self.assertNotIn("ProtectKernelModules", keys)
+    def test_offline_workers_do_not_reintroduce_package_script_sandbox(self) -> None:
+        for unit in FIRMWARE_RESOLVING_UNITS:
+            with self.subTest(unit=unit.name):
+                keys = {name for name, _ in _directives(unit)}
+                self.assertNotIn("SystemCallFilter", keys)
+                self.assertNotIn("CapabilityBoundingSet", keys)
+                self.assertNotIn("ProtectKernelModules", keys)
+                self.assertNotIn("RestrictSUIDSGID", keys)
 
 
 if __name__ == "__main__":
