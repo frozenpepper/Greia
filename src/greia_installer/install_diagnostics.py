@@ -62,60 +62,73 @@ def _cmdline_media_id() -> str | None:
 
 
 def _write_usb_report(report: str) -> bool:
-    """Use the installer USB's *existing* FAT32 EFI partition, not SYSTEM_A.
+    """Write diagnostics to the *existing* installer FAT32 EFI partition.
 
-    Mount read-only first and check the media marker inserted during image
-    assembly; only then remount rw. No partitioning, formatting or modifications
-    to boot files. This runs once on failure, not during the installation.
+    Read-only verify its media ID before remounting writable. Do not format,
+    partition, or touch EFI/BOOT. Never recursively delete a mountpoint:
+    if umount fails, leave the otherwise empty temporary mount directory.
     """
     try:
         expected = LIVE_MEDIA_MARKER.read_text(encoding="ascii").strip()
         boot_id = _cmdline_media_id()
         if not expected or not boot_id or expected != boot_id or not USB_DEVICE.exists():
             return False
-        with tempfile.TemporaryDirectory(prefix="greia-log-usb-", dir="/run") as temporary:
-            root = Path(temporary)
-            mounted = False
+        root = Path(tempfile.mkdtemp(prefix="greia-log-usb-", dir="/run"))
+        mounted = False
+        unmounted = False
+        saved = False
+        try:
+            subprocess.run(
+                ["mount", "-t", "vfat", "-o", "ro,nosuid,nodev,noexec",
+                 str(USB_DEVICE), str(root)],
+                check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
+                timeout=20,
+            )
+            mounted = True
+            marker = root / ".disk/live-uuid"
+            if not marker.is_file() or marker.read_text(encoding="ascii").strip() != expected:
+                return False
+            subprocess.run(
+                ["mount", "-o", "remount,rw", str(root)],
+                check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
+                timeout=20,
+            )
+            target = root / USB_LOG
+            target.parent.mkdir(parents=True, exist_ok=True)
+            temp = target.with_name(".last-install-failure.tmp")
             try:
+                with temp.open("w", encoding="utf-8") as handle:
+                    handle.write(report)
+                    handle.flush()
+                    os.fsync(handle.fileno())
+                os.replace(temp, target)
                 subprocess.run(
-                    ["mount", "-t", "vfat", "-o", "ro,nosuid,nodev,noexec",
-                     str(USB_DEVICE), str(root)],
+                    ["sync", "-f", str(target)],
                     check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
                     timeout=20,
                 )
-                mounted = True
-                marker = root / ".disk/live-uuid"
-                if not marker.is_file() or marker.read_text(encoding="ascii").strip() != expected:
-                    return False
-                subprocess.run(
-                    ["mount", "-o", "remount,rw", str(root)],
-                    check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
-                    timeout=20,
-                )
-                target = root / USB_LOG
-                target.parent.mkdir(parents=True, exist_ok=True)
-                temp = target.with_name(".last-install-failure.tmp")
-                try:
-                    with temp.open("w", encoding="utf-8") as handle:
-                        handle.write(report)
-                        handle.flush()
-                        os.fsync(handle.fileno())
-                    os.replace(temp, target)
-                    subprocess.run(
-                        ["sync", "-f", str(target)],
-                        check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
-                        timeout=20,
-                    )
-                finally:
-                    temp.unlink(missing_ok=True)
-                return True
+                saved = True
             finally:
-                if mounted:
-                    subprocess.run(
+                temp.unlink(missing_ok=True)
+            return saved
+        finally:
+            if mounted:
+                try:
+                    completed = subprocess.run(
                         ["umount", str(root)], check=False,
                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                         timeout=20,
                     )
+                    unmounted = completed.returncode == 0
+                except (OSError, subprocess.SubprocessError):
+                    unmounted = False
+            if not mounted or unmounted:
+                # Empty directory after unmount; rmdir is intentionally
+                # non-recursive so a stuck FAT mount can NEVER be deleted.
+                try:
+                    root.rmdir()
+                except OSError:
+                    pass
     except (OSError, ValueError, UnicodeError, subprocess.SubprocessError):
         return False
 
