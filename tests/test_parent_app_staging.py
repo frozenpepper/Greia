@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import stat
 import tempfile
 import unittest
 from pathlib import Path
@@ -72,6 +74,21 @@ class ParentAppStagingTests(unittest.TestCase):
 
             self.assertEqual((target / "src" / "app.js").read_text(), "export const x = 1;")
             self.assertFalse((target / "README.md").exists())
+
+    def test_stage_is_traversable_under_restrictive_umask(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source, pin_path, manifest_path = self._fixture(root)
+            pin = ParentAppPin.load(pin_path)
+            target = root / "target"
+            previous = os.umask(0o077)
+            try:
+                ParentAppStager(pin, ParentAppManifest.load(manifest_path, pin)).stage(source, target)
+            finally:
+                os.umask(previous)
+            for directory in (target, *(p for p in target.rglob("*") if p.is_dir())):
+                self.assertEqual(stat.S_IMODE(directory.stat().st_mode), 0o755)
+            self.assertEqual(stat.S_IMODE((target / "src/app.js").stat().st_mode), 0o644)
 
     def test_modified_runtime_asset_fails_before_target_creation(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

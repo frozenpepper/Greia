@@ -240,6 +240,13 @@ def _stage_runtime_tree(target: Path, payloads: dict[str, bytes]) -> Path:
             destination.parent.mkdir(parents=True, exist_ok=True)
             destination.write_bytes(data)
             destination.chmod(0o644)
+        # mkdtemp creates 0700 regardless of umask. This tree becomes an
+        # image overlay served by greiapanel, so every directory must be
+        # traversable by that non-root identity even under a restrictive umask.
+        temporary.chmod(0o755)
+        for directory in temporary.rglob("*"):
+            if directory.is_dir():
+                directory.chmod(0o755)
     except Exception:
         shutil.rmtree(temporary, ignore_errors=True)
         raise

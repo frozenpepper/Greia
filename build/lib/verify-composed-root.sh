@@ -19,6 +19,30 @@ _greia_root_fail() {
   exit 1
 }
 
+# The web client is read by the unprivileged Parent service. Hash checks run
+# as root during image work cannot detect an unreadable 0700 directory.
+_greia_verify_parent_client_access() {
+  local root="$1" label="$2"
+  python3 -I - "$root/usr/share/greia-parent-app" <<'PYMODE' || \
+    _greia_root_fail "$label" "Parent web runtime is not readable by the Parent service"
+import os
+import stat
+import sys
+from pathlib import Path
+root = Path(sys.argv[1])
+if root.is_symlink() or not root.is_dir() or not (root / "index.html").is_file():
+    raise SystemExit("Parent web runtime is missing or invalid")
+for base, directories, files in os.walk(root, followlinks=False):
+    for path in [Path(base), *(Path(base) / name for name in directories + files)]:
+        info = path.lstat()
+        if stat.S_ISLNK(info.st_mode):
+            raise SystemExit(f"Parent web runtime contains a symlink: {path}")
+        required = 0o005 if stat.S_ISDIR(info.st_mode) else 0o004
+        if info.st_mode & required != required:
+            raise SystemExit(f"Parent web runtime is not readable: {path}")
+PYMODE
+}
+
 # Expected console policy: the image's own declared manifest; manifests that
 # predate the key mean "developer -> diagnostic, else quiet".
 _greia_expected_console_policy() {
@@ -206,6 +230,8 @@ PY
     [[ -L "$root/etc/systemd/system/timers.target.wants/greia-candidate-recovery.timer" ]] || \
       _greia_root_fail "$label" "A/B candidate health-deadline timer is not enabled"
   fi
+
+  _greia_verify_parent_client_access "$root" "$label"
 
   # Wi-Fi: iwd's bus policy admits root and netdev only.
   grep -Eq '^SupplementaryGroups=(.*[[:space:]])?netdev([[:space:]]|$)' \

@@ -150,6 +150,12 @@ class ParentAppStager:
                 destination.parent.mkdir(parents=True, exist_ok=True)
                 destination.write_bytes((root / asset.path).read_bytes())
                 destination.chmod(0o644)
+            # The Parent service is unprivileged; do not let the invoking
+            # process's umask make the staged tree inaccessible to it.
+            temporary.chmod(0o755)
+            for directory in temporary.rglob("*"):
+                if directory.is_dir():
+                    directory.chmod(0o755)
             temporary.replace(target)
         except Exception:
             shutil.rmtree(temporary, ignore_errors=True)

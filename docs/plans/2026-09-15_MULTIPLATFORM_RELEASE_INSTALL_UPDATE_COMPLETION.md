@@ -3921,3 +3921,16 @@ is disabled, `ssh.socket` masked, Avahi enabled. A/B bundle
 `2572bf08…` unchanged. QEMU live test passed the Wi-Fi-page toggle:
 on -> SSH login/sudo, off -> connection reset, on -> restored. Real Acer
 connection remains PENDING; this is not release media.
+
+
+**2026-10-29 — Physical Acer Parent and installer-setting diagnosis:** The
+live installer was accessed over SSH; installed SYSTEM_A and PERSIST were
+mounted read-only. Parent web root was `root:root 0700`, and its service UID
+failed the pinned integrity check; changing only the mode to `0755` on a
+RAM copy made that check pass. Installed locale/hardware state and saved Wi-Fi
+profile were absent, reproducing the A/B carry-over omissions. Source now
+normalizes Parent static-client modes in pinning/staging and composition, and
+verifies readability in composed roots. 160 focused tests passed. No existing
+installed disk was modified and no new image built. A fresh A/B release bundle
+and installer plus installed acceptance are required; see
+`docs/agents/2026-10-29_ACER_INSTALLER_AND_PARENT_FIX_HANDOFF.md`.

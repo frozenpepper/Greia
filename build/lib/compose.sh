@@ -308,6 +308,17 @@ compose_install_packages() {
     apt-get "${APT_ACQUIRE_OPTIONS[@]}" -o Dpkg::Options::=--force-confold install -y --no-install-recommends "${packages[@]}"
 }
 
+# The installed static Parent client must be readable by greiapanel even when
+# a checkout or pin update created directories with a restrictive umask.
+compose_normalize_parent_client_permissions() {
+  local parent_web="$1/usr/share/greia-parent-app"
+  [[ -d "$parent_web" && ! -L "$parent_web" ]] || {
+    echo "Greia Parent web runtime is missing or is a symlink." >&2; return 1;
+  }
+  find "$parent_web" -type d -exec chmod 0755 {} + || return 1
+  find "$parent_web" -type f -exec chmod 0644 {} + || return 1
+}
+
 # Role-selected overlay. Repository checkout ownership is never
 # target-filesystem authority: static appliance overlay files are installed
 # as root regardless of the UID/GID of the developer or CI checkout.
@@ -318,6 +329,7 @@ compose_apply_overlay() {
   overlay_dir="$(compose_role_overlay_dir "$role" "${COMPOSE_PROJECT_ROOT:-$_COMPOSE_PROJECT_ROOT_DEFAULT}")"
   rsync -a --chown=root:root "$overlay_dir/" "$rootfs/"
   if [[ "$role" == "target" ]]; then
+    compose_normalize_parent_client_permissions "$rootfs" || return 1
     [[ "$(stat -c '%u:%g' "$rootfs")" == "0:0" ]] || {
       echo "Greia overlay changed target root ownership away from root:root." >&2
       return 1

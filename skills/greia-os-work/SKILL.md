@@ -1008,3 +1008,12 @@ installer images (`greia` /
 operations start/stop only live `ssh.service`; this does not enable SSH on the
 installed release. Use the existing Linux USB patch work order for physical
 acceptance; the installer demo and screenshot renderer do not prove networking.
+
+
+## Parent client startup permissions (2026-10-29)
+
+The Acer's installed Parent client web root was 0700, causing the Parent
+service's unprivileged integrity precheck to fail. Pin/stage/compose now
+normalize its directories and files; composed-root verification checks their
+readability. See `docs/agents/2026-10-29_ACER_INSTALLER_AND_PARENT_FIX_HANDOFF.md`
+for physical read-only evidence and the required new A/B bundle and acceptance.

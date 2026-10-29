@@ -942,3 +942,13 @@ advertises `greia-installer.local` through Avahi when networking permits.
 Source/demo evidence does not establish actual SSH or network connectivity.
 Patch the existing USB and run physical acceptance per
 `docs/agents/2026-10-29_INSTALLER_USB_SSH_RECOVERY.md`.
+
+
+### Parent client runtime permissions (2026-10-29)
+
+The real Acer A/B image had `/usr/share/greia-parent-app` mode 0700 and
+`greia-parent.service` could not run its integrity precheck. Pinning/staging and
+image composition now normalize public static-client directory/file modes;
+the composed-root verifier rejects unreadable client trees. See
+`docs/agents/2026-10-29_ACER_INSTALLER_AND_PARENT_FIX_HANDOFF.md` for the
+physical read-only evidence and required new-bundle/installed acceptance.

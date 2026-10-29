@@ -2,6 +2,19 @@
 
 **Purpose:** the short current state for contributors and agents: active workstreams, recent results, blockers and next steps. It is not an archive.
 
+**2026-10-29 Acer installed-system diagnosis (PHYSICAL READ-ONLY):**
+Connected to the live installer over SSH and inspected the installed A/B slot
+and PERSIST read-only. Parent's static web root is `root:root 0700`, so its
+unprivileged startup integrity check fails; a copy changed only to `0755`
+passes as the Parent identity. The installed system has no saved language or
+hardware settings and no Wi-Fi network profile; the real stores return English
+and US keyboard. Source fixes for Parent pinning/composition and a composed-root
+permission gate are prepared; 160 focused tests passed. No installed disk was
+modified. The next agent must build a new A/B bundle as well as a new installer
+and run installed acceptance; exact evidence and steps are in
+`docs/agents/2026-10-29_ACER_INSTALLER_AND_PARENT_FIX_HANDOFF.md`. The squeezed
+splash cause remains unproven.
+
 **2026-10-29 live-installer SSH toggle (USB PATCHED; real Acer connection
 PENDING):** The owner requested an installer Wi-Fi-page toggle for SSH on the
 running live installer using `greia` / `greia`. Source now includes the

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import stat
 import shutil
 import subprocess
 import tempfile
@@ -81,6 +83,20 @@ class ParentClientPinToolTests(unittest.TestCase):
                 self.assertEqual(
                     manifest["files"][relative]["sha256"], hashlib.sha256(data).hexdigest()
                 )
+
+    def test_pinned_trees_remain_readable_under_restrictive_umask(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            greia, parent, revision = self._fixture(Path(temporary))
+            previous = os.umask(0o077)
+            try:
+                update_pin(greia, parent, revision)
+            finally:
+                os.umask(previous)
+            for root in (greia / "vendor/parent-app", greia / "build/overlay/usr/share/greia-parent-app"):
+                for directory in (root, *(p for p in root.rglob("*") if p.is_dir())):
+                    self.assertEqual(stat.S_IMODE(directory.stat().st_mode), 0o755)
+                for file in (p for p in root.rglob("*") if p.is_file()):
+                    self.assertEqual(stat.S_IMODE(file.stat().st_mode), 0o644)
 
     def test_remote_runtime_dependency_is_rejected(self) -> None:
         if not HAS_GIT:

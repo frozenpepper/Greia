@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import json
+import os
+import stat
+import subprocess
 import shutil
 import tempfile
 import tomllib
@@ -55,6 +58,21 @@ class ParentClientImageIntegrationTests(unittest.TestCase):
         self.assertEqual(pin["revision"], manifest["revision"])
         self.assertEqual(pin["runtime_root"], "/usr/share/greia-parent-app")
         self.assertEqual(pin["integration_state"], "vendored-image-integrity-enforced")
+
+    def test_composition_normalizes_restrictive_parent_runtime_modes(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            web = root / "usr/share/greia-parent-app"
+            (web / "src").mkdir(parents=True)
+            (web / "src/app.js").write_text("ok", encoding="utf-8")
+            web.chmod(0o700)
+            (web / "src").chmod(0o700)
+            (web / "src/app.js").chmod(0o600)
+            subprocess.run(["bash", "-c", 'source "$1"; compose_normalize_parent_client_permissions "$2"',
+                "bash", str(ROOT / "build/lib/compose.sh"), str(root)], check=True)
+            self.assertEqual(stat.S_IMODE(web.stat().st_mode), 0o755)
+            self.assertEqual(stat.S_IMODE((web / "src").stat().st_mode), 0o755)
+            self.assertEqual(stat.S_IMODE((web / "src/app.js").stat().st_mode), 0o644)
 
     def test_contract_rejects_unexpected_runtime_file(self) -> None:
         contract = ParentClientRuntimeContract.load(MANIFEST, PIN)

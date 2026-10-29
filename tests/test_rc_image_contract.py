@@ -578,6 +578,12 @@ class SharedArtifactVerifierTests(unittest.TestCase):
         (wants / "greia-software-update-apply.timer").symlink_to(
             "../greia-software-update-apply.timer"
         )
+        web = root / "usr/share/greia-parent-app"
+        shutil.copytree(overlay / "usr/share/greia-parent-app", web)
+        for directory in (web, *(item for item in web.rglob("*") if item.is_dir())):
+            directory.chmod(0o755)
+        for file in (item for item in web.rglob("*") if item.is_file()):
+            file.chmod(0o644)
         put("etc/greia-os/developer-remote", "profile=legacy-x86-i686-rc\n")
         put("etc/greia-os/boot-console-policy", policy + "\n")
         put("etc/greia-os/image-profile.json", '{"boot": {"console_policy": "quiet"}}\n')
@@ -613,6 +619,20 @@ class SharedArtifactVerifierTests(unittest.TestCase):
             result = self.verify(self.make_root(raw))
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("policy=quiet", result.stdout)
+
+    def test_parent_runtime_unreadable_modes_fail_composed_root(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = self.make_root(raw)
+            web = root / "usr/share/greia-parent-app"
+            web.chmod(0o700)
+            result = self.verify(root)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("Parent web runtime is not readable", result.stderr)
+            web.chmod(0o755)
+            (web / "src/app.js").chmod(0o600)
+            result = self.verify(root)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("Parent web runtime is not readable", result.stderr)
 
     def test_installer_extraction_includes_the_generation_layout(self) -> None:
         verifier = (ROOT / "tools/verify-development-installer.sh").read_text(encoding="utf-8")
