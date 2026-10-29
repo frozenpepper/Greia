@@ -2,6 +2,20 @@
 
 **Purpose:** the short current state for contributors and agents: active workstreams, recent results, blockers and next steps. It is not an archive.
 
+**Installer USB diagnostics (2026-10-29, source-only):** New images create
+`GREIA_EFI/greia-logs/` on the existing FAT32 EFI partition. An install
+transaction failure now retains actual failed command stdout/stderr and its
+Python traceback, attempts to atomically save
+`greia-logs/last-install-failure.log` on the installer USB (matching the
+live-media ID before any write), and labels the error screen with **saved**
+or **could not be saved**. The same error remains in the live runtime and
+systemd journal. Mac/Windows retrieval and verification:
+[INSTALLER_FAILURE_LOGS_ON_USB.md](docs/release/INSTALLER_FAILURE_LOGS_ON_USB.md).
+**No image has been rebuilt or physically tested yet.** Test the USB write
+from an actual freshly-built image before relying on the hardware install;
+the previous image cannot gain this logging without reflashing.
+
+
 **Physical Acer install failure — simplified root installer (2026-10-29):**
 The A/B installer GUI now boots and starts install, but the Acer's actual
 firmware/microcode `apt-get`/dpkg configuration stage fails with generic code
