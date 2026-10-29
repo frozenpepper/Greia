@@ -260,7 +260,12 @@ class SubprocessPartitionRunner:
         except (OSError, subprocess.SubprocessError) as exc:
             raise LayoutError(f"partition command failed to execute: {exc}") from exc
         if completed.returncode != 0:
-            detail = (completed.stderr or "").strip()[:256] or "command failed"
+            from .install_diagnostics import append_command_failure
+
+            append_command_failure(
+                argv, completed.returncode, completed.stdout, completed.stderr
+            )
+            detail = _bounded_command_failure_detail(completed.stderr or completed.stdout)
             raise LayoutError(f"partition command failed: {detail}")
 
 
@@ -290,6 +295,11 @@ class SubprocessHardwareSupportRunner:
                 f"hardware-support command failed to execute: {exc}"
             ) from exc
         if check and completed.returncode != 0:
+            from .install_diagnostics import append_command_failure
+
+            append_command_failure(
+                argv, completed.returncode, completed.stdout, completed.stderr
+            )
             # Preserve bounded real output in the transaction service journal
             # before the UI's small refusal message truncates it. This is a
             # failed installer, not an authentication-sensitive command.
