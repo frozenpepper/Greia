@@ -544,6 +544,13 @@ grub-install --target=i386-pc --boot-directory="$USB_MOUNT/boot" --recheck "$USB
 install -d "$USB_ESP_MOUNT"
 mount "$USB_ESP_PART" "$USB_ESP_MOUNT"
 MOUNTS+=("$USB_ESP_MOUNT")
+# The FAT32 EFI partition doubles as the parent-readable failure log area.
+# A failed install cannot be expected to provide working SSH or target logs.
+# A duplicate live-media ID guards against accidentally writing another disk
+# when the installer mounts GREIA_EFI to save its diagnostic report.
+install -d "$USB_ESP_MOUNT/.disk" "$USB_ESP_MOUNT/greia-logs"
+printf '%s\n' "$live_media_id" > "$USB_ESP_MOUNT/.disk/live-uuid"
+chmod 0644 "$USB_ESP_MOUNT/.disk/live-uuid"
 for efi_target in i386-efi x86_64-efi; do
   grub-install --target="$efi_target" --removable --no-nvram --efi-directory="$USB_ESP_MOUNT" \
     --boot-directory="$USB_MOUNT/boot" --no-uefi-secure-boot
