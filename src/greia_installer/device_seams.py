@@ -96,6 +96,54 @@ def _bounded_command_failure_detail(value: str | None) -> str:
     return detail[:head] + marker + detail[-tail:]
 
 
+# apt-get sends the actual dpkg/postinst errors to stdout on many Debian
+# versions, while harmless debconf notices go to stderr. Reporting only
+# stderr produced the physical Acer 2026-10-29 false diagnostic:
+# "debconf: delaying package configuration ... E: dpkg returned code (1)".
+# Select the concrete failing package / command from BOTH streams.
+_APT_FAILURE_MARKERS = (
+    "dpkg: error processing package",
+    "dpkg: dependency problems",
+    "errors were encountered while processing:",
+    "post-installation script",
+    "pre-installation script",
+    "update-initramfs:",
+    "run-parts:",
+    "no space left on device",
+    "operation not permitted",
+    "permission denied",
+    "fatal error",
+    "failed to",
+    "cannot ",
+    "unable to",
+)
+
+
+def _apt_failure_detail(stdout: str | None, stderr: str | None) -> str:
+    out_lines = (stdout or "").splitlines()
+    err_lines = (stderr or "").splitlines()
+    meaningful = [
+        line.strip()
+        for line in (*out_lines, *err_lines)
+        if line.strip()
+        and any(token in line.lower() for token in _APT_FAILURE_MARKERS)
+    ]
+    # The line after "Errors were encountered while processing:" identifies
+    # the package, even if it contains no recognizable error word.
+    for lines in (out_lines, err_lines):
+        for i, line in enumerate(lines[:-1]):
+            if "errors were encountered while processing:" in line.lower():
+                for next_line in lines[i + 1 : i + 5]:
+                    if next_line.strip():
+                        meaningful.append(next_line.strip())
+    if meaningful:
+        # Avoid tail-only truncation losing "dpkg: error processing package".
+        return _bounded_command_failure_detail("\n".join(meaningful[-8:]))
+    # If the failure isn't recognizable, stdout is still the primary apt/dpkg
+    # transcript; stderr is often only a harmless debconf advisory.
+    return _bounded_command_failure_detail((stdout or "") or (stderr or ""))
+
+
 def _check_arg_array(command: Sequence[str], *, owner: str) -> list[str]:
     """Reject shell-string-shaped commands; return a plain argument list."""
     if not isinstance(command, (list, tuple)) or not command:
@@ -226,7 +274,25 @@ class SubprocessHardwareSupportRunner:
                 f"hardware-support command failed to execute: {exc}"
             ) from exc
         if check and completed.returncode != 0:
-            detail = _bounded_command_failure_detail(completed.stderr or completed.stdout)
+            # Preserve bounded real output in the transaction service journal
+            # before the UI's small refusal message truncates it. This is a
+            # failed installer, not an authentication-sensitive command.
+            import sys
+
+            print(
+                "greia-hardware-support: command failed "
+                f"(exit={completed.returncode}; argv={argv!r})",
+                file=sys.stderr,
+                flush=True,
+            )
+            for stream_name, value in (("stdout", completed.stdout), ("stderr", completed.stderr)):
+                if value:
+                    print(
+                        f"greia-hardware-support: {stream_name} tail:\n{value[-12000:]}",
+                        file=sys.stderr,
+                        flush=True,
+                    )
+            detail = _apt_failure_detail(completed.stdout, completed.stderr)
             raise FreshAbInstallError(f"hardware-support command failed: {detail}")
         return completed
 
