@@ -1065,7 +1065,10 @@ class SplitUnitContractTests(unittest.TestCase):
             "Environment=GREIA_TARGET_IMAGE_PROFILE=/etc/greia-os/target-image-profile.json",
             unit,
         )
-        self.assertIn("RestrictAddressFamilies=AF_UNIX", unit)
+        # The one-shot root worker configures a full Debian system. Socket
+        # authentication still limits who can invoke it; constraining its
+        # syscalls/capabilities broke real Acer package installation.
+        self.assertNotIn("RestrictAddressFamilies=AF_UNIX", unit)
         # Directive-level check (comments may name the forbidden value):
         # no StandardInput=socket directive (it leaves LISTEN_FDS unset
         # and the entry exits fail-closed); the service starts only via
