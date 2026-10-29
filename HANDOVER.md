@@ -21,6 +21,14 @@ SYSTEM_A apt/dpkg log is recovered read-only** using the existing USB GRUB,
 per [no-reflash recovery guide](docs/reviews/2026-10-29_RECOVER_FAILED_ACER_DPKG_WITHOUT_REFLASH.md).
 This is a source-level simplification, **not a proven fix** to the current
 dpkg error.
+The corresponding on-demand A/B **system-update** service uses the same
+hardware-support package finalizer, so its duplicate chroot-breaking
+capability/namespace restrictions have been removed too. Its local update
+socket, semantic operations and layout/boot authority remain unchanged.
+Only the root worker units were simplified; the browser/Parent/child services
+and lightweight Python/Activity update service are not modified. Source
+tests and an image build **have not been run in this GitHub environment**.
+
 
 
 **Physical Acer A/B install FAILED during hardware-support dpkg (2026-10-29):**
