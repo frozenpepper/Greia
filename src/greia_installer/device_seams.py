@@ -120,27 +120,43 @@ _APT_FAILURE_MARKERS = (
 
 
 def _apt_failure_detail(stdout: str | None, stderr: str | None) -> str:
+    """Report the package and failure, not the harmless debconf preamble."""
     out_lines = (stdout or "").splitlines()
     err_lines = (stderr or "").splitlines()
+    lines = [line.strip() for line in (*out_lines, *err_lines) if line.strip()]
+    # dpkg's named-package error is the most useful part of an apt failure.
+    named = [line for line in lines if "dpkg: error processing package" in line.lower()]
+    if named:
+        names: list[str] = []
+        for stream in (out_lines, err_lines):
+            for i, line in enumerate(stream[:-1]):
+                if "errors were encountered while processing:" in line.lower():
+                    names.extend(
+                        follow.strip() for follow in stream[i + 1 : i + 5]
+                        if follow.strip()
+                    )
+        reasons = [
+            line for line in lines
+            if any(token in line.lower() for token in (
+                "post-installation script",
+                "pre-installation script",
+                "no space left on device",
+                "operation not permitted",
+                "permission denied",
+                "returned error exit status",
+            ))
+        ]
+        return _bounded_command_failure_detail(
+            "\n".join((named[-1], *reasons[-2:], *names[-2:]))
+        )
     meaningful = [
-        line.strip()
-        for line in (*out_lines, *err_lines)
-        if line.strip()
-        and any(token in line.lower() for token in _APT_FAILURE_MARKERS)
+        line for line in lines
+        if any(token in line.lower() for token in _APT_FAILURE_MARKERS)
     ]
-    # The line after "Errors were encountered while processing:" identifies
-    # the package, even if it contains no recognizable error word.
-    for lines in (out_lines, err_lines):
-        for i, line in enumerate(lines[:-1]):
-            if "errors were encountered while processing:" in line.lower():
-                for next_line in lines[i + 1 : i + 5]:
-                    if next_line.strip():
-                        meaningful.append(next_line.strip())
     if meaningful:
-        # Avoid tail-only truncation losing "dpkg: error processing package".
-        return _bounded_command_failure_detail("\n".join(meaningful[-8:]))
-    # If the failure isn't recognizable, stdout is still the primary apt/dpkg
-    # transcript; stderr is often only a harmless debconf advisory.
+        return _bounded_command_failure_detail("\n".join(meaningful[-5:]))
+    # stderr may contain only a debconf advisory; retain apt's own stdout
+    # rather than hiding it. The complete tails also go into the journal.
     return _bounded_command_failure_detail((stdout or "") or (stderr or ""))
 
 
