@@ -338,7 +338,24 @@ class IwdProfileCarryover:
                 info = os.lstat(current)
             if not stat.S_ISDIR(info.st_mode):
                 return "target-unsafe"
-        state_dir = current
+        return self._write_state_dir(current, name, content)
+
+    def carry_over_to_state_dir(self, choice: WifiCarryoverChoice, state_dir: Path) -> WifiCarryoverOutcome:
+        """Copy a tested network into a verified, already-created PERSIST namespace."""
+        try:
+            content, how = self._read_source(choice, choice.filename)
+            if content is None:
+                outcome = WifiCarryoverOutcome(False, how, choice.security.value)
+            else:
+                reason = self._write_state_dir(Path(state_dir), choice.filename, content)
+                outcome = WifiCarryoverOutcome(reason is None, reason or how, choice.security.value)
+        except Exception as exc:
+            outcome = WifiCarryoverOutcome(False, f"failed:{type(exc).__name__}", choice.security.value)
+        self._log("wifi_carryover", outcome="copied" if outcome.copied else "skipped",
+                  reason=outcome.reason, security=choice.security.value)
+        return outcome
+
+    def _write_state_dir(self, state_dir: Path, name: str, content: bytes) -> str | None:
         dir_flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_NOFOLLOW", 0)
         dir_fd = os.open(state_dir, dir_flags)
         temporary = f".{name}.greia-carryover.tmp"

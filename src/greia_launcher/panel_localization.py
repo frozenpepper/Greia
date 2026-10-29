@@ -39,10 +39,10 @@ _MESSAGES: dict[str, dict[str, str]] = {
         "es": "Contraseña incorrecta", "fr": "Mot de passe incorrect",
     },
     "auth.unavailable": {
-        "en": "Cannot check the password right now",
-        "it": "Impossibile verificare la password adesso",
-        "es": "No se puede comprobar la contraseña ahora",
-        "fr": "Impossible de vérifier le mot de passe actuellement",
+        "en": "Parents is unavailable. Try again shortly.",
+        "it": "Genitori non è disponibile. Riprova tra poco.",
+        "es": "La app para padres no está disponible. Inténtalo de nuevo en breve.",
+        "fr": "Parents est indisponible. Réessayez dans un instant.",
     },
     "tab.language": {
         "en": "Language", "it": "Lingua", "es": "Idioma", "fr": "Langue",

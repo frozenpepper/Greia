@@ -2071,7 +2071,7 @@ class InstallerApplication:
         snapshot = self.wifi.snapshot
         y = self._paragraph(
             screen,
-            "Connect now, or set it up later in Greia Parents.",
+            "Connect now to make Greia ready for the Parents app. You can also set up Wi-Fi later.",
             small_font,
             HINT,
             pygame.Rect(main.left, y, main.width, main.height),

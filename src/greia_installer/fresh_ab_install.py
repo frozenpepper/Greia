@@ -54,6 +54,7 @@ zero disk contact.
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import time
@@ -81,6 +82,7 @@ from greia_platform.grub_ab import (
 from greia_platform.persistent_layout import (
     InstalledLayoutRecord,
     PersistentNamespaceMap,
+    persist_namespace_root,
 )
 from greia_platform.slot_writer import (
     DestinationSlot,
@@ -298,6 +300,7 @@ class FreshAbInstallSeams:
     wifi_firmware_unavailable: bool = False
     post_layout_identity_observer: PostLayoutIdentityObserver | None = None
     bios_bootloader_installer: Callable[[DeviceObservation, Path], None] | None = None
+    initial_configuration: Callable[[Path], None] | None = None
 
     def __post_init__(self) -> None:
         _require_hex64(self.inventory_token, field_name="hardware inventory token")
@@ -960,6 +963,8 @@ def execute_fresh_ab_install(
                 f"first-install journal refused: {exc}"
             ) from exc
         journal_holder.append(journal)
+        if seams.initial_configuration is not None:
+            seams.initial_configuration(persist_root)
 
     try:
         persist_result = initialize_fresh_persist(
@@ -1178,6 +1183,7 @@ def build_ab_executor(
         locale: object,
         target: DeviceObservation,
         progress: InstallProgressSink | None = None,
+        wifi_carryover: object = None,
     ):
         identity = getattr(authorization, "target_identity", "")
         _require_hex64(identity, field_name="install target identity")
@@ -1192,6 +1198,25 @@ def build_ab_executor(
                 "A/B executor requires a post-layout identity observer; "
                 "minting an independent UUID4 is retired"
             )
+        from greia_platform.hardware import HardwareSettings
+        from greia_platform.system_language import SystemLanguageStore
+        from .wifi_carryover import IwdProfileCarryover, WifiCarryoverChoice
+        if not isinstance(settings, HardwareSettings):
+            raise FreshAbInstallError("A/B installer requires typed hardware settings")
+        if wifi_carryover is not None and not isinstance(wifi_carryover, WifiCarryoverChoice):
+            raise FreshAbInstallError("A/B installer requires a validated Wi-Fi choice")
+
+        def configure_persist(persist_root: Path) -> None:
+            state = persist_namespace_root(persist_root, "device-settings")
+            SystemLanguageStore(state).replace(locale)
+            path = state / "settings.json"
+            path.write_text(json.dumps(settings.as_json_dict(), sort_keys=True, separators=(",", ":")) + "\n", encoding="utf-8")
+            os.chmod(path, 0o640)
+            if wifi_carryover is not None:
+                IwdProfileCarryover().carry_over_to_state_dir(
+                    wifi_carryover, persist_namespace_root(persist_root, "network-state")
+                )
+        seams.initial_configuration = configure_persist
         # Bind the post-layout observer without invoking it: the
         # orchestrator calls it only after the partition/filesystem
         # effects exist, never before the first destructive command.
@@ -1217,6 +1242,7 @@ def build_ab_executor(
 
     # Read by InstallTransactionService.execute_ab_install: this executor
     # takes the optional display-only progress sink.
+    _execute.accepts_wifi_carryover = True  # type: ignore[attr-defined]
     _execute.accepts_progress = True  # type: ignore[attr-defined]
     return _execute
 

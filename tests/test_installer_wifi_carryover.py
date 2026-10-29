@@ -132,6 +132,22 @@ class CarryoverChoiceTests(unittest.TestCase):
 
 
 class CarryoverCopyTests(unittest.TestCase):
+    def test_copies_into_ab_network_namespace_and_rejects_symlink(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = live_iwd(root, {"Family Wi-Fi.psk": PSK_FILE})
+            namespace = root / "network-state"
+            namespace.mkdir()
+            choice = WifiCarryoverChoice("Family Wi-Fi", WifiSecurity.PERSONAL)
+            service = copier(source)
+            self.assertTrue(service.carry_over_to_state_dir(choice, namespace).copied)
+            self.assertEqual((namespace / choice.filename).read_text(), PSK_FILE)
+            self.assertEqual(stat.S_IMODE(namespace.stat().st_mode), 0o700)
+            self.assertEqual(stat.S_IMODE((namespace / choice.filename).stat().st_mode), 0o600)
+            link = root / "link"
+            link.symlink_to(namespace, target_is_directory=True)
+            self.assertFalse(service.carry_over_to_state_dir(choice, link).copied)
+
     def test_copies_only_the_chosen_profile_private(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

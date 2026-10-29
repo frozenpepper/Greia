@@ -987,3 +987,14 @@ installed pending through existing transactions; no new synthesis/default change
 Current7installed/240remaining, all actual corpus/diagnostic calls retained. Follow
 PACKAGED_CONTEXT_SAFETY_REVIEW and HANDOVER for optional saved-WAV scope; never
 restart held producers or claim failed experimental gates passed.
+
+
+## A/B installer initial device preferences (2026-10-29; source only)
+
+Fresh A/B install seeds the authorized locale and hardware settings in the
+PERSIST device-settings namespace, and copies the selected tested iwd profile
+into network-state on a best-effort basis. First boot assigns seeded settings
+files to the Parent identity before child/Parent services start. These source
+changes need a rebuilt image and installed validation. The reported Acer Parent
+service outage remains undiagnosed; the revised unavailable message is not
+evidence of a repaired service.

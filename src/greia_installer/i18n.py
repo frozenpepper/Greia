@@ -68,7 +68,7 @@ _ITALIAN: dict[str, str] = {
     "US English": "Inglese (USA)",
     "UK English": "Inglese (UK)",
     "Wi-Fi (optional)": "Wi-Fi (facoltativo)",
-    "Connect now, or set it up later in Greia Parents.": "Connettiti ora oppure configuralo più tardi in Greia Parents.",
+    "Connect now to make Greia ready for the Parents app. You can also set up Wi-Fi later.": "Connettiti ora per preparare Greia all’app Genitori. Puoi anche configurare il Wi-Fi più tardi.",
     "Looking for Wi-Fi networks…": "Ricerca delle reti Wi-Fi…",
     "Wi-Fi": "Wi-Fi",
     "No wireless adapter is available. You can continue offline.": "Nessun adattatore Wi-Fi disponibile. Puoi continuare offline.",

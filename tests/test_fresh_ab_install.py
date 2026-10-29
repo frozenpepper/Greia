@@ -1130,7 +1130,7 @@ class AbServiceRoutingTests(unittest.TestCase):
     def _disk(self):
         return _target()
 
-    def _prepare_via_client(self, service):
+    def _prepare_via_client(self, service, extra_settings=None):
         client = InstallTransactionClient(
             lambda raw: service.handle_request(
                 raw, peer=PeerCredential(uid=65534), boot_state="installer_ready"
@@ -1147,6 +1147,7 @@ class AbServiceRoutingTests(unittest.TestCase):
             "disable_while_typing": "false",
             "locale": "en",
         }
+        snapshot.update(extra_settings or {})
         return client, client.prepare(
             expected_target_identity=service.authority.list_targets()[0].identity_digest,
             compatible_profile_id="profile-test",
@@ -1174,6 +1175,22 @@ class AbServiceRoutingTests(unittest.TestCase):
         self.assertEqual(seen["locale"], "en")
         self.assertIsInstance(seen["target"], DeviceObservation)
         self.assertEqual(service._last_installed_identity, seen["identity"])
+
+    def test_execute_passes_authorized_wifi_to_ab_executor(self) -> None:
+        from greia_installer.engine import InstallResult
+        from greia_installer.wifi import WifiSecurity
+        from greia_installer.wifi_carryover import WifiCarryoverChoice
+        seen = []
+
+        def executor(_authorization, _settings, locale, _target, *, progress, wifi_carryover):
+            seen.append((locale, wifi_carryover))
+            return InstallResult()
+        executor.accepts_wifi_carryover = True
+        service = self._service([self._disk()], ab_executor=executor)
+        choice = WifiCarryoverChoice("Family", WifiSecurity.PERSONAL)
+        client, prepared = self._prepare_via_client(service, {"locale": "it", **choice.snapshot_fields()})
+        client.execute(transaction_nonce=prepared.transaction_nonce, plan_digest=prepared.plan_digest)
+        self.assertEqual(seen, [("it", choice)])
 
     def test_invalidation_never_reaches_ab_executor(self) -> None:
         calls: list[object] = []
@@ -1311,7 +1328,25 @@ class AbServiceRoutingTests(unittest.TestCase):
             mic_gain=2.0,
             disable_while_typing=False,
         )
-        outcome = executor(_Authorization(), settings, "en", _target())
+        from unittest.mock import patch
+        from greia_installer.wifi import WifiSecurity
+        from greia_installer.wifi_carryover import IwdProfileCarryover, WifiCarryoverChoice
+        live = root / "live-iwd"
+        live.mkdir(mode=0o700)
+        profile = live / "Family.psk"
+        profile.write_text("[Security]\nPassphrase=examplepassword\n")
+        profile.chmod(0o600)
+        choice = WifiCarryoverChoice("Family", WifiSecurity.PERSONAL)
+        with patch("greia_installer.wifi_carryover.IwdProfileCarryover", return_value=IwdProfileCarryover(source_dir=live)):
+            outcome = executor(_Authorization(), settings, "it", _target(), wifi_carryover=choice)
+        from greia_platform.persistent_layout import persist_namespace_root
+        from greia_platform.system_language import SystemLanguageStore
+        import json
+        state = persist_namespace_root(persist_stage, "device-settings")
+        self.assertEqual(SystemLanguageStore(state).read().locale, "it")
+        network = persist_namespace_root(persist_stage, "network-state")
+        self.assertEqual((network / choice.filename).read_text(), profile.read_text())
+        self.assertEqual(json.loads((state / "settings.json").read_text()), settings.as_json_dict())
         self.assertEqual(outcome.release_id, "greia-0.15.0")
         self.assertEqual(touched, ["A"])
         # The post-layout observer fired exactly once, after partitioning,

@@ -3872,3 +3872,17 @@ tests OK, 5 skipped. Installer
 (2,270,167,040 bytes) was built and flashed to the LaCie; full
 2,270,167,040-byte readback matched. Physical Acer reinstall/first boot
 remains PENDING.
+
+
+**2026-10-29 — A/B installer preference carry-over (SOURCE, acceptance open):**
+Owner physical testing reported Italian selection reverting to English and an
+immediate Parent password-check service error. The A/B executor discarded the
+authorized locale and hardware settings and explicitly skipped the selected
+Wi-Fi profile. It now initializes device settings and the selected iwd profile
+in the existing shared PERSIST namespaces; Wi-Fi remains best-effort. First boot
+assigns ownership of seeded settings. The Wi-Fi screen describes Parents app
+readiness, with four translations. Focused source tests: 173 passed. These
+changes require a new bundle/image and installed validation; no installed or
+physical acceptance is claimed. The Parent service failure remains undiagnosed:
+obtain the affected installed device service status and journal before claiming
+it fixed.

@@ -1493,12 +1493,12 @@ class ParentSettingsOverlay:
             # unreadable credential looked exactly like a typing mistake.
             self._password_problem = _PASSWORD_CHECK_FAILED
             self.password_text = ""
-            self.password_error_until = time.monotonic() + 1.2
+            self.password_error_until = time.monotonic() + 5.0
             return
         except Exception:
             self._password_problem = _PASSWORD_CHECK_FAILED
             self.password_text = ""
-            self.password_error_until = time.monotonic() + 1.2
+            self.password_error_until = time.monotonic() + 5.0
             return
         if verified:
             self._password_problem = None

@@ -2,6 +2,24 @@
 
 **Purpose:** the short current state for contributors and agents: active workstreams, recent results, blockers and next steps. It is not an archive.
 
+**2026-10-29 installer preferences and Parent access (SOURCE; installed
+acceptance pending):** The owner reports a successful candidate installation
+with Italian selected, but the installed Shell appeared in English; the
+on-device Parent password check immediately reported unavailable. The A/B
+executor had dropped the authorized language and hardware settings, and the
+transaction service explicitly skipped Wi-Fi carry-over. Fresh A/B installs
+now seed the device-settings and network-state PERSIST namespaces, with the
+first-boot service handing the two seeded settings files to the Parent identity.
+Wi-Fi copy remains best-effort. Installer Wi-Fi copy now explains its benefit
+for Parents in all four languages. The Parent error explicitly says the service
+is unavailable and stays visible longer; this is **not a fix or diagnosis of the
+reported Parent service outage**. Parent service startup and journal evidence
+on the affected installed Acer remain necessary. Focused tests: 173 passed.
+No rebuilt installer, installed boot, network association or physical Parent
+login has been tested with these changes. Next: obtain installed Parent service
+status/journal and diagnose the failure, then build and test a fresh disposable
+image before any authorized physical reinstall.
+
 **Installer USB diagnostics (2026-10-29, source-only):** New images create
 `GREIA_EFI/greia-logs/` on the existing FAT32 EFI partition. An install
 transaction failure now retains actual failed command stdout/stderr and its

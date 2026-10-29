@@ -137,6 +137,17 @@ install -d -m 0755 -o greiapanel -g greiapanel /var/lib/greia-os
 install -d -m 0750 -o greiakid -g greiakid /var/lib/greia-kid
 install -d -m 2770 -o greiakid -g pipprofiles /var/lib/greia-profiles
 install -d -m 2750 -o greiapanel -g pipsettings /var/lib/greia-system-settings
+# Fresh A/B installation seeds these two fixed settings before target users exist.
+for setting in /var/lib/greia-system-settings/language.json /var/lib/greia-system-settings/settings.json; do
+    if [ -L "$setting" ]; then
+        echo "Refusing symbolic-link initial setting: $setting" >&2
+        exit 1
+    fi
+    if [ -f "$setting" ]; then
+        chown greiapanel:pipsettings "$setting"
+        chmod 0640 "$setting"
+    fi
+done
 machine_id="$(cat /etc/machine-id 2>/dev/null || true)"
 [ -n "$machine_id" ] || systemd-machine-id-setup >/dev/null 2>&1
 

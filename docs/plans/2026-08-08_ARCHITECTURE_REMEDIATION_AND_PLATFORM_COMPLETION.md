@@ -4030,3 +4030,11 @@ voice tests passed 237/237. `make verify` ran 5,839 tests and remains NOT GREEN
 (2 failures, 3 errors, 8 skipped); details are in HANDOVER and
 `docs/reviews/2026-10-23_SPOKEN_TARGET_VOICE_REPLACEMENT.md`. No architecture
 phase or release gate is closed by this audio operation.
+
+
+**2026-10-29 Parent error wording (SOURCE):** The on-device Parent overlay now
+identifies the unavailable service and keeps that error visible longer. This
+improves the reported error's meaning but does not establish why the actual
+installed Parent service was unavailable. Parent access on the Acer remains
+unverified; see HANDOVER and the lifecycle plan for the install findings and
+next evidence. Focused checks included Parent client/panel tests.

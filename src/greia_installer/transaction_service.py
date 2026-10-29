@@ -899,19 +899,14 @@ class InstallTransactionService:
             transaction_nonce=transaction_nonce, plan_digest=plan_digest
         )
         _s04_diag_faulthandler()
-        if self._authorized_wifi_carryover is not None:
-            # The A/B path persists durable state on PERSIST, whose
-            # network-state namespace is not bind-mounted at boot yet, so a
-            # copy there would be invisible. Say so instead of pretending.
-            _greia_log_event(
-                "wifi_carryover", outcome="skipped", reason="unsupported-ab-layout"
-            )
         executor = self.ab_executor
         if executor is None:
             raise TransactionServiceError(
                 "fresh A/B install is not configured on this service"
             )
         try:
+            if getattr(executor, "accepts_wifi_carryover", False):
+                return executor(authorization, settings, locale, target, progress=progress, wifi_carryover=self._authorized_wifi_carryover)
             if progress is not None and getattr(executor, "accepts_progress", False):
                 return executor(authorization, settings, locale, target, progress=progress)  # type: ignore[call-arg]
             return executor(authorization, settings, locale, target)
