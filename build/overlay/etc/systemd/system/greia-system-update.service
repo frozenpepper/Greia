@@ -1,28 +1,22 @@
-# Step 8A.6: socket-activated system-update semantic service.
-# POSTR1-P3-UPDATE-ACTIVATION: the normal installed contract. The old
-# ConditionPathExists gate on /run/greia-os/enable-privileged-transactions
-# (absent on every image) is removed: the service is a normal on-demand
-# product service, started only by greia-system-update.socket on the first
-# connection and never wanted by any boot target, so it stays inactive
-# during ordinary pre-intro boot. Semantic operations only
-# (STATUS/VERIFY/STAGE/ARM/CONFIRM/RECONCILE over the current inbox
-# candidate, plus the parent-authorized profile-picker REQUEST_RESTART
-# handoff; paths, slots and boot commands remain service-owned). Separate socket
-# from greia-install-transaction: the installer pair lives on installer media
-# only, while this pair serves the installed system. The services share the
-# common SlotWriter/SlotFinalizer/journal libraries, never a generic root
-# daemon; single-root layouts stay unavailable and the active/accepted slot
-# is never writable through this unit.
+# Socket-activated, local A/B system-update worker.
+# Only the Greia system-update socket exposes semantic STATUS/VERIFY/STAGE/
+# ARM/CONFIRM/RECONCILE and authorized restart operations. It never listens
+# on the network, and it resolves inactive-slot identity and update inputs
+# in source rather than accepting arbitrary commands or paths.
+#
+# STAGE runs the same SlotFinalizer and offline apt/dpkg package hooks as the
+# physical installer. systemd's former capability whitelist, restricted
+# filesystem mount namespace, RestrictSUIDSGID, NoNewPrivileges, task limit
+# and syscall restrictions were designed for a small daemon but are not
+# compatible with arbitrarily complex Debian maintainer scripts. They caused
+# repeated physical installation problems in the matching installer worker.
+# The long-lived Parent/browser services remain separately sandboxed. This
+# worker is root because it rewrites an inactive full operating-system slot.
 [Unit]
 Description=Greia OS system-update semantic service
 Requires=greia-system-update.socket greia-software-update-recover.service
 After=greia-system-update.socket greia-software-update-recover.service
 RequiresMountsFor=/run/greia-persist /var/lib/greia-os /boot/grub /etc/greia-os/layout
-# Never part of pre-intro boot and never a generic command runner or broad
-# system manager: this unit only serves the seven semantic update operations.
-# No Before= edge toward the boot chain (see the socket's ordering note):
-# the service cannot delay the first frame; it exists only after a client
-# connects, which happens post-intro.
 
 [Service]
 Type=simple
@@ -32,15 +26,6 @@ WorkingDirectory=/opt/greia-os
 Environment=PYTHONPATH=/opt/greia-os/src
 Environment=PYTHONNOUSERSITE=1
 Environment=PYTHONDONTWRITEBYTECODE=1
-# Greia-owned update facts. The inbox candidate bytes come from the
-# unprivileged Parent inbox under the state dir; trust, layout, journal and
-# boot facts are re-resolved from Greia-owned state on every operation.
-# Installed product identity comes from the image-owned
-# /etc/greia-os/release-identity.json release authority (SlotFinalizer-written
-# per slot), with the installed layout record and image-profile.json as
-# fallbacks for compatibility facts the identity file does not carry. No
-# GREIA_SYSTEM_* Environment= lines are shipped here: those names remain
-# test-only composition fallbacks in code, never installed product identity.
 Environment=GREIA_UPDATE_STATE_DIR=/var/lib/greia-os
 Environment=GREIA_INSTALLED_LAYOUT_RECORD=/etc/greia-os/layout/installed-layout.json
 Environment=GREIA_ACTIVE_PROFILE_STATUS=/run/greia-os/active-profile.json
@@ -49,54 +34,6 @@ Environment=GREIA_UPDATE_RESTART_FENCE=/run/greia-update-authority/restart-pendi
 Environment=GREIA_BOOT_JOURNAL_DIR=/run/greia-persist/greia/boot-journal
 ExecStart=/usr/bin/python3 -m greia_platform.update_privileged --socket-activated
 Restart=no
-TimeoutStartSec=5
-TimeoutStopSec=5
-# Native systemd fd store (LISTEN_FDS + fd 3, see
-# greia_platform.system_updates.main): never StandardInput=socket —
-# inetd-style stdin passing leaves LISTEN_FDS unset and the entry exits
-# fail-closed. Standard input stays disconnected.
 StandardOutput=journal
 StandardError=journal
-NoNewPrivileges=yes
-PrivateTmp=yes
-# Inactive-slot device access: the trusted layout record resolves partition
-# devices at runtime across transports, and blkid/blockdev/lsblk probes plus
-# the raw slot write and temporary slot mount need those nodes. PrivateDevices
-# stays off so the resolved inactive-slot device is addressable; containment
-# for device choice is the code-scoped resolution, not a static major list.
-PrivateDevices=no
-ProtectHome=yes
-ProtectSystem=strict
-ReadWritePaths=/var/lib/greia-os /run/greia-os /run/greia-update-authority /run/greia-persist
-# Minimum extra writes the implementation requires: atomic installed-layout
-# advancement on the PERSIST directory bind (/etc/greia-os/layout), GRUB
-# one-shot/default mutation (/boot/grub).
-# The temporary inactive-slot mountpoint is self-created under the granted
-# /run/greia-os tree. Everything else stays read-only.
-ReadWritePaths=/etc/greia-os /boot/grub
-ProtectKernelTunables=yes
-# ProtectKernelModules=yes is deliberately NOT set: besides denying module
-# loading it hides /usr/lib/modules, so `modinfo` (directly and through
-# isenkram) reports every driver as "module not found" and firmware selection
-# for the target resolved to nothing. The reference Aspire's installed system
-# shipped without firmware-iwlwifi that way. Module loading stays denied:
-# CAP_SYS_MODULE is outside the capability bounding set and the module
-# syscalls are filtered explicitly below.
-SystemCallFilter=~@module
-ProtectControlGroups=yes
-RestrictSUIDSGID=yes
-LockPersonality=yes
-# The shared SlotFinalizer stages the inactive slot, then runs the same
-# offline hardware-support APT install path used by the installer. Its chroot
-# and mount operations require SYS_CHROOT/SYS_ADMIN; APT/dpkg's privilege
-# drop, package ownership/mode restoration and apt-list replacement need the
-# same SETUID/SETGID/CHOWN/FOWNER/FSETID/DAC_OVERRIDE capabilities already
-# proven for the installer finalization workload. The updater does not unpack
-# the full installer rootfs or regenerate initramfs, so it excludes the
-# install-only MKNOD capability. No launcher/Parent process carries this set.
-CapabilityBoundingSet=CAP_SYS_ADMIN CAP_SYS_CHROOT CAP_SETUID CAP_SETGID CAP_CHOWN CAP_FOWNER CAP_FSETID CAP_DAC_OVERRIDE
-AmbientCapabilities=CAP_SYS_ADMIN CAP_SYS_CHROOT CAP_SETUID CAP_SETGID CAP_CHOWN CAP_FOWNER CAP_FSETID CAP_DAC_OVERRIDE
-RestrictAddressFamilies=AF_UNIX
-SystemCallArchitectures=native
-LimitCORE=0
-TasksMax=32
+# No WantedBy: the service starts only on a request through its local socket.
