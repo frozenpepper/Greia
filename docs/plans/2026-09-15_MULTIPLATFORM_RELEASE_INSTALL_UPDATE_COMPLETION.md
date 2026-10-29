@@ -3934,3 +3934,17 @@ verifies readability in composed roots. 160 focused tests passed. No existing
 installed disk was modified and no new image built. A fresh A/B release bundle
 and installer plus installed acceptance are required; see
 `docs/agents/2026-10-29_ACER_INSTALLER_AND_PARENT_FIX_HANDOFF.md`.
+
+**2026-10-29 Acer installed-system Parent/settings fix bundle + installer:**
+Built a new A/B fixture bundle from `77d18c711`:
+`d1a2f1a3c4e568195c17e88a6ed2b703015a64e3844a035d7813048761f3c3d8`
+(714,540,632 bytes). The installed Parent client is `root:root 0755` and its
+pinned integrity check passes as `greiapanel` (revision `51d6b589…`). A new
+installer `866e26d1…` (2,273,312,768 bytes) was built with this bundle.
+Disposable QEMU interactive install with Italian/Italian keyboard/natural
+scrolling/fast mouse persisted `it` and the non-default settings in PERSIST;
+first boot was Italian; Parent service served HTTPS 200 and accepted the
+`greia` password (201 bootstrap). `make verify`: 6,025 tests OK, 5 skipped.
+The LaCie USB was reflashed and full readback matched. Wi-Fi hardware,
+installed panel click-through, physical Acer install and rollback remain
+unexecuted.

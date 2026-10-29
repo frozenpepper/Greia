@@ -78,3 +78,36 @@ and installer SSH. The positive/negative Parent permission test above ran on
 the physical Acer's live installer using copies in `/run`; it is not an
 installed boot acceptance. The existing A/B bundle and Acer disk remain
 unchanged.
+
+## Executed result (2026-10-29)
+
+- Source `77d18c711`; new A/B fixture bundle
+  `d1a2f1a3c4e568195c17e88a6ed2b703015a64e3844a035d7813048761f3c3d8`
+  (`714,540,632` bytes, release `greia-acceptance-fixture-0.13.1-preview.1`),
+  and installer
+  `866e26d1fbb4827f82c9b12e0d56b458a102ea88fe482d664d26001e42e22b1c`
+  (`2,273,312,768` bytes).
+- New bundle payload Parent client:
+  `/usr/share/greia-parent-app` is `root:root 0755`; directories `0755`,
+  files `0644`; pinned integrity check passes as the installed
+  `greiapanel` UID/GID (996/993), revision `51d6b589…`.
+- Disposable QEMU interactive install: Italian selected; Italian keyboard
+  selected; natural scrolling enabled and mouse speed set to `0.8`.
+  Installed PERSIST verified read-only:
+  `language.json={"locale":"it"}`, `settings.json` with
+  `keyboard_layout="it"`, `natural_scrolling=true`, `mouse_speed=0.8`.
+  First installed boot rendered Italian. No Wi-Fi adapter exists in QEMU, so
+  no Wi-Fi profile was created (Wi-Fi hardware/carry-over remains unexecuted).
+- Installed Parent service served HTTPS `200` and accepted the `greia`
+  password (`POST /api/v1/pairing/bootstrap` returned `201`). The on-device
+  Parent panel click-through was not completed; the first-child setup screen
+  was reached instead. Parent client integrity and service start are proven.
+- Installer SSH toggle: the same current-main toggle source was previously
+  exercised on a byte copy of the patched USB (default off; toggle on ->
+  `greia`/`greia` login and password sudo; toggle off -> connection reset;
+  toggle on -> restored). The new installer includes that live source, but
+  this exact image was not re-toggled after the Parent-fix rebuild.
+- The LaCie `/dev/sdc` (`iamaKey`, serial `eca3505216d7d3`) was reflashed with
+  the new installer; the full `2,273,312,768`-byte readback matched and the
+  on-media bundle hash remained `d1a2f1a3…`. Physical Acer install/first boot,
+  Wi-Fi hardware, panel click-through and rollback remain unexecuted.

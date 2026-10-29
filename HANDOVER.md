@@ -2,18 +2,26 @@
 
 **Purpose:** the short current state for contributors and agents: active workstreams, recent results, blockers and next steps. It is not an archive.
 
-**2026-10-29 Acer installed-system diagnosis (PHYSICAL READ-ONLY):**
-Connected to the live installer over SSH and inspected the installed A/B slot
-and PERSIST read-only. Parent's static web root is `root:root 0700`, so its
-unprivileged startup integrity check fails; a copy changed only to `0755`
-passes as the Parent identity. The installed system has no saved language or
-hardware settings and no Wi-Fi network profile; the real stores return English
-and US keyboard. Source fixes for Parent pinning/composition and a composed-root
-permission gate are prepared; 160 focused tests passed. No installed disk was
-modified. The next agent must build a new A/B bundle as well as a new installer
-and run installed acceptance; exact evidence and steps are in
-`docs/agents/2026-10-29_ACER_INSTALLER_AND_PARENT_FIX_HANDOFF.md`. The squeezed
-splash cause remains unproven.
+**2026-10-29 Acer installed-system fix (NEW BUNDLE + INSTALLER; QEMU
+ACCEPTANCE PASS; physical Acer PENDING):** Physical read-only inspection had
+found the installed Parent web root `root:root 0700` (unprivileged integrity
+check failed) and no carried-over language/hardware/Wi-Fi settings. Source
+fixes are now in `77d18c711`: Parent pin/stage/compose normalize the client to
+directories `0755` / files `0644`, and the composed-root verifier rejects
+unreadable trees. A new A/B fixture bundle
+`d1a2f1a3c4e568195c17e88a6ed2b703015a64e3844a035d7813048761f3c3d8`
+and installer
+`866e26d1fbb4827f82c9b12e0d56b458a102ea88fe482d664d26001e42e22b1c`
+were built; the installed Parent client integrity check passes as
+`greiapanel` (revision `51d6b589…`). Disposable QEMU install with Italian,
+Italian keyboard, natural scrolling and fast mouse persisted
+`locale=it`, `keyboard_layout=it`, `natural_scrolling=true`,
+`mouse_speed=0.8`; first boot was Italian. Parent service served HTTPS `200`
+and accepted the `greia` password (`201` device bootstrap). Wi-Fi hardware is
+unavailable in QEMU; panel-UI click-through, physical Acer install/first boot
+and rollback remain unexecuted. The owner-authorized LaCie `/dev/sdc` was
+reflashed with this installer and the full image readback matched. Details:
+[2026-10-29_ACER_INSTALLER_AND_PARENT_FIX_HANDOFF.md](docs/agents/2026-10-29_ACER_INSTALLER_AND_PARENT_FIX_HANDOFF.md).
 
 **2026-10-29 live-installer SSH toggle (USB PATCHED; real Acer connection
 PENDING):** The owner requested an installer Wi-Fi-page toggle for SSH on the
