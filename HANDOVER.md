@@ -2,6 +2,27 @@
 
 **Purpose:** the short current state for contributors and agents: active workstreams, recent results, blockers and next steps. It is not an archive.
 
+**Physical Acer install failure — simplified root installer (2026-10-29):**
+The A/B installer GUI now boots and starts install, but the Acer's actual
+firmware/microcode `apt-get`/dpkg configuration stage fails with generic code
+1. The exact package/postinst reason **has not yet been recovered**; no new
+installer image has been built from this repair. Code review found extensive
+custom systemd hardening on the **one-time root transaction worker**:
+capability whitelist, namespace/FS/sycall filters and process limits. The
+unit's own comments document previous Acer failures from CAP_MKNOD,
+CAP_CHOWN, CAP_FSETID, CAP_DAC_OVERRIDE, RestrictSUIDSGID and TasksMax.
+This is the wrong boundary to constrain: it runs arbitrary Debian package
+maintainer scripts and builds a complete OS. The worker is now a simple root
+unit; local transaction socket ownership, request authorization and disk
+identity/confirmation logic remain unchanged. Error reporting separately now
+extracts actual dpkg stdout and journals output on *future builds*.
+**No further flash or internal-disk install until the actual failed
+SYSTEM_A apt/dpkg log is recovered read-only** using the existing USB GRUB,
+per [no-reflash recovery guide](docs/reviews/2026-10-29_RECOVER_FAILED_ACER_DPKG_WITHOUT_REFLASH.md).
+This is a source-level simplification, **not a proven fix** to the current
+dpkg error.
+
+
 **Physical Acer A/B install FAILED during hardware-support dpkg (2026-10-29):**
 the post-216/GROUP image now boots its UI, but the actual Acer install stops in
 `TargetHardwareSupportInstaller.install` with `dpkg` exit 1. The displayed
