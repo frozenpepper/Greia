@@ -2,6 +2,21 @@
 
 **Purpose:** the short current state for contributors and agents: active workstreams, recent results, blockers and next steps. It is not an archive.
 
+**Physical Acer A/B install FAILED during hardware-support dpkg (2026-10-29):**
+the post-216/GROUP image now boots its UI, but the actual Acer install stops in
+`TargetHardwareSupportInstaller.install` with `dpkg` exit 1. The displayed
+`debconf: delaying package configuration` is an advisory, **not a diagnosed
+cause**. Source `SubprocessHardwareSupportRunner` erroneously chose stderr
+over stdout, hiding the failing package's postinst/dpkg transcript. Source
+now reports distinctive stdout + stderr failures and prints bounded original
+stream tails to the transaction service journal; diagnostic regression tests
+added. **The underlying failing package/cause remains UNKNOWN and NOT FIXED.**
+Do not build/flash/erase again until the existing incomplete Acer SYSTEM_A
+`/var/log/apt/term.log`, `/var/log/dpkg.log` and capacity evidence have
+been collected read-only where accessible. No further image passed physical
+end-to-end installation.
+
+
 **Physical Acer installer boot blocker (2026-10-29):** The previous
 `b81279af...` LaCie image failed before the installer UI with systemd
 `status=216/GROUP` because the live root lacked `netdev` (and potentially
