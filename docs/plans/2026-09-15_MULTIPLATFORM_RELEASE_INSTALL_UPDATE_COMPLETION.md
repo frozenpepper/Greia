@@ -3822,3 +3822,19 @@ media exposes `GREIA_EFI` + `PIP_INSTALL` with the unchanged bundle
 `2572bf08…`. Physical Acer boot from this media remains PENDING. Evidence:
 `docs/reviews/2026-10-29_ACER_USB_INSTALLER_216_GROUP.md` and
 `docs/reviews/acer/2026-10-29_INSTALLER_216_GROUP_QEMU/`.
+
+## 2026-10-29 — Physical Acer A/B install stops in hardware-support dpkg
+
+The corrected 216/GROUP installer now starts on the physical Acer and reaches
+SYSTEM_A hardware-support package installation, where apt/dpkg exits 1. The
+user-visible message contains a harmless debconf `apt-utils` advisory and
+the generic dpkg code, not the original failing package or its postinst output.
+The source runner was discarding apt stdout whenever stderr was nonempty.
+`SubprocessHardwareSupportRunner` now extracts both streams for the UI and
+emits bounded failure tails to the transaction-service journal; regression
+tests exercise the precise misleading-error scenario. **Diagnostic repair
+only:** actual package/maintainer-script/space/capability cause remains
+unverified. Collect the existing failed SYSTEM_A apt/dpkg logs read-only
+before any further destructive installation, then make the specific
+production repair and verify the *actual* selected Acer hardware-support
+closure in disposable QEMU before another physical attempt.
