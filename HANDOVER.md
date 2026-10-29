@@ -16,9 +16,14 @@ is unavailable and stays visible longer; this is **not a fix or diagnosis of the
 reported Parent service outage**. Parent service startup and journal evidence
 on the affected installed Acer remain necessary. Focused tests: 173 passed.
 No rebuilt installer, installed boot, network association or physical Parent
-login has been tested with these changes. Next: obtain installed Parent service
-status/journal and diagnose the failure, then build and test a fresh disposable
-image before any authorized physical reinstall.
+login has been tested with these changes. The owner retried `greia` after several minutes: the same error appeared
+immediately. Direct Ethernet reaches the Acer over IPv6, but port 22 refuses
+connections; the exact product A/B image intentionally has developer SSH
+disabled. No installed Parent status or journal was recovered; do not equate
+closed SSH with a Parent-service diagnosis. Next: obtain installed Parent service
+status/journal by an appropriate diagnostic path and diagnose the failure,
+then build and test a fresh disposable image before any authorized physical
+reinstall.
 
 **Installer USB diagnostics (2026-10-29, source-only):** New images create
 `GREIA_EFI/greia-logs/` on the existing FAT32 EFI partition. An install
