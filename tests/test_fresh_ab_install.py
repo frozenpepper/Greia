@@ -1312,42 +1312,68 @@ class AbServiceRoutingTests(unittest.TestCase):
         )
         executor = build_ab_executor(facts, _seams, identities_factory=_identities)
 
-        class _Authorization:
-            target_identity = _INSTALL_SHA
-
         from greia_platform.hardware import HardwareSettings
 
         settings = HardwareSettings(
             schema_version=2,
-            touchpad_tap=False,
-            touchpad_speed=0.35,
-            mouse_speed=0.0,
-            natural_scrolling=False,
-            resolution="auto",
-            keyboard_layout="us",
-            mic_gain=2.0,
-            disable_while_typing=False,
+            touchpad_tap=True,
+            touchpad_speed=-0.25,
+            mouse_speed=0.5,
+            natural_scrolling=True,
+            resolution="800x600",
+            keyboard_layout="it",
+            mic_gain=1.0,
+            disable_while_typing=True,
         )
+        from types import SimpleNamespace
         from unittest.mock import patch
-        from greia_installer.wifi import WifiSecurity
+        from greia_installer.entrypoint import LanguageFirstInstallerApplication
+        from greia_installer.wifi import IwdNetworkProfile, WifiNetwork, WifiSecurity
         from greia_installer.wifi_carryover import IwdProfileCarryover, WifiCarryoverChoice
+        from greia_platform.hardware import HardwareSettingsStore
+        from greia_platform.hal_legacy_x import LegacyXHardwareSessionController
+        from greia_platform.hardware_session import run_watcher
+        from greia_platform.persistent_layout import persist_namespace_root
+        from greia_platform.system_language import SystemLanguageStore
+        from test_hardware_session import FakeRunner
+
         live = root / "live-iwd"
         live.mkdir(mode=0o700)
         profile = live / "Family.psk"
         profile.write_text("[Security]\nPassphrase=examplepassword\n")
         profile.chmod(0o600)
         choice = WifiCarryoverChoice("Family", WifiSecurity.PERSONAL)
+        ui = LanguageFirstInstallerApplication.__new__(LanguageFirstInstallerApplication)
+        ui.locale = "it"
+        ui.state = SimpleNamespace(settings=settings)
+        ui.wifi = SimpleNamespace(profile=IwdNetworkProfile.for_network(
+            WifiNetwork("Family", WifiSecurity.PERSONAL, -40, "/net/connman/iwd/0/1"),
+            "examplepassword",
+        ))
+        snapshot = ui.settings_snapshot_for_service()
+        routing = AbServiceRoutingTests()
+        service = routing._service([_target()], ab_executor=executor)
+        client, prepared = routing._prepare_via_client(service, snapshot)
         with patch("greia_installer.wifi_carryover.IwdProfileCarryover", return_value=IwdProfileCarryover(source_dir=live)):
-            outcome = executor(_Authorization(), settings, "it", _target(), wifi_carryover=choice)
-        from greia_platform.persistent_layout import persist_namespace_root
-        from greia_platform.system_language import SystemLanguageStore
-        import json
+            client.execute(transaction_nonce=prepared.transaction_nonce, plan_digest=prepared.plan_digest)
+
         state = persist_namespace_root(persist_stage, "device-settings")
         self.assertEqual(SystemLanguageStore(state).read().locale, "it")
         network = persist_namespace_root(persist_stage, "network-state")
         self.assertEqual((network / choice.filename).read_text(), profile.read_text())
-        self.assertEqual(json.loads((state / "settings.json").read_text()), settings.as_json_dict())
-        self.assertEqual(outcome.release_id, "greia-0.15.0")
+        defaults = Path(__file__).resolve().parents[1] / "runtime/hardware-settings.toml"
+        store = HardwareSettingsStore.load(defaults, state)
+        self.assertEqual(store.read(), settings)
+        runner = FakeRunner()
+        run_watcher(store, root / "status.json", controller=LegacyXHardwareSessionController(runner), once=True)
+        self.assertIn(("setxkbmap", "it"), runner.commands)
+        self.assertIn(("xinput", "set-prop", "12", "libinput Accel Speed", "-0.25"), runner.commands)
+        self.assertIn(("xinput", "set-prop", "13", "libinput Accel Speed", "0.50"), runner.commands)
+        self.assertIn(("xinput", "set-prop", "12", "libinput Tapping Enabled", "1"), runner.commands)
+        self.assertIn(("xinput", "set-prop", "12", "libinput Natural Scrolling Enabled", "1"), runner.commands)
+        self.assertIn(("xinput", "set-prop", "12", "libinput Disable While Typing Enabled", "1"), runner.commands)
+        self.assertIn(("xrandr", "--output", "LVDS1", "--mode", "800x600"), runner.commands)
+        self.assertIn(("amixer", "-q", "set", "Capture", "50%", "unmute"), runner.commands)
         self.assertEqual(touched, ["A"])
         # The post-layout observer fired exactly once, after partitioning,
         # for the rematerialized target with the validated plan.

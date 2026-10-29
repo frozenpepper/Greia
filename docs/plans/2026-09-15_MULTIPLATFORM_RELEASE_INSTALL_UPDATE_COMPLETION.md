@@ -3886,3 +3886,15 @@ changes require a new bundle/image and installed validation; no installed or
 physical acceptance is claimed. The Parent service failure remains undiagnosed:
 obtain the affected installed device service status and journal before claiming
 it fixed.
+
+
+**2026-10-29 — Installer setting continuity source verification:** Extended the
+fresh A/B source integration test to carry an Italian locale and keyboard, a
+selected Wi-Fi profile, non-default touchpad/mouse speeds, tapping, natural
+scrolling, disable-while-typing, screen resolution and microphone gain from
+the real installer snapshot via the service's prepared/authorized transaction
+into PERSIST. The installed hardware settings reader and fake Legacy-X watcher
+then consume and apply those choices. 214 focused tests pass; this is source
+evidence, not a rebuilt-image, real iwd association, first-boot ownership or
+physical Acer acceptance. Corrected the stale A/B skip in the Wi-Fi product
+requirement. The separate reported Parent service failure remains open.

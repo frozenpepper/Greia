@@ -10,7 +10,12 @@ executor had dropped the authorized language and hardware settings, and the
 transaction service explicitly skipped Wi-Fi carry-over. Fresh A/B installs
 now seed the device-settings and network-state PERSIST namespaces, with the
 first-boot service handing the two seeded settings files to the Parent identity.
-Wi-Fi copy remains best-effort. Installer Wi-Fi copy now explains its benefit
+Wi-Fi copy remains best-effort. A source integration test now takes Italian,
+a non-default Italian keyboard, Wi-Fi and non-default pointer/display/microphone
+choices from the installer snapshot through the authorized A/B transaction and
+persistent state into the actual settings reader and fake Legacy-X hardware
+watcher; it checks the expected adapter commands. The source suite for this
+tranche passed 214 tests. Installer Wi-Fi copy now explains its benefit
 for Parents in all four languages. The Parent error explicitly says the service
 is unavailable and stays visible longer; this is **not a fix or diagnosis of the
 reported Parent service outage**. Parent service startup and journal evidence
