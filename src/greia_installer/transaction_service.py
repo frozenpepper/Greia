@@ -1037,7 +1037,9 @@ def handle_connection(
             usb_log = publish_install_failure(exc)
             reason = str(exc)
             if usb_log:
-                reason = f"USB log: {usb_log}. {reason}"
+                reason = f"USB log saved: {usb_log}. {reason}"
+            else:
+                reason = f"USB log could not be saved. {reason}"
             try:
                 _s04_diag_boundary("error response encode starting")
                 response = encode_response(
