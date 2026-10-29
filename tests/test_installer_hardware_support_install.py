@@ -68,6 +68,7 @@ class TargetHardwareSupportInstallerTests(unittest.TestCase):
                 target / "proc",
                 target / "sys",
                 target / "run",
+                target / "run/greia-installer-scratch",
                 target / "run/greia-hardware-support",
             ],
         )
@@ -82,15 +83,29 @@ class TargetHardwareSupportInstallerTests(unittest.TestCase):
         )
         self.assertEqual(
             runner.commands[7],
-            ["mount", "--bind", "/verified-pool", str(target / "run/greia-hardware-support")],
+            [
+                "mount",
+                "-t",
+                "tmpfs",
+                "-o",
+                "size=256M,mode=1777",
+                "tmpfs",
+                str(target / "run/greia-installer-scratch"),
+            ],
         )
         self.assertEqual(
             runner.commands[8],
+            ["mount", "--bind", "/verified-pool", str(target / "run/greia-hardware-support")],
+        )
+        self.assertEqual(
+            runner.commands[9],
             ["mount", "-o", "remount,bind,ro", str(target / "run/greia-hardware-support")],
         )
         flattened = "\n".join(" ".join(command) for command in runner.commands)
         self.assertIn("Dir::Etc::sourcelist=/run/greia-hardware-support.list", flattened)
         self.assertIn("Dir::Etc::sourceparts=-", flattened)
+        self.assertIn("Dir::Cache::archives=/run/greia-installer-scratch/apt", flattened)
+        self.assertIn("TMPDIR=/run/greia-installer-scratch/tmp", flattened)
         self.assertIn("firmware-realtek", flattened)
         self.assertIn("intel-microcode", flattened)
         self.assertNotIn("deb.debian.org", flattened)

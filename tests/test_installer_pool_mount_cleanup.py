@@ -534,7 +534,7 @@ class SensitivityControlTests(unittest.TestCase):
         events = outcome["events"]
         assert isinstance(events, list)
         self.assertIn("slot-unmount-busy", events)
-        self.assertEqual(len(outcome["mounted"]), 5)  # type: ignore[arg-type]
+        self.assertEqual(len(outcome["mounted"]), 6)  # type: ignore[arg-type]
 
 
 if __name__ == "__main__":

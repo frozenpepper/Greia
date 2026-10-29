@@ -491,17 +491,30 @@ for **every** declared group; test `tests/test_live_installer_groups.py`
 guards this failure. See
 [the physical failure review](../reviews/2026-10-29_ACER_USB_INSTALLER_216_GROUP.md).
 
-Current image `b853330f…` (source `9dd3625fb`, which adds USB
-`greia-logs/last-install-failure.log` persistence) was checked inside its
-**actual live squashfs** (all declared groups present and
-`install_diagnostics.py` shipped), its default `greia-installer.service`
-reached the interactive UI in QEMU, and the re-authorized LaCie `/dev/sdc`
-(`iamaKey`, serial `eca3505216d7d3`) was reflashed with a byte-identical
-first-2,270,167,040-byte readback. The remaining gate is physical Acer boot
-from that USB, observation of the graphical installer screen, and recovery
-of the actual apt/dpkg failure transcript. An install through only the
-transaction socket is insufficient evidence; internal-disk installation
-still requires separate explicit authorization.
+Current image `7869b6b5…` adds USB
+`greia-logs/last-install-failure.log` persistence and the initramfs ENOSPC
+fix. Its **actual live squashfs** contains all declared groups,
+`install_diagnostics.py`, and the `/run/greia-installer-scratch` RAM scratch;
+its default `greia-installer.service` reached the interactive UI in QEMU.
+The re-authorized LaCie `/dev/sdc` (`iamaKey`, serial `eca3505216d7d3`) was
+reflashed with a byte-identical first-2,270,167,040-byte readback. The
+remaining gate is physical Acer boot/install from that USB. An install
+through only the transaction socket is insufficient evidence; internal-disk
+installation still requires separate explicit authorization.
+
+### Physical Acer installer initramfs ENOSPC (2026-10-29)
+
+The next physical install reached the hardware-support package step and
+failed in the `initramfs-tools` postinst: `zstd` could not write
+`/boot/initrd.img-6.1.0-54-686-pae` because the 1,664 MiB SYSTEM_A slot was
+full. The payload plus support packages plus an ~182 MiB `mkinitramfs`
+temporary tree and the 42 MiB initrd exceeded the slot. Do not "fix" this by
+loosening capacity checks or expanding the boot-control/PERSIST partition.
+The installer now keeps the apt archive cache and `mkinitramfs` temporary
+tree in a bounded 256 MiB tmpfs at `/run/greia-installer-scratch`; only the
+compressed initrd is written to the slot. Regression:
+`tests/test_installer_hardware_support_install.py`. See
+[the ENOSPC review](../reviews/2026-10-29_ACER_USB_INSTALL_ENOSPC_INITRAMFS.md).
 
 ### Live installer quiet-screen recovery (source contract, 2026-10-17)
 

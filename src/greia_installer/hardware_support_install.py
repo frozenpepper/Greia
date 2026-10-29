@@ -68,6 +68,40 @@ def detach_recorded_mounts(
     return tuple(failed_roots)
 
 
+#: RAM-backed scratch for the offline APT/dpkg transaction. ``mkinitramfs``
+#: unpacks a large temporary module/firmware tree before compressing it; on
+#: the 1,664 MiB Acer A/B slot that tree plus the apt archive cache can fill
+#: the nearly-full target and abort ``update-initramfs`` with ENOSPC. Keep
+#: these transient bytes out of the target slot; only the final compressed
+#: initrd belongs there.
+INSTALL_SCRATCH_REL_PATH = "run/greia-installer-scratch"
+INSTALL_SCRATCH_TMPFS_OPTIONS = "size=256M,mode=1777"
+
+
+def mount_install_scratch(
+    root: Path, runner: HardwareSupportCommandRunner, mounted: list[Path]
+) -> Path:
+    """Mount a bounded RAM scratch area inside the target's already-mounted /run."""
+
+    scratch = root / INSTALL_SCRATCH_REL_PATH
+    scratch.mkdir(parents=True, exist_ok=True)
+    runner.run(
+        [
+            "mount",
+            "-t",
+            "tmpfs",
+            "-o",
+            INSTALL_SCRATCH_TMPFS_OPTIONS,
+            "tmpfs",
+            str(scratch),
+        ]
+    )
+    mounted.append(scratch)
+    (scratch / "tmp").mkdir(mode=0o1777, exist_ok=True)
+    (scratch / "apt").mkdir(mode=0o755, exist_ok=True)
+    return scratch
+
+
 def mount_chroot_filesystems(
     root: Path, runner: HardwareSupportCommandRunner, mounted: list[Path]
 ) -> None:
@@ -110,6 +144,9 @@ class TargetHardwareSupportInstaller:
             return ()
 
         mount_chroot_filesystems(target_root, self.runner, mounted)
+        mount_install_scratch(target_root, self.runner, mounted)
+        scratch_tmp = f"/{INSTALL_SCRATCH_REL_PATH}/tmp"
+        scratch_apt = f"/{INSTALL_SCRATCH_REL_PATH}/apt"
         mountpoint = target_root / "run/greia-hardware-support"
         mountpoint.mkdir(parents=True, exist_ok=True)
         self.runner.run(["mount", "--bind", str(pool.root), str(mountpoint)])
@@ -125,6 +162,8 @@ class TargetHardwareSupportInstaller:
             "-o",
             "Dir::Etc::sourceparts=-",
             "-o",
+            f"Dir::Cache::archives={scratch_apt}",
+            "-o",
             "APT::Get::List-Cleanup=0",
             "-o",
             "Acquire::Languages=none",
@@ -139,6 +178,7 @@ class TargetHardwareSupportInstaller:
                     str(target_root),
                     "/usr/bin/env",
                     "DEBIAN_FRONTEND=noninteractive",
+                    f"TMPDIR={scratch_tmp}",
                     "apt-get",
                     *options,
                     "install",

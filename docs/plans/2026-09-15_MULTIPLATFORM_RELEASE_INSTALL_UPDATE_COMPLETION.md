@@ -3856,3 +3856,19 @@ first 2,270,167,040 bytes read back byte-identical. The Acer internal-disk
 failure transcript remains unrecovered, and physical Acer validation of this
 image is PENDING. Evidence:
 `docs/reviews/acer/2026-10-29_INSTALLER_216_GROUP_QEMU/`.
+
+**2026-10-29 recovered Acer ENOSPC and installer RAM-scratch fix:** The
+installer USB log named `initramfs-tools` postinst failing with
+`zstd ... No space left on device` while generating the initrd after the
+Acer firmware/microcode packages. Reproduced on the exact bundle payload and
+1,664 MiB slot: payload 1,362 MiB + support 82 MiB + apt cache + an 182 MiB
+`mkinitramfs` temporary tree exceeded the slot. `TargetHardwareSupportInstaller`
+now mounts a bounded 256 MiB tmpfs at `/run/greia-installer-scratch` and runs
+the support apt install with `TMPDIR` and `Dir::Cache::archives` there; only
+the 42 MiB compressed initrd is written to the slot. The same offline package
+install and initramfs generation then passed locally. `make verify`: 6,012
+tests OK, 5 skipped. Installer
+`7869b6b59e973ecd016facc3035ad29b7219a65efac394b26094ed32d447daae`
+(2,270,167,040 bytes) was built and flashed to the LaCie; full
+2,270,167,040-byte readback matched. Physical Acer reinstall/first boot
+remains PENDING.

@@ -118,3 +118,23 @@ installer FAT32 partition. This does not recover the existing internal-disk
 SYSTEM_A transcript; the read-only recovery options above remain the
 preferred evidence path, and any reinstall or internal-disk write remains a
 separate destructive action.
+
+## Recovered cause and repair (2026-10-29)
+
+The next installer wrote `GREIA_EFI/greia-logs/last-install-failure.log`.
+The failing package was `initramfs-tools`; its postinst ran
+`update-initramfs` and `zstd` failed with `No space left on device` while
+writing `/boot/initrd.img-6.1.0-54-686-pae`. The preceding
+`intel-microcode`, `firmware-misc-nonfree` and `firmware-realtek`
+installations succeeded. Reproduction on the exact bundle payload showed a
+1,362 MiB payload plus ~82 MiB support on a 1,664 MiB slot, with an
+~182 MiB `mkinitramfs` temporary tree plus a 42 MiB output; the transient
+tree filled the slot.
+
+The finalizer now places the apt archive cache and `mkinitramfs` temporary
+tree on a bounded 256 MiB RAM scratch area
+(`/run/greia-installer-scratch`) and leaves only the compressed initrd on the
+slot. The same package install/initramfs generation now passes on the 1,664
+MiB slot. Raw log and analysis:
+[2026-10-29_ACER_USB_INSTALL_ENOSPC_INITRAMFS.md](2026-10-29_ACER_USB_INSTALL_ENOSPC_INITRAMFS.md).
+Physical reinstall remains the next acceptance step.

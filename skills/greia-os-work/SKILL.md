@@ -89,6 +89,16 @@ rejects any missing identity. Route acceptance through
 socket acceptance alone does **not** prove the systemd UI launches. Retest the
 actual default service in QEMU and on hardware after a corrected image rebuild.
 
+The next physical Acer install failed inside the `initramfs-tools` postinst
+with `zstd ... No space left on device`: the 1,664 MiB SYSTEM_A slot held the
+payload and hardware-support packages, while `mkinitramfs` needed an ~182 MiB
+temporary tree plus a 42 MiB initrd. Keep transient apt/initramfs bytes out
+of SYSTEM_A: the installer mounts a bounded 256 MiB tmpfs at
+`/run/greia-installer-scratch` and directs `TMPDIR` and
+`Dir::Cache::archives` there. Do not relax capacity checks or enlarge
+boot-control/PERSIST to hide this. Route to
+`docs/reviews/2026-10-29_ACER_USB_INSTALL_ENOSPC_INITRAMFS.md`.
+
 ## Current blocking route: post-R1 product-composition closure + multiplatform lifecycle plan
 
 Install/update/release/multiplatform lifecycle work routes to

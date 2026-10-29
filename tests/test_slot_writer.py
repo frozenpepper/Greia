@@ -1928,6 +1928,7 @@ class SharedSeamTests(unittest.TestCase):
                     target_root / "proc",
                     target_root / "sys",
                     target_root / "run",
+                    target_root / "run/greia-installer-scratch",
                     target_root / "run/greia-hardware-support",
                 ],
             )

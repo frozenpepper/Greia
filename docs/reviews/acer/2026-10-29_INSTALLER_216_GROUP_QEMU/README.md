@@ -27,3 +27,10 @@ changes. `installer-language-screen-r2.png` is the same QEMU default-service
 boot evidence for that image; its screenshot hash is identical to the first
 image's (`28b9ce7d…`). The actual live squashfs also contains
 `opt/greia-os/src/greia_installer/install_diagnostics.py`.
+
+## RAM-scratch rebuild (2026-10-29)
+
+Installer `7869b6b59e973ecd016facc3035ad29b7219a65efac394b26094ed32d447daae`
+adds the `initramfs-tools` ENOSPC fix. Its default installer service reached
+the same interactive language screen; the captured framebuffer is
+byte-identical to `installer-language-screen.png` (`28b9ce7d…`).
