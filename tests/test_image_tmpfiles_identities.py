@@ -43,11 +43,12 @@ def _logical_lines(text: str) -> list[str]:
 def _identities_created_by_compose() -> set[str]:
     created: set[str] = {"root"}
     for command in _logical_lines(COMPOSE.read_text(encoding="utf-8")):
-        if "groupadd" in command:
-            fields = command.split()
-            index = max(i for i, f in enumerate(fields) if f.endswith("groupadd"))
+        fields = command.split()
+        groupadd_indexes = [i for i, f in enumerate(fields) if f.endswith("groupadd")]
+        if groupadd_indexes:
+            index = max(groupadd_indexes)
             for field in fields[index + 1:]:
-                if field.startswith("-"):
+                if field.startswith("-") or field.startswith("$"):
                     continue
                 created.add(field)
                 break

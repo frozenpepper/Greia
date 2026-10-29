@@ -2,17 +2,22 @@
 
 **Purpose:** the short current state for contributors and agents: active workstreams, recent results, blockers and next steps. It is not an archive.
 
-**Physical Acer installer boot blocker (2026-10-29):** The exact SHA-256
-`b81279af...` LaCie USB image failed to launch the graphical installer:
-systemd logged `status=216/GROUP` / `Failed to determine supplementary groups`.
-The live-installer image role never created `netdev`, even though the UI
-unit requested `video input tty netdev audio`; target group provisioning
-does not apply to the live root. Source now explicitly provisions the
-unit's declared groups, includes the group-management package, validates
-the composed root and tests the regression. **Corrected image rebuild,
-live-root inspection, default-service QEMU boot and physical Acer re-test
-are still PENDING.** Existing USB remains broken; do not claim physical
-installer acceptance or install to the Acer disk. Details:
+**Physical Acer installer boot blocker (2026-10-29):** The previous
+`b81279af...` LaCie image failed before the installer UI with systemd
+`status=216/GROUP` because the live root lacked `netdev` (and potentially
+other unit groups). The live-installer composer now provisions every group
+declared by the actual unit, ships `passwd`/`groupadd`, and the composed-root
+verifier rejects missing names. Corrected image
+`d12568abd9c60a6d23f75b7afe0204f53bf5567ff37ae95bf799fd91b7b0cabd`
+(2,270,167,040 bytes) was built from `4d2b65f78`; the actual squashfs
+contains `nobody/nogroup/video/input/tty/netdev/audio`; the default
+`greia-installer.service` booted under QEMU to the interactive language
+screen (`active`, `enabled`, `ExecStartPre` success); `make verify` is
+GREEN (6,016 tests, 5 skipped). The LaCie `/dev/sdc` (`iamaKey`, serial
+`eca3505216d7d3`) was reflashed and the first 2,270,167,040 bytes read back
+byte-identical. **Physical Acer boot from the new USB is PENDING**; do not
+claim physical installer acceptance. Internal-disk install still needs its
+own explicit destructive-action approval. Details:
 [2026-10-29_ACER_USB_INSTALLER_216_GROUP.md](docs/reviews/2026-10-29_ACER_USB_INSTALLER_216_GROUP.md).
 
 

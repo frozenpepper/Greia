@@ -3806,3 +3806,19 @@ The verified LaCie image SHA-256 `b81279afe4c8d72bb458670efda95c6a422deddbceef69
 Source root cause: `SupplementaryGroups=video input tty netdev audio` in the live installer unit, but `compose_create_users_groups` provisioned `netdev` **only for the installed target**, not the live installer. Fix: `compose_create_live_installer_groups` now provisions all groups from the real unit in the live root before enabling it; `passwd` explicitly provides groupadd, the composed-image verifier rejects missing names, and a local mock-chroot test reproduces the omission.
 
 **Evidence boundary:** GitHub source repair only. Corrected-image build, exact squashfs group inspection, normal/default `greia-installer.service` QEMU launch, re-authorized USB flash/readback, and physical Acer graphical installer boot are still **NOT RUN**. Do not treat the previous image as install-ready. See `docs/reviews/2026-10-29_ACER_USB_INSTALLER_216_GROUP.md`.
+
+**2026-10-29 corrected installer build and USB flash:** Rebuilt the
+`acer-aspire-one-i386-ab` installer from `4d2b65f78` after fixing two stale
+test fixtures exposed by the new live-group verifier. `make verify` is GREEN
+(6,016 tests OK, 5 skipped). Image
+`d12568abd9c60a6d23f75b7afe0204f53bf5567ff37ae95bf799fd91b7b0cabd`
+(2,270,167,040 bytes) contains `nobody`, `nogroup`, `video`, `input`, `tty`,
+`netdev` and `audio` in its actual `live/filesystem.squashfs`; its default
+`greia-installer.service` reached `active`/`enabled` and rendered the
+interactive language screen under QEMU. The owner-authorized LaCie
+`/dev/sdc` (`iamaKey`, serial `eca3505216d7d3`, 7.5 GiB removable) was
+reflashed; the first 2,270,167,040 bytes read back byte-identical and the
+media exposes `GREIA_EFI` + `PIP_INSTALL` with the unchanged bundle
+`2572bf08…`. Physical Acer boot from this media remains PENDING. Evidence:
+`docs/reviews/2026-10-29_ACER_USB_INSTALLER_216_GROUP.md` and
+`docs/reviews/acer/2026-10-29_INSTALLER_216_GROUP_QEMU/`.

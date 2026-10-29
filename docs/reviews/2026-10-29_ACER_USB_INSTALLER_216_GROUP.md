@@ -1,7 +1,7 @@
 # Acer USB installer first-boot failure: systemd 216/GROUP
 
 Date: 2026-10-29 · Evidence class: **physical Acer console photograph + source inspection**.
-Status: **source repair committed, corrected image NOT YET BUILT/TESTED**.
+Status: **corrected image built and QEMU default-service acceptance PASS; LaCie reflashed with byte-identical readback; physical Acer boot PENDING.** The original source-only repair record is preserved below.
 
 ## Evidence
 
@@ -96,3 +96,63 @@ is **still broken**.
 A physical Acer installation would be a separate destructive action requiring
 explicit owner approval; booting an installer is not authority to overwrite the
 internal disk.
+
+## Corrected-image acceptance (2026-10-29)
+
+**Source and gates.** Current `main` `4d2b65f78` plus two test-only fixture
+repairs needed because the new verifier checks exposed stale fixtures.
+Focused group/verifier regressions passed, then `make verify` was **GREEN**:
+6,016 tests OK, 5 skipped. The installer was rebuilt from this tree with the
+already-validated unchanged target bundle
+`2572bf0829152c24aaf0e82f897b9ba651f871f30c4c9ad5d4f9349729dab3d0`;
+the live-installer repair is installer-side only.
+
+**Exact image.** Profile `acer-aspire-one-i386-ab`, image
+`d12568abd9c60a6d23f75b7afe0204f53bf5567ff37ae95bf799fd91b7b0cabd`
+(2,270,167,040 bytes), live media ID
+`8ff1a118-b6a5-48d1-a07e-e531141e5737`, quiet boot, A/B bundle builder
+validation PASS. Output directory:
+`/home/orb/Greia-Images/installer-2026-10-29/`.
+
+**Actual live squashfs inspection.** `unsquashfs` against the image's own
+`live/filesystem.squashfs` confirmed:
+
+```text
+nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin
+nogroup:x:65534:
+video:x:44:
+input:x:101:
+tty:x:5:
+netdev:x:996:
+audio:x:29:
+```
+
+The shipped unit still declares `User=nobody`, `Group=nogroup`,
+`SupplementaryGroups=video input tty netdev audio`; `usr/sbin/groupadd`
+(passwd package) and the enabled `graphical.target.wants` link are present.
+
+**Default-service QEMU boot.** The actual image booted under QEMU 8.2.2/KVM,
+i386, `-cpu n270`, 768 MiB with snapshot media and reached the interactive
+installer language screen. A disposable observation-only clone (only a test
+unit appended; shipped service and group database unchanged) recorded:
+
+```text
+systemctl is-active greia-installer.service  -> active
+systemctl is-enabled greia-installer.service -> enabled
+Active: active (running)
+ExecStartPre=/usr/local/lib/greia-os/prepare-installer-vt (status=0/SUCCESS)
+Main PID: xinit ... greia-installer-client
+```
+
+Evidence: [QEMU acceptance](acer/2026-10-29_INSTALLER_216_GROUP_QEMU/README.md).
+
+**LaCie reflash.** Positively identified `/dev/sdc` (LaCie `iamaKey`, serial
+`eca3505216d7d3`, 7.5 GiB, removable whole disk), owner-authorized. Raw write
+followed by a full first-2,270,167,040-byte readback matched the image
+SHA-256 exactly. The media exposes `GREIA_EFI` (64 MiB vfat) and
+`PIP_INSTALL` (2.1 GiB ext4); the bundle on the media re-read as
+`2572bf08…`, and the flashed squashfs re-checked the same group database.
+
+**Remaining.** Physical Acer boot from this USB and observation of the
+graphical installer screen are still required. Any internal-disk installation
+remains a separate destructive action requiring explicit owner approval.

@@ -655,6 +655,17 @@ class SharedArtifactVerifierTests(unittest.TestCase):
         put("etc/greia-os/developer-remote", "profile=legacy-x86-i686-rc\n")
         put("etc/greia-os/boot-console-policy", "quiet\n")
         put("etc/greia-os/image-profile.json", '{"boot": {"console_policy": "quiet"}}\n')
+        put("etc/passwd",
+            "root:x:0:0:root:/root:/bin/sh\n"
+            "nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin\n")
+        put("etc/group",
+            "root:x:0:\n"
+            "video:x:44:\n"
+            "audio:x:29:\n"
+            "nogroup:x:65534:\n"
+            "input:x:104:\n"
+            "tty:x:5:\n"
+            "netdev:x:108:greiakid,greiapanel\n")
         put("usr/lib/i386-linux-gnu/alsa-lib/libasound_module_pcm_greia_mic_light.so", "ELF\n")
         put("usr/lib/greia/pycache/opt/greia-os/src/greia_platform/boot_contract.cpython-311.pyc")
         put("usr/bin/aplay", "#!/bin/sh\n")
