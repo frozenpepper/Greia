@@ -1030,10 +1030,18 @@ def handle_connection(
         except (InstallTransactionError, TransactionServiceError, PrivilegedChannelError) as exc:
             _s04_diag_boundary("expected exception caught", detail=_s04_diag_detail(exc))
             _greia_log_event("refused", reason=str(exc)[:256])
+            # USB logging must happen while the installer media is still
+            # attached; the partially installed OS may be unbootable.
+            from .install_diagnostics import publish_install_failure
+
+            usb_log = publish_install_failure(exc)
+            reason = str(exc)
+            if usb_log:
+                reason = f"USB log: {usb_log}. {reason}"
             try:
                 _s04_diag_boundary("error response encode starting")
                 response = encode_response(
-                    new_transaction_id(), "ERROR", {"status": "REFUSED", "reason": str(exc)[:256]}
+                    new_transaction_id(), "ERROR", {"status": "REFUSED", "reason": reason[:256]}
                 )
                 _s04_diag_boundary("error response encoded")
             except BaseException as encode_exc:
@@ -1048,6 +1056,9 @@ def handle_connection(
             _greia_log_event(
                 "unexpected_escape", error=_s04_diag_detail(exc)
             )
+            from .install_diagnostics import publish_install_failure
+
+            publish_install_failure(exc)
             raise
         _s04_diag_boundary("handle_request normal response ready")
         try:
