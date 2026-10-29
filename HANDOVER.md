@@ -11,16 +11,20 @@ live-media ID before any write), and labels the error screen with **saved**
 or **could not be saved**. The same error remains in the live runtime and
 systemd journal. Mac/Windows retrieval and verification:
 [INSTALLER_FAILURE_LOGS_ON_USB.md](docs/release/INSTALLER_FAILURE_LOGS_ON_USB.md).
-**No image has been rebuilt or physically tested yet.** Test the USB write
-from an actual freshly-built image before relying on the hardware install;
-the previous image cannot gain this logging without reflashing.
+A fresh image `b853330f…` was built from `9dd3625fb` and flashed to the
+LaCie on owner request; its actual live squashfs contains
+`install_diagnostics.py`, and the default installer UI booted in QEMU.
+Physical Acer testing of the USB write is still **PENDING**. The previous
+image cannot gain this logging without reflashing.
 
 
 **Physical Acer install failure — simplified root installer (2026-10-29):**
 The A/B installer GUI now boots and starts install, but the Acer's actual
 firmware/microcode `apt-get`/dpkg configuration stage fails with generic code
-1. The exact package/postinst reason **has not yet been recovered**; no new
-installer image has been built from this repair. Code review found extensive
+1. The exact package/postinst reason **has not yet been recovered**. The
+owner explicitly requested a rebuild and reflash on 2026-10-29; image
+`b853330f…` now carries the new USB failure logging so the next physical
+attempt can retain the failure transcript. Code review found extensive
 custom systemd hardening on the **one-time root transaction worker**:
 capability whitelist, namespace/FS/sycall filters and process limits. The
 unit's own comments document previous Acer failures from CAP_MKNOD,
@@ -30,18 +34,21 @@ maintainer scripts and builds a complete OS. The worker is now a simple root
 unit; local transaction socket ownership, request authorization and disk
 identity/confirmation logic remain unchanged. Error reporting separately now
 extracts actual dpkg stdout and journals output on *future builds*.
-**No further flash or internal-disk install until the actual failed
-SYSTEM_A apt/dpkg log is recovered read-only** using the existing USB GRUB,
-per [no-reflash recovery guide](docs/reviews/2026-10-29_RECOVER_FAILED_ACER_DPKG_WITHOUT_REFLASH.md).
-This is a source-level simplification, **not a proven fix** to the current
-dpkg error.
+The recommended recovery-first gate remains: recover the failed SYSTEM_A
+apt/dpkg transcript read-only when possible, per the
+[no-reflash recovery guide](docs/reviews/2026-10-29_RECOVER_FAILED_ACER_DPKG_WITHOUT_REFLASH.md).
+The owner explicitly authorized this rebuild/reflash; it does not prove the
+dpkg failure fixed, and internal-disk installation remains a separate
+destructive action.
 The corresponding on-demand A/B **system-update** service uses the same
 hardware-support package finalizer, so its duplicate chroot-breaking
 capability/namespace restrictions have been removed too. Its local update
 socket, semantic operations and layout/boot authority remain unchanged.
 Only the root worker units were simplified; the browser/Parent/child services
-and lightweight Python/Activity update service are not modified. Source
-tests and an image build **have not been run in this GitHub environment**.
+and lightweight Python/Activity update service are not modified. Local
+verification is GREEN (6,012 tests, 5 skipped) and image `b853330f…` was
+built and flashed; physical Acer validation of the new build remains
+**PENDING**.
 
 
 
@@ -65,16 +72,16 @@ end-to-end installation.
 `status=216/GROUP` because the live root lacked `netdev` (and potentially
 other unit groups). The live-installer composer now provisions every group
 declared by the actual unit, ships `passwd`/`groupadd`, and the composed-root
-verifier rejects missing names. Corrected image
-`d12568abd9c60a6d23f75b7afe0204f53bf5567ff37ae95bf799fd91b7b0cabd`
-(2,270,167,040 bytes) was built from `4d2b65f78`; the actual squashfs
-contains `nobody/nogroup/video/input/tty/netdev/audio`; the default
+verifier rejects missing names. Current image
+`b853330f624d816077c1149aa715e03aa2886e3571bbb834bb3e868d6072a436`
+(2,270,167,040 bytes, built from `9dd3625fb`) retains that group fix and
+adds the USB install-failure logging; the actual squashfs contains
+`nobody/nogroup/video/input/tty/netdev/audio`, and the default
 `greia-installer.service` booted under QEMU to the interactive language
-screen (`active`, `enabled`, `ExecStartPre` success); `make verify` is
-GREEN (6,016 tests, 5 skipped). The LaCie `/dev/sdc` (`iamaKey`, serial
-`eca3505216d7d3`) was reflashed and the first 2,270,167,040 bytes read back
-byte-identical. **Physical Acer boot from the new USB is PENDING**; do not
-claim physical installer acceptance. Internal-disk install still needs its
+screen. The LaCie `/dev/sdc` (`iamaKey`, serial `eca3505216d7d3`) was
+reflashed and the first 2,270,167,040 bytes read back byte-identical.
+**Physical Acer boot from the new USB is PENDING**; do not claim physical
+installer acceptance. Internal-disk install still needs its
 own explicit destructive-action approval. Details:
 [2026-10-29_ACER_USB_INSTALLER_216_GROUP.md](docs/reviews/2026-10-29_ACER_USB_INSTALLER_216_GROUP.md).
 

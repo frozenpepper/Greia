@@ -1284,10 +1284,12 @@ class OverlayContractTests(unittest.TestCase):
                 line.startswith("Before="),
                 f"activated contract keeps no Before= edge: {line!r}",
             )
-        self.assertIn("RestrictAddressFamilies=AF_UNIX", service)
+        self.assertIn("User=root", service)
+        self.assertNotIn("RestrictAddressFamilies=", service)
+        self.assertNotIn("ProtectSystem=", service)
         self.assertIn(
-            "ReadWritePaths=/var/lib/greia-os /run/greia-os "
-            "/run/greia-update-authority /run/greia-persist",
+            "RequiresMountsFor=/run/greia-persist /var/lib/greia-os "
+            "/boot/grub /etc/greia-os/layout",
             service,
         )
 

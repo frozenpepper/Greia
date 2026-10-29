@@ -431,31 +431,26 @@ class ShippedUnitContractTests(unittest.TestCase):
         self.assertFalse(parser.has_option("Unit", "ConditionPathExists"))
         _assert_no_condition_directive(SERVICE_PATH)
         self.assertEqual(parser.get("Service", "User").strip(), "root")
-        self.assertEqual(parser.get("Service", "ProtectSystem").strip(), "strict")
-        # Activated sandbox (POSTR1-P3-UPDATE-UNIT): mount/device
-        # The shared finalizer also runs the installer-proven offline APT
-        # package path; retain its apt/dpkg capabilities and task headroom,
-        # while excluding full-rootfs unpack/initramfs-only MKNOD.
-        self.assertEqual(
-            parser.get("Service", "CapabilityBoundingSet").strip(),
-            "CAP_SYS_ADMIN CAP_SYS_CHROOT CAP_SETUID CAP_SETGID CAP_CHOWN "
-            "CAP_FOWNER CAP_FSETID CAP_DAC_OVERRIDE",
+        # The offline slot worker runs arbitrary Debian maintainer scripts.
+        # systemd sandboxing here caused real physical installer/update
+        # failures; locality comes from the Unix socket, not unit filters.
+        for directive in (
+            "ProtectSystem",
+            "CapabilityBoundingSet",
+            "AmbientCapabilities",
+            "RestrictAddressFamilies",
+            "RestrictSUIDSGID",
+            "TasksMax",
+        ):
+            with self.subTest(directive=directive):
+                self.assertFalse(parser.has_option("Service", directive))
+        self.assertIn(
+            "/var/lib/greia-os",
+            parser.get("Unit", "RequiresMountsFor"),
         )
-        self.assertEqual(
-            parser.get("Service", "AmbientCapabilities").strip(),
-            "CAP_SYS_ADMIN CAP_SYS_CHROOT CAP_SETUID CAP_SETGID CAP_CHOWN "
-            "CAP_FOWNER CAP_FSETID CAP_DAC_OVERRIDE",
-        )
-        self.assertEqual(
-            _directive_values(SERVICE_PATH, "ReadWritePaths"),
-            {
-                "/var/lib/greia-os",
-                "/run/greia-os",
-                "/run/greia-update-authority",
-                "/run/greia-persist",
-                "/etc/greia-os",
-                "/boot/grub",
-            },
+        self.assertIn(
+            "/run/greia-persist",
+            parser.get("Unit", "RequiresMountsFor"),
         )
         # v3 carries no key material: no key trust root is granted.
         raw = SERVICE_PATH.read_text(encoding="utf-8")

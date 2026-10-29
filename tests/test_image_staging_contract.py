@@ -21,7 +21,6 @@ this file to the wrong image.
 
 from __future__ import annotations
 
-import re
 import unittest
 from pathlib import Path
 
@@ -235,55 +234,36 @@ class TargetImageCarriesFirstBootFixesTests(unittest.TestCase):
 
 
 class InstallerImageCarriesTransactionFixesTests(unittest.TestCase):
-    """The privileged install unit is sized for the install, not for a guess."""
+    """The one-time installer worker must run maintainer scripts unconfined."""
 
-    def test_suid_restriction_is_off_and_declared_once(self) -> None:
+    def _active_directives(self) -> list[str]:
         text = _read(
             INSTALLER_OVERLAY
             / "etc/systemd/system/greia-install-transaction.service"
         )
-        # Effective directives only: the unit's rationale comments deliberately
-        # quote both measured values, so a raw substring count is meaningless.
-        # A repeated declaration is dangerous here because the later assignment
-        # wins while the file still reads correctly.
-        effective = [
-            line.strip()
+        return [
+            line.split("=", 1)[0].strip()
             for line in text.splitlines()
-            if line.strip() and not line.strip().startswith(("#", ";"))
+            if line and not line.lstrip().startswith(("#", ";", "["))
+            and "=" in line
         ]
-        declared = [l for l in effective if l.startswith("RestrictSUIDSGID=")]
-        self.assertEqual(declared, ["RestrictSUIDSGID=no"], declared)
-        self.assertNotIn("RestrictSUIDSGID=yes", effective)
 
-    def test_task_limit_clears_the_measured_peak(self) -> None:
+    def test_suid_restriction_is_not_reintroduced(self) -> None:
+        self.assertNotIn("RestrictSUIDSGID", self._active_directives())
+
+    def test_no_task_limit_for_package_scripts(self) -> None:
+        self.assertNotIn("TasksMax", self._active_directives())
+
+    def test_no_capability_whitelist_for_package_scripts(self) -> None:
+        active = self._active_directives()
+        for directive in ("CapabilityBoundingSet", "AmbientCapabilities"):
+            with self.subTest(directive=directive):
+                self.assertNotIn(directive, active)
         text = _read(
             INSTALLER_OVERLAY
             / "etc/systemd/system/greia-install-transaction.service"
         )
-        declared = int(
-            re.search(r"^TasksMax=(\d+)$", text, re.MULTILINE).group(1)
-        )
-        self.assertGreater(declared, 16)
-
-    def test_every_evidenced_capability_is_present(self) -> None:
-        text = _read(
-            INSTALLER_OVERLAY
-            / "etc/systemd/system/greia-install-transaction.service"
-        )
-        bounding = re.search(
-            r"^CapabilityBoundingSet=(.*)$", text, re.MULTILINE
-        ).group(1)
-        for capability in (
-            "CAP_MKNOD",     # unsquashfs device nodes
-            "CAP_CHOWN",     # original uid/gid restore
-            "CAP_FOWNER",    # chmod of files the caller does not own
-            "CAP_FSETID",    # setgid bits; absent, it fails silently
-            "CAP_DAC_OVERRIDE",  # apt rename inside /var/lib/apt/lists
-        ):
-            with self.subTest(capability=capability):
-                self.assertIn(capability, bounding)
-        # CAP_DAC_READ_SEARCH was tested and is not needed.
-        self.assertNotIn("CAP_DAC_READ_SEARCH", bounding)
+        self.assertIn("User=root", text)
 
 
 class RepositorySourceCarriesRuntimeFixesTests(unittest.TestCase):

@@ -3838,3 +3838,21 @@ unverified. Collect the existing failed SYSTEM_A apt/dpkg logs read-only
 before any further destructive installation, then make the specific
 production repair and verify the *actual* selected Acer hardware-support
 closure in disposable QEMU before another physical attempt.
+
+**2026-10-29 rebuild with installer USB failure logging:** Source
+`9dd3625fb` (which adds `greia-logs/last-install-failure.log` persistence on
+the installer FAT32 partition, apt/dpkg stdout capture, and the simplified
+unconfined root transaction/system-update workers). Source tests were
+aligned to the new root-worker contract; `make verify` is GREEN (6,012 tests
+OK, 5 skipped). Installer
+`b853330f624d816077c1149aa715e03aa2886e3571bbb834bb3e868d6072a436`
+(2,270,167,040 bytes, live media ID
+`0af73bfd-a236-4140-a837-6073212f3438`) was built with the unchanged
+validated A/B bundle `2572bf08…`. Its live squashfs contains
+`install_diagnostics.py` and the expected group database; the default
+installer UI reached the language screen under QEMU. The owner-authorized
+LaCie `/dev/sdc` (`iamaKey`, serial `eca3505216d7d3`) was reflashed; the
+first 2,270,167,040 bytes read back byte-identical. The Acer internal-disk
+failure transcript remains unrecovered, and physical Acer validation of this
+image is PENDING. Evidence:
+`docs/reviews/acer/2026-10-29_INSTALLER_216_GROUP_QEMU/`.

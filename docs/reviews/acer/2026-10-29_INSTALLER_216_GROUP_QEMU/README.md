@@ -18,3 +18,12 @@ acceptance. Source `4d2b65f78`; installer SHA-256
 The standalone image boot screenshot and the observation-clone screenshot
 were byte-identical (`28b9ce7d…`), confirming the clone showed the same
 interactive screen. Physical Acer boot remains the next required step.
+
+## Later rebuild (2026-10-29)
+
+Image `b853330f624d816077c1149aa715e03aa2886e3571bbb834bb3e868d6072a436`
+(2,270,167,040 bytes, source `9dd3625fb`) adds the USB failure-logging
+changes. `installer-language-screen-r2.png` is the same QEMU default-service
+boot evidence for that image; its screenshot hash is identical to the first
+image's (`28b9ce7d…`). The actual live squashfs also contains
+`opt/greia-os/src/greia_installer/install_diagnostics.py`.

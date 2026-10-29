@@ -874,19 +874,27 @@ class StaticUnitContractTests(unittest.TestCase):
         ROOT / "build/installer-overlay/etc/systemd/system/greia-install-transaction.service"
     )
 
-    def test_update_service_has_shared_finalizer_package_capabilities(self) -> None:
+    def test_update_service_runs_unconfined_root_package_scripts(self) -> None:
         text = self.SERVICE.read_text(encoding="utf-8")
-        expected = (
-            "CAP_SYS_ADMIN CAP_SYS_CHROOT CAP_SETUID CAP_SETGID CAP_CHOWN "
-            "CAP_FOWNER CAP_FSETID CAP_DAC_OVERRIDE"
-        )
-        self.assertIn(f"CapabilityBoundingSet={expected}", text)
-        self.assertIn(f"AmbientCapabilities={expected}", text)
-        self.assertIn("RestrictAddressFamilies=AF_UNIX", text)
-        self.assertIn(
-            "ReadWritePaths=/var/lib/greia-os /run/greia-os /run/greia-update-authority",
-            text,
-        )
+        self.assertIn("User=root", text)
+        self.assertIn("Group=root", text)
+        active = [
+            line.split("=", 1)[0].strip()
+            for line in text.splitlines()
+            if line and not line.lstrip().startswith(("#", ";", "["))
+            and "=" in line
+        ]
+        for directive in (
+            "CapabilityBoundingSet",
+            "AmbientCapabilities",
+            "RestrictAddressFamilies",
+            "ProtectSystem",
+            "ReadWritePaths",
+            "RestrictSUIDSGID",
+            "TasksMax",
+        ):
+            with self.subTest(directive=directive):
+                self.assertNotIn(directive, active)
         self.assertIn(
             "ExecStart=/usr/bin/python3 -m greia_platform.update_privileged "
             "--socket-activated",
@@ -896,17 +904,28 @@ class StaticUnitContractTests(unittest.TestCase):
         self.assertNotIn("WantedBy=", text)
         self.assertNotIn("[Install]", text)
         self.assertIn("Requires=greia-system-update.socket", text)
-        bounding = [
-            line.strip() for line in text.splitlines()
-            if line.strip().startswith("CapabilityBoundingSet=")
-        ]
-        self.assertEqual(bounding, [f"CapabilityBoundingSet={expected}"])
 
-    def test_installer_service_capabilities_stay_minimal(self) -> None:
+    def test_installer_service_runs_unconfined_root_package_scripts(self) -> None:
         text = self.INSTALLER.read_text(encoding="utf-8")
-        self.assertIn("CapabilityBoundingSet=CAP_SYS_ADMIN CAP_SYS_CHROOT", text)
-        self.assertIn("AmbientCapabilities=CAP_SYS_ADMIN CAP_SYS_CHROOT", text)
-        self.assertIn("RestrictAddressFamilies=AF_UNIX", text)
+        self.assertIn("User=root", text)
+        self.assertIn("Group=root", text)
+        active = [
+            line.split("=", 1)[0].strip()
+            for line in text.splitlines()
+            if line and not line.lstrip().startswith(("#", ";", "["))
+            and "=" in line
+        ]
+        for directive in (
+            "CapabilityBoundingSet",
+            "AmbientCapabilities",
+            "RestrictAddressFamilies",
+            "ProtectSystem",
+            "ReadWritePaths",
+            "RestrictSUIDSGID",
+            "TasksMax",
+        ):
+            with self.subTest(directive=directive):
+                self.assertNotIn(directive, active)
         self.assertNotIn("WantedBy=", text)
 
     def test_systemd_analyze_verify_where_available(self) -> None:

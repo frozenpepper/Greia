@@ -491,15 +491,17 @@ for **every** declared group; test `tests/test_live_installer_groups.py`
 guards this failure. See
 [the physical failure review](../reviews/2026-10-29_ACER_USB_INSTALLER_216_GROUP.md).
 
-The corrected image was checked inside its **actual live squashfs** (all
-declared groups present), its default `greia-installer.service` reached
-`active`/`enabled` with the interactive UI in QEMU, and the re-authorized
-LaCie `/dev/sdc` (`iamaKey`, serial `eca3505216d7d3`) was reflashed with a
-byte-identical first-2,270,167,040-byte readback. The remaining gate is
-physical Acer boot from that USB and observation of the graphical installer
-screen. An install through only the transaction socket is insufficient
-evidence; internal-disk installation still requires separate explicit
-authorization.
+Current image `b853330f…` (source `9dd3625fb`, which adds USB
+`greia-logs/last-install-failure.log` persistence) was checked inside its
+**actual live squashfs** (all declared groups present and
+`install_diagnostics.py` shipped), its default `greia-installer.service`
+reached the interactive UI in QEMU, and the re-authorized LaCie `/dev/sdc`
+(`iamaKey`, serial `eca3505216d7d3`) was reflashed with a byte-identical
+first-2,270,167,040-byte readback. The remaining gate is physical Acer boot
+from that USB, observation of the graphical installer screen, and recovery
+of the actual apt/dpkg failure transcript. An install through only the
+transaction socket is insufficient evidence; internal-disk installation
+still requires separate explicit authorization.
 
 ### Live installer quiet-screen recovery (source contract, 2026-10-17)
 

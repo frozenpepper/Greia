@@ -107,3 +107,14 @@ package and error. Reproduce its `apt-get install`/maintainer script under
 the simplified service in a disposable i386 SYSTEM_A root with the Acer-selected
 hardware-support packages. Only after it passes should a new image be built
 and tested all the way through UI > fresh A/B install > first boot.
+
+## Owner-authorized rebuild/reflash note (2026-10-29)
+
+The repository owner explicitly requested a fresh installer build and LaCie
+reflash after reviewing this recovery guide. Image
+`b853330f624d816077c1149aa715e03aa2886e3571bbb834bb3e868d6072a436`
+now includes `greia-logs/last-install-failure.log` persistence to the
+installer FAT32 partition. This does not recover the existing internal-disk
+SYSTEM_A transcript; the read-only recovery options above remain the
+preferred evidence path, and any reinstall or internal-disk write remains a
+separate destructive action.

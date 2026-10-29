@@ -156,3 +156,12 @@ SHA-256 exactly. The media exposes `GREIA_EFI` (64 MiB vfat) and
 **Remaining.** Physical Acer boot from this USB and observation of the
 graphical installer screen are still required. Any internal-disk installation
 remains a separate destructive action requiring explicit owner approval.
+
+**Later rebuild (same day):** owner requested a rebuild after the USB
+failure-logging commits. Image
+`b853330f624d816077c1149aa715e03aa2886e3571bbb834bb3e868d6072a436`
+(2,270,167,040 bytes, source `9dd3625fb`, live media ID
+`0af73bfd-a236-4140-a837-6073212f3438`) retains the group fix, adds
+`install_diagnostics.py` and the simplified unconfined root workers, and was
+flashed to the same LaCie with byte-identical readback. `make verify`:
+6,012 tests OK, 5 skipped. Physical Acer boot remains PENDING.

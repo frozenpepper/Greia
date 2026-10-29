@@ -312,7 +312,8 @@ class SemanticServiceDefinitionGuardTests(unittest.TestCase):
             )
         self.assertNotIn("WantedBy=", service_text)
         self.assertIn("WantedBy=sockets.target", socket_text)
-        self.assertIn("RestrictAddressFamilies=AF_UNIX", service_text)
+        self.assertIn("User=root", service_text)
+        self.assertNotIn("RestrictAddressFamilies=", service_text)
         self.assertIn(
             "ExecStart=/usr/bin/python3 -m greia_platform.update_privileged "
             "--socket-activated",
@@ -337,7 +338,8 @@ class SemanticServiceDefinitionGuardTests(unittest.TestCase):
         )
         self.assertNotIn("ConditionPathExists", service_text)
         self.assertNotIn("WantedBy=", service_text)
-        self.assertIn("RestrictAddressFamilies=AF_UNIX", service_text)
+        self.assertIn("User=root", service_text)
+        self.assertNotIn("RestrictAddressFamilies=", service_text)
 
     def test_no_destructive_backend_wired(self) -> None:
         for relative in (
