@@ -38,6 +38,10 @@ def append_command_failure(
     command: Sequence[str], code: int, stdout: str | None, stderr: str | None
 ) -> None:
     """Record the real dpkg output from *both* streams, with exit status."""
+    # Only the live installer owns this diagnostic location. Normal host
+    # development/tests should never create stray files under host /run.
+    if not LIVE_MEDIA_MARKER.is_file():
+        return
     report = (
         f"\n--- FAILED COMMAND (exit {code}): {' '.join(map(str, command))} ---\n"
         f"--- stdout ---\n{_tail(stdout)}\n"
@@ -139,6 +143,8 @@ def publish_install_failure(error: BaseException) -> str | None:
     A previous command failure may already have written its full captured apt
     output. Keep that before the final exception and Python traceback.
     """
+    if not LIVE_MEDIA_MARKER.is_file():
+        return None
     try:
         details = LIVE_LOG.read_text(encoding="utf-8") if LIVE_LOG.is_file() else ""
     except OSError:
