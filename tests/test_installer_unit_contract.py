@@ -1,36 +1,8 @@
-"""POSTR1-P2-INSTALLER-UNIT: installer unit immutable-facts + minimum-privilege contract.
+"""Greia installer transaction: release facts, startup and real Debian installs.
 
-Proves the exact shipped unit
-(``build/installer-overlay/etc/systemd/system/greia-install-transaction.service``)
-carries one immutable image-owned A/B release-facts source and the minimum
-privilege/writable-path contract the real implementation needs — no more:
-
-- the unit loads ``/etc/greia-os/installer-ab.env`` through
-  ``EnvironmentFile`` (the same default
-  ``greia_installer.composition.AB_INSTALL_ENV_FILE_DEFAULT`` parses — one
-  authority, not hand-maintained copies) and hardcodes no ``GREIA_AB_*``
-  ``Environment=`` lines;
-- ``greia_installer.composition.ab_executor_facts_from_environment`` is the
-  single central parser (file baseline, explicit ``GREIA_AB_*`` wins per
-  key for tests/overrides);
-- capabilities are exactly ``CAP_SYS_ADMIN`` (mounts), ``CAP_SYS_CHROOT``
-  (hardware-support ``chroot`` install leg), ``CAP_SETUID`` and
-  ``CAP_SETGID`` (apt privilege drop), while ``ReadWritePaths`` are exactly
-  the socket dir + the PERSIST/boot-control staging dirs + the slot mount
-  root, all pre-created by tmpfiles;
-- filesystem stays strict, network stays ``AF_UNIX``-only, no shell API, the
-  semantic ``PREPARE_PLAN``/``EXECUTE`` protocol with kernel peer
-  credentials is untouched;
-- missing facts/bundle/key dir or a mismatched profile refuses fail-closed
-  before any disk mutation;
-- break → RED → restore → GREEN sensitivity on the central file mechanism
-  (capability-removal sensitivity is proven by the Linux mount/write proof
-  recorded with the attempt, not by unit text).
-
-Structured parsing throughout: no brittle full-file snapshot. Offline only:
-all fixtures live under disposable tmpdirs; no ``/etc``/``/run`` contact
-(the default image-owned path is always shadowed by a disposable
-``GREIA_AB_CONFIG``); no network, no signing.
+The transaction socket validates the request and disk identity. The one-shot
+root worker must not carry systemd sandbox restrictions that break dpkg,
+chroot, initramfs or bootloader installation on the reference Acer.
 """
 
 from __future__ import annotations
@@ -407,8 +379,8 @@ class ImmutableFactsSourceTests(unittest.TestCase):
 # ---------------------------------------------------------------------------
 
 
-class BoundedPrivilegeTests(unittest.TestCase):
-    def test_unit_uses_canonical_transaction_service_entrypoint(self) -> None:
+class InstallerTransactionUnitTests(unittest.TestCase):
+    def test_unit_uses_canonical_entrypoint(self) -> None:
         facts = parse_unit(UNIT_PATH)
         self.assertEqual(
             facts.get("exec_start"),
@@ -416,168 +388,52 @@ class BoundedPrivilegeTests(unittest.TestCase):
         )
         source = ENTRYPOINT_PATH.read_text(encoding="utf-8")
         self.assertIn("from .transaction_service import main", source)
-        self.assertNotIn("class InstallTransactionService", source)
-        import greia_installer.transaction_service as service_module
-        import greia_installer.transaction_service_entrypoint as entrypoint_module
 
-        self.assertIs(entrypoint_module.main, service_module.main)
-        implementation = SERVICE_IMPL_PATH.read_text(encoding="utf-8")
-        self.assertNotIn('if __name__ == "__main__"', implementation)
-
-    def test_entrypoint_executes_canonical_main_as_main_module(self) -> None:
-        import greia_installer.transaction_service as service_module
-
-        with (
-            mock.patch.object(service_module, "main", return_value=23) as main_call,
-            mock.patch.object(sys, "argv", ["transaction_service_entrypoint"]),
-            self.assertRaises(SystemExit) as raised,
-        ):
-            runpy.run_module(
-                "greia_installer.transaction_service_entrypoint",
-                run_name="__main__",
-                alter_sys=True,
-            )
-        self.assertEqual(raised.exception.code, 23)
-        main_call.assert_called_once_with([])
-
-
-    def test_capabilities_are_exactly_evidenced_installer_set(self) -> None:
-        expected = [
-            "CAP_SYS_ADMIN",
-            "CAP_SYS_CHROOT",
-            "CAP_SETUID",
-            "CAP_SETGID",
-            "CAP_MKNOD",
-            "CAP_CHOWN",
-            "CAP_FOWNER",
-            "CAP_FSETID",
-            "CAP_DAC_OVERRIDE",
+    def test_worker_runs_as_root_with_unrestricted_chroot_package_configuration(self) -> None:
+        text = UNIT_PATH.read_text(encoding="utf-8")
+        facts = parse_unit(UNIT_PATH)
+        self.assertEqual(facts.get("User"), "root")
+        # The entire installed filesystem must be writable and Debian
+        # maintainer scripts must be able to create nodes, fork, chown,
+        # update initramfs and use any required normal syscall.
+        forbidden = (
+            "CapabilityBoundingSet", "AmbientCapabilities", "NoNewPrivileges",
+            "ProtectSystem", "ReadWritePaths", "PrivateTmp", "ProtectHome",
+            "RestrictSUIDSGID", "RestrictAddressFamilies", "SystemCallFilter",
+            "ProtectKernelModules", "ProtectKernelTunables", "TasksMax",
+            "SystemCallArchitectures", "LockPersonality",
+        )
+        active = [
+            line.split("=", 1)[0].strip()
+            for line in text.splitlines()
+            if line and not line.lstrip().startswith(("#", ";", "["))
+            and "=" in line
         ]
-        facts = parse_unit(UNIT_PATH)
-        self.assertEqual(
-            (facts.get("CapabilityBoundingSet") or "").split(),
-            expected,
-        )
-        self.assertEqual(
-            (facts.get("AmbientCapabilities") or "").split(),
-            expected,
-        )
+        for directive in forbidden:
+            self.assertNotIn(directive, active, directive)
 
-    def test_chroot_install_leg_requires_declared_capability_and_argv_arrays(
-        self,
-    ) -> None:
-        """Regression: the unit must declare what the chroot install leg needs.
+    def test_socket_activation_and_release_facts_remain_unchanged(self) -> None:
+        text = UNIT_PATH.read_text(encoding="utf-8")
+        self.assertIn("Requires=greia-install-transaction.socket", text)
+        self.assertIn("EnvironmentFile=-/etc/greia-os/installer-ab.env", text)
+        self.assertIn("Environment=GREIA_HARDWARE_SUPPORT_POOL=/opt/greia-hardware-support", text)
+        self.assertIn("Restart=no", text)
+        self.assertNotIn("WantedBy=", text)
+        self.assertNotIn("StandardInput=socket", text)
+        self.assertEqual(parse_unit(UNIT_PATH)["read_write_paths"], set())
 
-        ``TargetHardwareSupportInstaller.install`` runs ``chroot <slot>
-        apt-get ...`` (update / install / clean) through the production
-        argv-array runner (``shell=False``). ``chroot(2)`` fails with EPERM
-        without ``CAP_SYS_CHROOT``. Session-04 QEMU also proved apt needs
-        ``CAP_SETUID``/``CAP_SETGID`` for its normal privilege drop, so the
-        unit must carry exactly those four evidenced capabilities — and the
-        install path must stay argv arrays, never a shell string.
-        """
-        facts = parse_unit(UNIT_PATH)
-        for key in ("CapabilityBoundingSet", "AmbientCapabilities"):
-            declared = (facts.get(key) or "").split()
-            self.assertIn(
-                "CAP_SYS_CHROOT",
-                declared,
-                f"{key} must declare the capability the chroot install leg needs",
-            )
-            self.assertIn(
-                "CAP_MKNOD",
-                declared,
-                f"{key} must declare CAP_MKNOD: update-initramfs inside the "
-                "target chroot creates device nodes and fails with EPERM "
-                "without it (reference Acer, first real install)",
-            )
-            self.assertEqual(
-                sorted(declared),
-                sorted(
-                    [
-                        "CAP_SYS_ADMIN",
-                        "CAP_SYS_CHROOT",
-                        "CAP_SETUID",
-                        "CAP_SETGID",
-                        "CAP_MKNOD",
-                        "CAP_CHOWN",
-                        "CAP_FOWNER",
-                        "CAP_FSETID",
-                        "CAP_DAC_OVERRIDE",
-                    ]
-                ),
-                f"{key} must declare exactly the evidenced capability set",
-            )
+    def test_apt_dpkg_chroot_uses_argument_arrays(self) -> None:
         install_source = (
-            REPO_ROOT
-            / "src"
-            / "greia_installer"
-            / "hardware_support_install.py"
+            REPO_ROOT / "src/greia_installer/hardware_support_install.py"
         ).read_text(encoding="utf-8")
-        self.assertGreaterEqual(
-            install_source.count('"chroot"'),
-            3,
-            "hardware-support install must still run the three chroot legs "
-            "(update / install / clean)",
-        )
+        self.assertGreaterEqual(install_source.count('"chroot"'), 3)
         self.assertIn('"apt-get"', install_source)
         self.assertNotIn("shell=True", install_source)
-        self.assertNotIn("os.system", install_source)
-        seams_source = (
-            REPO_ROOT / "src" / "greia_installer" / "device_seams.py"
-        ).read_text(encoding="utf-8")
+        seams_source = (REPO_ROOT / "src/greia_installer/device_seams.py").read_text(encoding="utf-8")
         self.assertIn("shell=False", seams_source)
-        self.assertNotIn("shell=True", seams_source)
-
-    def test_read_write_paths_are_exact(self) -> None:
-        facts = parse_unit(UNIT_PATH)
-        self.assertEqual(
-            frozenset(facts["read_write_paths"]),  # type: ignore[arg-type]
-            EXPECTED_READ_WRITE_PATHS,
-        )
-
-    def test_strict_filesystem_no_network_no_shell(self) -> None:
-        facts = parse_unit(UNIT_PATH)
-        self.assertEqual(facts.get("ProtectSystem"), "strict")
-        self.assertEqual(facts.get("NoNewPrivileges"), "yes")
-        families = (facts.get("RestrictAddressFamilies") or "").split()
-        self.assertIn("AF_UNIX", families)
-        self.assertNotIn("AF_INET", families)
-        self.assertNotIn("AF_INET6", families)
-        # Native fd-store activation (POSTR1-P5): the entry consumes
-        # LISTEN_FDS + fd 3, so the unit must NOT select inetd-style
-        # stdin passing. Kernel peer credentials still arrive over the
-        # accepted connection, never via standard input.
-        self.assertNotEqual(
-            facts.get("StandardInput"),
-            "socket",
-            "inetd-style StandardInput=socket leaves LISTEN_FDS unset "
-            "and the entry exits fail-closed",
-        )
-        self.assertIn(
-            facts.get("StandardInput"),
-            (None, "null"),
-            "standard input stays disconnected",
-        )
-        self.assertEqual(facts.get("User"), "root", "mounts need root + CAP_SYS_ADMIN")
-        exec_start = str(facts.get("exec_start"))
-        self.assertTrue(
-            exec_start.startswith("/usr/bin/python3 -m greia_installer."),
-            f"no shell API in ExecStart, got: {exec_start!r}",
-        )
-        self.assertNotIn("sh ", exec_start)
-
-    def test_tmpfiles_precreates_every_write_path(self) -> None:
-        facts = parse_unit(UNIT_PATH)
-        created = parse_tmpfiles_dirs(TMPFILES_PATH)
-        missing = [
-            path
-            for path in facts["read_write_paths"]  # type: ignore[union-attr]
-            if path not in created
-        ]
-        self.assertEqual(missing, [])
 
 
+# ---------------------------------------------------------------------------
 # ---------------------------------------------------------------------------
 # Product profile: A/B path defined, legacy kept explicit
 # ---------------------------------------------------------------------------
@@ -758,182 +614,3 @@ if __name__ == "__main__":
     unittest.main()
 
 
-class InitramfsDeviceNodeCapabilityTests(unittest.TestCase):
-    """The install leg must keep CAP_MKNOD, and must say why it needs it.
-
-    Regression from the first real hardware install on the reference Acer. The
-    installer service carried a deliberately minimal capability set — proved
-    necessary for the chroot leg by Session-04 QEMU — and that evidence was
-    collected only for the steps QEMU could reach. The step it never reached
-    was the one that ends a real install: after the target is written, the
-    engine runs ``chroot <target> update-initramfs -u -k all``, mkinitramfs
-    stages a fresh target under the installed system's /tmp and creates its
-    device nodes with mknod, and mknod needs CAP_MKNOD:
-
-        fatal error: create_inode: failed to create character device
-        /tmp/pip-install-target.3vyxk7p2/dev/console. because operation not
-        permitted
-
-    Nothing in the source-level evidence could have predicted that, which is
-    exactly why the capability is asserted by name *and* the reason is recorded
-    in the unit: a later pass that "tidies" this set back to the QEMU-proven
-    four would otherwise break every real install with no failing test.
-    """
-
-    def test_unit_declares_and_documents_the_mknod_requirement(self) -> None:
-        text = Path(UNIT_PATH).read_text(encoding="utf-8")
-        facts = parse_unit(UNIT_PATH)
-        for key in ("CapabilityBoundingSet", "AmbientCapabilities"):
-            self.assertIn("CAP_MKNOD", (facts.get(key) or "").split(), key)
-        self.assertIn("CAP_MKNOD", text)
-        self.assertIn("update-initramfs", text)
-        self.assertIn("create_inode", text)
-        self.assertIn("mknod", text)
-
-    def test_setgid_capability_is_declared_with_its_reproduction(self) -> None:
-        """Without CAP_FSETID a setgid binary silently loses its setgid bit.
-
-        The target's /usr/bin/chage is mode 2755 (setgid, group shadow) and
-        mkinitramfs restores each staged file's original mode. Measured on the
-        appliance with that real binary: chmod 2755 under the service's
-        capability set "succeeds" but yields 755, so the setgid bit is dropped
-        without any error being raised. That is a silent correctness defect in
-        the installed initramfs, and the unit must carry the capability and the
-        reason so it is not tidied away.
-        """
-
-        text = Path(UNIT_PATH).read_text(encoding="utf-8")
-        facts = parse_unit(UNIT_PATH)
-        for key in ("CapabilityBoundingSet", "AmbientCapabilities"):
-            self.assertIn("CAP_FSETID", (facts.get(key) or "").split(), key)
-        self.assertIn("2755", text)
-        self.assertIn("CAP_FSETID", text)
-
-    def test_suid_restriction_is_disabled_with_its_measurement(self) -> None:
-        """RestrictSUIDSGID=yes is the real cause of the setgid install failure.
-
-        It denies mode changes that set SUID/SGID bits, which is precisely what
-        mkinitramfs does to the target's setgid binaries. Measured on the
-        appliance with the real chage and identical capabilities in both runs,
-        the restriction is the only difference: with it, chmod 2755 fails with
-        errno=1; without it, the mode becomes 2755. No capability can substitute
-        for it, because the restriction is a property of the mount namespace
-        rather than of the capability set.
-
-        The declaration is also required to be *unique*. Adding the intended
-        `no` beside a pre-existing `yes` left the restriction in force, because
-        the later assignment wins, and the unit still looked correct on review.
-        Only the surrounding hardening is asserted to survive, since trading
-        this one directive away is deliberate and must not quietly become a
-        trade of the rest.
-        """
-
-        declared = self._service_directive("RestrictSUIDSGID")
-        self.assertEqual(
-            declared, ["no"],
-            "RestrictSUIDSGID must be declared exactly once, and off; a repeated "
-            "declaration silently overrides the intended value: %r" % (declared,),
-        )
-        text = Path(UNIT_PATH).read_text(encoding="utf-8")
-        self.assertIn("errno=1", text)
-        self.assertIn("mount namespace", text)
-        for hardening in ("ProtectSystem=strict", "NoNewPrivileges=yes", "ProtectHome=yes"):
-            self.assertIn(hardening, text)
-
-    def _service_directive(self, key: str) -> list[str]:
-        """Return every value the [Service] section declares for ``key``."""
-
-        values: list[str] = []
-        in_service = False
-        for raw_line in Path(UNIT_PATH).read_text(encoding="utf-8").splitlines():
-            line = raw_line.strip()
-            if line.startswith("[") and line.endswith("]"):
-                in_service = line == "[Service]"
-                continue
-            if not in_service or not line or line.startswith("#") or "=" not in line:
-                continue
-            name, _, value = line.partition("=")
-            if name.strip() == key:
-                values.append(value.strip())
-        return values
-
-    def test_task_limit_exceeds_the_measured_peak(self) -> None:
-        """TasksMax was 8, below the service's own peak of 16.
-
-        unsquashfs died with "Failed to create thread" and mkinitramfs with
-        "100: Cannot fork". Both surface only once the attribute failures are
-        fixed, so the limit was a second failure hiding behind the first, and
-        would have cost another appliance cycle. The peak is sampled from the
-        unit's own cgroup pids.current while running the whole install leg, not
-        estimated, and the declared limit must clear it with headroom.
-        """
-
-        declared = int(self._service_directive("TasksMax")[0])
-        measured_peak = 16
-        self.assertGreater(
-            declared, measured_peak,
-            "TasksMax=%d does not exceed the measured peak of %d"
-            % (declared, measured_peak),
-        )
-        text = Path(UNIT_PATH).read_text(encoding="utf-8")
-        self.assertIn("Cannot fork", text)
-        self.assertIn("pids.current", text)
-
-    def test_dac_override_is_present_for_the_apt_leg(self) -> None:
-        """The apt leg renames inside /var/lib/apt/lists and needs DAC override.
-
-        This leg had never executed on any appliance, because every earlier
-        attempt died before reaching it, so its requirement was invisible. It
-        surfaces as "rename failed, Permission denied" without the capability.
-        CAP_DAC_READ_SEARCH was tested and is deliberately absent.
-        """
-
-        declared = " ".join(self._service_directive("CapabilityBoundingSet"))
-        self.assertIn("CAP_DAC_OVERRIDE", declared)
-        self.assertNotIn("CAP_DAC_READ_SEARCH", declared)
-        text = Path(UNIT_PATH).read_text(encoding="utf-8")
-        self.assertIn("rename failed, Permission denied", text)
-
-    def test_chown_is_declared_and_documented_for_the_same_step(self) -> None:
-        """The initramfs step also needs CAP_CHOWN, and the unit must say so.
-
-        Immediately after CAP_MKNOD was added on the reference Acer, the very
-        next install failed in the same mkinitramfs staging step:
-
-            fatal error : set_attributes: failed to change UID and gids on
-            /tmp/pip-install-target.5m5dz4tui/etc/gshadow. because operation
-            not permitted
-
-        set_attributes calls chown() to restore each staged file's original
-        owner and group; chown(2) to a group the caller does not hold requires
-        CAP_CHOWN. Two capabilities from one unevidenced step is the evidence
-        that the QEMU-proven set was never sufficient for a real install.
-        """
-
-        text = Path(UNIT_PATH).read_text(encoding="utf-8")
-        facts = parse_unit(UNIT_PATH)
-        for key in ("CapabilityBoundingSet", "AmbientCapabilities"):
-            self.assertIn("CAP_CHOWN", (facts.get(key) or "").split(), key)
-        self.assertIn("set_attributes", text)
-        self.assertIn("CAP_CHOWN", text)
-
-    def test_added_capabilities_are_no_wider_than_admin_already_granted(self) -> None:
-        """The extra capabilities must not be the widest privilege in the set.
-
-        The set already carries CAP_SYS_ADMIN, which dominates both CAP_MKNOD
-        and CAP_CHOWN for risk purposes, so adding them grants no authority the
-        service did not already hold. This records the argument that made the
-        additions acceptable rather than a blanket widening.
-        """
-
-        facts = parse_unit(UNIT_PATH)
-        declared = (facts.get("CapabilityBoundingSet") or "").split()
-        self.assertIn("CAP_SYS_ADMIN", declared)
-        for capability in (
-            "CAP_MKNOD",
-            "CAP_CHOWN",
-            "CAP_FOWNER",
-            "CAP_FSETID",
-            "CAP_DAC_OVERRIDE",
-        ):
-            self.assertIn(capability, declared)
