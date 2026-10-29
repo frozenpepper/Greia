@@ -50,6 +50,7 @@ from .composition import (
     provisional_installed_shell_window_backend,
 )
 from .theme import LauncherThemeController
+from .installed_root import is_installed_root
 from .visual_assets import LauncherAssetSet, load_launcher_assets
 
 if False:  # pragma: no cover - typing only, avoids a main/bootstrap cycle.
@@ -263,7 +264,7 @@ class LauncherBootstrap:
         finally:
             emit_boot_marker("activity_discover_end")
         activity_discovery_token = composed.registry.discovery_token()
-        installed = paths.root == Path("/opt/greia-os")
+        installed = is_installed_root(paths.root)
         emit_boot_marker("activity_runtime_build_begin")
         try:
             runtime_services = build_services(runtime, activities)

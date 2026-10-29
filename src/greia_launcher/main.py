@@ -1516,7 +1516,9 @@ class LauncherApplication:
         return False
 
     def _installed_root(self) -> bool:
-        return self.paths.root == Path("/opt/greia-os")
+        from .installed_root import is_installed_root
+
+        return is_installed_root(self.paths.root)
 
     def _rescan_if_due(self) -> bool:
         now = time.monotonic()

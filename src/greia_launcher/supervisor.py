@@ -824,8 +824,10 @@ class ActivitySupervisor:
     def _sandbox_required(self) -> bool:
         if self._require_sandbox_override is not None:
             return self._require_sandbox_override
-        installed_root = Path(os.environ.get("GREIA_OS_ROOT", str(PRODUCTION_ROOT))).resolve()
-        return installed_root == PRODUCTION_ROOT
+        installed_root = Path(os.environ.get("GREIA_OS_ROOT", str(PRODUCTION_ROOT)))
+        from .installed_root import is_installed_root
+
+        return is_installed_root(installed_root)
 
     def _resolve_sandbox(self) -> Path:
         if self._sandbox_executable is not None:

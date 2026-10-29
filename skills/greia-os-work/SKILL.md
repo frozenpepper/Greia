@@ -284,6 +284,12 @@ being logged from an EXIT trap.
 
 ## Shell, launcher, Collections or lightweight UI
 
+Installed releases use `/opt/greia-os` as an application-generation symlink.
+Use `greia_launcher.installed_root.is_installed_root` when selecting installed
+Shell, focus, chrome, sandbox, interpreter or broker behavior; comparing a
+resolved generation to the unresolved link disables these production paths.
+Source tests do not replace Linux Bubblewrap/X11 or physical-device acceptance.
+
 Read:
 
 ```text

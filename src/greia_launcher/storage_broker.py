@@ -368,7 +368,9 @@ def _default_runtime_root() -> Path:
     if configured:
         return Path(configured)
     os_root = Path(os.environ.get("GREIA_OS_ROOT", "/opt/greia-os")).resolve(strict=False)
-    if os_root == Path("/opt/greia-os") and Path("/opt/greia-os").exists():
+    from .installed_root import INSTALLED_APPLICATION_ROOT, is_installed_root
+
+    if is_installed_root(os_root) and INSTALLED_APPLICATION_ROOT.exists():
         return Path("/run/greia-os/storage")
     base = Path(tempfile.gettempdir()) / f"greia-storage-{os.getuid()}"
     if os.name == "posix" and len(os.fsencode(base / ("0" * 32) / "storage.sock")) >= 100:

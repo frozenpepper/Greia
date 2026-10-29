@@ -426,9 +426,11 @@ class PythonRuntimeAdapter:
             return Path(configured)
         installed_root = Path(
             os.environ.get("GREIA_OS_ROOT", str(PRODUCTION_ROOT))
-        ).resolve()
+        )
         system_python = Path("/usr/bin/python3")
-        if installed_root == PRODUCTION_ROOT and system_python.exists():
+        from .installed_root import is_installed_root
+
+        if is_installed_root(installed_root) and system_python.exists():
             return system_python
         return Path(sys.executable)
 

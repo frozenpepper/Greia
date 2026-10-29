@@ -4038,3 +4038,16 @@ improves the reported error's meaning but does not establish why the actual
 installed Parent service was unavailable. Parent access on the Acer remains
 unverified; see HANDOVER and the lifecycle plan for the install findings and
 next evidence. Focused checks included Parent client/panel tests.
+
+**2026-10-30 installed-generation Shell/security regression (SOURCE):** The
+release `/opt/greia-os` symlink was resolved before comparison with its
+unresolved name, selecting development Shell/focus/display composition and
+omitting mandatory Bubblewrap for installed Activities. Shared installed-root
+detection now recognizes the active generation for launcher bootstrap,
+supervisor, Python interpreter and broker paths. Owner reports all Activity
+Home controls missing and S+T inactive; missing chrome follows from source,
+while focus loss is a plausible but unproven cause of S+T. Symlink and real
+bootstrap composition regression tests plus focused supervisor, chrome, broker,
+Parent input and key-chord tests passed on macOS; strict ownership audit passed.
+No real Linux Bubblewrap/X11 or physical Acer acceptance ran. Retest those paths
+before release; this source fix does not close the R7 or device gates.

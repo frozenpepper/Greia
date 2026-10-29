@@ -320,6 +320,32 @@ class BootstrapCoordinatorTests(unittest.TestCase):
                 self.assertIsNotNone(state.catalogue)
                 self.assertIsInstance(state.history_recovery_failures, frozenset)
 
+    def test_installed_generation_pointer_selects_focus_and_chrome(self) -> None:
+        from greia_launcher import installed_root
+        from greia_launcher.child_shell import GreiaChildShell
+        from greia_launcher.shell_window_legacy_x import LegacyXShellWindowController
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            index_path = tmp_path / "builtin-index.json"
+            self._write_production_index(index_path)
+            link = tmp_path / "greia-os"
+            link.symlink_to(REPO_ROOT, target_is_directory=True)
+            env = self._boot_env(tmp_path, index_path)
+            env["GREIA_OS_ROOT"] = str(link)
+            with mock.patch.object(installed_root, "INSTALLED_APPLICATION_ROOT", link), \
+                 mock.patch.dict(os.environ, env, clear=False):
+                app = GreiaChildShell(windowed=True, allow_exit=True, bootstrap=False)
+                state = LauncherBootstrap(app.paths).prepare_runtime(
+                    build_services=app._build_bootstrap_services,
+                    build_supervisor=app._build_bootstrap_supervisor,
+                    build_catalogue=app._bootstrap_catalogue_builder(),
+                )
+                self.assertTrue(state.installed)
+                self.assertIsInstance(state.shell_window_backend, LegacyXShellWindowController)
+                self.assertTrue(state.supervisor._sandbox_required())
+                self.assertIsNotNone(state.supervisor._system_chrome_coordinator)
+
     def test_prepare_performs_no_pygame_work(self) -> None:
         """Sensitivity control: preparation must survive without pygame."""
 

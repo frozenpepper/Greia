@@ -2,6 +2,23 @@
 
 **Purpose:** the short current state for contributors and agents: active workstreams, recent results, blockers and next steps. It is not an archive.
 
+**2026-10-30 Acer Shell installed-generation regression (SOURCE FIX; device
+retest pending):** Owner reports a successful Italian installation, S+T does
+nothing on the profile picker, and every Activity lacks Home. Direct Ethernet
+`192.168.2.8` answered Parent HTTPS health; SSH was closed. The installed
+`/opt/greia-os` is a generation symlink: launcher path resolution compared its
+target to the unresolved link, selecting development instead of installed
+composition. This disabled protected Activity chrome, installed Shell focus
+repair, the installed display coordinator, and mandatory Bubblewrap selection.
+The focus defect is a plausible S+T cause, not a confirmed device diagnosis.
+Shared installed-root detection now handles the generation link across Shell,
+bootstrap, supervisor, interpreter and broker defaults. Focused tests exercise
+the actual symlink and bootstrap composition, but no Linux sandbox, live X11,
+updated-image or physical Acer verification ran. Next: test a current Python
+update on disposable Linux with real Bubblewrap and X11, then verify S+T and
+Home on the Acer using an appropriately accepted update. The currently
+installed candidate has the sandbox regression; do not treat it as release safe.
+
 **2026-10-29 Acer installed-system fix (NEW BUNDLE + INSTALLER; QEMU
 ACCEPTANCE PASS; physical Acer PENDING):** Physical read-only inspection had
 found the installed Parent web root `root:root 0700` (unprivileged integrity
