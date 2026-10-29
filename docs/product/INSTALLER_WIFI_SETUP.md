@@ -35,7 +35,12 @@ The Wi-Fi page must:
 - provide an obvious **Skip for now** / continue-offline path;
 - keep the graphical installer responsive while scanning, associating, or obtaining network configuration;
 - show a clear success or failure state;
-- never require Internet reachability in order to install Greia.
+- never require Internet reachability in order to install Greia;
+- offer an SSH toggle for the running installer, off by default on ordinary
+  installer images, with `greia` /
+  `greia` login, actual on/off state, and visible failure feedback. It applies
+  only to the live installer and works even when Wi-Fi is unavailable (for
+  example, on wired Ethernet).
 
 If no compatible wireless adapter is available, the installer explains that Wi-Fi can be configured later and continues offline.
 

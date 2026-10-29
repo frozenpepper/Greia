@@ -998,3 +998,13 @@ files to the Parent identity before child/Parent services start. These source
 changes need a rebuilt image and installed validation. The reported Acer Parent
 service outage remains undiagnosed; the revised unavailable message is not
 evidence of a repaired service.
+
+
+## Live installer SSH (owner decision 2026-10-29; source/demo)
+
+The Wi-Fi page owns a live-installer SSH toggle, off by default on ordinary
+installer images (`greia` /
+`greia`, ordinary password sudo). The fixed local installer transaction
+operations start/stop only live `ssh.service`; this does not enable SSH on the
+installed release. Use the existing Linux USB patch work order for physical
+acceptance; the installer demo and screenshot renderer do not prove networking.

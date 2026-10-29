@@ -156,11 +156,18 @@ Do not treat available hosted compute as implicit permission to spend money. Ins
 
 Greia developer/test images may expose a remote-control surface so an operator can deploy test Activities, collect screenshots/logs/status, inject bounded test input, restart Greia services, reboot/power off, and use an explicit maintenance SSH shell without physically operating the target machine.
 
+Owner decision 2026-10-29: the live graphical installer also offers an explicit
+Wi-Fi-page SSH toggle, off by default on ordinary installer images, using the `greia` / `greia` account.
+It applies only to the running installer, not the installed release; root SSH
+remains disabled. Normal password-authenticated sudo is available there for
+owner recovery. The following development-only rules continue to govern all
+other remote-control surfaces.
+
 This capability is **development-only**:
 
 - normal/release profiles must not enable SSH merely because developer tooling exists in the repository;
-- remote enablement requires an explicit developer image/profile marker and provisioning;
-- during the active development/test cycle, developer images provide the owner-approved `greia` / `greia` SSH login; root SSH login remains disabled and base/release images keep the `greia` account locked with SSH off;
+- remote enablement requires an explicit developer image/profile marker and provisioning, except the owner-authorized live-installer toggle above;
+- during the active development/test cycle, developer images provide the owner-approved `greia` / `greia` SSH login; root SSH login remains disabled and installed base/release systems keep the `greia` account locked with SSH off;
 - never commit private keys, Wi-Fi passwords, tokens, or other operator credentials;
 - passwordless privilege escalation must stay behind a bounded Greia-owned control command such as `greia-devctl`, not generic passwordless sudo/root APIs;
 - ordinary remotely deployed Activities retain `DEVELOPER_UNSIGNED` trust and live in a source distinct from `/opt/greia-os/activities`; remote file placement must never upgrade package trust;

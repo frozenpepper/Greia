@@ -5,7 +5,7 @@ Step 8A.5 wires the R0/R1 semantic protocol
 split:
 
 - ``greia-installer-ui.service`` runs the graphical UI unprivileged and
-  speaks only ``PREPARE_PLAN``/``EXECUTE`` over the local socket;
+  speaks bounded install and live-SSH operations over the local socket;
 - this module runs as root behind ``greia-install-transaction.socket`` and
   owns every destructive command, but runs one only while a valid prepared
   transaction executes.
@@ -90,6 +90,7 @@ from .install_transaction import (
 )
 from .layout import LayoutError, adapter_for
 from .wifi_carryover import WIFI_SNAPSHOT_KEYS, WifiCarryoverChoice, WifiCarryoverError
+from .live_ssh import LiveSshError, LiveSshService
 
 
 class TransactionServiceError(RuntimeError):
@@ -737,6 +738,18 @@ class InstallTransactionService:
         except PrivilegedChannelError as exc:
             raise InstallTransactionError(str(exc)) from exc
         transaction_id = new_transaction_id()
+        if op in {"LIVE_SSH_STATUS", "LIVE_SSH_SET"}:
+            if (op == "LIVE_SSH_STATUS" and params) or (
+                op == "LIVE_SSH_SET" and
+                (set(params) != {"enabled"} or not isinstance(params.get("enabled"), bool))
+            ):
+                raise InstallTransactionError("invalid live SSH request")
+            try:
+                controller = LiveSshService()
+                active = controller.status() if op == "LIVE_SSH_STATUS" else controller.set_enabled(params["enabled"])
+            except LiveSshError as exc:
+                raise InstallTransactionError(str(exc)) from exc
+            return encode_response(transaction_id, op, {"status": "OK", "active": active})
         if op == "PREPARE_PLAN":
             prepared = self.prepare(params)
             _ = format_log_record(transaction_id, op, "PREPARED")

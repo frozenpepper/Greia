@@ -3898,3 +3898,15 @@ then consume and apply those choices. 214 focused tests pass; this is source
 evidence, not a rebuilt-image, real iwd association, first-boot ownership or
 physical Acer acceptance. Corrected the stale A/B skip in the Wi-Fi product
 requirement. The separate reported Parent service failure remains open.
+
+
+**2026-10-29 — Live-installer SSH toggle (SOURCE / installer-demo visual):**
+The owner authorized a Wi-Fi-page on/off control for the running installer,
+with `greia` / `greia` and normal password-authenticated sudo. The live image
+composition provisions OpenSSH, sudo and Avahi; SSH is disabled by default on ordinary installer images and
+the installed target is unchanged. A local peer-authorized semantic request
+starts/stops only `ssh.service` asynchronously and verifies its actual state.
+The real installer demo and 56 offscreen four-language/two-resolution states
+were exercised; zero layout faults, Italian/Spanish screenshots inspected.
+This is not installed/live SSH or hardware evidence; no image built. Linux USB
+patch and physical SSH acceptance remain open.

@@ -1,9 +1,10 @@
 """Installer prepare-plan/execute semantic protocol (L7-PROTOCOLS, R0/R1).
 
-The ``greia-install-transaction`` socket-activated service exposes exactly
-two semantic operations over the shared :mod:`greia_platform.privileged_channel`
+The ``greia-install-transaction`` socket-activated service exposes bounded
+semantic operations over the shared :mod:`greia_platform.privileged_channel`
 transport:
 
+- ``LIVE_SSH_STATUS`` / ``LIVE_SSH_SET`` query or change only the live installer SSH service.
 - ``PREPARE_PLAN(expected_target_identity, compatible_profile_id,
   settings_snapshot)`` returns a single-use ``transaction_nonce``, a
   canonical human-reviewable plan, and its ``plan_digest``.
@@ -56,7 +57,7 @@ class InstallTransactionError(RuntimeError):
 
 
 #: Semantic operations of the install-transaction service.
-INSTALL_TRANSACTION_OPS = ("PREPARE_PLAN", "EXECUTE")
+INSTALL_TRANSACTION_OPS = ("PREPARE_PLAN", "EXECUTE", "LIVE_SSH_STATUS", "LIVE_SSH_SET")
 
 #: Unprivileged installer UI identity (Debian ``nobody``, always present).
 #: The graphical UI runs as this UID behind ``greia-installer-ui.service``

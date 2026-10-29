@@ -193,6 +193,14 @@ def _wifi_state(wifi: _ScriptedWifi) -> Setup:
     return setup
 
 
+def _wifi_ssh_state(*, enabled: bool = False, busy: bool = False, error: bool = False) -> Setup:
+    def setup(app: Any) -> None:
+        from greia_installer.live_ssh import LiveSshSnapshot
+        _wifi_state(_wifi(WifiSetupPhase.READY, passphrase="segreto"))(app)
+        app._live_ssh.snapshot = LiveSshSnapshot(enabled, busy, error)
+    return setup
+
+
 def _confirm(*, holding: bool = False, wifi_ssid: str | None = None,
              keyboard: bool = False) -> Setup:
     def setup(app: Any) -> None:
@@ -245,6 +253,10 @@ SCENARIOS: tuple[tuple[str, Setup], ...] = (
     ("09-pointer", _page(InstallerPage.POINTER)),
     ("10-display", _page(InstallerPage.DISPLAY)),
     ("11-wifi-scanning", _wifi_state(_wifi(WifiSetupPhase.SCANNING, networks=()))),
+    ("11a-wifi-ssh-off", _wifi_ssh_state()),
+    ("11b-wifi-ssh-on", _wifi_ssh_state(enabled=True)),
+    ("11c-wifi-ssh-busy", _wifi_ssh_state(busy=True)),
+    ("11d-wifi-ssh-error", _wifi_ssh_state(error=True)),
     ("12-wifi-password", _wifi_state(_wifi(WifiSetupPhase.READY, passphrase="segreto"))),
     ("13-wifi-open", _wifi_state(_wifi(WifiSetupPhase.READY, index=1))),
     ("14-wifi-enterprise", _wifi_state(_wifi(WifiSetupPhase.READY, index=2))),

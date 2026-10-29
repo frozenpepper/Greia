@@ -9,6 +9,7 @@ What the UI may do here:
 
 - read safe inventory/display facts (identity digests, eligibility, display
   summaries) for the target page;
+- query or set the running installer's SSH service through fixed semantic requests;
 - ``PREPARE_PLAN`` with an identity digest + compatible profile id + bounded
   settings snapshot, receiving a single-use ``transaction_nonce``, a
   canonical human-reviewable plan and its ``plan_digest``;
@@ -289,6 +290,22 @@ class InstallTransactionClient:
         if returned_op != op:
             raise TransactionClientError("transaction service answered the wrong op")
         return payload
+
+    def live_ssh_status(self) -> bool:
+        """Read the installer-only SSH service state."""
+        return self._live_ssh_request("LIVE_SSH_STATUS", {})
+
+    def set_live_ssh(self, enabled: bool) -> bool:
+        """Start or stop SSH on the live installer, not the target OS."""
+        if not isinstance(enabled, bool):
+            raise TransactionClientError("SSH state must be boolean")
+        return self._live_ssh_request("LIVE_SSH_SET", {"enabled": enabled})
+
+    def _live_ssh_request(self, operation: str, params: Mapping[str, object]) -> bool:
+        payload = self._round_trip(operation, params, self._execute_transport)
+        if payload.get("status") != "OK" or not isinstance(payload.get("active"), bool):
+            raise TransactionClientError("invalid SSH service response")
+        return payload["active"]
 
     def prepare(
         self,

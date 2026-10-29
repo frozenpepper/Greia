@@ -312,6 +312,12 @@ compose_build_early_framebuffer "$LIVE_ROOT"
 compose_build_audio_endpoint_plugin "$LIVE_ROOT"
 compose_configure_systemd "$LIVE_ROOT" "live-installer"
 compose_configure_ssh_base "$LIVE_ROOT"
+# Owner-authorized live-installer recovery account. Provision the ordinary
+# login, then keep the service disabled until the installer toggle starts it.
+compose_provision_developer_ssh_live "$LIVE_ROOT"
+systemctl --root="$LIVE_ROOT" disable ssh.service
+# The UI controls ssh.service, so no independent socket may start it.
+systemctl --root="$LIVE_ROOT" mask ssh.socket
 compose_maybe_provision_developer_ssh "$LIVE_ROOT" "live-installer"
 compose_footprint_prune "$LIVE_ROOT"
 compose_write_metadata_manifests "$LIVE_ROOT" "live-installer"

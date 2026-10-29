@@ -247,7 +247,7 @@ class SemanticServiceDefinitionGuardTests(unittest.TestCase):
     def test_installer_ops_are_prepare_and_execute_only(self) -> None:
         from greia_installer.install_transaction import INSTALL_TRANSACTION_OPS
 
-        self.assertEqual(tuple(INSTALL_TRANSACTION_OPS), ("PREPARE_PLAN", "EXECUTE"))
+        self.assertEqual(tuple(INSTALL_TRANSACTION_OPS), ("PREPARE_PLAN", "EXECUTE", "LIVE_SSH_STATUS", "LIVE_SSH_SET"))
 
     def test_update_ops_are_semantic_only(self) -> None:
         from greia_platform.update_privileged import UPDATE_PRIVILEGED_OPS

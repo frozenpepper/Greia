@@ -2,6 +2,23 @@
 
 **Purpose:** the short current state for contributors and agents: active workstreams, recent results, blockers and next steps. It is not an archive.
 
+**2026-10-29 live-installer SSH toggle (SOURCE / preview tested):** The
+owner requested an installer Wi-Fi-page toggle for SSH on the running live
+installer using `greia` / `greia`. The toggle is off by default on ordinary installer images, starts/stops
+only live `ssh.service` through the existing authorized local installer socket,
+shows state and failure, and supports keyboard and pointer. Live composition
+includes OpenSSH, sudo and Avahi, creates the owner-requested login, keeps root
+SSH denied and disables the service by default. This does not enable SSH on
+installed Greia. The real installer demo accepted mouse and keyboard input;
+56 offscreen visual states (EN/IT/ES/FR, 1024x600 and 800x480) had zero layout
+faults and selected Italian/Spanish screenshots were inspected. Greia's
+Activity Simulator does not run the installer; this is installer-demo visual
+evidence, not physical/network or Activity Simulator acceptance. No image was
+built and the existing USB was not modified. The Linux agent must apply the
+source and live-root provisioning to the existing USB using
+`docs/agents/2026-10-29_INSTALLER_USB_SSH_RECOVERY.md`, then test live SSH on
+the Acer. The installed Parent outage remains undiagnosed.
+
 **2026-10-29 installer preferences and Parent access (SOURCE; installed
 acceptance pending):** The owner reports a successful candidate installation
 with Italian selected, but the installed Shell appeared in English; the

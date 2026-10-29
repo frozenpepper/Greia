@@ -6,26 +6,17 @@ Linux host; do not build or run virtual machines on the Mac. The Acer is at a
 GRUB prompt and is connected to the Mac by Ethernet. The USB is the LaCie
 iamaKey, approximately 8 GB. The owner does not require a USB backup.
 
-1. **Implement the installer change in the repository.** Add an obvious,
-   localized on/off SSH toggle to the Wi-Fi page. It controls SSH on the
-   **currently running live installer**, immediately, without beginning an
-   install or changing the installed OS. Default off; turning it on starts
-   ordinary SSH with username `greia` and password `greia`; turning it off
-   stops SSH. Show the actual result or an actionable failure, and support both
-   mouse and keyboard. Keep the Wi-Fi setup and existing navigation usable.
-2. Add the live-installer-only OpenSSH server, required dependencies and
-   `greia` account. Use standard password authentication and ordinary
-   password-authenticated `sudo`; root SSH stays disabled. Start the service
-   only on toggle, generate host keys on the booted machine, and ensure the
-   SSH unit's existing `prepare-developer-ssh` drop-in and effective sshd
-   configuration really allow the requested login. The live UI is unprivileged:
-   use an explicit, narrowly scoped root service operation for start/stop and
-   verify the actual service state. Do not grant passwordless generic root or
-   alter the installed target's SSH policy.
-3. Add focused tests for toggle on/off, failures, unauthorized callers,
-   keyboard/mouse operation, localization and live-image composition. Commit
-   the source and tests to `main` and push them. Preserve unrelated work. Do not
-   call the toggle complete until the patched USB actually runs it.
+1. **The installer toggle is now implemented in source.** Use current `main`:
+   the Wi-Fi page controls the running installer SSH service, with `greia` /
+   `greia`, off by default on ordinary installer images, with keyboard/pointer
+   behavior and localized copy. The source includes OpenSSH, sudo, Avahi, the live account and the
+   narrowly scoped local service operation. Source/demo tests are not live SSH
+   acceptance. Do not reimplement the toggle.
+2. Apply all affected installer Python sources, locale tables, live service
+   composition and package/account provisioning from current `main` to the
+   extracted live root. Ensure the resulting effective SSH policy and host-key
+   bootstrap actually work on the live system; do not alter installed Greia.
+3. Run the focused installer SSH and layout tests on the Linux host.
 4. **Patch the existing USB in place on Linux.** Identify the LaCie device by
    actual USB identity and partition inspection; recheck before writing. It has
    a 64 MiB FAT EFI partition and an ext4 `PIP_INSTALL` partition. Mount the

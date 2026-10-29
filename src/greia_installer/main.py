@@ -85,6 +85,7 @@ from .transaction_client import (
 from .wifi import IwdWifiBackend, WifiSecurity
 from .wifi_setup import DemoWifiBackend, WifiSetupController, WifiSetupPhase
 from .wifi_carryover import carryover_snapshot_fields
+from .live_ssh import LiveSshToggle
 
 
 class InstallerPage(Enum):
@@ -295,6 +296,8 @@ class InstallerApplication:
         self.wifi = WifiSetupController(
             DemoWifiBackend() if self.demo else IwdWifiBackend()
         )
+        self._live_ssh = LiveSshToggle(self._transaction_client, demo=self.demo)
+        self._wifi_ssh_focus = False
         self._events: queue.Queue[InstallProgress | InstallResult | Exception] = (
             queue.Queue()
         )
@@ -887,6 +890,7 @@ class InstallerApplication:
             frame_started = time.monotonic()
             self._drain_worker_events()
             self.wifi.drain()
+            self._live_ssh.drain()
             self._write_status_record()
             handled_event = False
             for event in pygame.event.get():
@@ -932,7 +936,7 @@ class InstallerApplication:
         return 0
 
     def _handle_text_input(self, text: str) -> None:
-        if self.state.page != InstallerPage.WIFI:
+        if self.state.page != InstallerPage.WIFI or self._wifi_ssh_focus:
             return
         network = self.wifi.snapshot.selected_network
         if network is not None and network.security is WifiSecurity.PERSONAL:
@@ -1039,10 +1043,18 @@ class InstallerApplication:
         if self.state.page == InstallerPage.WIFI:
             if key == pygame.K_ESCAPE:
                 self._back()
+            elif key == pygame.K_TAB:
+                self._wifi_ssh_focus = not self._wifi_ssh_focus
+            elif self._wifi_ssh_focus and key in {pygame.K_RETURN, pygame.K_SPACE}:
+                self._live_ssh.toggle()
             elif key == pygame.K_UP:
+                self._wifi_ssh_focus = False
                 self.wifi.move_selection(-1)
             elif key == pygame.K_DOWN:
+                self._wifi_ssh_focus = False
                 self.wifi.move_selection(1)
+            elif self._wifi_ssh_focus:
+                return True
             elif key == pygame.K_BACKSPACE:
                 self.wifi.backspace_password()
                 self._last_password_character = None
@@ -1112,10 +1124,14 @@ class InstallerApplication:
             self.state.page = InstallerPage.DISPLAY
         elif self.state.page == InstallerPage.DISPLAY:
             self.state.page = InstallerPage.WIFI
+            self._wifi_ssh_focus = False
+            self._live_ssh.refresh()
             self.wifi.begin()
         elif self.state.page == InstallerPage.SETTINGS:
             # Legacy combined page (superseded by POINTER + DISPLAY).
             self.state.page = InstallerPage.WIFI
+            self._wifi_ssh_focus = False
+            self._live_ssh.refresh()
             self.wifi.begin()
         elif self.state.page == InstallerPage.WIFI:
             snapshot = self.wifi.snapshot
@@ -1284,6 +1300,11 @@ class InstallerApplication:
                     return
             return
         if self.state.page == InstallerPage.WIFI:
+            if self._inside("wifi-ssh", position):
+                self._wifi_ssh_focus = True
+                self._live_ssh.toggle()
+                return
+            self._wifi_ssh_focus = False
             if self._inside("wifi-refresh", position):
                 self.wifi.refresh()
                 return
@@ -2077,6 +2098,16 @@ class InstallerApplication:
             pygame.Rect(main.left, y, main.width, main.height),
             center=True,
         ) + 8
+        ssh = self._live_ssh.snapshot
+        self._toggle_row(screen, pygame, main, "wifi-ssh", "Installer SSH: greia / greia",
+                         ssh.enabled, small_font, y, 42, focused=self._wifi_ssh_focus)
+        y += 46
+        if ssh.busy or ssh.error or ssh.enabled:
+            message = ("Changing SSH…" if ssh.busy else
+                       "SSH unavailable. Try again." if ssh.error else
+                       "Connect: ssh greia@greia-installer.local")
+            y = self._paragraph(screen, message, small_font, BURGUNDY if ssh.error else HINT,
+                                pygame.Rect(main.left, y, main.width, main.height), center=True) + 4
         nav_top = self._bottom_row_y(main) - self.BUTTON_HEIGHT // 2 - 8
         error_h = small_font.get_linesize() + 6 if snapshot.error else 0
         area = pygame.Rect(main.left, y, main.width, max(40, nav_top - error_h - y))
@@ -3051,6 +3082,7 @@ class InstallerApplication:
                     bool(snapshot.error),
                     self.wifi.profile is not None,
                 ),
+                self._live_ssh.snapshot,
                 len(self._pointer_infos_cache or ()),
                 tuple(self.state.targets),
                 self._live_tick(),

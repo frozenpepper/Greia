@@ -930,3 +930,15 @@ GenerationResult.evidence_dir. GREIA_VOXSTAGE_HTTP_TIMEOUT (default120s, max7200
 is separate from GREIA_VOXSTAGE_TIMEOUT; accepted submissions must be recovered
 by their existing key after response timeouts, never duplicated. See the corpus
 manual and current HANDOVER before execution.
+
+
+## Live installer SSH toggle (owner decision 2026-10-29)
+
+The installer's Wi-Fi screen has an off by default on ordinary installer images toggle for SSH on the
+running live installer using `greia` / `greia` and ordinary password sudo.
+The fixed local install-transaction socket operations control only `ssh.service`;
+the installed target keeps its independent release SSH policy. The device
+advertises `greia-installer.local` through Avahi when networking permits.
+Source/demo evidence does not establish actual SSH or network connectivity.
+Patch the existing USB and run physical acceptance per
+`docs/agents/2026-10-29_INSTALLER_USB_SSH_RECOVERY.md`.
