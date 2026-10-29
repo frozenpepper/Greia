@@ -1,10 +1,8 @@
-"""Services that resolve driver firmware must be able to read module metadata.
+"""Firmware resolvers must see module metadata.
 
-``ProtectKernelModules=yes`` hides ``/usr/lib/modules``; ``modinfo`` then
-reports every driver as unknown and firmware selection used to resolve to
-nothing (the installed reference Aspire lost ``firmware-iwlwifi`` that way).
-These units keep module *loading* denied through the capability bounding set
-and an explicit ``@module`` syscall filter instead.
+The offline installation worker deliberately has no systemd capability or
+syscall sandbox: it must run real Debian package maintainer scripts. The
+long-lived update service still keeps module loading disabled.
 """
 
 from __future__ import annotations
@@ -41,16 +39,22 @@ class FirmwareResolvingUnitContractTests(unittest.TestCase):
                 inaccessible = " ".join(v for k, v in _directives(unit) if k == "InaccessiblePaths")
                 self.assertNotIn("modules", inaccessible)
 
-    def test_module_loading_stays_denied(self) -> None:
-        for unit in FIRMWARE_RESOLVING_UNITS:
-            with self.subTest(unit=unit.name):
-                directives = _directives(unit)
-                self.assertIn(("SystemCallFilter", "~@module"), directives)
-                bounding = " ".join(v for k, v in directives if k == "CapabilityBoundingSet")
-                ambient = " ".join(v for k, v in directives if k == "AmbientCapabilities")
-                self.assertTrue(bounding, "a capability bounding set must be declared")
-                self.assertNotIn("CAP_SYS_MODULE", bounding)
-                self.assertNotIn("CAP_SYS_MODULE", ambient)
+    def test_long_lived_update_service_keeps_module_loading_disabled(self) -> None:
+        unit = FIRMWARE_RESOLVING_UNITS[1]
+        directives = _directives(unit)
+        self.assertIn(("SystemCallFilter", "~@module"), directives)
+        bounding = " ".join(v for k, v in directives if k == "CapabilityBoundingSet")
+        ambient = " ".join(v for k, v in directives if k == "AmbientCapabilities")
+        self.assertTrue(bounding)
+        self.assertNotIn("CAP_SYS_MODULE", bounding)
+        self.assertNotIn("CAP_SYS_MODULE", ambient)
+
+    def test_one_time_offline_installer_has_no_package_blocking_syscall_filter(self) -> None:
+        directives = _directives(FIRMWARE_RESOLVING_UNITS[0])
+        keys = {name for name, _ in directives}
+        self.assertNotIn("SystemCallFilter", keys)
+        self.assertNotIn("CapabilityBoundingSet", keys)
+        self.assertNotIn("ProtectKernelModules", keys)
 
 
 if __name__ == "__main__":
