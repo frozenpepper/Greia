@@ -3910,3 +3910,14 @@ The real installer demo and 56 offscreen four-language/two-resolution states
 were exercised; zero layout faults, Italian/Spanish screenshots inspected.
 This is not installed/live SSH or hardware evidence; no image built. Linux USB
 patch and physical SSH acceptance remain open.
+
+**2026-10-29 LaCie installer USB patched with live SSH toggle:** Replaced
+only `/live/filesystem.squashfs` on the owner-authorized LaCie
+(`iamaKey`, serial `eca3505216d7d3`) with
+`6b8d2416981e549273cac1edfa9e26bff9ceff62562f56a5addf026cafadfa0a`
+(675 MiB). Applied current installer sources, locales, overlay,
+OpenSSH/sudo/Avahi and the password-enabled `greia` account; `ssh.service`
+is disabled, `ssh.socket` masked, Avahi enabled. A/B bundle
+`2572bf08…` unchanged. QEMU live test passed the Wi-Fi-page toggle:
+on -> SSH login/sudo, off -> connection reset, on -> restored. Real Acer
+connection remains PENDING; this is not release media.

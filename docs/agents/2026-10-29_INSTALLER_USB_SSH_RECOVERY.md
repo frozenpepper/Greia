@@ -43,3 +43,33 @@ not a public release artifact. The owner separately requested carrying all
 installer-selected settings into A/B installations; the source fixes are
 already on `main`, but this USB patch must not overwrite the existing installed
 OS bundle or claim that bundle has been rebuilt with those fixes.
+
+## Executed result (2026-10-29, current-main toggle build)
+
+- USB: `/dev/sdc`, LaCie `iamaKey`, serial `eca3505216d7d3`, 7.5 GiB
+  removable; p1 `GREIA_EFI` 64 MiB vfat, p2 `PIP_INSTALL` 2.1 GiB ext4.
+- Preserved: `/payload/greia-release.greiaupdate` SHA-256
+  `2572bf0829152c24aaf0e82f897b9ba651f871f30c4c9ad5d4f9349729dab3d0`
+  before and after; EFI partition and its (empty) `greia-logs` directory
+  untouched.
+- Replaced only `/live/filesystem.squashfs`: new SHA-256
+  `6b8d2416981e549273cac1edfa9e26bff9ceff62562f56a5addf026cafadfa0a`
+  (675 MiB). Applied current `main` installer sources, locale tables,
+  installer overlay, and the live package/account provisioning.
+- Provisioned: `openssh-server`, `sudo`, `avahi-daemon`; password-enabled
+  `greia` (`uid=1000`, home `/var/lib/greia`, member of `sudo`). `ssh.service`
+  is **disabled** and `ssh.socket` is **masked** by default; the Wi-Fi page
+  toggle starts/stops only `ssh.service`. `avahi-daemon.service` is enabled.
+  The shipped `prepare-developer-ssh` supplies `AllowUsers greia`,
+  `AuthenticationMethods password`, `PermitRootLogin no`, and generates the
+  Ed25519 host key in the writable live overlay on first start. No host key
+  is shipped in the squashfs.
+- QEMU live-media test on a byte copy of the patched USB: default SSH port
+  refused; Wi-Fi-page toggle (Tab then Enter) started SSH; actual login as
+  `greia`/`greia` succeeded, `sudo` reached root, `avahi-daemon` active; the
+  toggle off reset the SSH connection; the toggle on restored login. This is
+  live-media evidence, not a real Acer connection.
+- Real Acer connection remains **PENDING**. Boot the Acer from this USB
+  without starting installation, open the Wi-Fi page, turn **Installer SSH**
+  on, and connect as `greia` (or `ssh greia@greia-installer.local`). Report
+  the Acer address/result before any read-only inspection.

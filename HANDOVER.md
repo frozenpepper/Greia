@@ -2,22 +2,22 @@
 
 **Purpose:** the short current state for contributors and agents: active workstreams, recent results, blockers and next steps. It is not an archive.
 
-**2026-10-29 live-installer SSH toggle (SOURCE / preview tested):** The
-owner requested an installer Wi-Fi-page toggle for SSH on the running live
-installer using `greia` / `greia`. The toggle is off by default on ordinary installer images, starts/stops
-only live `ssh.service` through the existing authorized local installer socket,
-shows state and failure, and supports keyboard and pointer. Live composition
-includes OpenSSH, sudo and Avahi, creates the owner-requested login, keeps root
-SSH denied and disables the service by default. This does not enable SSH on
-installed Greia. The real installer demo accepted mouse and keyboard input;
-56 offscreen visual states (EN/IT/ES/FR, 1024x600 and 800x480) had zero layout
-faults and selected Italian/Spanish screenshots were inspected. Greia's
-Activity Simulator does not run the installer; this is installer-demo visual
-evidence, not physical/network or Activity Simulator acceptance. No image was
-built and the existing USB was not modified. The Linux agent must apply the
-source and live-root provisioning to the existing USB using
-`docs/agents/2026-10-29_INSTALLER_USB_SSH_RECOVERY.md`, then test live SSH on
-the Acer. The installed Parent outage remains undiagnosed.
+**2026-10-29 live-installer SSH toggle (USB PATCHED; real Acer connection
+PENDING):** The owner requested an installer Wi-Fi-page toggle for SSH on the
+running live installer using `greia` / `greia`. Source now includes the
+default-off toggle, live OpenSSH/sudo/Avahi provisioning, the authorized local
+semantic operation, localized copy and keyboard/pointer support; installed
+Greia remains unchanged. The owner-authorized LaCie `/dev/sdc` (`iamaKey`,
+serial `eca3505216d7d3`) was patched in place: only
+`/live/filesystem.squashfs` was replaced (`6b8d2416…`, 675 MiB). The live root
+has the current source, password-enabled `greia` (`/var/lib/greia`, `sudo`
+group), `ssh.service` disabled, `ssh.socket` masked, Avahi enabled, and the
+Wi-Fi-page toggle. The A/B bundle remains `2572bf08…`. QEMU boot of a byte
+copy passed: toggle on -> real `greia`/`greia` login and password sudo; toggle
+off -> connection reset; toggle on -> login restored. Boot the Acer from this
+USB without installing, turn **Installer SSH** on on the Wi-Fi page, then
+connect as `greia`; the real Acer connection remains PENDING. Procedure/result:
+[2026-10-29_INSTALLER_USB_SSH_RECOVERY.md](docs/agents/2026-10-29_INSTALLER_USB_SSH_RECOVERY.md).
 
 **2026-10-29 installer preferences and Parent access (SOURCE; installed
 acceptance pending):** The owner reports a successful candidate installation
