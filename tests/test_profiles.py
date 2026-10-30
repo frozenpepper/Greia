@@ -318,6 +318,21 @@ class ProfileStoreTests(unittest.TestCase):
             self.assertNotIn("secret", raw)
             self.assertNotIn("digest", raw)
 
+    def test_active_session_status_uses_its_shared_directory_group(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            status = root / "run" / "active.json"
+            session = ActiveProfileSession(status)
+            real_chown = os.chown
+            with mock.patch("greia_platform.profiles.os.chown", wraps=real_chown) as chown:
+                session.clear()
+            self.assertEqual(chown.call_count, 1)
+            self.assertEqual(chown.call_args.args[1:], (-1, status.parent.stat().st_gid))
+            self.assertEqual(status.stat().st_gid, status.parent.stat().st_gid)
+            self.assertEqual(stat.S_IMODE(status.stat().st_mode), 0o660)
+            with session.profile_picker_restart_guard():
+                pass
+
     def test_restart_fence_blocks_a_new_profile_activation(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

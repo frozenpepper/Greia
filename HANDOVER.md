@@ -2,6 +2,21 @@
 
 **Purpose:** the short current state for contributors and agents: active workstreams, recent results, blockers and next steps. It is not an archive.
 
+**2026-10-30 Acer Parent Activity upload — physical retry in progress:**
+Python application update `greia-parent-activities-20261030` applied on Acer
+via the Parent HTTPS receiver and `activities.install` became true. A test
+package upload returned 409 even with the owner confirming the profile picker.
+The likely cause is that Shell-created `/run/greia-os/active-profile.json`
+was mode 0660 but inherited the Shell primary group instead of the shared
+`pipprofiles` directory group; Parent status reads silently treated an
+unreadable file as no active child. ActiveProfileSession now explicitly assigns
+the shared directory group before atomically publishing status, and the API
+distinguishes unavailable session state from a genuinely active profile.
+Focused tests: upload integration 2 PASS, profiles 23 PASS/1 skipped. This
+repair is SOURCE ONLY until a new application package is applied and the
+actual Acer upload, listing and cleanup pass. The first update was applied;
+the user-data and Activity test acceptance must not be inferred from that.
+
 **2026-10-30 Parent Activity upload (SOURCE + LOCAL HTTP; device pending):**
 Owner requested uploads. The API now advertises install/remove if its real
 package store is writable, with an explicit off override. The shared profile

@@ -936,14 +936,14 @@ class ActiveProfileSession:
         with self._mutation_lock():
             # Publish explicit picker-idle evidence. The restart authority
             # cannot infer a safe boundary from a missing status file.
-            _atomic_write_json(self.path, self.IDLE_STATUS)
+            _atomic_write_json(self.path, self.IDLE_STATUS, inherit_parent_group=True)
 
     def read(self) -> dict[str, object] | None:
         with self._mutation_lock():
             return self._read_unlocked()
 
     def _write_unlocked(self, profile: ChildProfile) -> None:
-        _atomic_write_json(self.path, profile.public_dict())
+        _atomic_write_json(self.path, profile.public_dict(), inherit_parent_group=True)
 
     def _read_unlocked(self) -> dict[str, object] | None:
         try:
@@ -1113,7 +1113,9 @@ def _validate_profile_id(profile_id: str) -> None:
         raise ProfileError("profile identifier must be canonical lowercase UUID hex")
 
 
-def _atomic_write_json(path: Path, payload: Mapping[str, object]) -> None:
+def _atomic_write_json(
+    path: Path, payload: Mapping[str, object], *, inherit_parent_group: bool = False
+) -> None:
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
     except OSError:
@@ -1126,6 +1128,11 @@ def _atomic_write_json(path: Path, payload: Mapping[str, object]) -> None:
             handle.write("\n")
             handle.flush()
             os.fsync(handle.fileno())
+        if inherit_parent_group:
+            # /run/greia-os is shared with Parents but is not setgid on
+            # existing images. mkstemp otherwise keeps the Shell's primary
+            # group, making the status unreadable to the Parent identity.
+            os.chown(temporary, -1, path.parent.stat().st_gid)
         os.chmod(temporary, 0o660)
         temporary.replace(path)
     except BaseException:

@@ -4075,3 +4075,15 @@ cover rejection, real install, discovery and duplicate refusal; focused suites
 and Parent-client integrity checks passed as recorded in HANDOVER. No Linux
 service sandbox, Bubblewrap, browser upload, physical Acer or phase closure is
 claimed.
+
+
+### 2026-10-30 — Acer Parent Activity upload group-permission retry
+
+Acer accepted and applied application package `greia-parent-activities-20261030`
+and reported `activities.install=true`, but an actual package upload returned
+409 at the confirmed profile picker. The status writer used mode 0660 on a
+non-setgid shared directory, leaving the Parent unable to read the Shell-owned
+status group. Source now assigns the directory's shared group on atomic status
+writes and distinguishes unavailable session state from active child. Local
+profile and upload tests passed; apply this correction and retest on Acer
+before claiming the upload works. No phase closure or family-release claim.

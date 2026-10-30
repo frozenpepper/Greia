@@ -973,3 +973,11 @@ lock; the Shell watches the active generation pointer and refreshes authority.
 The local HTTP test covers real validation, rejection, install and registry
 discovery, but not installed systemd permissions, Bubblewrap, browser or Acer.
 Use a disposable installed Linux image for those checks before device delivery.
+
+
+The 2026-10-30 Acer test applied the Activity upload application update but
+returned 409 at the profile picker. ActiveProfileSession must atomically
+publish `active-profile.json` with its shared parent-directory group as well
+as mode 0660; `/run/greia-os` is not setgid on existing images. Parent and
+Shell must read the same lock-protected status. A follow-up physical retry is
+required; do not infer successful upload from the capability alone.

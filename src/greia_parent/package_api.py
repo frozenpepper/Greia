@@ -211,9 +211,13 @@ class PackageParentApiRequestHandler(ParentApiRequestHandler):
             # Activity can lose its files halfway through a mutation.
             with self.app.active_session.profile_picker_restart_guard():
                 receipt = self.app.package_service.install_archive(upload)
-        except ProfileError:
-            self._send_api_error(409, "profile_session_active",
-                                 "Return to the profile picker before installing an Activity")
+        except ProfileError as exc:
+            if str(exc).startswith("return to the profile picker"):
+                self._send_api_error(409, "profile_session_active",
+                                     "Return to the profile picker before installing an Activity")
+            else:
+                self._send_api_error(503, "profile_session_unavailable",
+                                     "Greia could not check the profile session; try again after the profile picker appears")
             return
         except (ActivityPackageError, ActivityValidationError, OSError) as exc:
             self._send_api_error(400, "activity_install_rejected", str(exc))
@@ -247,9 +251,13 @@ class PackageParentApiRequestHandler(ParentApiRequestHandler):
         try:
             with self.app.active_session.profile_picker_restart_guard():
                 receipt = self.app.package_service.uninstall(activity_id)
-        except ProfileError:
-            self._send_api_error(409, "profile_session_active",
-                                 "Return to the profile picker before removing an Activity")
+        except ProfileError as exc:
+            if str(exc).startswith("return to the profile picker"):
+                self._send_api_error(409, "profile_session_active",
+                                     "Return to the profile picker before removing an Activity")
+            else:
+                self._send_api_error(503, "profile_session_unavailable",
+                                     "Greia could not check the profile session; try again after the profile picker appears")
             return
         except (ActivityPackageError, ActivityValidationError, OSError) as exc:
             self._send_api_error(400, "activity_remove_rejected", str(exc))
