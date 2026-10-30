@@ -2,7 +2,7 @@
 
 **Status:** mandatory derived Activity implementation guidance  
 **Audience:** Activity authors, coding agents, reviewers  
-**Reviewed:** 2026-08-23
+**Reviewed:** 2026-10-30
 
 This companion translates Greia's repository-wide engineering, runtime and measured-performance rules into a practical Activity-development protocol.
 

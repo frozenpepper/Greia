@@ -4,7 +4,7 @@ set -Eeuo pipefail
 #
 # The reference Acer BIOS does not execute GRUB's MBR from a USB stick but
 # does execute the antiX-style syslinux MBR+VBR on an active FAT32 partition
-# (see docs/INSTALLATION_USB_BOOT_POSTMORTEM.md). This tool turns an already
+# (see docs/engineering/boot/INSTALLATION_USB_BOOT_POSTMORTEM.md). This tool turns an already
 # built `greia-os-installer-*.img` into that media layout on a removable USB
 # device, copying the live kernel/initrd/root, the installable payload and the
 # live-media identity marker.

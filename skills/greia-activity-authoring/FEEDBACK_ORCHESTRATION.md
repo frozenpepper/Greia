@@ -2,7 +2,7 @@
 
 **Status:** mandatory cross-cutting Activity design/implementation guidance  
 **Audience:** Activity authors, coding agents, reviewers  
-**Reviewed:** 2026-09-02
+**Reviewed:** 2026-10-30
 
 Read this file for **every new Activity** and whenever an existing Activity changes success/failure feedback, spoken reactions, completion timing, score/progression events or performance-sensitive feedback presentation.
 

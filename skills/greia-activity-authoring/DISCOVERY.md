@@ -1,7 +1,7 @@
 # Greia Activity Discovery and Audience Authoring
 
 **Status:** current source-aligned Activity-authoring contract  
-**Reviewed:** 2026-09-03  
+**Reviewed:** 2026-10-30  
 **Source authorities:** `src/greia_platform/activities.py`, `src/greia_platform/activity_discovery.py`, `src/greia_launcher/catalogue_view.py`
 
 Discovery metadata directly affects what a parent can make visible to a child. Product intent remains owned by `docs/product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md`; exact parser/filter behavior remains source-owned.

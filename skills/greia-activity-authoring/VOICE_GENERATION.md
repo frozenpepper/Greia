@@ -124,7 +124,7 @@ Example:
 Dani: "Metti tre mele nel cestino."
 ```
 
-Dani now uses the owner-accepted `greia.dani.v2` cloned master through the default VoxStage/VoxCPM2 provider. `dani_system_speech` remains a compatible semantic kind; ordinary `character_dialogue` is also supported. Pedagogical pronunciation keeps its separate native/system route.
+Dani uses its selected v0.3 cloned master (`greia.dani.v3`) through the default VoxStage/VoxCPM2 provider. `dani_system_speech` remains a compatible semantic kind; ordinary `character_dialogue` is also supported. Pedagogical pronunciation keeps its separate native/system route.
 
 ## 4. Canonical speakers
 
@@ -147,24 +147,15 @@ skills/greia-activity-authoring/PRESENTERS_AND_CURIOSITY.md
 
 ## 5. Shared speech current state
 
-Current accepted shared asset state:
+The shared library lives in `assets/audio/characters/shared/v0.2/`: generic reactions per character plus canonical character introductions, in EN/IT/ES/FR. Its `manifest.toml` and `review.csv` (and `docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md`) hold the current per-clip acceptance state; do not infer it from older counts and do not call owner-accepted clips pending.
 
-```text
-assets/audio/characters/shared/v0.2/
-180 shared reactions
-12 canonical character introductions
-192 owner-accepted clips total
-```
-
-Do not call v0.2 pending generation/listening.
-
-However, accepted asset bytes do not prove that every Activity runtime path already resolves every family. Inspect the current shared resolver/source before depending on a family.
+Accepted asset bytes do not prove that every Activity runtime path already resolves every family. Inspect the current shared resolver/source before depending on a family.
 
 Canonical character introductions are OS/shared presentation content. Do not rerecord "Hi, I'm Leo/Lilli/..." independently in every Activity.
 
-### Shared locale-aware audio resolution (owner decision 2026-10-15)
+### Shared locale-aware audio resolution (owner decision)
 
-The shared Greia runtime subsystem now owns localized prerecorded-audio
+The shared Greia runtime subsystem owns localized prerecorded-audio
 lookup through `greia_platform.localization.LocalizedResources`.
 Activity code requests stable semantic IDs through `audio_path(key)`
 (fail-soft `Path | None`), or the compatibility `audio_cue(key)`
@@ -193,16 +184,14 @@ the active child profile/device locale. The localization resolver
 does not decode audio or create a Pygame mixer; the Activity sound
 owner handles only cache/channels/playback and procedural effects.
 
-Previously committed recordings are **personally owner-approved**. Preserve
-them during ordinary Activity work. The explicit 2026-10-19 corpus replacement,
-continued by the exact v0.3 master selection and frozen scope on 2026-10-21, is a
-scoped exception: use `tools/regenerate_voice_corpus.py` and
-`docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md`, preserving deterministic
-isolated letters/syllables and marking fresh output pending listening. That
-1,340-cue run is complete; all replacements remain pending until individually
-heard. New recordings continue to require owner listening approval. No
-source/signature tamper checking is required: users are allowed to modify
-installed media.
+Committed recordings are **personally owner-approved**. Preserve them during
+ordinary Activity work. Corpus-wide replacement is a separate owner-authorized
+operation (`tools/regenerate_voice_corpus.py`,
+`docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md`) that preserves deterministic
+isolated letters/syllables and marks fresh output pending listening; replaced
+takes stay pending until individually heard. New recordings always require owner
+listening approval. No source/signature tamper checking is required: users are
+allowed to modify installed media.
 
 VoxStage character acting defaults are editable in
 `tools/greia_voice_core/character_delivery.json`. Use the semantic
@@ -246,7 +235,7 @@ Do not hard-code locale branches into game rules.
 
 ## 7. Produce through VoiceEngine only
 
-Default character production uses the shared local VoxStage/VoxCPM2 worker and active v0.3 registry references: Dani/Momo/Tito use their selected v3 IDs while Lilli/Leo/Flash retain their exact v2 IDs and bytes (2026-10-21). The operator starts the installed worker with `voxstage start`; Activity producers still submit only semantic Greia requests. Chatterbox is an explicit operator alternative, never a silent fallback. Do not regenerate existing accepted clips outside an explicit owner-authorized corpus operation.
+Default character production uses the shared local VoxStage/VoxCPM2 worker and active v0.3 registry references: Dani/Momo/Tito use their selected v3 IDs while Lilli/Leo/Flash retain their exact v2 IDs and bytes. The operator starts the installed worker with `voxstage start`; Activity producers still submit only semantic Greia requests. Chatterbox is an explicit operator alternative, never a silent fallback. Do not regenerate existing accepted clips outside an explicit owner-authorized corpus operation.
 
 Start with:
 
@@ -324,7 +313,7 @@ Every successful generated candidate remains:
 human_review = PENDING
 ```
 
-Machine success or Whisper success is not acceptance.
+Machine success or an ASR (Parakeet/Whisper) pass is not acceptance.
 
 Reject natural-character speech for:
 
@@ -337,7 +326,7 @@ Reject natural-character speech for:
 
 Reject pedagogical speech for any incorrect or ambiguous target sound.
 
-Whisper is advisory for suitable multi-word natural speech and never pronunciation authority for letters/syllables/phonics.
+ASR screening is advisory for suitable multi-word natural speech and never pronunciation authority for letters/syllables/phonics.
 
 ## 10. Audio sequencing is part of child UX
 

@@ -40,7 +40,7 @@ unexplained. Human listening remains required for acceptance.
 Producer implementation commits are `772df9cb7` and `14a93e74c`. The complete
 voice-pattern suite passed 231/231 on the final producer source before launch.
 The full repository gate was executed after the run; see
-`docs/reviews/2026-10-23_FULL_PARAKET_VOICE_CORPUS_REPLACEMENT.md` for the exact
+`2026-10-23_FULL_PARAKET_VOICE_CORPUS_REPLACEMENT.md` (archived; see git history) for the exact
 result and remaining limitations.
 
 ## Historical ten-cue diagnostic — Parakeet v3 (2026-10-23)
@@ -56,7 +56,7 @@ thresholds and corpus budgets are unchanged. Passing outputs remain
 `human_review=PENDING`. Takeboard has all 21 raw attempts, 24 cuts and 6 passed
 packages as an unreviewed batch at `http://127.0.0.1:8816/`.
 
-Evidence and per-case results: `docs/reviews/2026-10-23_PARAKEET_VOICE_PIPELINE.md`
+Evidence and per-case results: `2026-10-23_PARAKEET_VOICE_PIPELINE.md` (archived; see git history)
 and external directory
 `/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/parakeet-v3-pipeline-10-v1/`.
 At this diagnostic's time, the prior saved/context natural-corpus pipeline was held (combined frozen-667
@@ -66,7 +66,7 @@ order above is separate authority; its outputs still need human listening.
 
 ## Historical corpus state before the authorized replacement (2026-10-23)
 
-Read `docs/reviews/2026-10-22_SAVED_CONTEXT_CORPUS_ADAPTER.md` for the full
+Read `2026-10-22_SAVED_CONTEXT_CORPUS_ADAPTER.md` (archived; see git history) for the full
 saved-source recovery evidence. The newer engine diagnostic is above; it is a
 separate ten-cue API check and does not continue the corpus run. The diagnostic
 reconciliation adapter recovered two registered saved sources: French Tito
@@ -94,7 +94,7 @@ the diagnostic pass count or the older saved-evidence yield screen.
 
 ## Prior state — 2026-10-22
 
-Read `docs/reviews/2026-10-22_SAVED_CONTEXT_CORPUS_ADAPTER.md` first for latest
+Read `2026-10-22_SAVED_CONTEXT_CORPUS_ADAPTER.md` (archived; see git history) first for latest
 method results and exact next work. Both bulk producers remain held; no new
 synthesis. Actual audit8changed659unchanged of667,428kept/installed,239remaining:
 44unstartedletters,193unstartedordinary,2exhausted(EN W as Whale,FR Trouve Oskar).
@@ -130,7 +130,7 @@ raw/job/key/request/hash proofs, planned versus actual delivery and pending huma
 review. Corpus reservations stay25; all16separate diagnostic submissions and
 lifetime per-cue totals are pinned in diagnostic-generation-ledger-v1.json.
 
-Latest source/evidence: `docs/reviews/2026-10-22_SAVED_SUBSTITUTION_SEAM.md`.
+Latest source/evidence: `2026-10-22_SAVED_SUBSTITUTION_SEAM.md` (archived; see git history).
 The optional disabled seam is implemented; held-out48-case v1 failed due a new
 NumPy real-scalar timing bug. Corrected cache-only v2 retains15/16positives,
 rescues1/12substitution sources, rejects20controls with1554protected hashes

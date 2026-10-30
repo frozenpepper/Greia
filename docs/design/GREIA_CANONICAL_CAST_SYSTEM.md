@@ -4,8 +4,8 @@
 **Date:** 2026-08-24  
 **Character construction grammar:** `docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md`  
 **Expression/motion vocabulary:** `docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md`  
-**Current source-art authority:** `docs/reviews/visual/2026-08-22_flash-white-rabbit-identity-revision/PRIMARY_REVIEW.md`  
-**Runtime status:** Promoted & integrated via `docs/testing/2026-08-22_CANONICAL_CAST_V01_PROMOTION_RUNTIME_SIMULATOR.md` (30 runtime PNGs in `assets/visual/runtime/v1/characters/`)
+**Current source-art authority:** `PRIMARY_REVIEW.md` (archived; see git history)  
+**Runtime status:** Promoted & integrated via `2026-08-22_CANONICAL_CAST_V01_PROMOTION_RUNTIME_SIMULATOR.md` (archived; see git history) (30 runtime PNGs in `assets/visual/runtime/v1/characters/`)
 
 ## 1. Purpose
 
@@ -295,7 +295,7 @@ with exactly the six current semantic IDs and all five source states.
 
 Promotion/runtime acceptance is owned by:
 
-`docs/testing/2026-08-22_CANONICAL_CAST_V01_PROMOTION_RUNTIME_SIMULATOR.md`
+`2026-08-22_CANONICAL_CAST_V01_PROMOTION_RUNTIME_SIMULATOR.md` (archived; see git history)
 
 Source promotion is not the same as runtime acceptance.
 
@@ -348,4 +348,4 @@ Not yet accepted:
 
 The current exact gate is:
 
-`docs/testing/2026-08-22_CANONICAL_CAST_V01_PROMOTION_RUNTIME_SIMULATOR.md`
+`2026-08-22_CANONICAL_CAST_V01_PROMOTION_RUNTIME_SIMULATOR.md` (archived; see git history)

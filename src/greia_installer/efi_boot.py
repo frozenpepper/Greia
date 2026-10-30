@@ -2,8 +2,8 @@
 
 Status: UNPROVEN / LAB. No Intel Mac (or any EFI machine) has booted this code
 path; it implements the documented theory in
-``docs/reviews/2026-10-21_PRE_M1_MAC_HARDWARE_SUPPORT.md`` and
-``docs/INSTALLER_IMAGE_CREATION_AND_BOOT.md`` ("Intel Mac / UEFI boot").
+``2026-10-21_PRE_M1_MAC_HARDWARE_SUPPORT.md`` (archived; see git history) and
+``docs/engineering/boot/INSTALLER_IMAGE_CREATION_AND_BOOT.md`` ("Intel Mac / UEFI boot").
 
 Two substitutable layouts share one small contract (:class:`SingleRootLayout`):
 

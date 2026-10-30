@@ -20,7 +20,7 @@ Controlled local acceptance and resource gate.
 ## Allowed files
 
 ```text
-/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/docs/reviews/2026-10-22_VERIFIED_VOICE_PIPELINE_ACCEPTANCE.md
+/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/docs/plans/2026-10-22_VERIFIED_VOICE_PIPELINE/ACCEPTANCE_RESULT.md
 /Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/HANDOVER.md
 /Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md
 ```

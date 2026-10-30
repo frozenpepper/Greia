@@ -14,8 +14,8 @@ driver at all.  This table is a narrow, reviewed supplement:
   redistributable; ``wl`` needs DKMS compilation).  The installer then tells the
   parent plainly instead of leaving an empty Wi-Fi list unexplained.
 
-Sources: ``docs/reviews/2026-10-21_PRE_M1_MAC_HARDWARE_SUPPORT.md`` section 2
-and ``docs/reviews/2026-10-21_LEGACY_X86_NETBOOK_HARDWARE_RISKS.md`` section 3.
+Sources: ``2026-10-21_PRE_M1_MAC_HARDWARE_SUPPORT.md`` (archived; see git history) section 2
+and ``2026-10-21_LEGACY_X86_NETBOOK_HARDWARE_RISKS.md`` (archived; see git history) section 3.
 All entries are UNPROVEN on real Macs/netbooks; extend the table from user
 reports, never with a Greia-owned product database of names.
 """

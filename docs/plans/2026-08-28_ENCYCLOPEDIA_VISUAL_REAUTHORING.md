@@ -3,11 +3,11 @@
 **Status:** COMPLETE for E3 — E2 APPROVED; E3 SOURCE + 11-PNG RUNTIME + SIMULATOR ACCEPTED at 03bf76ac; E4 COMPLETE at 7b1f6b2c (2026-10-16); E5 interaction visual-language pass NEXT  
 **Date:** 2026-08-28  
 **Latest checkpoint:** 2026-10-16 — E4 COMPLETE (`7b1f6b2c`); E5 next  
-**Current checkpoint:** 2026-08-30 — E3 ACCEPTED (see `docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/runtime/REVIEW.md`; evidence HEAD 69cf8966)  
+**Current checkpoint:** 2026-08-30 — E3 ACCEPTED (see `docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/runtime/REVIEW.md` (archived; see git history); evidence HEAD 69cf8966)  
 **Parent visual authority:** `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`  
 **Stable visual architecture:** `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`  
-**Forensic audit:** `docs/archive/reviews/2026-08-28_ENCYCLOPEDIA_GRAPHICS_FORENSIC_AUDIT.md`  
-**Current E3 source review:** `docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/SOURCE_REVIEW.md`  
+**Forensic audit:** `2026-08-28_ENCYCLOPEDIA_GRAPHICS_FORENSIC_AUDIT.md` (archived; see git history)  
+**Current E3 source review:** `SOURCE_REVIEW.md` (archived; see git history)  
 **Activity:** `activities/enciclopedia_greia/` (`org.greia.enciclopedia`)
 
 This is a **bounded Activity-level visual reauthoring subplan**, not a competing platform implementation plan. The platform R7 architecture plan remains the primary blocking platform authority.
@@ -624,17 +624,17 @@ During work:
 - update `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md`;
 - update `encyclopedia/HANDOVER.md`;
 - update root `HANDOVER.md` when the active visual checkpoint changes materially;
-- preserve meaningful comparison/review records under `docs/reviews/visual/`;
+- preserve meaningful comparison/review records under `docs/reviews/visual/` (archived; see git history);
 - do not commit giant redundant screenshot dumps;
 - do not convert source-only inspection into a Simulator claim.
 
 Current reviews:
 
 ```text
-docs/archive/reviews/2026-08-28_ENCYCLOPEDIA_GRAPHICS_FORENSIC_AUDIT.md
-docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/
-docs/reviews/visual/2026-08-29_encyclopedia_owner_direct_repairs/REVIEW.md
-docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/SOURCE_REVIEW.md
+2026-08-28_ENCYCLOPEDIA_GRAPHICS_FORENSIC_AUDIT.md (archived; see git history)
+docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/ (archived; see git history)
+docs/reviews/visual/2026-08-29_encyclopedia_owner_direct_repairs/REVIEW.md (archived; see git history)
+SOURCE_REVIEW.md (archived; see git history)
 ```
 
 ---
@@ -657,7 +657,7 @@ build corrected six golden-master PNGs
 → if accepted, mark E3 complete and unblock E4
 ```
 
-The owner explicitly asked the primary agent to perform the current visual-authoring work directly. `docs/testing/GREIA_ENCYCLOPEDIA_V01_LOCAL_AGENT_NEXT.md` remains HOLD unless the owner later changes that instruction.
+The owner explicitly asked the primary agent to perform the current visual-authoring work directly. Local agents do not take this Encyclopedia visual work (the old local-agent work order stays on HOLD and was archived 2026-10-30) unless the owner later changes that instruction.
 
 ---
 
@@ -715,7 +715,7 @@ The owner explicitly asked the primary agent to perform the current visual-autho
 - Preserved Space's continuously orbiting Sun/planets/Moon as live teaching state inside the authored observatory.
 - Extended the build tool with explicit `golden`, `sections` and `all` groups.
 - Extended the visual-foundation contract so E3 generated art is staged atomically: 0/5 during source work or 5/5 when committed; partial section packs are forbidden.
-- Added `docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/SOURCE_REVIEW.md`.
+- Added `SOURCE_REVIEW.md` (archived; see git history).
 - E3 runtime PNG build, fresh tests/verify, exact-SHA Simulator and six-section runtime review remain pending. E4 remains blocked.
 
 ## 2026-10-16 — E4 entry migration complete (SOURCE / DESKTOP VISUAL REVIEW)

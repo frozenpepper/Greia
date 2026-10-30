@@ -210,7 +210,6 @@ Activity authors must read:
 
 ```text
 skills/greia-activity-authoring/SKILL.md
-skills/greia-activity-authoring/CORE.md
 skills/greia-activity-authoring/DISCOVERY.md
 ```
 

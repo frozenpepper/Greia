@@ -1,8 +1,12 @@
 # Greia OS Work Skill — Boot, Recovery and First-Boot Safety
 
 **Status:** mandatory companion to `skills/greia-os-work/SKILL.md` for any substantive boot/image/installer/initramfs/GRUB/first-boot/Xorg-startup/recovery work  
-**Reviewed:** 2026-08-24  
+**Reviewed:** 2026-10-30  
 **Audience:** coding agents, maintainers, build/recovery operators, reviewers
+
+## When to use / Read first
+
+Load this before touching anything on the boot chain (firmware/bootloader policy, kernel command line, initramfs, root mount, first-boot/systemd prerequisites, VT/Xorg start, boot artwork, physical boot repair). Start with §1 (mandatory reading), then the sections for the layer you are changing; §10 is the physical-device repair protocol and §12 the pre-commit review questions.
 
 This companion exists because Greia boot work crosses several independently dangerous layers. A source edit that looks local can regenerate a different initramfs, remove remote recovery, hide the actual failure, or create a reboot loop on physical hardware.
 
@@ -20,9 +24,9 @@ skills/greia-os-work/SKILL.md
 skills/greia-os-work/BOOT.md
 docs/DOCUMENTATION.md
 docs/engineering/BOOT_PIPELINE_AGENT_GUIDE.md
-docs/INSTALLATION_ISSUES_LOG.md
-docs/INSTALLED_OS_BOOT_POSTMORTEM.md
-docs/INSTALLATION_USB_BOOT_POSTMORTEM.md
+docs/engineering/boot/INSTALLATION_ISSUES_LOG.md
+docs/engineering/boot/INSTALLED_OS_BOOT_POSTMORTEM.md
+docs/engineering/boot/INSTALLATION_USB_BOOT_POSTMORTEM.md
 docs/design/GREIA_BOOT_EXPERIENCE.md
 docs/design/GREIA_BOOT_PROGRESS.md
 HANDOVER.md
@@ -268,7 +272,7 @@ Rules:
 - do not regenerate initramfs unless the changed visual bytes are actually packaged through initramfs;
 - if they are, apply the initramfs artifact checks from §5.
 
-The current milestone progress implementation is source-owned by `GREIA_BOOT_PROGRESS.md`, initramfs stage scripts, the raw framebuffer renderer and launcher handoff. Do not claim a progress bar was removed while those sources still draw/require it. Any product decision to remove it must change source, tests and docs together and then receive physical visual acceptance.
+The current milestone progress implementation is source-owned by `docs/design/GREIA_BOOT_PROGRESS.md`, initramfs stage scripts, the raw framebuffer renderer and launcher handoff. Do not claim a progress bar was removed while those sources still draw/require it. Any product decision to remove it must change source, tests and docs together and then receive physical visual acceptance.
 
 ### Launcher animation timing is intentional product behavior
 

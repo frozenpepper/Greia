@@ -5,7 +5,7 @@
 
 This guide covers development-image diagnosis when an installed Greia machine does not reach the child launcher. It does not change release UX: normal/release Greia must remain consoleless and must not expose development SSH.
 
-Normative boot architecture remains in `docs/design/GREIA_BOOT_EXPERIENCE.md`; the historical Acer investigations are preserved in `docs/INSTALLATION_USB_BOOT_POSTMORTEM.md` and `docs/INSTALLED_OS_BOOT_POSTMORTEM.md`. The current 2026-08-20 regression/recovery boundary is recorded in `docs/archive/reviews/2026-08-20_ACER_INSTALLER_BOOT_REGRESSION.md` and takes precedence for the next physical Acer build.
+Normative boot architecture remains in `docs/design/GREIA_BOOT_EXPERIENCE.md`; the historical Acer investigations are preserved in `docs/engineering/boot/INSTALLATION_USB_BOOT_POSTMORTEM.md` and `docs/engineering/boot/INSTALLED_OS_BOOT_POSTMORTEM.md`. The current 2026-08-20 regression/recovery boundary is recorded in `2026-08-20_ACER_INSTALLER_BOOT_REGRESSION.md` (archived; see git history) and takes precedence for the next physical Acer build.
 
 ## 1. Interpreting `PIP_ROOT: clean ...`
 

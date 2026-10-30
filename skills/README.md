@@ -1,7 +1,21 @@
-# Greia contributor skill architecture
+# Greia contributor skills
 
 **Status:** repository convention  
-**Reviewed:** 2026-10-26
+**Reviewed:** 2026-10-30
+
+## Which skill do I load?
+
+| Skill | Use it when you... | Entry file |
+|---|---|---|
+| `greia-os-work` | change the OS, platform, Shell, Parent, installer, simulator, build/image, update or hardware-service code; touch boot, GRUB, initramfs or first-boot | `skills/greia-os-work/SKILL.md` (boot work: also `BOOT.md`) |
+| `greia-activity-authoring` | build or materially change an Activity: design, controls, audio, performance, packaging, acceptance | `skills/greia-activity-authoring/SKILL.md` |
+| `greia-visual-authoring` | create, redraw, reuse or register art (SVG/PNG, scenes, characters, icons, badges) or review rendered visuals | `skills/greia-visual-authoring/SKILL.md` |
+| `greia-voice-production` | generate, replace, screen or install prerecorded speech; operate the VoiceEngine or voice corpus | `skills/greia-voice-production/SKILL.md` |
+| `greia-language-expansion` | add, translate, stage or release an OS/Activity/installer/Parent language | `skills/greia-language-expansion/SKILL.md` |
+
+Each `SKILL.md` starts with `name`/`description` frontmatter and a "When to use / Read first" section. Load only the skill (and its companion files) that matches the task.
+
+## Skill architecture
 
 Greia skills use **progressive disclosure**.
 
@@ -112,14 +126,4 @@ When contributor guidance changes:
 3. update `SKILL.md` only when routing/universal rules changed;
 4. remove duplicated explanatory prose from the router rather than copying new detail into it.
 
-Current top-level routers:
-
-```text
-skills/greia-activity-authoring/SKILL.md
-skills/greia-os-work/SKILL.md
-skills/greia-visual-authoring/SKILL.md
-skills/greia-language-expansion/SKILL.md
-skills/greia-voice-production/SKILL.md
-```
-
-All future Greia skills should follow the same pattern.
+All future Greia skills follow the same pattern and get a row in the table at the top.

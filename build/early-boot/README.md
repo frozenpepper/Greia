@@ -6,7 +6,7 @@ The source is committed here before profile authority is switched so a Linux/loc
 
 **Acceptance status (2026-10-28):** `greia-early-framebuffer-v1` passed the
 QEMU visual acceptance recorded in
-`docs/release/2026-10-28_BOOT_COVER_ACCEPTANCE.md`: the installer and the
+`2026-10-28_BOOT_COVER_ACCEPTANCE.md` (archived; see git history): the installer and the
 installed A/B target show the branded white frame/launcher handoff with no
 Linux console text. The registered release-safe status applies to the
 technical-preview composition; physical Acer visual acceptance remains an

@@ -64,7 +64,7 @@ queued tasks; that restriction does **not** apply to this update assignment.
 Keep measured A/B versus application acceptance distinct, and never target an
 actual family disk or data. Don't rerun the frozen 1275-era single-stage job:
 its refusal is captured in
-[the diagnostic result](../reviews/2026-10-27_AB_OLD_RELEASE_STAGE_DIAGNOSTIC_RESULT.md).
+the diagnostic result (archived; see git history).
 Old POSTR1-P1/Gate-P5 sequencing does not supersede Session 04. The
 architecture-remediation plan remains active for non-lifecycle obligations.
 
@@ -76,7 +76,7 @@ For the owner-approved simple Parents HTTPS implementation, use the current focu
 docs/testing/2026-10-23_PARENT_HTTPS_ACCEPTANCE.md
 ```
 
-The older `docs/testing/2026-09-08_PARENT_UNIFIED_AUTH_RUNTIME_ACCEPTANCE.md` retains the September baseline for the existing password/per-device authentication behavior; its frozen client revision and provisional HTTP instructions must **not** be used as the current HTTPS acceptance authority.
+The older `2026-09-08_PARENT_UNIFIED_AUTH_RUNTIME_ACCEPTANCE.md` (archived; see git history) retains the September baseline for the existing password/per-device authentication behavior; its frozen client revision and provisional HTTP instructions must **not** be used as the current HTTPS acceptance authority.
 
 Other subsystem procedures remain active when their owning workstream is being closed, including:
 
@@ -86,7 +86,7 @@ docs/testing/2026-09-03_ACTIVITY_AGE_POLICY_ACCEPTANCE.md
 docs/testing/2026-09-02_R7_FINAL_EVIDENCE_GAP_CLOSURE.md
 ```
 
-Finished one-off procedures from August–September 2026 were deleted or moved to `docs/archive/` (see `docs/archive/README.md`).
+Finished one-off procedures from August–September 2026 were removed from the working tree in the 2026-10-30 public-repository cleanup; they remain in Git history.
 
 Always re-read `HANDOVER.md` immediately before execution. Source may have advanced after an earlier physical or image candidate; old evidence stays scoped to the exact SHA that produced it.
 
@@ -153,7 +153,7 @@ Do **not** maintain a growing root `LOCAL_AGENT_RESULT.md` accumulator.
 
 For retained work:
 
-- detailed dated analysis/evidence -> `docs/reviews/` when it merits repository preservation;
+- detailed dated analysis/evidence -> the external evidence volume (dated reviews are no longer kept in the public tree; summarize the conclusion in the plan or `HANDOVER.md`);
 - append-only phase history -> active plan when implementation/phase state changed;
 - short current continuation/evidence boundary -> `HANDOVER.md`;
 - raw/bulky evidence -> outside Git unless a specific authority says otherwise.

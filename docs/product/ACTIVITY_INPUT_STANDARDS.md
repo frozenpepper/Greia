@@ -251,6 +251,6 @@ Phase 0 is not input-complete until evidence demonstrates at least:
 - resource cost acceptable on the Acer low-resource reference;
 - equivalent semantic contract ready for the Web runtime boundary;
 - representative child-facing Activity flows remain understandable without reading written instructions;
-- related game controls placed as one mouse-first cluster and a lit keyboard hint shown in every Activity that requires one (audit: `docs/reviews/activities/2026-10-16_CONTROL_PLACEMENT_AUDIT.md`).
+- related game controls placed as one mouse-first cluster and a lit keyboard hint shown in every Activity that requires one (audit: `2026-10-16_CONTROL_PLACEMENT_AUDIT.md` (archived; see git history)).
 
 First-party Activities receive no exemption from these standards.

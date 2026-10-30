@@ -3,7 +3,7 @@
 **Status:** Accepted (2026-10-15, primary agent; pilots: pasticceria_magica, casa_del_dieci)
 **Scope:** child-facing controls inside Activities (buttons, pills, tool/mode strips, HUD counters, progress, prompts, result feedback, completion)
 **Extends:** ADR 0018 (lightweight UI foundation), ADR 0019 (platform-owned Home/Back chrome), ADR 0020 (runtime-neutral input and controllers), ADR 0026 (resolution-adaptive layout), ADR 0034 (CAPITAL child text)
-**Evidence/audits:** `docs/reviews/activities/2026-10-15_activity_design_audit/GROUP_A_*.md` and `GROUP_B_*.md` (cross-cutting sections), `docs/reviews/visual/2026-10-15_asset_library_audit/REVIEW.md`
+**Evidence/audits:** `docs/reviews/activities/2026-10-15_activity_design_audit/GROUP_A_*.md` (archived; see git history) and `GROUP_B_*.md` (cross-cutting sections), `docs/reviews/visual/2026-10-15_asset_library_audit/REVIEW.md` (archived; see git history)
 **Implementation (SOURCE):** `src/greia_platform/activity_controls.py`, `src/greia_platform/activity_feedback.py`, `src/greia_platform/activity_keyboard_hint.py`, `src/greia_platform/pygame_completion.py`; art under `assets/visual/ui/controls/v1/` and cast `pose_think` masters.
 
 ## Context
@@ -62,7 +62,7 @@ Bodies, labels, composites and rings live in hard-bounded LRU caches (`BoundedCa
 
 ### 6a. Frame governance (amendment 2026-10-16)
 
-The Acer sweep (`docs/reviews/acer/2026-10-16_ACER_ACTIVITY_SWEEP.md` §3.4) measured 19 of 29 Activities above 60% idle CPU on the Atom N270 because their loops re-rendered and flipped the full 1024×600 frame 20–30 times a second while nothing changed. Every Pygame Activity loop is therefore governed by one platform object, `greia_platform.frame_governor.FrameGovernor`, extending the canvas seam rather than adding a framework:
+The Acer sweep (`2026-10-16_ACER_ACTIVITY_SWEEP.md` (archived; see git history) §3.4) measured 19 of 29 Activities above 60% idle CPU on the Atom N270 because their loops re-rendered and flipped the full 1024×600 frame 20–30 times a second while nothing changed. Every Pygame Activity loop is therefore governed by one platform object, `greia_platform.frame_governor.FrameGovernor`, extending the canvas seam rather than adding a framework:
 
 * **Activities declare, the governor decides.** Per iteration the loop calls `frames.frame(dirty=…, animating=…, ambient=…)` and honours the answer: `FULL` (render, `present`, flip), `POINTER` (`PygameReferenceCanvas.present_pointer()` repairs only the old/new pointer rectangles from the last frame and calls `display.update(rects)`), or `SKIP` (no render, no present, no flip). `frames.wait()` replaces `Clock.tick`.
 * **Static screens cost ~0.** With nothing dirty the loop only sleeps `idle_poll_seconds` (50 ms) between event/timer polls, so `step()` timers keep running; `pygame.event.wait(timeout)` is deliberately not used because Pygame ≥ 2.1.3 implements it as a 1 ms poll loop.

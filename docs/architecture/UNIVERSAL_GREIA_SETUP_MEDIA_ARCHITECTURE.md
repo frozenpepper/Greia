@@ -185,7 +185,7 @@ The privileged request schema cannot accept arbitrary commands, paths, URLs, mou
 Greia already has accepted physical evidence in:
 
 ```text
-docs/INSTALLATION_USB_BOOT_POSTMORTEM.md
+docs/engineering/boot/INSTALLATION_USB_BOOT_POSTMORTEM.md
 build/live-syslinux/syslinux.cfg.in
 ```
 

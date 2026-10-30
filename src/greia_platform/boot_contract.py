@@ -399,7 +399,7 @@ def _line_errors(
     # kernel panic stays on screen (panic=0) so failure state remains
     # observable. The quiet policy (release, and the developer RC) silences
     # the same tty1 console and also never reboots on panic.
-    # See docs/INSTALLED_OS_BOOT_POSTMORTEM.md §16.
+    # See docs/engineering/boot/INSTALLED_OS_BOOT_POSTMORTEM.md §16.
     if console_policy is None:
         policy = BootConsolePolicy.DIAGNOSTIC if developer else BootConsolePolicy.QUIET
     else:

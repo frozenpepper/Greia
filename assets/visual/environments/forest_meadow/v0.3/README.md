@@ -2,7 +2,7 @@
 
 **Version:** 0.3.0  
 **Status:** Promoted Authoring Pack  
-**Authority:** `docs/reviews/visual/2026-08-21_forest-meadow-pack-finalization/PRIMARY_PROMOTION_REVIEW.md`
+**Authority:** `PRIMARY_PROMOTION_REVIEW.md` (archived; see git history)
 
 ## Summary
 

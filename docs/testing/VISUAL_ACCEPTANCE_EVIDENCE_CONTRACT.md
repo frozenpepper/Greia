@@ -24,13 +24,13 @@ tmp/<gate>-evidence/
 
 That directory does not need to be committed.
 
-The local agent must also create a curated review set under:
+The local agent must also create a curated review set under the external evidence root (not committed to the public repository tree):
 
 ```text
-docs/reviews/visual/<YYYY-MM-DD>_<gate>/
+<evidence-root>/visual/<YYYY-MM-DD>_<gate>/
 ```
 
-Commit only the small curated set, normally **4–6 screenshots maximum**, plus the review metadata below. Do not commit hundreds of simulator frames.
+Keep only the small curated set, normally **4–6 screenshots maximum**, plus the review metadata below. Do not commit hundreds of simulator frames.
 
 Required files:
 

@@ -2,7 +2,7 @@
 
 **Status:** mandatory for Pygame Activities with completion, victory, results or terminal screens  
 **Audience:** Activity authors, coding agents, reviewers  
-**Calibrated from:** cross-Activity performance review, 2026-08-23
+**Calibrated from:** a cross-Activity performance review of terminal/victory screens
 
 This companion exists because a repeated first-party pattern caused severe slowdown on low-end Greia hardware: Activities kept the live game updating/rendering at roughly 30 Hz and then placed a newly allocated full-screen RGBA victory modal over it every frame.
 
@@ -262,20 +262,9 @@ Hardware performance claims require physical measurement. Simulator smoothness i
 
 ---
 
-## 9. First-party migration finding — 2026-08-23
+## 9. Known problematic terminal-overlay pattern
 
-A cross-Activity source review found the same problematic terminal-overlay architecture in multiple independent first-party packages, including:
-
-```text
-activities/costruiamo_ponti
-activities/memory_meraviglie
-activities/labirinto_magico
-activities/treno_numeri
-activities/piccola_serra
-activities/nascondino_bosco
-```
-
-The common pattern was some combination of:
+A cross-Activity source review found the same terminal-overlay architecture problem in several independent first-party packages. The pattern is some combination of:
 
 - active world still updating after victory;
 - active world fully redrawn before terminal UI;
@@ -284,7 +273,7 @@ The common pattern was some combination of:
 - stable victory labels rendered every frame;
 - terminal loop still paced at the active ~30 Hz render cadence.
 
-`activities/clinica_cuccioli` is the first consumer migrated to the shared opaque completion owner after the cross-Activity finding.
+`activities/clinica_cuccioli` is the reference consumer of the shared opaque completion owner.
 
 Open-ended Activities without a terminal/victory state are not part of this migration merely because they use Pygame.
 

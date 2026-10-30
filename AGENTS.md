@@ -48,7 +48,7 @@ Before changing implementation or architecture, read:
 21. **`skills/greia-os-work/SKILL.md` whenever creating, modifying, reviewing, refactoring, optimizing, testing or documenting Greia OS/platform/Shell/Parent/installer/simulator/build/runtime/hardware-service implementation**;
 22. `skills/greia-activity-authoring/SKILL.md` whenever creating, modifying, reviewing, validating, optimizing, packaging, deploying, or testing an Activity;
 23. `skills/greia-visual-authoring/SKILL.md` whenever creating, modifying, reviewing, generating, or integrating Greia visual assets or Activity art;
-24. phase-specific testing/review documents referenced by `HANDOVER.md` or the active plan. Older lessons are indexed in `docs/archive/README.md`; nothing there is current instruction.
+24. phase-specific testing/review documents referenced by `HANDOVER.md` or the active plan. Older reviews and lessons were removed from the working tree on 2026-10-30 (history: see git); nothing there is current instruction.
 
 `docs/DOCUMENTATION.md` defines which document class owns which fact. In short:
 

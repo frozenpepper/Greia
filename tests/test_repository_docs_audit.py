@@ -31,8 +31,8 @@ class DocumentationAuditTests(unittest.TestCase):
         self.assertTrue(maintained(Path("docs/user/README.md")))
         self.assertTrue(maintained(Path("docs/testing/LOCAL_AGENT_START_HERE.md")))
         self.assertFalse(maintained(Path("docs/testing/2026-09-01_OLD.md")))
-        self.assertTrue(maintained(Path("docs/archive/README.md")))
-        self.assertFalse(maintained(Path("docs/reviews/2026-08-01.md")))
+        self.assertTrue(maintained(Path("docs/engineering/boot/INSTALLED_OS_BOOT_POSTMORTEM.md")))
+        self.assertFalse(maintained(Path("docs/plans/2026-08-01_OLD_PLAN.md")))
 
     def test_maintained_repository_documentation_links_resolve(self):
         """Keep current user, contributor, agent and skill link rot out of release."""

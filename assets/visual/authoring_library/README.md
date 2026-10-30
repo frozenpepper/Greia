@@ -4,7 +4,7 @@
 **Date:** 2026-08-22  
 **Parent Architecture:** `docs/design/GREIA_VISUAL_AUTHORING_ARCHITECTURE.md`  
 **Taxonomy Reference:** `docs/design/GREIA_GENERIC_ART_LIBRARY_TAXONOMY.md`  
-**Audit Reference:** `docs/reviews/visual/2026-08-21_generic-core-essentials-batch-a/PRIMARY_REVIEW.md`  
+**Audit Reference:** `PRIMARY_REVIEW.md` (archived; see git history)  
 **Discovery Tooling:** `tools/visual_authoring_library.py`  
 **User-Agent Guidance:** `skills/greia-visual-authoring/SKILL.md`
 

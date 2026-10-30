@@ -16,7 +16,7 @@ shown with a library picture (``picture`` is a shared ``prop.*`` visual ID, an
 ``activity:<name>`` picture under this package's ``assets/runtime``, or
 ``PICTURE_PENDING`` for staged words that still lack art).
 
-IT/EN voice review: docs/reviews/2026-08-24_FESTA_DELLE_RIME_AUDIO_REVIEW.md.
+IT/EN voice review: 2026-08-24_FESTA_DELLE_RIME_AUDIO_REVIEW.md (archived; see git history).
 ES/FR: staged educational candidates, NOT voice-approved or manifest-enabled;
 their word lists are kept for key/inventory parity and are not re-taught here.
 """

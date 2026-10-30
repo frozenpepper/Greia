@@ -2,7 +2,7 @@
 
 **Pack ID:** `greia.generic_core_essentials.2026-08-21-candidate`  
 **Parent Taxonomy:** `docs/design/GREIA_GENERIC_ART_LIBRARY_TAXONOMY.md`  
-**Review Evidence:** `docs/reviews/visual/2026-08-21_generic-core-essentials-batch-a/`
+**Review Evidence:** `docs/reviews/visual/2026-08-21_generic-core-essentials-batch-a/` (archived; see git history)
 
 ## Summary
 

@@ -1,7 +1,7 @@
 # Generic Visual Toolbox — Core Essentials v0.1 (Preferred Source)
 
 **Directory:** `assets/visual/generic/core_essentials/v0.1/`  
-**Authority:** `docs/reviews/visual/2026-08-21_generic-core-essentials-batch-a/PRIMARY_REVIEW.md`
+**Authority:** `PRIMARY_REVIEW.md` (archived; see git history)
 
 Contains 9 preferred finished generic assets and 2 preferred authoring ingredients promoted from Batch A candidate review:
 

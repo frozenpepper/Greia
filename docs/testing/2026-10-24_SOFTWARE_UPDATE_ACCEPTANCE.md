@@ -17,7 +17,7 @@ or guess a host `/dev` target. Do not run this procedure on a family device.
 
 ## Follow-up after the first Linux run (2026-10-24)
 
-Read `docs/reviews/2026-10-24_SOFTWARE_UPDATE_LINUX_ACCEPTANCE_RESULT.md`
+Read `2026-10-24_SOFTWARE_UPDATE_LINUX_ACCEPTANCE_RESULT.md` (archived; see git history)
 before this retry. Its passed application cases used a manually repaired RC
 clone, so they do not establish clean acceptance of the committed ownership
 fix. Rebuild and graphically install a fresh RC; do not manually chmod/chown the
@@ -48,7 +48,7 @@ source; do not reuse old September bundles or the manually repaired RC image.
    fixtures using §§1–2 and 9.
 3. For the next A/B attempt, first execute the clean-source install → first
    boot → healthy A-to-B smoke in
-   [`2026-10-25_AB_SMOKE_RETRY.md`](2026-10-25_AB_SMOKE_RETRY.md). It rebuilds
+   `2026-10-25_AB_SMOKE_RETRY.md` (archived; see git history). It rebuilds
    both fixtures and a clean installer from one SHA. Keep this evidence
    separate from the single-root GUI install/detached boot in §8.
 4. After that initial A/B smoke, pair the fresh disposable Parent target; run
@@ -146,7 +146,7 @@ additional retained-surface memory failure (675,948 bytes after 24 launches
 against a 524,288-byte bound); it did not recur in the later 5,942-test run.
 Keep it as historical watch evidence, not as a current failure. Compare current
 failures with the clean-baseline findings in
-`docs/reviews/2026-10-23_SYSTEM_UPDATE_IMPLEMENTATION_EVIDENCE.md`; report
+`2026-10-23_SYSTEM_UPDATE_IMPLEMENTATION_EVIDENCE.md` (archived; see git history); report
 exact counts, test IDs and logs. Do not relabel the full gate green because
 some outcomes reproduce on baseline.
 
@@ -161,7 +161,7 @@ stops this run before the first image build. The known baseline is comparison
 context, not an accepted PASS or a predicate waiver.
 
 For Linux-specific comparison, also use the committed acceptance result at
-`docs/reviews/2026-10-24_SOFTWARE_UPDATE_LINUX_ACCEPTANCE_RESULT.md`: its full run
+`2026-10-24_SOFTWARE_UPDATE_LINUX_ACCEPTANCE_RESULT.md` (archived; see git history): its full run
 reported 5,943 tests, 8 failures, 3 errors and 2 skips. It reproduced the
 optional voice-module errors, ARM64 error and `morbidi` timing case on a clean
 pre-update baseline. Its aggregate-only `piccola_serra` timing failure and the
@@ -488,7 +488,7 @@ proof or ordinary-family readiness from this work order alone.
 Use an x86_64 Debian/Ubuntu Linux host with root/sudo, QEMU (`qemu-system-i386`
 or `qemu-system-x86_64`), `qemu-img`, `curl`, `socat`, Python 3, loop/mount
 and `losetup` tools, `mksquashfs`, `unsquashfs`, and the exact GRUB EFI
-packages required by the selected image builder. Follow `SETUP.md` §10 and `docs/INSTALLER_IMAGE_CREATION_AND_BOOT.md`
+packages required by the selected image builder. Follow `SETUP.md` §10 and `docs/engineering/boot/INSTALLER_IMAGE_CREATION_AND_BOOT.md`
 for build prerequisites and host checks. Keep build/evidence storage outside
 the checkout, below 80% filesystem utilization before starting, and preserve
 the repository's private mount-namespace build procedure. Use `-cpu n270`,

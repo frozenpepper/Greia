@@ -1,6 +1,6 @@
 """Top-right Home corner: the time-left pill never sits under the badge star.
 
-Regression for the Acer sweep (docs/reviews/acer/2026-10-16_ACER_ACTIVITY_SWEEP.md
+Regression for the Acer sweep (2026-10-16_ACER_ACTIVITY_SWEEP.md (archived; see git history)
 P3): the star was drawn over the right end of the pill, hiding "OGGI".
 """
 import unittest

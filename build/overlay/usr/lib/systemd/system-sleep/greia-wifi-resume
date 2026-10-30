@@ -20,7 +20,7 @@
 set -u
 
 # Drivers known to fail Wi-Fi resume (module names, space separated).
-# Extended 2026-10-21 from docs/reviews/2026-10-21_LEGACY_X86_NETBOOK_HARDWARE_RISKS.md
+# Extended 2026-10-21 from 2026-10-21_LEGACY_X86_NETBOOK_HARDWARE_RISKS.md (archived; see git history)
 # 5.2 (UNPROVEN on hardware): iwlwifi (5100/5300/6000 series), ath9k (AR9285
 # lost association), Ralink rt2800pci, Realtek rtl8192ce / rtl8180 / rtl8187,
 # Intel ipw2100 / ipw2200. The hook only reloads when the interface or its

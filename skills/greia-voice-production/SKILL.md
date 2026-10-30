@@ -1,721 +1,155 @@
 ---
 name: greia-voice-production
-description: Canonical Greia authoring skill for producing prerecorded character, shared-library, pedagogical and Dani speech. Use for generation, installation/readiness, batch/service operation and voice-engine maintenance.
+description: Use when generating, regenerating, reviewing or installing prerecorded Greia speech (character, shared-library, pedagogical, Dani, launcher or Activity voice lines), operating the VoiceEngine/VoxStage/Parakeet pipeline, or maintaining the voice corpus. Authoring-time only; never runtime TTS.
 ---
 
 # Greia Voice Production
 
 **Status:** canonical authoring-time voice-production contract  
-**Reviewed:** 2026-10-23
+**Reviewed:** 2026-10-30
+
+## When to use / Read first
+
+Use for any new or replacement prerecorded speech, voice-engine maintenance, corpus regeneration/recovery, or automated/human voice review. Not for child microphone recording (`skills/greia-activity-authoring/MICROPHONE_RECORDING.md`) and not for adding a language (`skills/greia-language-expansion/SKILL.md`, which calls back here for the voice step).
+
+Read first:
+
+```text
+tools/greia_voice_core/README.md                              practical CLI/JSON/Python entry point, defaults, recovery
+docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md
+docs/architecture/GREIA_VOICE_PRODUCTION_ENGINE.md
+```
+
+Then as needed:
+
+```text
+docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md      installation/readiness (also SETUP.md §7)
+docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md            post-generation machine screening
+docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md         corpus replacement/recovery operations
+docs/agents/GREIA_NATURAL_VOICE_COMPLETION.md          natural-carrier completion method
+docs/agents/GREIA_SPOKEN_CARRIER_EXTRACTION.md         short-cue carrier extraction
+docs/agents/GREIA_CHATTERBOX_PRODUCTION_FIELD_GUIDE.md engine maintainers only
+```
+
+For a **new language** begin with `skills/greia-language-expansion/SKILL.md` and `docs/development/ADD_A_GREIA_LANGUAGE.md`. The VoxStage worker and cached Parakeet weights on the owner's workstation are not a reproducible installation on another contributor's machine.
 
 ## One rule
 
-All new Greia prerecorded speech production goes through:
+All new Greia prerecorded speech goes through:
 
 ```text
 tools/greia_voice.py
 ```
 
-Activity, OS/shared-library and content-project agents must not invoke VoxStage, Chatterbox, `mlx_audio`, `mlx_whisper`, macOS `say`, `afconvert`, FFmpeg trimming or canonical reference files directly. Those are implementation details owned by the Voice Production Engine.
+Activity, OS/shared-library and content-project agents must not invoke VoxStage, Chatterbox, `mlx_audio`, `mlx_whisper`, macOS `say`, `afconvert`, FFmpeg trimming or canonical reference files directly. Those are implementation details owned by the Voice Production Engine. If an older generator, runbook or queue contains direct backend instructions, treat those production mechanics as superseded; keep the semantic cue/text/acceptance data and submit the speech through the engine.
 
-If an older project generator, runbook or queue contains direct backend instructions, treat those **production mechanics as superseded** by this skill. Preserve useful semantic cue/text/acceptance data, but submit speech through the engine.
+"Voice Studio" (`SETUP.md` §7) means this VoiceEngine authoring workflow: semantic request → routed provider → optional verification → review audio/receipt → human listening → accepted asset promotion. It is not a separate GUI; do not build another Activity-owned speech producer because an instruction says "studio".
 
-Read first:
+## Standing authority and limits
 
-```text
-tools/greia_voice_core/README.md
-docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md
-docs/architecture/GREIA_VOICE_PRODUCTION_ENGINE.md
-```
+- EN/IT/ES/FR are all released: every new line is recorded in all four with the same speaker and integrated with `tools/integrate_reviewed_voices.py --layout mirror` (never overwrites). The all-Activity recording order is `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/LOCAL_AGENT_ALL_APP_VOICE_RECORDING_ORDER.md`; cue identity/legacy inventory is in `LOCAL_AGENT_VOICE_PRODUCTION.md` beside it; the single task queue is `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`.
+- That authority covers an **already configured, registered, no-new-spend local VoiceEngine provider** and exact current approved scripts in reviewed small batches. It is **not** authority for new paid cloud/Modal spend, heavy downloads, direct backend scripting or unreviewed voice anchors. Install the heavy MLX stack only with explicit owner authorization.
+- Owner-approved visible text does not supply an absent long spoken transcript or decide letter-name versus phoneme for preschool content; those stay `BLOCKED_SCRIPT` until a complete script exists.
+- Committed recordings are owner-reviewed and accepted: never regenerate them for perceived provenance problems. Replacement of accepted speech happens only inside an explicit owner-authorized corpus operation (below) and yields listening-pending receipts.
+- Scoped owner exceptions (for example a native system-voice replacement of specific corpus rows recorded as `verification=NOT_RUN`, `human_review=WAIVED_BY_OWNER`) apply only to the named external run. Ordinary new speech always needs its configured delivered-audio verification and human review.
+- Do not add file anti-tampering, signing or elaborate asset verification to voice assets.
 
-For installation/readiness work also read:
+## Providers and masters
 
-```text
-docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md
-```
+- Dani, Momo and Tito use the owner-selected **v0.3 cloned masters** (`greia.dani.v3`, `greia.momo.v3`, `greia.tito.v3`); Lilli, Leo and Flash retain their exact v0.2 master IDs and bytes. Active registry: `assets/audio/characters/canonical/v0.3/manifest.toml`; source masters/provenance: `assets/source/audio/character-voice-masters/v0.3/`. The v0.2 registry stays intact as history. Master selection does not accept any later generation.
+- VoxCPM2 through the shared local VoxStage worker is the default provider. Chatterbox stays explicitly selectable (`--character-provider chatterbox` on `doctor`/`generate`/`batch`/`serve`, or `GREIA_VOICE_CHARACTER_PROVIDER=chatterbox`); unload the VoxStage model before switching on the same host. There is no silent fallback when the selected backend is unavailable.
+- Start/reuse the worker with `voxstage start`, then run `python3 tools/greia_voice.py doctor`. Model installation needs explicit authorization. The adapter reuses/imports exact registry references on a fresh worker, never replaces an existing voice ID and never starts a second MLX process. The shared worker owns warm-model lifecycle: run `voxstage unload` only when the worker is idle and your session is finished. Never restart the shared worker or repeat an uncertain POST.
+- Loopback integration: `GREIA_VOXSTAGE_URL` (default `http://127.0.0.1:8791`); job wait bounded by `GREIA_VOXSTAGE_TIMEOUT` (default 1,800 s; a timeout does not cancel the external job, so record the job ID and inspect it before resubmitting); HTTP response timeout `GREIA_VOXSTAGE_HTTP_TIMEOUT` (default 120 s, up to 7,200); `request --timeout` bounds the warm-service response (default 3,600 s).
+- `dani_system_speech` clones Dani's selected master; Dani can also use `character_dialogue`. Pedagogical pronunciation keeps the independent native/system route. VoxCPM2 language direction is probabilistic (no hard language selector), so every clip needs listening review.
 
-Only engine maintainers/troubleshooters should normally read:
+### Identity versus acting
 
-```text
-docs/agents/GREIA_CHATTERBOX_PRODUCTION_FIELD_GUIDE.md
-```
+Pitch/register, voice age, timbre and permanent character traits belong only in the master voice design. Do not repeat them in a recording's `delivery_prompt`. Defaults for all six characters are the same warm, calm, clear reading with careful natural pronunciation (`tools/greia_voice_core/character_delivery.json`; VoxStage applies them to normal generation too). Add line-specific intention/emotion/pace only when needed, via `VoiceRequest.delivery_prompt`, CLI `--delivery-prompt` or the batch/service field. Acting instructions stay separate from the exact spoken text; receipts keep the supplied prompt and the provider's effective direction. Chatterbox/native reject unsupported explicit direction rather than ignoring it. Do not reuse the retired persona-prefixed prompt overrides for a replacement run.
 
-For a **new language** rather than routine speech production, begin with `skills/greia-language-expansion/SKILL.md` and `docs/development/ADD_A_GREIA_LANGUAGE.md`. It separates translation staging, selected-language promotion, script/phonics work, model/ASR language suitability and voice recording. The available VoxStage worker and cached Parakeet weights on the owner's workstation are not a reproducible installation on another contributor's machine.
+## Semantic input and routing
 
-## 2026-10-14 owner-approved four-language all-Activity recording task
-
-The owner approved **all currently authored EN/IT/ES/FR text
-translations** for voice recording and explicitly requested that the
-local agent inspect **all 45 Activities plus shared OS/Parent/Creations,
-Encyclopedia and incubated voice surfaces**, then actually record each
-missing clip. The executable sequence is
-`docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/LOCAL_AGENT_ALL_APP_VOICE_RECORDING_ORDER.md`.
-The detailed cue identity and per-Activity legacy inventory remain in
-`LOCAL_AGENT_VOICE_PRODUCTION.md` beside that work order, and the
-single task queue remains `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`.
-
-This is explicit authority to use an **already configured, registered,
-no-new-spend local VoiceEngine provider** for exact current approved
-scripts in reviewed small batches; it is *not* authority for new paid
-cloud/Modal spend, heavy downloads, direct backend scripting, or
-unreviewed voice anchors. Owner-approved visible text does not fill in
-an absent long spoken transcript or decide preschool letter-name
-versus phoneme; those are `BLOCKED_SCRIPT` cue rows pending a complete
-script. EN/IT/ES/FR are all released (2026-10-17): every new line is
-recorded in all four with the same speaker, and integrated with
-`tools/integrate_reviewed_voices.py --layout mirror` (never overwrites).
-
-### 2026-10-23 owner-authorized spoken-target corpus policy
-
-The current continuation after the exact v3 Parakeet run is versioned as
-`automatic-natural-context-parakeet-v4-spoken-target-v1`. For its 77-row
-reviewed unresolved scope only, a separate spoken-target collaborator spells
-contextual letter examples in the selected locale and passes that exact spoken
-form through the normal short-phrase extractor and final delivered-audio
-verification. The semantic request text is retained unchanged in the plan and
-receipt. Number policy, word-count, signal, and packaged-audio gates remain
-enabled; up to three fresh actual calls are reserved per cue, stopping at the
-first automated PASS. Human-approved saved cuts remain identified as human
-decisions with their original machine findings intact; generated replacements
-remain `human_review=PENDING`. Historical plan/comparison versions are not
-rewritten.
-
-The 77-row v4 production completed `BOUNDED_COMPLETE`: 25 installed packaged
-Parakeet PASS pairs, 52 preserved originals, 199 new provider calls, and no
-remaining or blocked rows. Generated receipts remain `human_review=PENDING`;
-the 475-row listening batch is at `http://127.0.0.1:8819/`. Exact transaction
-and whole-scope audit evidence is linked in `HANDOVER.md`.
-
-An explicit 2026-10-23 owner exception authorizes native macOS system-voice
-replacement for the exact 52 unresolved v4 corpus rows. It uses the existing
-`MacOSNativeSpeechProvider` through `VoiceEngine`, with an exact authorization
-ID and frozen locale-spelled `spoken_text`; it records `verification=NOT_RUN`
-and `human_review=WAIVED_BY_OWNER`. This is not a Parakeet or listening PASS.
-The exception is scoped to that external run; ordinary new speech continues to
-require its configured delivered-audio verification and human review.
-
-## Voice Studio identity and existing owner-approved assets
-
-`SETUP.md` §7 and `docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md`
-§1 explicitly define **Voice Studio as the VoiceEngine authoring
-workflow**: semantic request → routed provider → optional verification
-→ review audio/receipt → human listening → accepted asset promotion.
-It is not automatically a separate GUI. The public production
-surface is `tools/greia_voice.py` (`generate`, `batch`,
-`serve`/`request`); do not build another Activity-owned speech
-producer because an instruction uses the term “studio”.
-
-Before generating shared voice speech, audit the current
-`assets/audio/characters/shared/v0.2/` catalogue, its `manifest.toml` and
-`review.csv`; do not infer current acceptance from historical counts. Before the
-v3 corpus replacement, 192 shared EN/IT recordings (180 reactions and 12
-introductions) had owner-approved state. The owner-authorized v3 scope replaced
-the Dani/Momo/Tito entries selected by its frozen 1,340-cue plan, and those new
-receipts are PENDING; Lilli/Leo/Flash entries remain unchanged. The external v3
-run backups retain the overwritten bytes and receipts. Reusing currently
-accepted bytes, missing playback wiring and actually missing voice audio are
-separate ledger states. See
-`docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md` and HANDOVER.
-
-## Current selected provider and masters — v0.3 promotion on 2026-10-21
-
-Dani, Momo and Tito use owner-selected **v0.3 cloned masters**; Lilli, Leo and
-Flash retain their exact v0.2 master IDs and bytes. VoxCPM2 through the existing shared local VoxStage worker is the default
-VoiceEngine provider. Chatterbox remains explicitly selectable through
-`--character-provider chatterbox` on `doctor`/`generate`/`batch`/`serve`, or
-`GREIA_VOICE_CHARACTER_PROVIDER=chatterbox` for repository producers. No silent
-fallback occurs when the selected backend is unavailable.
-
-Start/reuse the installed service with `voxstage start`, then run the Greia
-`doctor`. Model installation still needs explicit authorization. The adapter
-reuses/imports exact registry references on a fresh local worker, never replaces
-an existing voice ID, and does not start a second MLX process. The shared worker
-owns warm-model lifecycle: finish with `voxstage unload`; closing Greia leaves
-other projects' worker intact. Chatterbox is a retained alternative; unload the
-VoxStage model before switching to it on the same host.
-
-Active registry: `assets/audio/characters/canonical/v0.3/manifest.toml`.
-Active source masters/provenance: `assets/source/audio/character-voice-masters/v0.3/`.
-The v0.2 canonical master registry and localized comparison evidence remain
-historical. No v0.3 multilingual cloned-line comparison is claimed as accepted.
-Master selection does not accept future generations; new corpus takes remain
-listening-pending.
-
-**Scoped owner authorization (2026-10-19; v0.3 continuation 2026-10-21):**
-the owner explicitly requested replacement of existing Activity/system
-recordings using these new masters, except deterministic isolated
-letters/syllables, and a tone/mood prompt
-for every recording. Execute `tools/regenerate_voice_corpus.py` under
-`docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md`. This is the authorized exception
-to older preservation instructions for this corpus operation. It uses the same
-VoiceEngine, serial production, frozen requests, explicit metadata blockers,
-backups/recovery and pending-review receipts. Do not use the add-only approved
-asset importer for new unlistened takes. The v2 run used its selected v0.2
-masters; the separately frozen v3 run used the exact owner-selected v0.3
-masters documented below.
-
-**Owner clarification 2026-10-21 — identity versus acting:** pitch/register,
-voice age, timbre/texture and permanent character vocal traits belong only in
-master voice design. Do not repeat these in each recording's delivery_prompt.
-Defaults for all six characters are now the same warm, calm, clear reading
-with careful natural pronunciation (owner update2026-10-22). Only add line-specific intention/emotion/pace when needed. The
-completed v2 corpus's frozen prompts and receipts remain historical evidence;
-its old PERSONA-prefixed overrides must not be reused for the next replacement.
-The original Dani/Momo/Tito voices were rejected for high pitch, inconsistent
-Momo, overexcited delivery and hyperactive/aged Tito.
-
-**Owner selection and promotion 2026-10-21:** Momo v3 candidate 1, Tito v3
-candidate 1 and Dani v5 candidate 2 are selected. Their immutable VoxStage IDs
-are `greia-audition-20261021-momo-v3-01`,
-`greia-audition-20261021-tito-v3-01` and
-`greia-audition-20261021-dani-v5-02`. Exact hashes, saved approvals, source WAVs
-and provenance are archived under `assets/source/audio/character-voice-masters/v0.3/`;
-active semantic IDs are `greia.momo.v3`, `greia.tito.v3` and `greia.dani.v3`.
-Lilli, Leo and Flash remain byte-for-byte and ID-for-ID unchanged from v0.2.
-Dani v5 candidates 01/03 are rejected. The active canonical master registry is
-`assets/audio/characters/canonical/v0.3/manifest.toml`; the v0.2 master registry
-remains intact. Existing shared utterance paths retain their `shared/v0.2`
-filenames; selected rows included in the frozen v3 scope now carry v3 recordings
-with pending receipts, while original bytes/receipts remain in external backups.
-Source-master approval does not approve fresh runtime generations or localized
-cloned lines. The scoped v3 replacement then completed 1,340 DONE / 3,575
-PRESERVED with no unresolved rows. Its full policy-v2 automated screen covered
-all 1,340 (1,115 PASS / 225 WARN / no FAIL or BLOCKED; 533 ASR policy
-exclusions); every new receipt remains `human_review=PENDING`. Full report and
-Takeboard batch are external in
-`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-corpus-v3/`. Owner
-listening is still required across the entire batch.
-
-Character performance defaults live in
-`tools/greia_voice_core/character_delivery.json`; VoxStage applies them to normal
-generation too. `VoiceRequest.delivery_prompt`, CLI `--delivery-prompt`, and the
-batch/service field override the default for one cue. Acting instructions stay
-separate from the exact spoken text. Receipts retain the supplied prompt and
-the provider's actual effective language/delivery direction. Chatterbox/native
-reject explicit unsupported direction instead of silently ignoring it.
-
-`dani_system_speech` remains compatible and now clones Dani's selected master;
-Dani can also use `character_dialogue`. Pedagogical pronunciation retains the
-independent native/system route. VoxCPM2 language direction is probabilistic;
-there is no hard language selector. Every new clip still needs listening review.
-
-The default integration uses loopback HTTP (`GREIA_VOXSTAGE_URL`, default
-`http://127.0.0.1:8791`). A job wait is bounded by `GREIA_VOXSTAGE_TIMEOUT`
-(default 1,800 seconds); timeout does not cancel an external job. Preserve the
-reported ID and inspect it before resubmitting. `request --timeout` separately
-bounds the warm-service response (default 3,600 seconds).
-
-## Semantic input
-
-Every generated cue needs:
+Every generated cue needs speaker, kind, locale, exact reviewed text, cue ID (strongly preferred) and an output path when the destination is known. Kinds: `character_dialogue`, `shared_character_utterance`, `pedagogical_speech`, `dani_system_speech`. The caller chooses semantic purpose, never backend/model.
 
 ```text
-speaker
-kind
-locale
-exact reviewed text
-cue ID (strongly preferred)
-output path when the destination is known
+Lilli/Leo/Flash/Tito/Momo/Dani + character_dialogue -> canonical cloned-character provider
+shared_character_utterance  -> Greia's central reviewed shared library; cloned provider for all six
+pedagogical_speech          -> deterministic native/system provider; speaker must be pedagogical or system
+Dani + dani_system_speech   -> selected Dani cloned-character provider
 ```
 
-Kinds:
+At runtime Activities never synthesize `shared_character_utterance`; they resolve reviewed static shared assets through the runtime resolver. Do not infer `pedagogical_speech` from short text (`Vai!` may be dialogue; `ma` may be a teaching target).
 
-```text
-character_dialogue
-shared_character_utterance
-pedagogical_speech
-dani_system_speech
-```
-
-The caller chooses semantic purpose, never backend/model.
-
-Routing:
-
-```text
-Lilli/Leo/Flash/Tito/Momo/Dani + character_dialogue
-    -> canonical cloned-character provider
-
-shared_character_utterance
-    -> production of Greia's central reviewed shared library
-    -> cloned provider for all six characters
-
-pedagogical_speech
-    -> deterministic native/system provider
-    -> speaker must be pedagogical or system
-
-Dani + dani_system_speech
-    -> selected Dani cloned-character provider
-```
-
-At runtime, Activities never synthesize `shared_character_utterance`; they resolve reviewed static Greia shared assets through the current runtime resolver.
-
-Do not infer `pedagogical_speech` from short text. `Vai!` may be character dialogue; `ma` may be a teaching target.
-
-## Packaging and footprint
-
-`VoiceEngine` delegates WAV checks and output packaging to `AudioPipeline`.
-Outputs are 22,050 Hz mono; WAV uses PCM16 and OGG uses Vorbis quality 5 by
-default. Engine maintainers may pass a bounded `ogg_quality` value from 0 to 10
-to `AudioPipeline` for an explicit corpus package-footprint constraint. Keep
-that choice inside the shared pipeline, retain output hashes in receipts, and
-leave every new recording `human_review=PENDING` until a person listens. Do not
-invoke FFmpeg directly from corpus or Activity code to work around the bound.
-
-## Installation / readiness
-
-The engine source ships in the repository. The optional heavy MLX production environment lives outside Git.
-
-Start with:
-
-```bash
-python3 tools/greia_voice.py doctor
-```
-
-For full Apple-Silicon setup follow:
-
-```text
-tools/greia_voice_core/README.md
-```
-
-The tested dependency set is:
-
-```text
-tools/greia_voice_requirements_mlx.txt
-```
-
-Do not silently install/download a multi-GB production stack merely because optional speech might be useful. If actual production is requested and the environment is absent, install only with owner authorization using the canonical setup procedure.
-
-## Generate one line
-
-```bash
-python3 tools/greia_voice.py generate \
-  --speaker leo \
-  --kind character_dialogue \
-  --locale it \
-  --text "Guardiamo con calma." \
-  --cue-id presenter.hint \
-  --output /tmp/greia-voice-review/presenter-hint.wav
-```
-
-Pedagogical example:
-
-```bash
-python3 tools/greia_voice.py generate \
-  --speaker pedagogical \
-  --kind pedagogical_speech \
-  --locale it \
-  --text "ma" \
-  --cue-id phonics.ma \
-  --verification off \
-  --output /tmp/greia-voice-review/ma.wav
-```
-
-Generate into review staging, not directly into final runtime assets.
-
-## Repeated generation
-
-Prefer one warm worker:
-
-```bash
-python3 tools/greia_voice.py serve
-```
-
-Then use `request`, or use `batch` for JSONL queues. Never launch concurrent raw model workers. VoxStage owns one serialized shared worker; Chatterbox remains in-process when explicitly selected. The engine owns the cross-process generation lock.
-
-## Chatterbox output-length policy
-
-For `character_dialogue` and natural-character `shared_character_utterance`, Greia must **not derive `max_new_tokens` from text word count**. Chatterbox acoustic-token length is not predictable from a simple words→tokens formula, and earlier short-prompt caps caused truncation.
-
-Letters/syllables/phonics do not justify such a cap because they route through `pedagogical_speech`.
-
-Do not reintroduce a guessed word-count token table in callers or providers.
-
-## Post-generation automated review (2026-10-21)
-
-Follow `docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md` after corpus generation.
-Use the explicit prepared Greia venv interpreter from SETUP §7.5; the global
-Anaconda Python has an unrelated NumPy/Numba ABI mismatch. Current verification
-uses the pinned Parakeet-TDT v3 model in the prepared environment. Historical
-corpus-review artifacts may retain Whisper/Base identities; Tiny also remains a
-historical comparison model.
-Use `tools/regenerate_voice_corpus.py review --work-dir <external-run>
---report-dir <separate-external-reports> --asr auto`. It reads installed files
-and the frozen plan, checks metadata/decoding/signal metrics, runs existing
-eligible ASR only with already installed/cached dependencies, and creates
-resumable reports plus a prioritized listening queue. It never changes audio,
-receipts, plan, generation state or acceptance, and never downloads models.
-Missing ASR is BLOCKED; `--asr off` is incomplete speech review, not PASS.
-Dani/short utterances/teaching targets/long scripts retain explicit eligibility
-exclusions. Identity, acting, pronunciation and independent language recognition
-remain unassessed. The legacy receipt-score audit does not run ASR or audio
-analysis. Generation complete, automated review and human listening are separate
-evidence states. Review exit 0 never accepts a recording.
-
-## Short spoken-carrier extraction experiment (2026-10-21)
-
-Use `tools/voice_carrier.py` through the bounded short-cue pipeline documented in
-`docs/agents/GREIA_SPOKEN_CARRIER_EXTRACTION.md`. Generate carrier plus target
-as one VoiceEngine request; preserve the raw carrier WAV and provider receipt.
-The extractor accepts mono PCM16 WAV up to 120 seconds, ignores disposable intro wording, locates the final target suffix with valid word timings, then requires one independently measured
-low-energy PCM gap before making a deterministic sample cut. The default target
-policy is `required` and checks exact target transcripts. The explicit corpus
-policy `warn` still requires an identifiable target suffix, timing, unique-gap and at least 80 ms
-of voiced signal, while preserving target transcript mismatches as a visible
-machine WARN. Parakeet transcript/timing and waveform checks do not prove
-pronunciation or replace human listening. An unidentifiable/ambiguous target, malformed
-timing, no clean pause, ambiguous boundary or insufficient voiced duration must
-reject. Generated/extracted clips remain listening-pending. Isolated
-pedagogical letters/syllables remain outside the method.
-
-## Shared human listening tool (2026-10-21)
-
-After automated review, use shared `takeboard` (catalog/skill/README at
-`/Volumes/Test1/Works/takeboard`) for HTML generated/master comparison and
-save/export/reload of human state, 1–5 scores and notes. Greia's thin adapter
-is `tools/export_voice_review_batch.py`; exact commands are in
-`docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md` §6. Keep its manifests external.
-Machine findings never initialize human acceptance. Takeboard edits only its
-review JSON; importing decisions into Greia receipts/runtime is a separate task.
-
-## Current automated review policy (2026-10-21)
-
-Policy v3 (same silence/score thresholds; diacritics ignored by default): trailing silence/internal pauses warn at ≥1.5s; ASR transcript PASS
-requires similarity >0.8 and other applicable checks clear. Other quality flags
-remain. `reassess --evidence-dir <finished-report>` reapplies policy to matching
-saved evidence without another ASR run; use a fresh report directory. Human
-judgments stay separate. Exact commands/boundaries: automated review procedure §3a.
-
-## Parakeet screening policy
-
-Parakeet is an automated screening gate, not pronunciation or human-acceptance authority; warnings are actionable production evidence.
-
-```text
-PASS -> transcript plausibly matches; still needs human review
-WARN -> unresolved candidate; inspect/regenerate
-```
-
-Do not use ASR as pronunciation authority for letters, syllables or phonics.
-
-## Acceptance
-
-Every successful generation remains:
-
-```text
-human_review = PENDING
-```
-
-Listen before integrating. Verify exact words, locale, character identity when applicable, pronunciation, clipping/tails, delivery and small-speaker suitability.
-
-A process exit, receipt, valid audio container or Parakeet PASS is never final acceptance.
-
-## Project-specific producer rule
-
-A project may need a thin helper that assembles many semantic VoiceEngine requests.
-
-That helper belongs **inside the project that owns the cues**, not in repository root `tools/`.
-
-Examples:
-
-```text
-activities/my_activity/tools/generate_voice_requests.py
-activities/my_activity/tools/build_voice_batch.py
-<other-project>/tools/generate_voice_requests.py
-```
-
-A project-local producer may own only:
-
-- semantic cue IDs;
-- exact reviewed localized text;
-- semantic speaker/kind assignment;
-- review-output naming;
-- thin JSONL/batch request assembly for `tools/greia_voice.py`.
-
-It must not own or reintroduce:
-
-- VoxStage/Chatterbox/MLX imports, direct service calls or model IDs;
-- canonical reference paths/hashes;
-- native host voice names/rates or `say`/`afconvert` calls;
-- Whisper calls;
-- FFmpeg trimming/conversion policy;
-- token budgets/model retries/accelerator cache lifecycle;
-- silent/synthetic placeholder audio on generation failure.
-
-For an Activity, remember that `activities/<id>/` is also package content. Remove obsolete/one-shot voice producers, temporary JSONL queues, receipts and scratch files from the Activity tree before final package acceptance. Do not accidentally ship authoring machinery to the child runtime.
-
-Repository root `tools/` is reserved for genuinely Greia-wide reusable tooling such as the canonical VoiceEngine and central shared-library producers.
-
-If a project-local helper becomes genuinely useful across multiple independent projects, promote it deliberately to a stable shared tool instead of copying variants everywhere.
-
-## Semantic-speaker rule
-
-When an Activity needs ordinary guidance rather than pronunciation-authoritative sound, choose an actual semantic presenter route rather than misclassifying the line as `pedagogical_speech`.
-
-Examples:
+Semantic-speaker rule: ordinary guidance uses a real presenter route, not `pedagogical_speech`:
 
 ```text
 Leo welcome/instruction -> character_dialogue
 Dani instruction        -> dani_system_speech
-generic praise          -> shared_character_utterance when resolver supports it
+generic praise          -> shared_character_utterance when the resolver supports it
 exact letter/syllable   -> pedagogical_speech
 ```
 
-Existing owner-accepted audio does not need regeneration merely because its historical generator predates the engine. New/replacement takes must be generated into review staging and accepted before integration.
+Before generating shared speech, audit `assets/audio/characters/shared/v0.2/` (its `manifest.toml` and `review.csv`) and `docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md`; do not infer current acceptance from historical counts. Reusing accepted bytes, missing playback wiring and genuinely missing audio are separate ledger states.
+
+## Packaging and footprint
+
+`VoiceEngine` delegates WAV checks and output packaging to `AudioPipeline`: 22,050 Hz mono, WAV PCM16, OGG Vorbis quality 5 by default; maintainers may pass a bounded `ogg_quality` (0–10) to `AudioPipeline` for an explicit footprint constraint. Retain output hashes in receipts. Never invoke FFmpeg from corpus or Activity code to work around a bound.
+
+## Installation / readiness
+
+The engine source ships in the repository; the heavy MLX production environment lives outside Git. Start with `python3 tools/greia_voice.py doctor`; full Apple-Silicon setup is `tools/greia_voice_core/README.md` with the tested dependency set `tools/greia_voice_requirements_mlx.txt`. Use the explicit prepared Greia venv interpreter from `SETUP.md` §7.5 (the global Anaconda Python has an unrelated NumPy/Numba ABI mismatch). Do not silently install or download a multi-GB stack.
+
+## Generate
+
+```bash
+python3 tools/greia_voice.py generate --speaker leo --kind character_dialogue --locale it \
+  --text "Guardiamo con calma." --cue-id presenter.hint \
+  --output /tmp/greia-voice-review/presenter-hint.wav
+
+python3 tools/greia_voice.py generate --speaker pedagogical --kind pedagogical_speech \
+  --locale it --text "ma" --cue-id phonics.ma --verification off \
+  --output /tmp/greia-voice-review/ma.wav
+```
+
+Generate into review staging, never directly into final runtime assets. For repeated work run one warm worker (`python3 tools/greia_voice.py serve`) and use `request`, or `batch` for JSONL queues. Never launch concurrent raw model workers; VoxStage owns one serialized worker and the engine owns the cross-process generation lock.
+
+**Chatterbox length policy:** for `character_dialogue` and natural-character `shared_character_utterance`, never derive `max_new_tokens` from word count (acoustic-token length is not predictable and short-prompt caps caused truncation). Letters/syllables route through `pedagogical_speech` and do not justify a cap. Do not reintroduce a word-count token table in callers or providers.
+
+## Short cues, verification and comparison policy
+
+- Normal VoxStage character requests with fewer than five words (including Dani and single words) auto-route through the localized carrier → target-only cut → final Parakeet check (`short_text_mode=auto`, `short_text_max_words=4`, three total takes). Override via CLI/JSON/Python; native pedagogical speech stays excluded; Chatterbox keeps its ordinary route. Explicit corpus raw synthesis uses `short_text_mode=off` to avoid double wrapping.
+- Extraction: `tools/voice_carrier.py` / `tools/voice_carrier_search.py` (current v7) generate carrier plus target as one request, keep the raw carrier WAV and receipt, ignore the disposable intro (no raw-intro ASR), and use PCM-first bounded suffix candidates with exactly one target-only match, then cut at a measured low-energy gap. Reject any unidentifiable/ambiguous target, malformed timing, missing clean pause, ambiguous boundary or too little voiced signal (the `warn` corpus policy still requires an identifiable suffix, timing, unique gap and ≥80 ms voiced signal). Never transcribe the removed intro to accept a cut. Normal intros end with a period, not an ellipsis (`period-separated-intro-v1`).
+- Verifier: new requests use the cached local multilingual Parakeet-TDT v3 (`mlx-community/parakeet-tdt-0.6b-v3`, revision `ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15`, from `tools/greia_voice_core/parakeet_asr.py`). Missing model/dependencies are reported; the engine never downloads weights or falls back to Whisper silently. Historical reports keep their recorded verifier (Whisper Base/Tiny); never reinterpret or re-score old evidence.
+- Pass rule: similarity > 0.8, equal canonical unit count, identical numeric sequence (locale cardinals/digits 0–100 are equivalent), and the signal checks clear. Comparison policy `locale-number-tokens-v3-chck-orthographic` (locale cardinals/literals first, then lexical `ch`/`c`/`k` canonicalized to `k`; submitted phrase and exact transcript retained). Registered corpus jobs carry their own frozen policy ID; never rewrite a registered plan to a newer default. Diacritics are ignored only during ASR comparison (`ignore_accents=True` default; `--strict-accents` / `"ignore_accents": false` / `ignore_accents=False` restore strict).
+- `verification=off` is explicitly unverified, not a machine PASS. ASR/IO failures require recovery and must not spend a fresh take. Inspect each result's `disposition`, `verification` and receipt (`result.evidence_dir`), not exit status or error prose.
+- Parakeet is a screening gate: PASS = transcript plausibly matches (still needs human review); WARN = unresolved candidate, inspect/regenerate. Never use ASR as pronunciation authority for letters, syllables or phonics.
+
+## Automated review and human listening
+
+After corpus generation follow `docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md`: `tools/regenerate_voice_corpus.py review --work-dir <external-run> --report-dir <separate-external-reports> --asr auto`. It reads installed files and the frozen plan, checks metadata/decoding/signal metrics, runs eligible ASR only with already installed/cached dependencies, and writes resumable reports plus a prioritized listening queue. It never changes audio, receipts, plans or acceptance and never downloads models. Missing ASR is BLOCKED; `--asr off` is incomplete screening, not PASS. Dani, short utterances, teaching targets and long scripts keep explicit ASR exclusions; identity, acting, pronunciation and language recognition remain unassessed. Current screening policy (`greia-audio-screen-v3`): silence/score thresholds as v2, diacritics ignored, trailing silence/internal pauses warn at ≥ 1.5 s, ASR PASS needs similarity > 0.8. `reassess --evidence-dir <finished-report>` reapplies policy to saved evidence without another ASR run (use a fresh report directory); procedure §3a of the review doc.
+
+Human listening uses the shared `takeboard` tool (its own skill/README; HTML comparison, 1–5 scores, notes, JSON export). Greia's thin adapter is `tools/export_voice_review_batch.py` (commands in `docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md` §6); keep its manifests external. Machine findings never initialize human acceptance; importing takeboard decisions into receipts/runtime is a separate task.
+
+**Acceptance:** every successful generation stays `human_review = PENDING` until a person listens (exact words, locale, character identity, pronunciation, clipping/tails, delivery, small-speaker suitability). A process exit, receipt, valid audio container or Parakeet PASS is never final acceptance. Keep generation DONE, automated coverage and human acceptance as separate evidence states.
+
+## Project-specific producer rule
+
+A project may have a thin helper that assembles many semantic VoiceEngine requests. It lives inside the project that owns the cues (`activities/<id>/tools/generate_voice_requests.py`, `build_voice_batch.py`, `<other-project>/tools/...`), not in repository root `tools/` (reserved for Greia-wide tooling such as the VoiceEngine and central shared-library producers). It may own only semantic cue IDs, exact reviewed localized text, speaker/kind assignment, review-output naming and thin JSONL/batch assembly. It must not own VoxStage/Chatterbox/MLX imports or model IDs, canonical reference paths/hashes, native voice names/rates or `say`/`afconvert`, Whisper calls, FFmpeg policy, token budgets/retries/accelerator lifecycle, or silent/synthetic placeholder audio on failure.
+
+`activities/<id>/` is also package content: remove one-shot producers, temporary JSONL queues, receipts and scratch files before package acceptance so authoring machinery never ships. Promote a helper to a stable shared tool deliberately if it becomes useful across projects. Existing owner-accepted audio need not be regenerated merely because its historical generator predates the engine.
 
 ## Maintainer extension rule
 
-New synthesis systems implement the provider contract behind `VoiceEngine`. Never spread model/backend conditionals back into Activities, content projects, OS/shared-library scripts or skills.
+New synthesis systems implement the provider contract behind `VoiceEngine`. Never spread model/backend conditionals into Activities, content projects, OS/shared-library scripts or skills. The saved-WAV contextual seam (`PackagedCandidateVerifier` in `voice_carrier_search.extract`, optional `TargetQualityChecker(context_checker=...)`) is disabled in normal production; read the core README's saved-WAV section before experimenting, never bypass its source/observation checks, and never infer live yield from unit tests or saved-audio screening.
 
-## Historical paused extractor v4 retries (2026-10-21; superseded below)
+## Corpus operations (replacement, recovery, held producers)
 
-Use the current corpus work order and HANDOVER for the scoped priority run.
-Version 4 handles coincident word-boundary timestamps with a unique quiet run
-inside the first target-word span, requiring exact independent removed-prefix
-and retained-target transcripts; warn mode cannot waive those recovery checks.
-Source snapshots and same-ASR replay evidence are external. Never silently
-resume a frozen v2/v3 extraction plan with a changed algorithm. New retries
-freeze v4 plus an explicit roughly one-second pause and retain the cumulative
-three-generation limit. Primary owns diagnosis; batch monitoring must not
-change thresholds, masters, transcripts, selection or code.
+The owner-authorized corpus replacement runs through `tools/regenerate_voice_corpus.py` under `docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md`: frozen requests, serial production through the same VoiceEngine, explicit metadata blockers, recoverable originals (external backups) and pending-review receipts. It is an exception to the add-only importer, which must not be used for new unlistened takes. Deterministic isolated letters/syllables are preserved. The v0.3 replacement is complete; exact counts, scope and listening state are in `HANDOVER.md` and the run's external reports.
 
-## Historical target-suffix cutter v5 (2026-10-22; superseded by v6 below)
+Rules that outlive each run:
 
-Discarded intro spelling and recognized word count do not gate extraction. The
-final expected target anchors the cut; the declared prefix/count are provenance
-only. See the current extraction contract for exact/warn suffix matching and
-adjacent-span PCM search with mandatory exact retained-target verification.
-Never transcribe the removed intro to accept a cut. Historical v4 plans/receipts
-remain immutable and cannot silently run under v5. Bulk priority generation is
-STOPPED; saved-audio replay and human comparison do not authorize restarting it.
-
-## ASR default / accent override (2026-10-22)
-
-Current new-request verification uses pinned cached multilingual Parakeet-TDT v3 (`mlx-community/parakeet-tdt-0.6b-v3`, revision `ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15`) from `parakeet_asr.py`. Historical corpus review/replay remains tied to each receipt's recorded verifier, including Whisper Base where applicable; never reinterpret old evidence.
-Diacritics are ignored only during ASR comparison by default; exact authored
-scripts and audio are preserved. `VoiceRequest(ignore_accents=False)`, JSON
-ignore_accents=false or `--strict-accents` select strict comparison. This applies
-to final verification, target location, extraction safety and saved review scoring.
-Extractor v6 freezes the model/accent policy; review screen v3 prevents stale
-cache reuse. Reassessment preserves original verifier provenance. No old corpus
-plan or human review is rewritten. Current owner-authorized continuation is
-described below and in HANDOVER; older paused plans remain historical.
-
-
-### 2026-10-22 owner-authorized priority continuation
-
-The latest owner request resumes only the previously frozen 667 problematic short
-cues through `tools/finish_voice_priority.py`; the older STOPPED entries remain
-historical. Read the corpus regeneration manual for exact continuation flags and
-crash recovery. Saved provider sources are tried first, prior cumulative budgets
-carry by maximum, and three fresh generations per cue remains the total limit.
-Carrier raw synthesis verification is OFF because the intro is disposable;
-Parakeet verification checks target-only candidates and the delivered packaged
-target. Signal/count/number/score thresholds are unchanged.
-Keep master identity, deferred scope and human acceptance separate. Do not launch
-an old v4 producer or the unimplemented shared two-queue plan.
-
-
-### Usage/reference consistency
-
-`tools/greia_voice_core/README.md` is the practical entry point for current CLI,
-JSON/Python fields, defaults, return statuses, service ports and recovery. Normal VoxStage character requests now auto-route fewer than five words to the
-localized carrier/cut/final-Parakeet path, including Dani and single words. Defaults:
-short_text_mode=auto, short_text_max_words=4, short_text_max_alnum=null, three total
-takes. CLI/JSON/Python can override mode/thresholds. Pedagogical speech stays native;
-Chatterbox auto retains its ordinary route. Long/bypass verification retains its
-older eligibility/advisory-warning behavior. Only separate verification queues
-remain proposed. Explicit corpus raw synthesis uses short_text_mode=off to prevent
-double wrapping; its frozen selection and cumulative budgets remain unchanged.
-
-
-### 2026-10-22 correction: normal API v7; frozen corpus stopped
-
-Normal automatic short requests now use `tools/voice_carrier_search.py` v7:
-PCM-first bounded suffix candidates, no raw-intro ASR, exactly one target-only
-Parakeet match. The normal API uses score >0.8 plus equal canonical unit count and
-identical numeric sequence; exact locale words/digits 0–100 are equivalent.
-Final delivered signal/ASR checks remain mandatory unless explicitly disabled.
-ASR/IO failures require recovery and must not spend a fresh take. See the
-VoiceEngine README and `docs/reviews/2026-10-22_TARGET_ONLY_VOICE_EXTRACTION_V7.md`.
-The historical 667-cue producer remains stopped on v6; never resume unchanged.
-A versioned corpus adapter must preserve source/master/job provenance and
-cumulative budgets before any synthesis or installation. Saved replay candidates
-are external and listening-pending, not installed or human-approved.
-
-### V7 saved-source corpus adapter
-
-`tools/recover_voice_candidates.py` stages FAILED rows from an existing frozen v6
-priority source run using `target-only-v7-saved-v1`, then installs only completed
-passing candidates with `--install` through CorpusRunner/RunStore. It has no
-provider capability/fresh mode; missing candidates never spend a take. Required
-final count/numeric/signal checks cannot be disabled. Source plans/receipts,
-master identities and cumulative counts remain unchanged. See the corpus manual
-for exact flags and transaction recovery. Other saved histories and the preserved
-letter_A job require explicit reconciliation, not a restart of the old producer.
-
-Saved recovery can now use `--source-selection <index.json>` for explicitly
-pinned historical FAILED/PRESERVED rows. The index binds source plan, remaining
-list, priority, raw/receipt and completed provider job. Exact provider packaging
-is replayed if its48kHz output and retained22,050Hz carrier have different hashes.
-No synthesis, threshold or budget changes. Read the corpus manual's index schema;
-unknown provenance or uncertain journal states remain blockers.
-
-### Period/warm direction and final-take continuation
-
-Normal automatic intros now end with a period, not ellipsis; composition policy
-`period-separated-intro-v1`. Default reading is warm, calm and clear with careful
-natural pronunciation. Silent-pause direction remains separate. Source masters
-and historical frozen prompts are unchanged.
-
-`continue_voice_priority_v7.py` prepares a separately versioned final-take plan
-for exact remaining IDs with two prior attempts, then calls normal automatic
-VoiceEngine with max_attempts1/required verification. CorpusRunner owns the last
-take reservation and installation. Known quality exhaustion preserves originals;
-unknown provider/ASR/IO outcomes stop NEEDS_RECOVERY. Inspect result.evidence_dir,
-not error prose. HTTP response timeout now defaults120s (override
-GREIA_VOXSTAGE_HTTP_TIMEOUT, up to7200) separately from job wait; never retry an
-uncertain POST. Current220-file plan is NOT STARTED: live period/warm probes8/12
-pass and miss their predeclared readiness gate. Investigate saved failures first.
-
-
-Owner method-repair correction2026-10-22: corpus final-take-v7-02 is OWNER
-STOPPED, not prepared/unstarted or runnable. Automatic continuation is deleted.
-Owner permits bounded diagnostics on two consistently rejected targets only.
-Current comparison v2 supports standard cardinals0–100 EN/IT/FR/ES, guards exact
-numeric values/literals and removes internal-marker score inflation. Normal
-Whisper verification and review/reassess v4 share it; historical v1 evidence
-is retained. Source preparation and alternate natural-carrier prompts remain
-experimental, not production defaults. Read HANDOVER and paired-method report;
-no bulk restart or threshold relaxation follows from a small diagnostic result.
-
-
-Natural completion update2026-10-22: owner authorized a new bounded natural-
-method run for247 unresolved priority cues. It injects NaturalCarrierPolicy and
-MethodAttemptBudget into existing ShortPhrasePipeline, with up to3actual new
-calls and historical counters retained. Existing transactions install only final
-Base/count/number/signal passes, human pending. Initial real-corpus canary hit
-METHOD_REVIEW_REQUIRED (2installed,3exhausted,242unstarted); do not blindly resume.
-Read docs/agents/GREIA_NATURAL_VOICE_COMPLETION.md and HANDOVER for active method
-repair. Alternate policy selection is explicit; normal API defaults unchanged.
-
-
-Natural completion continuation2026-10-22: the original natural247run is held.
-A saved-only English Oskar/Oscar policy is explicit, opt-in and retains raw ASR;
-normal/historical numeric policies do not change. The ordinary-speech child197
-moves only zero-use allowances through natural_continuation, never rebudgets
-attempted cues.45letter cues remain separate. Read the current completion guide
-and HANDOVER; do not restart a held parent or duplicate its child. Existing
-quality/poor-yield guards and humanPENDING state remain binding.
-
-
-Current voice continuation correction2026-10-22: BOTH natural producers are held
-for poor yield; do not restart natural-context-v1 or natural-context-speech-v1.
-Latest exact audit7installed pending,240remaining. Explicit saved-only English spoken
-comparison can recover homophonic recognition errors without another provider
-call; normal API defaults and historical policies remain unchanged. Read the
-current natural completion guide/HANDOVER for diagnostic state and remaining
-lists. A failed prompt experiment never authorizes a blind bulk continuation.
-
-
-2026-10-22 context safety correction: the82-source packaged-context experiment
-failed on an uncut-intro OGG false approval. Neither context version is selected.
-Two additional saved diagnostic takes pass unchanged isolated checks and were
-installed pending through existing transactions; no new synthesis/default change.
-Current7installed/240remaining, all actual corpus/diagnostic calls retained. Follow
-PACKAGED_CONTEXT_SAFETY_REVIEW and HANDOVER for optional saved-WAV scope; never
-restart held producers or claim failed experimental gates passed.
-
-### Disabled saved-WAV contextual seam (2026-10-22)
-
-Engine maintenance now has an explicit `PackagedCandidateVerifier` injection
-in `voice_carrier_search.extract`, plus optional
-`TargetQualityChecker(context_checker=...)`. Neither is enabled by normal
-production calls. Read the core README's disabled saved-WAV section and
-`docs/reviews/2026-10-22_SAVED_SUBSTITUTION_SEAM.md` before experimenting.
-The explicit saved-only policy `target-only-v7-saved-wav-context-v1` now admits
-that extraction version with mandatory pinned source selection and exact read-only
-ASR cache; normal calls remain unchanged. Read the core README recorded-only
-section and `docs/reviews/2026-10-22_SAVED_CONTEXT_CORPUS_ADAPTER.md`.
-Do not bypass source/observation checks, resume held producers or infer live yield from
-unit tests or saved-audio screening. Context cannot erase isolated count/number
-or signal conflicts; exact observation/provenance replay and normal recoverable
-transactions are required for every installed candidate.
-
-
-### Registered diagnostic saved recovery — 2026-10-23
-
-An explicit `diagnostic_reconciliation` adapter now handles registered saved
-diagnostics whose completed source does not use the old source-selection layout.
-It pins the exact frozen row, remaining/priority snapshots, Activity-family
-ownership, actual and semantic requests, raw audio/receipt/job/master, original
-destination pair and historical attempt ledger. Admission is followed only by
-the existing saved-candidate, CorpusRunner and RunStore path. It never invokes
-the provider or recognizer and cannot reset a budget.
-
-The exact Oscar/Oskar name spelling is a distinct opt-in comparison policy for
-the French recovery; English `W as Whale` uses the already finite English
-spoken-letter policy. Defaults and historical receipts remain unchanged. The
-C-as-Cat source resolves to already-completed `alfabeto_leo.letter_C.en`; do not
-reuse it for Forest `find_c` by text match.
-
-Current audit: 10/667 changed, 430 kept or installed, 237 remaining (44
-letters, 193 ordinary, 0 exhausted). Both bulk producers remain held because
-saved-only corpus parent/child screening passed only 7/25 (28%). The ten
-installed new-method clips remain listening-pending. Focused voice/policy tests
-pass; full `make verify` aborts with `Abort trap: 6`, NOT GREEN. Next is a
-read-only earliest-failed-predicate table across those 25 retained cases; do
-not run ASR, providers, models, workers, installations, or adjust gates/budgets.
-See `docs/reviews/2026-10-22_SAVED_CONTEXT_CORPUS_ADAPTER.md`.
-
-
-## 2026-10-23 current engine verification
-
-New public requests use cached local Parakeet-TDT v3 through the prepared voice
-Python: `mlx-community/parakeet-tdt-0.6b-v3`, revision
-`ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15`. Missing model/dependencies are
-reported; the engine does not download weights or silently fall back to Whisper.
-Historical reports retain their recorded Whisper identity. Public
-`verification=off` is explicitly unverified. The bounded 10-request diagnostic
-used the natural-carrier recipe by explicit test injection; it is not the production
-prompt default. Six of ten passed automated packaged-audio checks; four were
-rejected after three quality attempts. Every new clip is still listening-pending.
-See `docs/reviews/2026-10-23_PARAKEET_VOICE_PIPELINE.md` before authoring or
-continuing the held corpus.
-
-
-## Current Parakeet comparison policy (2026-10-23)
-
-New Parakeet verification, short target extraction and the delivered-target
-check use `locale-number-tokens-v3-chck-orthographic`. It recognizes locale
-cardinals/numeric literals first, then canonicalizes lexical `ch`, `c` and `k` to
-`k` for comparison. The request's submitted phrase and Parakeet's exact transcript
-are retained unchanged. The pre-existing v2 tokenizer already treated hyphens as
-word separators, so `Raconte-moi` and `Raconte moi` match under v2 and remain
-matched under v3. Extra/missing words and changed numeric values remain guarded;
-no fuzzy spelling rules are implied. Historical receipts/saved evidence preserve
-their recorded comparison-policy IDs and are not silently re-scored.
-Ordinary requests leave the request override unset and use the current Parakeet
-default. Registered automatic/natural corpus jobs explicitly carry their frozen
-policy (currently v2) through extraction and delivered checking; do not rewrite
-registered plans to match a newer engine default.
-
-The 2026-10-23 saved replay found two existing `Trova Oscar` candidate
-transcripts eligible against the authored `Trova Oskar` target under the new
-policy. Those source requests had no packaged-final verification because the
-original v2 run stopped earlier; do not call them end-to-end passes. Review the
-separate full-text Takeboard batch and replay report in
-`docs/reviews/2026-10-23_VOICE_CK_NORMALIZATION.md`.
-
-## Owner-authorized full corpus replacement — 2026-10-23
-
-The owner explicitly authorized one separately versioned full-scope run for the
-exact 237 rows in the latest frozen remaining list, superseding the saved-only
-poor-yield hold for this new version only. It completed 147 installed
-Parakeet-PASS pairs and preserved the other 90 originals after quality
-exhaustion; there are no remaining or blocked rows. It used the natural-carrier
-recipe, pinned Parakeet v3 and `locale-number-tokens-v3-chck-orthographic`, with
-at most three new actual provider calls per cue. Earlier attempt totals and held
-plans remain historical. Normal CorpusRunner backup/install recovery applied;
-the final audit confirms all 667 frozen pairs and exact originals. The unreviewed
-Takeboard batch at `http://127.0.0.1:8818/` includes raw attempts, recorded cuts,
-failed package candidates and installed finals. All replacements remain
-`human_review=PENDING`; human listening is required for acceptance.
+- Never silently resume a frozen plan with a changed extraction/comparison algorithm; each retry freezes its own version and keeps cumulative budgets (three fresh generations per cue in total; saved provider sources are tried before fresh synthesis).
+- `tools/finish_voice_priority.py` and `tools/continue_voice_priority_v7.py` wrap the normal engine through CorpusRunner (which owns last-take reservation and installation); known quality exhaustion preserves originals; unknown provider/ASR/IO outcomes stop as NEEDS_RECOVERY.
+- `tools/recover_voice_candidates.py` is the no-synthesis saved-source adapter (stage, then `--install` the same completed external folder; `--source-selection <index.json>` pins historical rows). It has no provider/fresh mode, cannot disable count/numeric/signal checks, cannot reset budgets, and installs only through CorpusRunner/RunStore with `human_review=PENDING`. Unknown provenance or uncertain journal states are blockers.
+- The 667-cue priority producers, `natural-context-v1` and `natural-context-speech-v1` were stopped or held for poor yield: do not restart or duplicate them, and do not launch an old v4 producer. A failed prompt experiment never authorizes a blind bulk continuation; a small diagnostic result implies no bulk restart or threshold relaxation. Bounded diagnostics and any new run need explicit owner authorization and a separately versioned plan.
+- Saved replay candidates and external listening batches are not installed or human-approved. Installed new-method clips stay listening-pending until a person accepts them.
+- Do not claim a failed experimental gate passed; keep historical plans, receipts and comparison-policy IDs immutable.

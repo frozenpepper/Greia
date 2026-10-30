@@ -84,7 +84,7 @@ Candidate commit:
 
 Review:
 
-`docs/reviews/visual/2026-08-22_canonical-character-cast-reauthoring/PRIMARY_REVIEW.md`
+`docs/reviews/visual/2026-08-22_canonical-character-cast-reauthoring/PRIMARY_REVIEW.md` (archived; see git history)
 
 Established the five-state/source-component/motion foundation.
 
@@ -96,7 +96,7 @@ Candidate commit:
 
 Review:
 
-`docs/reviews/visual/2026-08-22_canonical-cast-expansion/PRIMARY_REVIEW.md`
+`docs/reviews/visual/2026-08-22_canonical-cast-expansion/PRIMARY_REVIEW.md` (archived; see git history)
 
 Established Leo, Flash and Dani beside Lilli/Tito/Momo. Leo and Dani were accepted; Flash required one bounded identity correction.
 
@@ -108,7 +108,7 @@ Candidate commit:
 
 Review:
 
-`docs/reviews/visual/2026-08-22_flash-white-rabbit-identity-revision/PRIMARY_REVIEW.md`
+`PRIMARY_REVIEW.md` (archived; see git history)
 
 Result: **ACCEPTED**.
 
@@ -131,7 +131,7 @@ Momo  — monster                      → emotion / music / silly play / celebr
 
 Final owner acceptance:
 
-`docs/reviews/visual/2026-08-22_canonical-cast-v01-final-capture/OWNER_REVIEW.md`
+`docs/reviews/visual/2026-08-22_canonical-cast-v01-final-capture/OWNER_REVIEW.md` (archived; see git history)
 
 Evidence class: **SIMULATOR VISUAL REVIEW**.
 
@@ -204,7 +204,7 @@ baseline pixels
 ```
 
 Review artifacts packaged:
-- Review directory: `docs/reviews/visual/2026-08-22_shape-garden-visual-authoring-workflow/`
+- Review directory: `docs/reviews/visual/2026-08-22_shape-garden-visual-authoring-workflow/` (archived; see git history)
 - Audit report: `AUTHORING_AUDIT.md`
 - Structured audit data: `authoring-audit.json`
 - Simulator trace: `simulator-trace.json`
@@ -231,7 +231,7 @@ Review artifacts packaged:
   - `CREATE_ORIGINAL`: 4 bridge materials (`block_wood.png`, `block_stone.png`, `block_shroom.png`, `block_rainbow.png`), safety net (`trampoline.png`), and reward goal flag (`goal_flag.png`).
   - `KEEP_EXISTING_INTENTIONAL`: Puzzle mechanics, 4-material requirements, sound synthesis, storage persistence, event emissions, platform Home button.
 - Companion: Canonical Flash (`character.flash`) with `neutral` idle, `happy` walking hop, spring bounce, and `surprised` trampoline rebound.
-- Evidence: 13 curated simulator PNGs in `docs/reviews/visual/2026-08-22_costruiamo-ponti-visual-authoring-stress/` + transfer bundle `GREIA_VISUAL_REVIEW_COSTRUIAMO_PONTI_AUTHORING_STRESS_2026-08-22.zip`.
+- Evidence: 13 curated simulator PNGs in `docs/reviews/visual/2026-08-22_costruiamo-ponti-visual-authoring-stress/` (archived; see git history) + transfer bundle `GREIA_VISUAL_REVIEW_COSTRUIAMO_PONTI_AUTHORING_STRESS_2026-08-22.zip`.
 - Gap outcome: `NO_GAP`. Generic Batch B remains unauthorized.
 
 

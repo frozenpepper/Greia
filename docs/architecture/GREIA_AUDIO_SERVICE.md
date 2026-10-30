@@ -3,7 +3,7 @@
 **Status:** implemented; physically accepted on the reference Acer (2026-08-24)  
 **Architecture authority:** `docs/adr/0031-platform-owned-microphone-processing.md`  
 **Physical acceptance:** `docs/testing/2026-08-23_ACER_MICROPHONE_PROCESSING_ACCEPTANCE.md`  
-**Physical evidence review:** `docs/archive/reviews/2026-08-24_ACER_MICROPHONE_PHYSICAL_ACCEPTANCE.md`
+**Physical evidence review:** `2026-08-24_ACER_MICROPHONE_PHYSICAL_ACCEPTANCE.md` (archived; see git history)
 
 ## Purpose
 
@@ -202,7 +202,7 @@ Implemented/source-visible:
 - focused source tests.
 
 Physically accepted on the reference Acer (2026-08-24, see
-`docs/archive/reviews/2026-08-24_ACER_MICROPHONE_PHYSICAL_ACCEPTANCE.md`):
+`2026-08-24_ACER_MICROPHONE_PHYSICAL_ACCEPTANCE.md` (archived; see git history)):
 
 - `greia_mic_light` implemented as an in-process ALSA ExtPlug
   (SpeexDSP denoise at in-spec 24 kHz, on-demand, no daemon);

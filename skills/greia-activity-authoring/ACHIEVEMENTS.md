@@ -2,7 +2,7 @@
 
 **Status:** mandatory specialist Activity guidance  
 **Audience:** Activity authors, coding agents, reviewers  
-**Reviewed:** 2026-08-24
+**Reviewed:** 2026-10-30
 
 Read this file completely for **every new Activity design**, and whenever an Activity adds/changes local progress, score, completion/milestone events, Greia Stars, badges/achievements, trophy presentation, or achievement artwork.
 

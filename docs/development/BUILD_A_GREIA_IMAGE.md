@@ -14,7 +14,7 @@ The long-term goal is a single convenient Setup image for compatible PCs and Ras
 
 - A **supported Debian-based x86 Linux build machine**, with root/sudo access and enough free disk space. The documented release-candidate host is Debian x86; ordinary Windows/macOS developer laptops are **not** drop-in replacements for this privileged image-composition route.
 - A clean Greia Git checkout at the revision you intend to build.
-- The Linux build prerequisites and preflight checks in [the existing installer build runbook](../INSTALLER_IMAGE_CREATION_AND_BOOT.md#132-build-host-commands-debian-x86-no-docker).
+- The Linux build prerequisites and preflight checks in [the existing installer build runbook](../engineering/boot/INSTALLER_IMAGE_CREATION_AND_BOOT.md#132-build-host-commands-debian-x86-no-docker).
 - Time and disk space for two Linux root compositions, target payload, squashfs and build outputs; do not treat the installed OS footprint limit as the build host's free-space requirement.
 - Permission to use any removable medium **before** invoking a media-writing command.
 
@@ -22,7 +22,7 @@ The long-term goal is a single convenient Setup image for compatible PCs and Ras
 
 ## The safe development-image path
 
-First check the [setup index](../../SETUP.md#10-os-image--installer-builder), [OS work skill](../../skills/greia-os-work/SKILL.md), [build operations guide](../agents/GREIA_AGENT_OPERATIONS.md), and [installer-image reference](../INSTALLER_IMAGE_CREATION_AND_BOOT.md). On an appropriate Linux host, from the clean repository root:
+First check the [setup index](../../SETUP.md#10-os-image--installer-builder), [OS work skill](../../skills/greia-os-work/SKILL.md), [build operations guide](../agents/GREIA_AGENT_OPERATIONS.md), and [installer-image reference](../engineering/boot/INSTALLER_IMAGE_CREATION_AND_BOOT.md). On an appropriate Linux host, from the clean repository root:
 
 ```bash
 git status --short
@@ -34,7 +34,7 @@ sudo bash tools/build-development-installer.sh legacy-x86-i686-dev ./out
 
 This high-level wrapper routes legacy-x86 builds through the accepted boot-artwork and installer steps. The real image is named `out/greia-os-installer-<PROFILE>-<VERSION>-build-<COMMIT>.img`; `out/greia-os-installer-legacy-x86-i686-dev.img` is a compatibility symlink. A report is written beside it. Inspect the reports and verification output; **a file existing is not proof it is bootable**.
 
-For the specific quiet developer release candidate, the analogous profile is `legacy-x86-i686-rc`. Follow [the RC runbook](../INSTALLER_IMAGE_CREATION_AND_BOOT.md#13-release-candidate-build-runbook-legacy-x86-i686-rc) rather than substituting it silently for a normal release.
+For the specific quiet developer release candidate, the analogous profile is `legacy-x86-i686-rc`. Follow [the RC runbook](../engineering/boot/INSTALLER_IMAGE_CREATION_AND_BOOT.md#13-release-candidate-build-runbook-legacy-x86-i686-rc) rather than substituting it silently for a normal release.
 
 ### Validate before anyone uses it
 
@@ -57,7 +57,7 @@ On the accepted Linux development host, the repo also provides a combined develo
 sudo bash tools/build-and-flash-development-usb.sh legacy-x86-i686-dev /dev/sdX ./out
 ```
 
-**Do not copy/paste that command until you have positively identified and been authorized to erase the actual USB device.** It targets the whole device, not a file or partition. The [physical USB checklist](../INSTALLER_IMAGE_CREATION_AND_BOOT.md#133-identify-the-usb-stick-before-writing) requires unplug/replug checks of the exact drive's model/size/serial and a separate read-back verification.
+**Do not copy/paste that command until you have positively identified and been authorized to erase the actual USB device.** It targets the whole device, not a file or partition. The [physical USB checklist](../engineering/boot/INSTALLER_IMAGE_CREATION_AND_BOOT.md#133-identify-the-usb-stick-before-writing) requires unplug/replug checks of the exact drive's model/size/serial and a separate read-back verification.
 
 If you are preparing media from an already published, supported image on a personal Windows PC or Mac, use [the graphical Etcher guide](../user/INSTALL_FROM_USB.md), not this Linux builder/writer route.
 

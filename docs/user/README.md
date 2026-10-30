@@ -1,24 +1,45 @@
 # Welcome to Greia
 
-Greia is a computer made for children to explore, play and learn. It is designed to feel like a small learning console, not a conventional desktop.
+Greia turns a computer into a small learning console for young children.
+Children pick their own picture, choose an Activity and play, draw, write or
+learn. They never see a desktop, a terminal or a web browser.
 
-**Greia is still in development.** There is not yet a supported public installer download. These guides describe the intended ordinary-family route and the parts already implemented; they will be checked again against the actual downloadable release before we call them finished. Please do not install a development image on a family computer containing anything important.
+**Greia is a technical preview.** A first installer for Acer Aspire One class
+PCs is on the [Greia website](https://www.frozenpepper.it/greia/downloads.html).
+It is for people who are happy to try new software. It is not a finished
+family release yet. Use a spare computer, not one with files you need.
 
-## Choose what you want to do
+## What do you want to do?
 
-- **[Install Greia from a download](INSTALL_FROM_USB.md)** — start with a Windows PC or a Mac, prepare a USB stick and install Greia on another computer.
-- **[Greia Parents](GREIA_PARENTS.md)** — open parental settings on Greia itself, or manage it from a browser on your phone or computer. Includes the **S + T** shortcut.
-- **[Create an Activity](../development/CREATE_AN_ACTIVITY.md)** — a practical starting guide for creators, including the Simulator, voices, packaging and installation.
-- **[Build your own Greia image](../development/BUILD_A_GREIA_IMAGE.md)** — for experienced builders and coding agents, not needed for normal installation.
+- **[Install Greia](INSTALL_FROM_USB.md).** Download it, put it on a USB stick
+  and install it on another computer.
+- **[Use Greia Parents](GREIA_PARENTS.md).** Open the parent settings on the
+  Greia computer, or manage it from your phone. Includes the **S + T**
+  shortcut.
+- **[Make an Activity](../development/CREATE_AN_ACTIVITY.md).** For people who
+  want to create games or tools for Greia.
+- **[Build your own Greia image](../development/BUILD_A_GREIA_IMAGE.md).** For
+  experienced builders. You do not need this to install Greia.
 
-When Greia starts, children choose their picture/name, enter their space and select an Activity. To return from an Activity, use Greia's own Home control.
+## Two things that erase data
 
-### A small distinction that matters
+- **Making the USB stick** erases everything on the stick.
+- **Installing Greia** erases everything on the computer's internal disk.
 
-**Installation** replaces the chosen computer's disk with Greia. **Making the USB stick** replaces the contents of the USB stick. Those are two different actions and both erase data. Keep any files you want to save before proceeding.
+Copy anything you want to keep first.
 
-### Help improve these instructions
+## How Greia works
 
-We want these steps to be understandable without Linux experience. If a step does not match what is on screen, or if a choice seems risky or unclear, please report it instead of guessing. You can find the project's contact and contribution routes in [the main README](../../README.md).
+When Greia starts, each child picks their picture and name, then chooses an
+Activity. To leave an Activity, a child presses Greia's own Home button. It is
+always in the same place.
 
-For contributors and automated agents, [the documentation map](../DOCUMENTATION.md) and [setup index](../../SETUP.md) identify the current technical authorities. They are not prerequisites for families.
+## Help us improve these pages
+
+These steps should work without any Linux knowledge. If a step does not match
+what you see on screen, or a choice looks risky, tell us instead of guessing.
+You can write to greia@frozenpepper.it or open an issue on
+[GitHub](https://github.com/frozenpepper/Greia/issues). The
+[main README](../../README.md) has more ways to get involved.
+
+Contributors and coding agents: see the [docs map](../README.md).

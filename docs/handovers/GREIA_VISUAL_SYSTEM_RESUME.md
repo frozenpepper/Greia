@@ -7,8 +7,8 @@
 **Visual-system guide:** `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`  
 **Active visual plan:** `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`  
 **Current Activity visual subplan:** `docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md`  
-**Current E3 source review:** `docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/SOURCE_REVIEW.md`  
-**E3 runtime gate:** `docs/testing/2026-08-29_ENCYCLOPEDIA_E3_SECTION_RUNTIME_REVIEW.md`  
+**Current E3 source review:** `SOURCE_REVIEW.md` (archived; see git history)  
+**E3 runtime gate:** `2026-08-29_ENCYCLOPEDIA_E3_SECTION_RUNTIME_REVIEW.md` (archived; see git history)  
 **Visual-authoring skill:** `skills/greia-visual-authoring/SKILL.md`
 
 ---
@@ -43,7 +43,7 @@
 
 # 2026-10-15 — Art direction reset
 
-Decisions (main agent, 2026-10-15; evidence: `docs/reviews/visual/2026-10-15_asset_library_audit/REVIEW.md`):
+Decisions (main agent, 2026-10-15; evidence: `docs/reviews/visual/2026-10-15_asset_library_audit/REVIEW.md` (archived; see git history)):
 
 - `docs/design/GREIA_SVG_AUTHORING_RULES.md` is the ACCEPTED, binding SVG recipe (flat shapes, one cocoa contour, no filters/text/raster, `rsvg-convert` at build time); tile hues per Collection accepted.
 - Opus is the selected SVG authoring model (bake-off winners `icon_marble_run`, `leo_celebrate`, `scene_river_valley`).
@@ -84,7 +84,7 @@ E3 exact-SHA Simulator review           ACCEPTED (7/7 sessions, 11/11 SHA-256, 1
 E4 factual-entry migration              UNBLOCKED / NEXT (deferred per post-activity-pass protocol)
 ```
 
-E3 is ACCEPTED per `docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/runtime/REVIEW.md` (Disposition: ACCEPTED, SHA 03bf76ac, visual ACCEPTED). Do not rerun E3 merely because unrelated Activities changed.
+E3 is ACCEPTED per `docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/runtime/REVIEW.md` (archived; see git history) (Disposition: ACCEPTED, SHA 03bf76ac, visual ACCEPTED). Do not rerun E3 merely because unrelated Activities changed.
 
 ---
 
@@ -129,7 +129,7 @@ Gears     real toothed three-gear train with actual mesh points
 Primary correction record:
 
 ```text
-docs/reviews/visual/2026-08-29_encyclopedia_owner_direct_repairs/REVIEW.md
+docs/reviews/visual/2026-08-29_encyclopedia_owner_direct_repairs/REVIEW.md (archived; see git history)
 ```
 
 The owner asked the primary agent to perform this visual work directly. Do not hand the current aesthetic-authoring lane to the local agent.
@@ -179,7 +179,7 @@ All four reauthored v6 pages preserved their existing semantic centers. A local 
 Current source review:
 
 ```text
-docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/SOURCE_REVIEW.md
+SOURCE_REVIEW.md (archived; see git history)
 ```
 
 Current maintainer-local six-section contact sheet:
@@ -322,7 +322,7 @@ Evidence binding is fail-closed:
 Canonical protocol:
 
 ```text
-docs/testing/2026-08-29_ENCYCLOPEDIA_E3_SECTION_RUNTIME_REVIEW.md
+2026-08-29_ENCYCLOPEDIA_E3_SECTION_RUNTIME_REVIEW.md (archived; see git history)
 ```
 
 ---
@@ -343,7 +343,7 @@ E3 RUNTIME VISUAL ACCEPTANCE            ACCEPTED at 03bf76ac
 E4                                       UNBLOCKED / NEXT
 ```
 
-E3 is ACCEPTED per `docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/runtime/REVIEW.md`. The pack remains valid until an Encyclopedia source/runtime change.
+E3 is ACCEPTED per `docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/runtime/REVIEW.md` (archived; see git history). The pack remains valid until an Encyclopedia source/runtime change.
 
 ---
 
@@ -381,7 +381,7 @@ E4 UNBLOCKED / NEXT — deferred until post-activity-pass R7 acceptance window e
 
 Post-activity-pass acceptance SHA is e2b831da (Activity modernization COMPLETE, source gate green, Simulator 5/5 final decompositions PASS, focused R7.2/R7.3 PASS; physical Acer INCOMPLETE due to no hardware in this environment). Do not rerun E3 merely because unrelated Activities changed.
 
-`docs/testing/GREIA_ENCYCLOPEDIA_V01_LOCAL_AGENT_NEXT.md` remains HOLD unless the owner explicitly changes the direct-work instruction.
+Local agents do not take this Encyclopedia visual work (the old local-agent work order stays on HOLD and was archived 2026-10-30) unless the owner explicitly changes the direct-work instruction.
 
 ---
 

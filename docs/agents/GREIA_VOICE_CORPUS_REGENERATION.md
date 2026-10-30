@@ -387,7 +387,7 @@ before bulk replacement. The draft scope is 1,340 DONE cues (392 Dani, 284 Momo,
 performance. It is not a new frozen plan or authority to run with old masters.
 
 Model reference guidance/research and job evidence:
-`docs/reviews/2026-10-21_VOICE_DIRECTION_AND_REFERENCE_REVIEW.md`. The engine now
+`2026-10-21_VOICE_DIRECTION_AND_REFERENCE_REVIEW.md` (archived; see git history). The engine now
 uses policy v2 screening; see automated review procedure §3a for reassessment.
 
 ### Owner master choices — 2026-10-21 follow-up
@@ -844,7 +844,7 @@ The owner stopped `final-take-v7-02` because the method's high rejection rate is
 unacceptable. Automatic supervision is deleted. Do not resume it or reset its
 budgets. Later owner authorization is for bounded prompt/code experiments on
 repeatedly failing targets, not another corpus run. See
-`docs/reviews/2026-10-22_VOICE_METHOD_PAIRED_EXPERIMENT.md`.
+`2026-10-22_VOICE_METHOD_PAIRED_EXPERIMENT.md` (archived; see git history).
 New numeric comparison is v2 (0–100 word/digit equivalence, literal-value guards,
 ordinary digit scoring); review is v4. Historical plans/receipts retain v1 and
 are not silently migrated. Explicit numeric policy mismatches in old staged

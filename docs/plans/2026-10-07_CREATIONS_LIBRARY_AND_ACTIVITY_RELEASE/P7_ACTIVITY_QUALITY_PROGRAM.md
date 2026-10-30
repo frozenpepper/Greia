@@ -1,7 +1,7 @@
 # P7 — Activity Quality Program (decisions of 2026-10-15)
 
 **Status:** ACTIVE execution record (W0–W3 DONE at source level 2026-10-16; W4 and the follow-ups in §8 remain) for P7 of [PLAN.md](./PLAN.md). Owner mandate (2026-10-15): *"a serious and solid collection of first-class Activities, all engaging, fun and educational"*; the primary agent may change looks, design, gameplay and interactions.
-**Inputs:** four design audits in `docs/reviews/activities/2026-10-15_activity_design_audit/` (all 45 Activities played headlessly and scored /40), the asset-library audit `docs/reviews/visual/2026-10-15_asset_library_audit/REVIEW.md`, and the binding art recipe `docs/design/GREIA_SVG_AUTHORING_RULES.md` (Opus is the sole SVG authoring model).
+**Inputs:** four design audits in `docs/reviews/activities/2026-10-15_activity_design_audit/` (archived; see git history) (all 45 Activities played headlessly and scored /40), the asset-library audit `docs/reviews/visual/2026-10-15_asset_library_audit/REVIEW.md` (archived; see git history), and the binding art recipe `docs/design/GREIA_SVG_AUTHORING_RULES.md` (Opus is the sole SVG authoring model).
 **Not:** a release approval. `[release].status` stays `draft` until each Activity passes the PLAN §7 decision record. This file does not override the architecture-remediation or lifecycle plans.
 
 ## 1. Design principles every reworked Activity must meet

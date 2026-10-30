@@ -13,9 +13,9 @@ skills/greia-os-work/BOOT.md
 The historical incident record remains in:
 
 ```text
-docs/INSTALLED_OS_BOOT_POSTMORTEM.md
-docs/INSTALLATION_ISSUES_LOG.md
-docs/INSTALLATION_USB_BOOT_POSTMORTEM.md
+docs/engineering/boot/INSTALLED_OS_BOOT_POSTMORTEM.md
+docs/engineering/boot/INSTALLATION_ISSUES_LOG.md
+docs/engineering/boot/INSTALLATION_USB_BOOT_POSTMORTEM.md
 ```
 
 Do not copy a command or constant from an old postmortem without checking current source.
@@ -103,7 +103,7 @@ The normal Greia menu entry remains automatic and `--unrestricted`. GRUB edit/co
 **Release acceptance (2026-10-28):** the early framebuffer backend is
 registered release-safe for the technical-preview composition after the
 recorded QEMU visual acceptance in
-`docs/release/2026-10-28_BOOT_COVER_ACCEPTANCE.md`. Physical Acer visual
+`2026-10-28_BOOT_COVER_ACCEPTANCE.md` (archived; see git history). Physical Acer visual
 acceptance and any ordinary-family release decision remain separate.
 
 The renderer currently still supports explicit milestone progress through `--progress`. That behavior is also reflected by `docs/design/GREIA_BOOT_PROGRESS.md` and `tests/test_boot_progress_contract.py`.
@@ -198,7 +198,7 @@ A boot/image change on the reference development Acer must preserve automatic SS
 
 ## 5. Developer boots must preserve failure evidence
 
-The console is a profile fact, `boot.console_policy` (`diagnostic` | `quiet`), independent of the developer/SSH marker since 2026-10-17. `*-dev` profiles default to `diagnostic`; release profiles and the developer release candidate `legacy-x86-i686-rc` are `quiet`. The composer writes `/etc/greia-os/boot-console-policy`; `10_greia_appliance` renders from it and declares `# greia-boot-console-policy: <policy>` in `grub.cfg`; `boot_contract.py` (`BootConsolePolicy`, `--console-policy`) validates it; the live USB template is chosen from the installer manifest (`build/lib/live-syslinux.sh`). A quiet developer image keeps diagnostics reachable: Syslinux `LABEL verbose` (hold Shift/Alt, type `verbose`) and an owner-restricted GRUB entry `greia-os-diagnostics` (hold Shift). Developer images also keep a bounded persistent journal (`journalctl -b -1` after a failed boot). Details: `docs/INSTALLER_IMAGE_CREATION_AND_BOOT.md` §7.
+The console is a profile fact, `boot.console_policy` (`diagnostic` | `quiet`), independent of the developer/SSH marker since 2026-10-17. `*-dev` profiles default to `diagnostic`; release profiles and the developer release candidate `legacy-x86-i686-rc` are `quiet`. The composer writes `/etc/greia-os/boot-console-policy`; `10_greia_appliance` renders from it and declares `# greia-boot-console-policy: <policy>` in `grub.cfg`; `boot_contract.py` (`BootConsolePolicy`, `--console-policy`) validates it; the live USB template is chosen from the installer manifest (`build/lib/live-syslinux.sh`). A quiet developer image keeps diagnostics reachable: Syslinux `LABEL verbose` (hold Shift/Alt, type `verbose`) and an owner-restricted GRUB entry `greia-os-diagnostics` (hold Shift). Developer images also keep a bounded persistent journal (`journalctl -b -1` after a failed boot). Details: `docs/engineering/boot/INSTALLER_IMAGE_CREATION_AND_BOOT.md` §7.
 
 The diagnostic generated kernel policy is source-owned by `10_greia_appliance` and `boot_contract.py`. Current required diagnostic arguments include:
 

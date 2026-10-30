@@ -352,7 +352,7 @@ The next job is **not** to blindly continue `Clinic → Reading → Fantasy → 
 The immediate maintainer task is:
 
 ```text
-docs/testing/2026-08-21_GENERIC_VISUAL_LIBRARY_CONSOLIDATION.md
+2026-08-21_GENERIC_VISUAL_LIBRARY_CONSOLIDATION.md (archived; see git history)
 ```
 
 That task builds the first generic semantic indexes from reviewed/promoted source art, harvests broadly reusable pieces from the Clinic candidate, keeps medical-specific pieces specialized, and identifies the next true generic coverage gaps.

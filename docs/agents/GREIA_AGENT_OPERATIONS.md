@@ -100,7 +100,7 @@ explicit procedure.
 
 **Current owner-authorized execution:** [single update release acceptance](../testing/GREIA_UPDATE_RELEASE_ACCEPTANCE.md). The local coding agent may fix code, add tests, build current-source disposable Linux/QEMU images, test full A/B and application updates, diagnose failures and commit coherent repairs in **one session**. Do not apply the testing-only source-edit restrictions from the unrelated delayed Activity queue to this owner-authorized work.
 
-Dated October 23–27 procedures are detailed **reference material**, not independent mandatory gates. Do **not** use the frozen 1275 guest, duplicate source-difference allowlists, one-stage-only stop orders or fixed old artifact hashes as current instructions. The prior diagnostic already identified a real failure: i386 guest updater stage refused because `sda2` capacity was unobservable. See [captured result](../reviews/2026-10-27_AB_OLD_RELEASE_STAGE_DIAGNOSTIC_RESULT.md) and [root-cause analysis](../reviews/2026-10-27_AB_OLD_RELEASE_STAGE_REFUSAL_ANALYSIS.md).
+Dated October 23–27 procedures are detailed **reference material**, not independent mandatory gates. Do **not** use the frozen 1275 guest, duplicate source-difference allowlists, one-stage-only stop orders or fixed old artifact hashes as current instructions. The prior diagnostic already identified a real failure: i386 guest updater stage refused because `sda2` capacity was unobservable. See captured result (archived; see git history) and root-cause analysis (archived; see git history).
 
 Use the Linux host's disposable QEMU disks; never guess a physical target. Keep the real product invariants: layout/device identity, bounded writes, PERSIST preservation, application generation atomicity, child-session fence, health and rollback. Run focused tests while fixing, full verification once after coherent changes, and consolidated installed acceptance. Record unrelated pre-existing full-suite failures without blocking relevant disposable-device tests; never misstate evidence.
 
@@ -109,7 +109,7 @@ The two independent lanes are (1) current-source blank-disk A/B install -> first
 ### Linux acceptance follow-up (2026-10-24)
 
 The first Linux result is recorded in
-`docs/reviews/2026-10-24_SOFTWARE_UPDATE_LINUX_ACCEPTANCE_RESULT.md`; preserve its
+`2026-10-24_SOFTWARE_UPDATE_LINUX_ACCEPTANCE_RESULT.md` (archived; see git history); preserve its
 manual-repair evidence boundary. Rebuild/reinstall the committed fixes before
 claiming clean acceptance. Run the root-to-Parent ownership regression on the
 installed disposable image with its real `greiakid`/`greiapanel` accounts, then
@@ -382,7 +382,7 @@ What it does (the former manual procedure, kept as the contract):
 - Screenshots: the `greia_remote.py screenshot` path needs `/etc/greia-os/developer-display.json`, which in-place deploys do not guarantee. Fall back to `PIL.ImageGrab` run as `greiakid` with `DISPLAY=:0`.
 - Input: `xdotool` run as `greiakid` on `DISPLAY=:0`. It is remote coordinate injection, never physical-input evidence (rule 8 above).
 - Launcher warnings and uncaught tracebacks now reach the journal as `greia-launcher: ...` entries (`greia_launcher.main.configure_launcher_logging`); you no longer need the `session.err` redirect for Shell crashes.
-- Measurement method (launch to READY from `sessions.ready_at`, 1 Hz `/proc` CPU/RSS sampler, idle/interaction windows, STANDALONE DIAGNOSTIC labelling, play-limit and parent-policy constraints): `docs/reviews/acer/2026-10-16_ACER_ACTIVITY_SWEEP.md`. Its re-sweep section lists what a deploy of a given SHA changed and what was not verified on device.
+- Measurement method (launch to READY from `sessions.ready_at`, 1 Hz `/proc` CPU/RSS sampler, idle/interaction windows, STANDALONE DIAGNOSTIC labelling, play-limit and parent-policy constraints): `2026-10-16_ACER_ACTIVITY_SWEEP.md` (archived; see git history). Its re-sweep section lists what a deploy of a given SHA changed and what was not verified on device.
 - `/opt/greia-os/.deployed-sha` (written by `tools/dev_source_deploy.py stage`) is the convention the sweep reviews rely on; quote it in every evidence note.
 
 ---
@@ -474,7 +474,7 @@ Then read the task-specific ADR/product documents named by `skills/greia-os-work
 
 Do not perform destructive physical installation from memory. The exact named procedure must permit it and revalidate target identity before destructive work.
 
-For the reference Acer, do not substitute the generic raw GRUB/MBR installer for the named Syslinux/FAT32 physical procedure. Accepted Acer boot evidence in `docs/INSTALLATION_USB_BOOT_POSTMORTEM.md` establishes active FAT32 + Syslinux as the proven removable-media first stage; the GRUB/MBR USB route is unproven/negative on that device. When a task is a reference-Acer physical boot test, read that postmortem before choosing the media path.
+For the reference Acer, do not substitute the generic raw GRUB/MBR installer for the named Syslinux/FAT32 physical procedure. Accepted Acer boot evidence in `docs/engineering/boot/INSTALLATION_USB_BOOT_POSTMORTEM.md` establishes active FAT32 + Syslinux as the proven removable-media first stage; the GRUB/MBR USB route is unproven/negative on that device. When a task is a reference-Acer physical boot test, read that postmortem before choosing the media path.
 
 Developer-image convenience must not leak into normal/release profiles.
 
@@ -489,7 +489,7 @@ supplementary group after installing the live package set. `passwd` supplies
 `groupadd`. The live composed-root verifier checks the actual `/etc/group`
 for **every** declared group; test `tests/test_live_installer_groups.py`
 guards this failure. See
-[the physical failure review](../reviews/2026-10-29_ACER_USB_INSTALLER_216_GROUP.md).
+the physical failure review (archived; see git history).
 
 Current image `7869b6b5…` adds USB
 `greia-logs/last-install-failure.log` persistence and the initramfs ENOSPC
@@ -514,7 +514,7 @@ The installer now keeps the apt archive cache and `mkinitramfs` temporary
 tree in a bounded 256 MiB tmpfs at `/run/greia-installer-scratch`; only the
 compressed initrd is written to the slot. Regression:
 `tests/test_installer_hardware_support_install.py`. See
-[the ENOSPC review](../reviews/2026-10-29_ACER_USB_INSTALL_ENOSPC_INITRAMFS.md).
+the ENOSPC review (archived; see git history).
 
 ### Live installer quiet-screen recovery (source contract, 2026-10-17)
 
@@ -557,7 +557,7 @@ a text-free transition or available Wi-Fi/SSH on a particular image.
   clone injection with `losetup: Permission denied` (observed V12F; not a
   product finding). Disposable `/tmp` media only.
 - Release-candidate build (quiet boot, SSH on, optional operator public key):
-  profile `legacy-x86-i686-rc`, runbook `docs/INSTALLER_IMAGE_CREATION_AND_BOOT.md`
+  profile `legacy-x86-i686-rc`, runbook `docs/engineering/boot/INSTALLER_IMAGE_CREATION_AND_BOOT.md`
   §13 (pre-build gates, USB identification, required PASS lines).
 - Installer media since 2026-10-21 also needs `grub-efi-ia32-bin` and
   `grub-efi-amd64-bin` on the build host; the builder fails fast if
@@ -638,7 +638,7 @@ Binding rules:
   the installer client dies, and the bounded `Restart=always` plus
   `installer-exit-cover` repaint a clean Greia splash over the dead service — a
   CPU-model artifact indistinguishable from a stalled image (2026-10-18).
-  Evidence: `docs/INSTALLATION_ISSUES_LOG.md` §35.
+  Evidence: `docs/engineering/boot/INSTALLATION_ISSUES_LOG.md` §35.
 - Loop audit after every build/run (success, failure, interrupt):
   `sudo losetup -a | grep greia` must be empty. Any shell path that creates a
   `losetup --partscan` loop must use `build/lib/safe-cleanup.sh` and
@@ -941,7 +941,7 @@ the installed target keeps its independent release SSH policy. The device
 advertises `greia-installer.local` through Avahi when networking permits.
 Source/demo evidence does not establish actual SSH or network connectivity.
 Patch the existing USB and run physical acceptance per
-`docs/agents/2026-10-29_INSTALLER_USB_SSH_RECOVERY.md`.
+`2026-10-29_INSTALLER_USB_SSH_RECOVERY.md` (archived; see git history).
 
 
 ### Parent client runtime permissions (2026-10-29)
@@ -950,7 +950,7 @@ The real Acer A/B image had `/usr/share/greia-parent-app` mode 0700 and
 `greia-parent.service` could not run its integrity precheck. Pinning/staging and
 image composition now normalize public static-client directory/file modes;
 the composed-root verifier rejects unreadable client trees. See
-`docs/agents/2026-10-29_ACER_INSTALLER_AND_PARENT_FIX_HANDOFF.md` for the
+`2026-10-29_ACER_INSTALLER_AND_PARENT_FIX_HANDOFF.md` (archived; see git history) for the
 physical read-only evidence and required new-bundle/installed acceptance.
 
 

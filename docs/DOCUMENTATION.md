@@ -67,7 +67,7 @@ Accepted ADRs own architectural decisions. Current cross-cutting accepted decisi
 
 `docs/architecture/GREIA_ARCHITECTURE.md` is a living synthesis, not a second ADR system.
 
-The parent-facing website's page content, interactions, copied preview assets and release-link state live in `website/`; `website/README.md` records their provenance and publishing boundary. It summarizes the product for visitors and does not override product requirements, ADRs, source contracts or release evidence. The September website concept prototypes were retired from the active tree during release cleanup. Their design decision is recorded in `docs/archive/reviews/2026-09-23_WEBSITE_DESIGN_STUDIES.md`; the original HTML and preview assets remain recoverable through Git history.
+The parent-facing website's page content, interactions, copied preview assets and release-link state live in `website/`; `website/README.md` records their provenance and publishing boundary. It summarizes the product for visitors and does not override product requirements, ADRs, source contracts or release evidence. The September website concept prototypes were retired from the active tree during release cleanup. Their design decision is recorded in the 2026-09-23 website design studies note (archived; see git history); the original HTML and preview assets remain recoverable through Git history.
 
 ### 2.4 Exact implemented contracts — source/runtime declarations
 
@@ -121,7 +121,7 @@ mismatch, runtime mutation lost on re-enumeration, identity/name instability,
 probe-identity mismatch, single-machine evidence) across the Acer, UEFI and ARM
 reference targets. It is subordinate to the blocking architecture plan and does
 not supersede it. Root-cause instances are recorded in
-`docs/INSTALLATION_ISSUES_LOG.md`.
+`docs/engineering/boot/INSTALLATION_ISSUES_LOG.md`.
 
 The Activity quality execution record (P7: design principles, catalogue decisions, curriculum ladders, platform foundations F0-F6, shared-library and rework waves, append-only progress log) lives beside that plan and is subordinate to it:
 
@@ -159,15 +159,13 @@ docs/testing/LOCAL_AGENT_START_HERE.md
 
 and it selects the current gate through `HANDOVER.md` / the active plan.
 
-### 2.9 Dated reviews/evidence — `docs/reviews/*`
+### 2.9 Boot and installer root-cause references — `docs/engineering/boot/*`
 
-Dated reviews preserve analysis, evidence and decisions for an exact context/source state.
+`docs/engineering/boot/` holds the long-lived installer/boot references that source code and skills cite as root-cause records: `INSTALLED_OS_BOOT_POSTMORTEM.md`, `INSTALLATION_USB_BOOT_POSTMORTEM.md`, `INSTALLATION_ISSUES_LOG.md` and `INSTALLER_IMAGE_CREATION_AND_BOOT.md` (the image/installer runbook). They are living references for causes and procedures, not dated status reports; the engineering guidance in `docs/engineering/` stays the normative source for rules.
 
-They are historical evidence unless a current authority explicitly links them for a current rule/procedure. Do not edit old reviews merely to make history agree with the present.
+### 2.10 Dated reviews, evidence and archive — removed from the tree
 
-### 2.10 Engineering archive — `docs/archive/*`
-
-`docs/archive/` holds older reviews, investigations and decision reports that still carry a useful lesson, moved verbatim. `docs/archive/README.md` lists each one with its lesson. Nothing in the archive is current instruction.
+Until 2026-10-30 the tree carried `docs/reviews/*` (dated analysis and evidence) and `docs/archive/*` (older reviews with a lesson). On 2026-10-30, before the repository went public, these folders, the dated `docs/testing/`, `docs/agents/` and `docs/release/` handoffs/results that no living authority names as a current procedure, and finished plan evidence were moved to an external archive (`MANIFEST.tsv` with checksums) and removed with `git rm`. **They remain in Git history** (for example `git log --diff-filter=D -- docs/reviews/`, then `git show <commit>^:<path>`). References to them in living documents carry the note "archived; see git history". Nothing removed is current instruction. New dated reviews and bulky evidence belong outside the repository unless a specific authority says otherwise.
 
 ### 2.11 Derived manuals/skills — `skills/*`, `docs/agents/*`, developer guides
 
@@ -320,7 +318,7 @@ Examples:
 
 Owner decision (2026-10-16, open-source cleanup): once work is finished and no longer current, its dated documents leave the working tree.
 
-- A document that still teaches something (a root cause, a rejected approach, a design rationale) moves verbatim to `docs/archive/` and gets one line in `docs/archive/README.md`. Link-target-only repairs may point to verified, immutable historical Git revisions when moves/deletions break navigation; they must not rewrite a historical finding, evidence claim or obsolete procedure as if current.
+- A document that still teaches something (a root cause, a rejected approach, a design rationale) and is cited by source or a living guide stays as a living reference (see `docs/engineering/boot/`); otherwise it leaves the tree and is recovered from Git history (`docs/archive/` no longer exists). Path-only repairs may point to verified, immutable historical Git revisions when moves/deletions break navigation; they must not rewrite a historical finding, evidence claim or obsolete procedure as if current.
 - Everything else (screenshots, capture evidence, finished runbooks, session handovers and status snapshots) is deleted. Git history keeps it.
 - A document still cited by a living authority (an ADR, product or design document, skill, asset provenance record or source file) stays in place until that citation is retired.
 - `HANDOVER.md` keeps only the current state and recent entries; it is not an archive.
@@ -328,15 +326,22 @@ Owner decision (2026-10-16, open-source cleanup): once work is finished and no l
 Bulky evidence belongs outside Git unless a specific evidence authority requires otherwise.
 
 **2026-10-26 release cleanup:** the superseded language-tier proposal moved
-from `docs/product/` to `docs/archive/plans/`. Twenty-one obsolete website
+from `docs/product/` to the former `docs/archive/plans/` (removed 2026-10-30; see git history). Twenty-one obsolete website
 study HTML/CSS/JS/image files (about 3.5 MB) were retired from
 `docs/design/website_mocks_2026-09-23/`; current `website/` is unchanged.
 Their decision and exact Git recovery revision are in
-`docs/archive/reviews/2026-09-23_WEBSITE_DESIGN_STUDIES.md`.
+the 2026-09-23 website design studies note (archived; see git history).
 The living `HANDOVER.md` was condensed from about 290 KB to about 44 KB,
 with historical entries recoverable through the SHA recorded inside it.
 No test suites, actively referenced A/B results, approved character audio,
 production images or asset provenance receipts were deleted.
+
+**2026-10-30 public-repository cleanup:** `docs/reviews/`, `docs/archive/`,
+dated `docs/testing/`, `docs/agents/` and `docs/release/` reports and handoffs
+that no living authority names as current, plan `evidence/` folders and one
+test that only guarded a dated work order were copied (checksum-verified) to an
+external archive and removed from the tree; four boot/installer references moved
+to `docs/engineering/boot/`. Everything remains in Git history.
 
 ## 8. Documentation freshness rules
 
@@ -354,7 +359,7 @@ Before public-source/RC sign-off:
 A read-only tracked-Markdown path/link audit now exists:
 `python3 tools/audit_repository_docs.py --scope maintained` scans current guides,
 agent skills and public entry points; `--scope all` inventories dated
-reviews, plans and the archive too. Unlike the earlier entry-only link test,
+plans and non-current testing procedures too. Unlike the earlier entry-only link test,
 this reports the source file/line and missing relative target, and never
 deletes data. Historical documents may legitimately link to evidence removed
 from the working tree during cleanup, but these findings must not be confused
@@ -386,13 +391,13 @@ historical broken links, the read-only tool provides `--scope all`. Links
 into retired evidence should target an immutable Git revision of the original
 file, not result in restoring obsolete runbooks, or make the historical report
 appear current. Two archived source documents had such path-only repairs on
-2026-10-27; see `docs/archive/README.md`.
+2026-10-27; those files were removed from the tree on 2026-10-30 (see git history).
 
 Retired in this cleanup tranche: September website study mocks and a set
 of disposable August visual test screenshots. Historical reports and
 approved recordings, release diagnostics and the named Encyclopedia
 visual baselines were preserved. The recovery context remains in
-`docs/archive/` and Git history.
+Git history (the former `docs/archive/` was removed on 2026-10-30).
 
 ## 9. Maintenance
 

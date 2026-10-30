@@ -12,7 +12,7 @@ At the **exact checkout** being built, read in this order:
 
 1. [AGENTS.md](../../AGENTS.md), [SETUP.md](../../SETUP.md), [HANDOVER.md](../../HANDOVER.md) and [documentation ownership](../DOCUMENTATION.md).
 2. [OS work skill](../../skills/greia-os-work/SKILL.md), [boot companion](../../skills/greia-os-work/BOOT.md) and [agent operations](GREIA_AGENT_OPERATIONS.md).
-3. [Installer image creation/boot](../INSTALLER_IMAGE_CREATION_AND_BOOT.md), especially sections 3, 11–14 and the RC runbook.
+3. [Installer image creation/boot](../engineering/boot/INSTALLER_IMAGE_CREATION_AND_BOOT.md), especially sections 3, 11–14 and the RC runbook.
 4. [Release lifecycle authority](../plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md), [release readiness](../release/GREIA_PUBLIC_RELEASE_READINESS.md), [image profiles](../../build/profiles/README.md), and [release CLI workflow](../development/GREIA_SYSTEM_UPDATE_RELEASE_WORKFLOW.md) if making publishable/update artifacts.
 5. The actual selected profile TOML, the high-level script's `--help`/usage, its delegated builder, current verifier and any later fixes in source.
 
@@ -58,7 +58,7 @@ sudo bash tools/build-development-installer.sh legacy-x86-i686-dev ./out
 
 That wrapper delegates to `build/build-legacy-x86-sd-installer.sh` and is the physical legacy route. Do **not** replace it with direct `build/build-installer-image.sh` use unless specifically investigating a lower-level failure.
 
-For the quiet Acer RC, use `legacy-x86-i686-rc` only if explicitly requested, and follow [the RC runbook](../INSTALLER_IMAGE_CREATION_AND_BOOT.md#13-release-candidate-build-runbook-legacy-x86-i686-rc) including its frozen SHA, host preflight, complete gates, operator public-key handling and boot/USB semantics. The RC includes developer remote access and cannot be relabeled as a family image.
+For the quiet Acer RC, use `legacy-x86-i686-rc` only if explicitly requested, and follow [the RC runbook](../engineering/boot/INSTALLER_IMAGE_CREATION_AND_BOOT.md#13-release-candidate-build-runbook-legacy-x86-i686-rc) including its frozen SHA, host preflight, complete gates, operator public-key handling and boot/USB semantics. The RC includes developer remote access and cannot be relabeled as a family image.
 
 **Pi:** do not infer a working Pi installer from a profile file. Verify the current native Pi build adapter and its exact source/physical acceptance first; otherwise report the gap without generating a mislabeled image.
 
@@ -94,7 +94,7 @@ Once authorized, the repository's preferred physical legacy developer workflow i
 sudo bash tools/build-and-flash-development-usb.sh legacy-x86-i686-dev /dev/sdX ./out
 ```
 
-Do not substitute an arbitrary target. Read-back verification is separate from writing and mandatory for claimed media success: [writer and verifier contract](../INSTALLER_IMAGE_CREATION_AND_BOOT.md#2-reference-acer-removable-media-keep-the-proven-syslinuxfat32-recipe). If the writer rejects the device, stop and report why; do not bypass it.
+Do not substitute an arbitrary target. Read-back verification is separate from writing and mandatory for claimed media success: [writer and verifier contract](../engineering/boot/INSTALLER_IMAGE_CREATION_AND_BOOT.md#2-reference-acer-removable-media-keep-the-proven-syslinuxfat32-recipe). If the writer rejects the device, stop and report why; do not bypass it.
 
 **Never auto-install Greia on the destination computer.** It must boot the real GUI installer and require its verified-disk confirmation.
 

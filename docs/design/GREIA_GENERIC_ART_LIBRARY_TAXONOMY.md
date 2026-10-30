@@ -309,7 +309,7 @@ A medical Activity may create its own diagnostic toy; an astronomy Activity may 
 
 Current full-harvest gate:
 
-`docs/testing/2026-08-21_GENERIC_VISUAL_LIBRARY_FULL_SOURCE_HARVEST.md`
+`2026-08-21_GENERIC_VISUAL_LIBRARY_FULL_SOURCE_HARVEST.md` (archived; see git history)
 
 ## 13. Success criterion
 

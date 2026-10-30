@@ -303,7 +303,7 @@ approval and checking the saved-language fallback, Activity declarations,
 audio and Parents browser presentation before rebuilding/releasing.
 
 The superseded September language-tier proposal has been moved to
-`docs/archive/plans/LANGUAGE_SUPPORT_TIERS_PROPOSAL_2026-09-27.md` as
+`LANGUAGE_SUPPORT_TIERS_PROPOSAL_2026-09-27.md` (archived; see git history) as
 historical evidence only. The four-language rollout is also dated history;
 the live selector authority is now the per-language manifest set.
 

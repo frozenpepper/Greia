@@ -1,166 +1,115 @@
 # Greia OS
 
-Greia is an educational operating system for young children, designed to
-turn recycled and low-cost computers into small learning consoles rather than
-ordinary desktops. The first release target is a legacy-BIOS Acer Aspire One
-class PC; Raspberry Pi 400/500 support is planned but **not yet buildable or
-publicly supported**.
+**Greia turns an old laptop into a small learning computer for young children.**
 
-```text
-power on
-  -> Greia
-  -> choose your profile
-  -> choose an Activity
-  -> play / learn / create
-  -> return safely to Greia
-```
+A child switches it on, picks their own picture, and chooses something to
+play, draw, write or learn. There is no desktop, no terminal and no web
+browser to get lost in. Greia works without the internet, keeps each child's
+work on the computer, and lets a grown-up manage everything from a phone.
 
-Linux is the substrate, not the product. A child never sees a terminal,
-desktop, login prompt, file manager, package manager or browser chrome.
-**Greia Shell is the child's operating system.**
+Greia is free and open source. It runs on a Linux base, but children never
+see it. It is built for very modest machines first: the reference computer is
+the first-generation Acer Aspire One netbook. Raspberry Pi 400 and 500 are
+planned targets, but there is no Raspberry Pi image yet.
 
-> **Status: pre-release (`0.13.1-preview.1`).** There is no supported family
-> download yet. Installed i386 QEMU testing confirms A/B system updates,
-> automatic rollback and application-package updates. A technical-preview
-> release candidate is being built and tested from the committed source; it is
-> **not published**. Physical Acer/USB acceptance and the public media rights
-> audit remain open, and the macOS System Voice recordings are an active
-> public-release blocker. See the
-> [first public release execution sheet](docs/release/FIRST_PUBLIC_RELEASE_EXECUTION.md),
-> the [source rights inventory](docs/release/2026-10-28_MACOS_SYSTEM_VOICE_AUDIO_INVENTORY.md)
-> and [complete readiness requirements](docs/release/GREIA_PUBLIC_RELEASE_READINESS.md).
+> **Status: technical preview (`0.13.1-preview.1`), not a family release.**
+> A preview installer for Acer Aspire One class PCs is listed on the
+> [Greia website](https://www.frozenpepper.it/greia/downloads.html). It has
+> passed testing in virtual machines. It has **not** yet been tested on enough
+> real computers, and some recordings still need replacing before a full
+> release. Try it on a spare computer, not one you rely on.
+> Details: [release readiness](docs/release/FIRST_PUBLIC_RELEASE_EXECUTION.md).
 
-## What is in the box
+## Get Greia
 
-- **45 built-in Activities**, mostly for ages 3–7: painting and writing
-  studios, numbers, letters and phonics, music, stories, a puppet theatre, a
-  children's encyclopedia and more. Four languages can be selected: English, Italian, Spanish and French;
-  release voice review and device acceptance are still being completed.
-- **A child Shell** with explicit child profiles, Collections and a
-  platform-owned Home button that every Activity keeps.
-- **A Creations Library** (in progress) where each child's drawings, writing
-  and recordings are saved and can be reopened across Activities.
-- **Greia Parents**, a web client on the local network for profiles, time
-  limits, Activity visibility, settings and updates. No cloud account needed.
-- **An Activity Simulator** that runs the real Shell and platform services on
-  a developer's desktop.
-- **Image build tooling** that composes OS images from declarative profiles.
-  x86 targets build today; Raspberry Pi images are in progress.
+Installing Greia **erases the whole disk** of the computer you put it on.
+Use a spare computer, and copy off anything you want to keep.
 
-## Design principles
+1. **Download** the Greia installer from the
+   [downloads page](https://www.frozenpepper.it/greia/downloads.html). It is
+   one big file ending in `.img`.
+2. **Put it on a USB stick.** Use a stick of 4 GB or more with nothing
+   important on it. A free program called balenaEtcher does this for you on
+   Windows, Mac and Linux. The stick will be erased.
+3. **Start the computer from the stick.** Plug it in, switch on, and tap the
+   boot-menu key (often F12) until a list appears. Choose the USB stick.
+4. **Follow the pictures.** Pick a language, a keyboard and the disk. Nothing
+   is erased until the last screen, and only after you hold the button down
+   for two seconds.
+5. **Take the stick out** when the installer says it is finished, then start
+   the computer again. Greia opens with a screen where your child picks a
+   profile.
 
-- **Activities are the universal abstraction.** Python today, Web and other
-  runtimes later, all behind the same lifecycle, storage, permission,
-  progression and input contracts. Activities report events; the platform
-  owns rewards, child data and navigation.
-- **Built for the weakest machine first.** The first-generation Acer Aspire
-  One (Intel Atom, at most 1 GB of RAM, 1024×600) is the reference floor, and
-  ARM devices are first-class targets. Bounded memory and cheap rendering are
-  correctness requirements.
-- **Offline and child-owned.** Core use works without the internet. Child
-  data stays on the device, is profile-scoped and is portable between
-  architectures. No advertising or engagement tricks.
-- **Learned input, not device logic.** Activities declare an interaction
-  profile (pointer, directional, game, text and so on). The platform maps
-  keyboard, mouse, touch and game controllers onto it.
-- **Pre-readers first.** Symbols, colour, position, animation and prerecorded
-  speech carry navigation; text appears when it is part of the learning.
-- **Safe by construction.** Activities run sandboxed, removable media never
-  autoruns, and installation is graphical and fails closed.
+Step-by-step with screenshots and fixes for common problems:
+[Install Greia from a USB stick](docs/user/INSTALL_FROM_USB.md).
+Greia installs on PCs, not on Macs, and the Raspberry Pi is not supported yet.
+Your Windows PC or Mac is only used to prepare the stick.
 
-## Guides for families
+## For parents
 
-- [Install Greia from a download and USB stick (Windows or Mac)](docs/user/INSTALL_FROM_USB.md)
-- [Greia Parents: the on-device S + T shortcut and browser controls](docs/user/GREIA_PARENTS.md)
+- **Open the parent settings** on the computer itself: on the profile screen,
+  hold the **S** and **T** keys together for five seconds.
+  [Greia Parents guide](docs/user/GREIA_PARENTS.md)
+- **Manage Greia from your phone** or laptop on the same home Wi-Fi. No
+  account and no cloud. [Greia Parents guide](docs/user/GREIA_PARENTS.md)
+- **Choose what each child sees**, with separate profiles, language and
+  play-time limits. [What parents can manage](docs/product/PARENT_MANAGEMENT.md)
+- **Keep Greia up to date** without losing your child's work. If an update
+  goes wrong, Greia goes back to the last working version.
+  [How updates work](docs/product/SYSTEM_UPDATES.md)
+- **Backups** of a child's work are planned but not finished yet.
+- **Privacy:** no ads, no tracking, no account. Everything stays on the
+  computer. [PRIVACY.md](PRIVACY.md)
 
-**No supported public installer is available yet.** These guides are release preparations, not an invitation to install a development image on a family computer. See the [guide home](docs/user/README.md) for the current starting point.
+Greia comes with 45 Activities for roughly ages 3 to 7: painting, writing,
+numbers, letters, music, stories and more. You can choose English, Italian,
+Spanish or French.
 
-## Getting started (developers)
+## Help build Greia
 
-You need Python 3.11+, `git` and `make`.
+You do not have to be a programmer. Artists, translators and voice
+reviewers are welcome too. Start with [CONTRIBUTING.md](CONTRIBUTING.md).
+
+| I want to... | Read this |
+|---|---|
+| Make a new Activity (game, tool, story) | [Create an Activity](docs/development/CREATE_AN_ACTIVITY.md) |
+| Add or translate a language | [Add a Greia language](docs/development/ADD_A_GREIA_LANGUAGE.md) |
+| Record or review voices | [Voice production skill](skills/greia-voice-production/SKILL.md) and [voice tool](tools/greia_voice_core/README.md) |
+| Draw art and icons | [Art and graphics system](docs/design/GREIA_ART_GRAPHICS_SYSTEM.md), [SVG rules](docs/design/GREIA_SVG_AUTHORING_RULES.md) |
+| Build an installer image | [Build a Greia image](docs/development/BUILD_A_GREIA_IMAGE.md) |
+| Test an Activity on my desktop | [Activity Simulator](docs/development/GREIA_ACTIVITY_SIMULATOR.md) |
+| Work on the Shell, Parent API or installer | [OS work skill](skills/greia-os-work/SKILL.md), [engineering foundations](docs/engineering/ENGINEERING_FOUNDATIONS.md) |
+| Report a bug | [Open an issue](https://github.com/frozenpepper/Greia/issues) with your computer model and what you saw |
+| Report a security problem | Privately, as described in [SECURITY.md](SECURITY.md) |
+| Find my way around the docs | [Documentation map](docs/README.md) |
+
+To try the Simulator, you need Python 3.11+, `git` and `make`:
 
 ```bash
 git clone https://github.com/frozenpepper/Greia.git
 cd Greia
 python3 -m pip install -r requirements-dev.txt
+python3 tools/greia_simulator.py     # run the real Shell on your desktop
+make verify                          # run all tests and checks
 ```
 
-Run the Shell and Activities in the Simulator, validate an Activity, and run
-the full test and validation gate:
+The Simulator and desktop tests do not prove anything about real hardware.
+Say where you tested when you open a pull request.
 
-```bash
-python3 tools/greia_simulator.py
-PYTHONPATH=src python3 tools/validate_activity.py activities/painting
-make verify
-```
+## For AI agents
 
-[CONTRIBUTING.md](CONTRIBUTING.md) explains the workflow, the checks and the
-rules every change must respect. [SETUP.md](SETUP.md) covers the heavier
-roles: building OS images, recording voices and operating test devices.
+1. Start at [AGENTS.md](AGENTS.md): the rules and product contracts.
+2. Then [SETUP.md](SETUP.md): what to install for your role.
+3. Then the matching skill in [skills/](skills/README.md). The
+   [agent index](docs/agents/README.md) lists which manual fits which task.
 
-## Repository map
+## License, trademark, privacy, security
 
-```text
-src/greia_platform/    shared platform services and contracts
-src/greia_launcher/    child Shell and Activity session orchestration
-src/greia_parent/      Parent API server
-src/greia_installer/   graphical installer
-src/greia_simulator/   development-only Simulator composition
-activities/            built-in Activities
-activity_incubator/    Activities still in development
-encyclopedia/          Encyclopedia content authoring sources
-assets/                shared art, audio, fonts and catalogues
-runtime/               runtime and policy declarations
-build/                 image profiles, package sets, overlays and builders
-tools/                 validation, Simulator, voice, release and device tools
-vendor/parent-app/     pinned copy of the Greia Parents web client
-website/               the public project website
-docs/                  architecture, product, engineering and test docs
-skills/                task guides for contributors and coding agents
-tests/                 the unittest suite
-```
-
-## Documentation
-
-| Start here for… | Read |
-|---|---|
-| Friendly parent and installer guides | [docs/user/README.md](docs/user/README.md) |
-| Create an Activity | [docs/development/CREATE_AN_ACTIVITY.md](docs/development/CREATE_AN_ACTIVITY.md) |
-| Add/translate a language (including Voice Studio) | [docs/development/ADD_A_GREIA_LANGUAGE.md](docs/development/ADD_A_GREIA_LANGUAGE.md) |
-| Build an OS image (human guide + linked agent runbook) | [docs/development/BUILD_A_GREIA_IMAGE.md](docs/development/BUILD_A_GREIA_IMAGE.md) |
-| How the docs fit together | [docs/DOCUMENTATION.md](docs/DOCUMENTATION.md) |
-| Architecture overview | [docs/architecture/GREIA_ARCHITECTURE.md](docs/architecture/GREIA_ARCHITECTURE.md) |
-| Architecture decisions | [docs/adr/](docs/adr/) (start with ADR 0012, the platform constitution) |
-| Product requirements | [docs/product/](docs/product/) |
-| Engineering practice | [docs/engineering/ENGINEERING_FOUNDATIONS.md](docs/engineering/ENGINEERING_FOUNDATIONS.md) |
-| Writing an Activity | [skills/greia-activity-authoring/SKILL.md](skills/greia-activity-authoring/SKILL.md) |
-| OS, Shell, Parent and installer work | [skills/greia-os-work/SKILL.md](skills/greia-os-work/SKILL.md) |
-| Art and visual assets | [skills/greia-visual-authoring/SKILL.md](skills/greia-visual-authoring/SKILL.md) |
-| Recorded speech | [VoiceEngine usage](tools/greia_voice_core/README.md) · [agent skill](skills/greia-voice-production/SKILL.md) |
-| The Simulator | [docs/development/GREIA_ACTIVITY_SIMULATOR.md](docs/development/GREIA_ACTIVITY_SIMULATOR.md) |
-| Privacy | [PRIVACY.md](PRIVACY.md) |
-| Release changes | [CHANGELOG.md](CHANGELOG.md) |
-| Current work and next steps | [HANDOVER.md](HANDOVER.md) |
-| Lessons from earlier work | [docs/archive/README.md](docs/archive/README.md) |
-| Rules for contributors and coding agents | [AGENTS.md](AGENTS.md) |
-
-## Contributing, conduct and security
-
-Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) first,
-follow the [Code of Conduct](CODE_OF_CONDUCT.md), and report security
-problems privately as described in [SECURITY.md](SECURITY.md).
-
-## License
-
-Greia-owned source code is licensed under the
-[Mozilla Public License 2.0](LICENSE). Documentation is intended for
-CC BY 4.0, and third-party fonts and media keep their own licenses. The
-licensing audit is still in progress: [NOTICE.md](NOTICE.md) lists the
-default terms, the third-party material and the media whose provenance is
-under review. The Greia name and distinctive logo are governed separately by the
-[trademark guide](TRADEMARK.md) and
-[full policy](docs/governance/LICENSING_AND_TRADEMARK.md). Greia may be
-redistributed commercially under its open-source licenses, and sellers may
-truthfully identify the software they include. Official product co-branding,
-certification and endorsement are separate optional agreements; no
-registration or certification programme is claimed yet.
+- **Code** is under the [Mozilla Public License 2.0](LICENSE). Documentation
+  is intended for CC BY 4.0. Fonts and media from others keep their own
+  licenses, and the audit is still under way: see [NOTICE.md](NOTICE.md).
+- **The Greia name and logo** are covered by the [trademark guide](TRADEMARK.md).
+  You may truthfully say a product "runs Greia OS".
+- **Privacy:** [PRIVACY.md](PRIVACY.md). **Security:** [SECURITY.md](SECURITY.md).
+  **Conduct:** [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+- **Contact:** greia@frozenpepper.it. **History:** [CHANGELOG.md](CHANGELOG.md).

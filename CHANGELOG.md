@@ -29,5 +29,5 @@ one.
 
 Installed i386 QEMU A/B update, rollback, interrupted-write recovery and
 lightweight Python/Activity/combined application updates passed. See
-`docs/reviews/2026-10-27_UPDATE_RELEASE_ACCEPTANCE_RESULT.md`. No public
+`2026-10-27_UPDATE_RELEASE_ACCEPTANCE_RESULT.md` (archived; see git history). No public
 installer was released.

@@ -1623,7 +1623,7 @@ remains open and the exact next step.
   `greia_release.py build`, root composition, debootstrap, QEMU, mounts/loops,
   media write, Docker, Orbiter or physical hardware action is authorized.
 - Next: execute
-  `docs/testing/2026-09-20_SESSION03_RELEASE_CLI_LOCAL_VALIDATION.md`.
+  `2026-09-20_SESSION03_RELEASE_CLI_LOCAL_VALIDATION.md` (archived; see git history).
   If source validation is green, complete Session 03 with one real one-command
   Acer release build on the appropriate supported x86_64 Linux build host.
   Session 04 remains closed until that real release artifact exists.
@@ -1671,7 +1671,7 @@ remains open and the exact next step.
   directory, source-bound report, profile-specific update bundle and compact
   intermediates without manual low-level parameter plumbing.
 - Canonical procedure:
-  `docs/testing/2026-09-21_SESSION03_LINUX_RELEASE_BUILD_ACCEPTANCE.md`.
+  `2026-09-21_SESSION03_LINUX_RELEASE_BUILD_ACCEPTANCE.md` (archived; see git history).
 - Terminology correction: this is a **Greia release build with the current
   Acer-only matrix**, not an Acer installer image. The one universal
   `greia-setup-<version>.img.xz` remains a Session 08 output after the
@@ -1972,7 +1972,7 @@ remains open and the exact next step.
 - Final product-mode QEMU evidence is captured in
   `docs/testing/session04-evidence/attempt13-install-execute-serial.log` and
   summarized in
-  `docs/archive/testing/2026-09-25_SESSION04_INSTALL_EXECUTE_ROOT_CAUSE_AND_DECISION.md`.
+  `2026-09-25_SESSION04_INSTALL_EXECUTE_ROOT_CAUSE_AND_DECISION.md` (archived; see git history).
   The service remained active through `finalize-completeness`, then apt in the
   mounted slot failed `setgroups`, `setegid`, and `seteuid` with
   `Operation not permitted`; systemd recorded `Result=exit-code` and
@@ -2024,7 +2024,7 @@ remains open and the exact next step.
 
 ## 2026-09-25 — Apt ownership decision brief prepared
 
-`docs/archive/testing/2026-09-25_SESSION04_APT_OWNERSHIP_DECISION.md` records the
+`2026-09-25_SESSION04_APT_OWNERSHIP_DECISION.md` (archived; see git history) records the
 post-GitHub Orbiter evidence and the explicit decision between adding
 `CAP_CHOWN` and changing apt's ownership/privilege behavior. It preserves the
 four-capability contract as the current authority, documents the proven
@@ -2034,7 +2034,7 @@ option has been applied; Session 04 remains OPEN pending owner/agent review.
 
 ## 2026-09-25 — Session 04 apt ownership conclusion deferred pending fatal-tail proof
 
-- Reviewed `docs/archive/testing/2026-09-25_SESSION04_APT_OWNERSHIP_DECISION.md` and the committed QEMU refusal.
+- Reviewed `2026-09-25_SESSION04_APT_OWNERSHIP_DECISION.md` (archived; see git history) and the committed QEMU refusal.
 - The visible `chown _apt:root ... SetupAPTPartialDirectory` line is warning-level in APT; the prior runner kept only the first 256 stderr characters, so a later fatal apt/dpkg/postinst reason could be hidden.
 - Do **not** add `CAP_CHOWN` yet. The exact four-capability contract remains authoritative.
 - GitHub repair now preserves bounded stderr head + fatal tail so the next refusal can identify the real failure.
@@ -2073,7 +2073,7 @@ option has been applied; Session 04 remains OPEN pending owner/agent review.
   reference Acer firmware+stick combination; the proven path is
   `legacy-x86-i686-dev` on Syslinux/FAT32. The A/B release route is GRUB. The image also
   ships `quiet splash loglevel=0 console=null panic=0`, the diagnostic suppression that
-  `docs/archive/reviews/2026-08-20_ACER_INSTALLER_BOOT_REGRESSION.md` §3.1 prohibits, which is
+  `2026-08-20_ACER_INSTALLER_BOOT_REGRESSION.md` (archived; see git history) §3.1 prohibits, which is
   why the failure presented without a readable error. The removed GRUB theme and the
   1600x900 full-colour boot-canvas regeneration were reintroduced 2026-08-20..24 and are
   in the shipped image.
@@ -2092,7 +2092,7 @@ option has been applied; Session 04 remains OPEN pending owner/agent review.
 - Uninvestigated per owner instruction: 982 MiB accounted installed size against a ≤800 MiB
   profile preferred target (required target <1000 MiB).
 - Decisions D1–D8 for the lead agent are in
-  `docs/archive/reviews/2026-09-27_ACER_AB_GRUB_INSTALLER_PHYSICAL_BOOT_FAILURE.md`. Chief: which
+  `2026-09-27_ACER_AB_GRUB_INSTALLER_PHYSICAL_BOOT_FAILURE.md` (archived; see git history). Chief: which
   boot path is the product path for the reference device, and whether `console=null` /
   `panic=0` may ship in a product installer.
 - Next action: owner returns the stick, then
@@ -2650,7 +2650,7 @@ id `22857a5a-9fdb-4d9c-923d-ab659eed38ff`; payload 1,203 MiB (<1,300 gate).
 The flashed media was QEMU-booted (snapshot; `-cpu n270`): the quiet Syslinux
 entry reaches the Greia boot splash and then the installer language screen with
 `greia-installer.service` active and no shell text. Evidence:
-`docs/reviews/acer/2026-10-18_RC_INSTALLER_QEMU_BOOT_VERIFICATION/`.
+`docs/reviews/acer/2026-10-18_RC_INSTALLER_QEMU_BOOT_VERIFICATION/` (archived; see git history).
 Negative control: a `-cpu pentium3` run lacks SSE2, NumPy import fails, and the
 restart limit + exit cover make it look like a stalled splash; not an image
 defect.
@@ -2682,7 +2682,7 @@ SHA-256 `b92cfd58f2967fa581d88a5c675f6926bbf979869318bb302570b5a416aff2f2`,
 live media id `d60ca3a7-372a-4b48-92fb-55c75077daa9`, payload 1,203 MiB.
 QEMU of the flashed stick (snapshot, `-cpu n270`): no Syslinux text at 0.8 s
 or 1.5 s; installer language screen at 190 s with no shell. Evidence:
-`docs/reviews/acer/2026-10-18_QUIET_BANNER_CLEAR_QEMU_VERIFICATION/`.
+`docs/reviews/acer/2026-10-18_QUIET_BANNER_CLEAR_QEMU_VERIFICATION/` (archived; see git history).
 
 Closure still requires physical Acer re-acceptance, including the hidden
 `verbose` recovery path (premortem F2).
@@ -2735,24 +2735,24 @@ closure remains after the Acer retest.
 
 ### 2026-10-19 — Raspberry Pi 400/500 source foundation recovered after committed-file review
 
-Owner requested Pi implementation and further review. Review found the earlier PR #10 committed the **deferred 64 MiB Pi layout**, despite a prior staged executable blob. This is a provenance/engineering continuity error, not a claim that hardware evidence is missing. Refined source now includes executable Pi 256 MiB FAT/P4 extended/P5-P7 ext4 commands with EBR capacity overhead and positive built-in microSD eligibility, shared observed-MBR identities, strict board-specific ARM64 profile definitions, offline native Pi boot asset staging and ARM64 Image-header checks, sysfs built-in MMC/CID evidence, and negative source tests. The full installed-Pi transaction **continues to refuse before erase** because live ARM boot, real kernel/module/firmware pairing, P1 recovery and production tryboot are unfinished. The default builder intentionally rejects ARM64 until bootable composition is implemented. **Evidence SOURCE ONLY / UNPROVEN; tests not run this turn.** Follow `docs/reviews/2026-10-19_RASPBERRY_PI_INSTALLER_SOURCE_REVIEW.md` for the exact code defects, acceptance matrix and next action. The universal Setup image and Pi 400/500 support are NOT COMPLETE.
+Owner requested Pi implementation and further review. Review found the earlier PR #10 committed the **deferred 64 MiB Pi layout**, despite a prior staged executable blob. This is a provenance/engineering continuity error, not a claim that hardware evidence is missing. Refined source now includes executable Pi 256 MiB FAT/P4 extended/P5-P7 ext4 commands with EBR capacity overhead and positive built-in microSD eligibility, shared observed-MBR identities, strict board-specific ARM64 profile definitions, offline native Pi boot asset staging and ARM64 Image-header checks, sysfs built-in MMC/CID evidence, and negative source tests. The full installed-Pi transaction **continues to refuse before erase** because live ARM boot, real kernel/module/firmware pairing, P1 recovery and production tryboot are unfinished. The default builder intentionally rejects ARM64 until bootable composition is implemented. **Evidence SOURCE ONLY / UNPROVEN; tests not run this turn.** Follow `2026-10-19_RASPBERRY_PI_INSTALLER_SOURCE_REVIEW.md` (archived; see git history) for the exact code defects, acceptance matrix and next action. The universal Setup image and Pi 400/500 support are NOT COMPLETE.
 
 
 ### 2026-10-19 — Pi source verification pass 2: slotted-dataclass target-policy TypeError, DTB placeholders
 
-Checked actual `main` `e37aa437` source (not uncommitted blobs). Confirmed `PiBuiltInMicroSdTargetPolicy._removable_rejection` erroneously used zero-argument `super()` in a frozen/slotted dataclass; independent local Python reproduction raised `TypeError` on a negative/rejection path. Fixed with direct shared base-method delegation. The built-in MMC evidence and `lsblk` integration now have a regression test exercising real probe→sysfs→policy filtering with both Pi microSD and USB present. Native Pi offline boot staging previously accepted 3-byte placeholder DTB/DTBO files; it now checks FDT magic and declared length, with negative tests. Official Raspberry Pi tryboot/kernel-file specification agrees with intended selected partition/kernels, but runtime remains unconnected. **Evidence: source inspection + isolated Python reproduction only. No project tests, loop/device execution or boot performed. Pi release and universal installer remain OPEN.** See `docs/reviews/2026-10-19_RASPBERRY_PI_INSTALLER_SOURCE_REVIEW.md`, follow-up verification pass 2, for exact remaining work and test commands.
+Checked actual `main` `e37aa437` source (not uncommitted blobs). Confirmed `PiBuiltInMicroSdTargetPolicy._removable_rejection` erroneously used zero-argument `super()` in a frozen/slotted dataclass; independent local Python reproduction raised `TypeError` on a negative/rejection path. Fixed with direct shared base-method delegation. The built-in MMC evidence and `lsblk` integration now have a regression test exercising real probe→sysfs→policy filtering with both Pi microSD and USB present. Native Pi offline boot staging previously accepted 3-byte placeholder DTB/DTBO files; it now checks FDT magic and declared length, with negative tests. Official Raspberry Pi tryboot/kernel-file specification agrees with intended selected partition/kernels, but runtime remains unconnected. **Evidence: source inspection + isolated Python reproduction only. No project tests, loop/device execution or boot performed. Pi release and universal installer remain OPEN.** See `2026-10-19_RASPBERRY_PI_INSTALLER_SOURCE_REVIEW.md` (archived; see git history), follow-up verification pass 2, for exact remaining work and test commands.
 
 
 ### 2026-10-19 — Research-led Pi installation/A-B third verification (SOURCE + ISOLATED TEST ONLY)
 
 Researched Raspberry Pi's official autoboot/tryboot/EEPROM/kernel contracts, Pi rpi-image-gen A/B boot-device-backed slot mapping and persistent-state repair practices, public firmware issue #818 (CM5 tryboot on GPT; FAT grouping and bootloader-version differences), and corrupted-autoboot partition-walking reports. The plan's MBR P1/P2/P3 contiguous FAT layout remains a plausible candidate but is NOT hardware-proved. Added positive 32-hex MMC CID check and tests, and new **read-only** firmware evidence decoding of big-endian /proc/device-tree/chosen/bootloader partition + tryboot flags; verifies boot partition P2/P3 versus root hint P5/P6 and shared observed MBR signature. It is explicitly **not** sufficient to accept/promote a boot: actual mounted-root/boot-disk ancestry, finalized receipt and Shell health are still missing.
 
-Eight tests passed in isolated Python 3.13 run with stand-in Greia helpers; full repository tests, make verify, actual loop partitioning, Pi firmware and physical hardware were not run. P1 recovery/partition walk is firmware-version-sensitive, and USB/SD boot ordering and PERSIST continuity need explicit physical/fault testing. Do not permit install-card erasure or describe the ARM/universal installer as complete. Authoritative detailed findings: docs/reviews/2026-10-19_RASPBERRY_PI_RESEARCH_LED_VERIFICATION.md. Next: local full-source testing; read-only Pi EEPROM evidence; loopback geometry; native installed Pi A/B & recovery; ARM live boot + universal media and Pi400/Pi500 physical acceptance.
+Eight tests passed in isolated Python 3.13 run with stand-in Greia helpers; full repository tests, make verify, actual loop partitioning, Pi firmware and physical hardware were not run. P1 recovery/partition walk is firmware-version-sensitive, and USB/SD boot ordering and PERSIST continuity need explicit physical/fault testing. Do not permit install-card erasure or describe the ARM/universal installer as complete. Authoritative detailed findings: 2026-10-19_RASPBERRY_PI_RESEARCH_LED_VERIFICATION.md (archived; see git history). Next: local full-source testing; read-only Pi EEPROM evidence; loopback geometry; native installed Pi A/B & recovery; ARM live boot + universal media and Pi400/Pi500 physical acceptance.
 
 
 ### 2026-10-19 — Authoring-reference exclusion from runtime asset composition (SOURCE)
 
-The owner-directed voice-master migration exposed that the existing broad `audio/***` runtime copy also included canonical authoring references. `compose_install_runtime_assets` now hides `audio/characters/canonical/` on the sender while allowing `--delete` to remove stale copies from reused staging roots. The existing real-rsync contract verifies all canonical versions remain absent and shared playable audio remains installed. Four focused packaging tests PASS. No image was rebuilt; no installer/update/physical acceptance or lifecycle phase closure is claimed. The voice provider/master migration itself is tracked in the non-lifecycle remediation ledger and `docs/reviews/2026-10-19_VOXSTAGE_VOICE_MIGRATION.md`.
+The owner-directed voice-master migration exposed that the existing broad `audio/***` runtime copy also included canonical authoring references. `compose_install_runtime_assets` now hides `audio/characters/canonical/` on the sender while allowing `--delete` to remove stale copies from reused staging roots. The existing real-rsync contract verifies all canonical versions remain absent and shared playable audio remains installed. Four focused packaging tests PASS. No image was rebuilt; no installer/update/physical acceptance or lifecycle phase closure is claimed. The voice provider/master migration itself is tracked in the non-lifecycle remediation ledger and `2026-10-19_VOXSTAGE_VOICE_MIGRATION.md` (archived; see git history).
 
 
 ### 2026-10-19 — RC installer rebuilt from current `main` and flashed to the LaCie (BUILD + USB READ-BACK PASS)
@@ -2779,7 +2779,7 @@ Owner reported that Activities on a newly installed Acer Aspire laptop (1280x800
 - **Wi-Fi device recovery:** on the installed system, `apt-get install firmware-iwlwifi` (after correcting the clock for TLS), `modprobe iwl3945`, restart `iwd`: station associated with the saved profile and `systemd-networkd` acquired `192.168.68.112`; `networkctl` reports `routable (configured)`, online.
 - **Installer source fix (`813b43d0`):** after the payload copy and before target configuration, the engine takes a second complete hardware inventory and merges late-bound verified packages from the same frozen support pool into the pre-erase plan. An incomplete refresh leaves the initial plan unchanged. `install-record.json` records the final merged package list. Focused planner/merge tests pass; `make verify` ran 5,480 tests with the inherited ARM64-profile error, the known `morbidi_mostriciattoli` startup-budget flake and the stale MBR-message expectation, plus the `build_profile` executable-mode error that `a8a64fdd` now fixes. Full aggregate gate remains red for the inherited cases, not for these changes.
 - **Evidence scope:** source + focused tests + physical/device runtime on the installed Aspire. No QEMU boot and no fresh install from a rebuilt image yet.
-- **Detailed implementation/evidence:** `docs/reviews/acer/2026-10-21_ASPIRE_1280X800_VIEWPORT_AND_TARGET_WIFI.md` (call flow, contracts, tests, device evidence, limits, image data).
+- **Detailed implementation/evidence:** `2026-10-21_ASPIRE_1280X800_VIEWPORT_AND_TARGET_WIFI.md` (archived; see git history) (call flow, contracts, tests, device evidence, limits, image data).
 - **Exact next step:** rebuild/flash the RC with these commits, then reinstall (or deploy-source) and confirm the display and Wi-Fi on a clean install; keep the Acer premortem/first-boot checklist as the physical acceptance boundary.
 
 ### 2026-10-21 — RC rebuilt/flashed with the Aspire fixes (BUILD + USB READ-BACK PASS)
@@ -2893,7 +2893,7 @@ Implemented source extends the existing v3/inactive-slot engine:
   site-ftp remains the pipeline; no hosted Actions execution was requested/run.
 
 Evidence and residual verification are recorded in HANDOVER and
-`docs/reviews/2026-10-23_SYSTEM_UPDATE_IMPLEMENTATION_EVIDENCE.md`. Local
+`2026-10-23_SYSTEM_UPDATE_IMPLEMENTATION_EVIDENCE.md` (archived; see git history). Local
 source checks do not close Session 04. The real exact-unit finalization,
 A→B→A, interrupted update, bad userspace/kernel recovery and child-data
 survival remain **UNPROVEN** until the external work order runs.
@@ -2911,7 +2911,7 @@ integrated source run is 743 tests, OK with 2 skips; separate focus runs report
 predate the lifecycle worker's pending BIOS installer fix. Keep them labeled
 pre-fix until that worker reports its final focused run. Exact paths and
 negative evidence are in
-`docs/reviews/2026-10-23_SYSTEM_UPDATE_IMPLEMENTATION_EVIDENCE.md`.
+`2026-10-23_SYSTEM_UPDATE_IMPLEMENTATION_EVIDENCE.md` (archived; see git history).
 
 The checkout sampled for that report has base `2fd29dffa75edc3ce5edd16431a86e6722a68830`
 with an uncommitted source worktree; the base is not a source freeze. The
@@ -3063,7 +3063,7 @@ guide `docs/development/GREIA_SOFTWARE_UPDATE_PACKAGES.md` for all package recip
 ## 2026-10-24 — Linux installed software-update acceptance: partial pass
 
 Append-only result entry. Full evidence and per-predicate disposition are in
-`docs/reviews/2026-10-24_SOFTWARE_UPDATE_LINUX_ACCEPTANCE_RESULT.md`; evidence
+`2026-10-24_SOFTWARE_UPDATE_LINUX_ACCEPTANCE_RESULT.md` (archived; see git history); evidence
 root is
 `/var/tmp/greia-software-update-e8fed0ec494763834114e49863cc64aa66e70f2e-20261024T155314Z/`.
 The run found and fixed two source defects on `main`:
@@ -3156,7 +3156,7 @@ report as repaired-clone evidence and append a new exact-source runtime report.
 ## 2026-10-25 — Exact-source Linux retry: ownership/order PASS, A/B capacity blocked
 
 Append-only result entry. Full evidence is in
-`docs/reviews/2026-10-25_SOFTWARE_UPDATE_LINUX_RETRY.md`; evidence root is
+`2026-10-25_SOFTWARE_UPDATE_LINUX_RETRY.md` (archived; see git history); evidence root is
 `/var/tmp/greia-software-update-9161af3b30e3b96da314b24f4aba0e507eb46e7c-20261024T220454Z/`.
 Focused coverage passed **170 tests, OK with 1 Linux-only skip**; the full gate
 ran **5,957 tests, 7 failures, 3 errors, 3 skips** and remains NOT GREEN for the
@@ -3206,7 +3206,7 @@ active slot with PERSIST binds versus a declared bounded active-slot
 exception), not a capacity or health-token failure. The healthy B update,
 rollback/failure legs and the clean A/B installer/fixture rebuild remain NOT
 RUN. Session 04 remains OPEN; details are in
-`docs/reviews/2026-10-25_SOFTWARE_UPDATE_LINUX_RETRY.md`.
+`2026-10-25_SOFTWARE_UPDATE_LINUX_RETRY.md` (archived; see git history).
 
 ### 2026-10-25 — Simpler A/B smoke; writable-root hash gate corrected
 
@@ -3232,7 +3232,7 @@ default/journal/PERSIST and health/recovery checks remain; recovery additionally
 binds the previous accepted release to its PERSIST layout record. That binding
 is semantic evidence, not an inventory of the old root's file contents.
 
-The new primary retry is `docs/testing/2026-10-25_AB_SMOKE_RETRY.md`: clean
+The new primary retry is `2026-10-25_AB_SMOKE_RETRY.md` (archived; see git history): clean
 same-source baseline and next fixtures, clean installer, then install → first A
 acceptance → healthy A-to-B. It writes per-leg result/error/traceback logs with
 bounded 2400-second leg timeouts. Larger fault/reverse/data-survival tests come
@@ -3280,7 +3280,7 @@ applying-cut, Mobile or physical leg ran. Evidence is under
 Session 04 remains OPEN.
 
 Detailed retry evidence and root-cause analysis:
-`docs/reviews/2026-10-26_AB_SMOKE_RETRY_EVIDENCE.md`.
+`2026-10-26_AB_SMOKE_RETRY_EVIDENCE.md` (archived; see git history).
 
 ## 2026-10-26 — Candidate receipt projection corrected in test harness; VM retry pending
 
@@ -3304,9 +3304,9 @@ Detailed retry evidence and root-cause analysis:
 - The Linux run from clean source `866ba6827` installed and accepted A, but the
   candidate-verification/update-to-B leg remains UNPROVEN. Next: after the
   reviewed harness changes are committed, follow
-  `docs/testing/2026-10-26_AB_CANDIDATE_RETRY.md` if old bundles, accepted-A,
+  `2026-10-26_AB_CANDIDATE_RETRY.md` (archived; see git history) if old bundles, accepted-A,
   source-diff, SHA, first-boot and PERSIST preflight all pass. Otherwise use
-  the clean three-leg fallback `docs/testing/2026-10-25_AB_SMOKE_RETRY.md`.
+  the clean three-leg fallback `2026-10-25_AB_SMOKE_RETRY.md` (archived; see git history).
   Do not manually repair the old guest. After healthy B, execute the remaining
   10/23 and 10/24 fault matrix. Session 04 remains OPEN.
 
@@ -3323,9 +3323,9 @@ and independent on-device continuation remain unchanged.
 
 Production source changed, so the next Linux action is the current-source
 clean build/install/first-A/healthy-B route in
-`docs/testing/2026-10-25_AB_SMOKE_RETRY.md`. The old candidate-only reuse guide
+`2026-10-25_AB_SMOKE_RETRY.md` (archived; see git history). The old candidate-only reuse guide
 is historical; old images cannot prove this implementation. Source results:
-`docs/reviews/2026-10-26_UPDATE_DISCOVERY_SIMPLIFICATION.md`. No new VM/device
+`2026-10-26_UPDATE_DISCOVERY_SIMPLIFICATION.md` (archived; see git history). No new VM/device
 claim; Session 04 remains OPEN.
 
 ## 2026-10-26 — Current-source A/B rerun: install/first PASS, stage harness timeout
@@ -3359,7 +3359,7 @@ with `build/lib/safe-cleanup.sh` and the post-cleanup loop audit is empty.
 Evidence root:
 `/var/tmp/greia-ab-smoke-1275e0be1a9e0cda724ce18151ae65a25f03c98c-20261026T014350Z/`.
 Report:
-`docs/reviews/2026-10-26_AB_SMOKE_CLEAN_SOURCE_RERUN_EVIDENCE.md`. Next: fix
+`2026-10-26_AB_SMOKE_CLEAN_SOURCE_RERUN_EVIDENCE.md` (archived; see git history). Next: fix
 the test-only stage timeout and loop cleanup, commit a new freeze, then rebuild
 and rerun all three legs; do not reuse these images with modified harness
 source. Session 04 remains OPEN; no rollback, Parent/fault, full-system,
@@ -3376,12 +3376,12 @@ scoped repository cleanup and explicit failure reporting. This changes only
 harness/tests, not shipped updater behavior.
 
 Next is the bounded healthy A-to-B route in
-`docs/testing/2026-10-26_AB_STAGE_RETRY.md`, conditional on unchanged shipped
+`2026-10-26_AB_STAGE_RETRY.md` (archived; see git history), conditional on unchanged shipped
 source/build inputs plus exact bundle/accepted-A hashes, prior first-boot proof
 and offline/loop checks. This supersedes the report's blanket rebuild direction
 for harness-only changes. Otherwise rebuild via the clean three-leg guide.
 No new Linux/physical success is claimed. Source verification is appended to
-`docs/reviews/2026-10-26_AB_SMOKE_CLEAN_SOURCE_RERUN_EVIDENCE.md`; Session 04 OPEN.
+`2026-10-26_AB_SMOKE_CLEAN_SOURCE_RERUN_EVIDENCE.md` (archived; see git history); Session 04 OPEN.
 
 Owner workflow correction in this follow-up: the immediate work order runs
 cheap source/host preflight, then only the healthy update against preserved
@@ -3393,7 +3393,7 @@ matrix. Those release obligations remain OPEN separately.
 
 ## 2026-10-26 — Stage retry result: stage failure masked by login-prefixed marker
 
-Executed the single retry in `docs/testing/2026-10-26_AB_STAGE_RETRY.md` from
+Executed the single retry in `2026-10-26_AB_STAGE_RETRY.md` (archived; see git history) from
 `abb11b0a0`, reusing the verified `1275e0be1` bundles and accepted-A clone.
 Source-diff allowlist passed; focused harness suites **176 tests OK**. Reuse
 hashes and prior first-boot JSON validated; holder check reported no users and
@@ -3416,7 +3416,7 @@ is claimed. Accepted-A SHA is unchanged and the post-leg loop audit is 0.
 
 Evidence:
 `/var/tmp/greia-ab-stage-abb11b0a0fc999ec536841f02441423546b845fa-20261026T085728Z/`.
-Report: `docs/reviews/2026-10-26_AB_STAGE_RETRY_EVIDENCE.md`. Next: fix the
+Report: `2026-10-26_AB_STAGE_RETRY_EVIDENCE.md` (archived; see git history). Next: fix the
 test-control failure-marker handling and stage journal capture, then authorize
 a new single attempt; do not reuse the failed clone or rebuild the OS for this
 harness-only cause. Session 04 remains OPEN; no B health, rollback, Parent,
@@ -3432,13 +3432,13 @@ A subprocess demonstrates exit 120 from stderr-flush failure; the installed
 stage's actual first error is still unknown. Separate stage/arm boots were
 traced against the real journal/reconciliation owners and preserve staged state.
 
-The immediate route is `docs/testing/2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS.md`:
+The immediate route is `2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS.md` (archived; see git history):
 read-only collection from the existing failed clone, report and stop. No rebuild
 or fresh VM/update run. The collector reuses scoped teardown and mounts with
 read-only loop plus `ro,noload`; its output is facts, not acceptance. PSmisc
 holder syntax/status handling and sudo reads of root-owned artifacts are also
 corrected. Production code/build inputs remain unchanged. Source evidence is
-appended to `docs/reviews/2026-10-26_AB_STAGE_RETRY_EVIDENCE.md`; Session 04 OPEN.
+appended to `2026-10-26_AB_STAGE_RETRY_EVIDENCE.md` (archived; see git history); Session 04 OPEN.
 
 ## 2026-10-26 — Failed-image read: B empty, stage cause unrecoverable
 
@@ -3462,14 +3462,14 @@ refusal, crash, or lost control error. The demonstrated closed-stderr flush is
 a possible loss mechanism, not proof. Do not rebuild or replay blindly. A
 later bounded diagnostic boot with corrected capture needs a separate work
 order. Healthy B remains UNPROVEN; Session 04 OPEN. Report:
-`docs/reviews/2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS_RESULT.md`.
+`2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS_RESULT.md` (archived; see git history).
 
 ## 2026-10-26 — Offline facts received; bounded stage-only diagnostic
 
 The offline result at `10de26ce8` confirms accepted A, missing B release
 identity and received update status; old first-error logs are unrecoverable.
 Source audit found no established capacity, dependency or boot-order cause.
-The next work order is `docs/testing/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC.md`:
+The next work order is `2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC.md` (archived; see git history):
 reuse verified inputs, make a fresh clone, inject the candidate offline, boot
 only stage once, then collect response/error and offline facts even on failure.
 No rebuild/install/arm/B boot/full matrix. New helper/tests live under
@@ -3480,7 +3480,7 @@ The helper uses the actual default ProductHarness phase executor with a
 It retains errors, collector state and source/bundle before/after hashes without
 claiming stage or health acceptance. New collaboration policy/CODEOWNERS commits
 are preserved and exactly allowlisted as non-image source for artifact reuse.
-Evidence is appended to `docs/reviews/2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS_RESULT.md`.
+Evidence is appended to `2026-10-26_AB_FAILED_IMAGE_DIAGNOSTICS_RESULT.md` (archived; see git history).
 No Linux boot executed on this Mac; actual stage cause and healthy B unproven.
 Session 04 remains OPEN.
 
@@ -3497,7 +3497,7 @@ checks passed: source allowlist clean, accepted-A/next-bundle hashes OK, holder
 status 1 with empty output, zero old-evidence loops. Inputs were preserved.
 
 This is a test-control race, not an installed-updater result. Report:
-`docs/reviews/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC_PREFLIGHT_FAILURE.md`.
+`2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC_PREFLIGHT_FAILURE.md` (archived; see git history).
 Next: fix the fake-server teardown/join, rerun the preflight, then authorize
 the single stage boot. Do not rebuild the OS for this harness-only failure.
 The installed stage cause and healthy B remain UNPROVEN; Session 04 OPEN.
@@ -3537,7 +3537,7 @@ any of it is irrelevant to the updater-stage target is a review decision, not a
 safe assumption under the gate. Read-only input checks pass: accepted-A and
 next-bundle hashes OK, holder status 1 with empty output, zero old-evidence
 loops. Report:
-`docs/reviews/2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC_SOURCE_GATE_FAILURE.md`.
+`2026-10-26_AB_SINGLE_STAGE_DIAGNOSTIC_SOURCE_GATE_FAILURE.md` (archived; see git history).
 Next: record an explicit reuse exception or rebuild the next bundle/image; do
 not boot until that decision is recorded. Actual stage cause and healthy B
 remain UNPROVEN; Session 04 OPEN.
@@ -3547,7 +3547,7 @@ remain UNPROVEN; Session 04 OPEN.
 The latest agent stopped before VM work at the blanket old-source reuse gate.
 Review of `1275e0be1..78f07861c` finds 19 localization/UI production source
 changes but unchanged updater/slot/boot and build/runtime/Activity/asset inputs.
-The new `docs/testing/2026-10-27_UPDATE_AGENT_HANDOFF.md` explicitly permits one
+The new `2026-10-27_UPDATE_AGENT_HANDOFF.md` (archived; see git history) explicitly permits one
 old-release stage diagnostic on the frozen existing payloads, with reviewed-
 host and actual-host source identities separate. It does not waive current-
 release or current-language image acceptance. One stage, collect, report, stop;
@@ -3624,7 +3624,7 @@ captured production refusal, not a capture/host failure. A remains accepted
 input and bundle hashes are unchanged. Collector cleanup was ok (loop
 `/dev/loop13`, no owned loops after); command/final exits are 1 because staging
 was refused. No arm or B boot ran. Report:
-`docs/reviews/2026-10-27_AB_OLD_RELEASE_STAGE_DIAGNOSTIC_RESULT.md`.
+`2026-10-27_AB_OLD_RELEASE_STAGE_DIAGNOSTIC_RESULT.md` (archived; see git history).
 
 This diagnoses only `1275`-era updater behavior on the disposable image.
 Healthy B, current-language image acceptance, rollback/fault matrix and
@@ -3633,7 +3633,7 @@ rebuild, retry, arm or boot B.
 
 ## 2026-10-27 — Old-release stage refusal analysis
 
-Added `docs/reviews/2026-10-27_AB_OLD_RELEASE_STAGE_REFUSAL_ANALYSIS.md`, a
+Added `2026-10-27_AB_OLD_RELEASE_STAGE_REFUSAL_ANALYSIS.md` (archived; see git history), a
 reviewable source-path analysis of the captured refusal. It traces the failure
 through `_observe_production_topology` / `_probe_role_fact` /
 `_block_node_size_bytes`; active `sda2` capacity is unobservable before the
@@ -3706,7 +3706,7 @@ the bridge changes the available command set. Session 04 remains OPEN.
 Tested source: `810caa91f363a5eb39676f68862a8bef276a6998`; rebased onto
 current main, whose only later changes are licensing/trademark documentation.
 Result report:
-[`2026-10-27_UPDATE_RELEASE_ACCEPTANCE_RESULT.md`](../reviews/2026-10-27_UPDATE_RELEASE_ACCEPTANCE_RESULT.md).
+`2026-10-27_UPDATE_RELEASE_ACCEPTANCE_RESULT.md` (archived; see git history).
 Evidence root:
 `/var/tmp/greia-update-acceptance-810caa91f363a5eb39676f68862a8bef276a6998-20261027T204906Z/`.
 
@@ -3796,7 +3796,7 @@ installer composition `fc2af2103`, profile `acer-aspire-one-i386-ab`,
 version `0.13.1-preview.1`. Fresh blank-disk A/B install, installed A
 first-boot health acceptance and default-A journal acceptance passed on the
 exact image. QEMU boot-cover screenshots are preserved under
-`docs/reviews/acer/2026-10-28_BOOT_COVER_QEMU/`. The acceptance-fixture report
+`docs/reviews/acer/2026-10-28_BOOT_COVER_QEMU/` (archived; see git history). The acceptance-fixture report
 is `release_eligible: false`; the ordinary release roster remains draft.
 
 ## 2026-10-29 — Physical Acer installer splash hang: missing live-service groups
@@ -3805,7 +3805,7 @@ The verified LaCie image SHA-256 `b81279afe4c8d72bb458670efda95c6a422deddbceef69
 
 Source root cause: `SupplementaryGroups=video input tty netdev audio` in the live installer unit, but `compose_create_users_groups` provisioned `netdev` **only for the installed target**, not the live installer. Fix: `compose_create_live_installer_groups` now provisions all groups from the real unit in the live root before enabling it; `passwd` explicitly provides groupadd, the composed-image verifier rejects missing names, and a local mock-chroot test reproduces the omission.
 
-**Evidence boundary:** GitHub source repair only. Corrected-image build, exact squashfs group inspection, normal/default `greia-installer.service` QEMU launch, re-authorized USB flash/readback, and physical Acer graphical installer boot are still **NOT RUN**. Do not treat the previous image as install-ready. See `docs/reviews/2026-10-29_ACER_USB_INSTALLER_216_GROUP.md`.
+**Evidence boundary:** GitHub source repair only. Corrected-image build, exact squashfs group inspection, normal/default `greia-installer.service` QEMU launch, re-authorized USB flash/readback, and physical Acer graphical installer boot are still **NOT RUN**. Do not treat the previous image as install-ready. See `2026-10-29_ACER_USB_INSTALLER_216_GROUP.md` (archived; see git history).
 
 **2026-10-29 corrected installer build and USB flash:** Rebuilt the
 `acer-aspire-one-i386-ab` installer from `4d2b65f78` after fixing two stale
@@ -3820,8 +3820,8 @@ interactive language screen under QEMU. The owner-authorized LaCie
 reflashed; the first 2,270,167,040 bytes read back byte-identical and the
 media exposes `GREIA_EFI` + `PIP_INSTALL` with the unchanged bundle
 `2572bf08…`. Physical Acer boot from this media remains PENDING. Evidence:
-`docs/reviews/2026-10-29_ACER_USB_INSTALLER_216_GROUP.md` and
-`docs/reviews/acer/2026-10-29_INSTALLER_216_GROUP_QEMU/`.
+`2026-10-29_ACER_USB_INSTALLER_216_GROUP.md` (archived; see git history) and
+`docs/reviews/acer/2026-10-29_INSTALLER_216_GROUP_QEMU/` (archived; see git history).
 
 ## 2026-10-29 — Physical Acer A/B install stops in hardware-support dpkg
 
@@ -3855,7 +3855,7 @@ LaCie `/dev/sdc` (`iamaKey`, serial `eca3505216d7d3`) was reflashed; the
 first 2,270,167,040 bytes read back byte-identical. The Acer internal-disk
 failure transcript remains unrecovered, and physical Acer validation of this
 image is PENDING. Evidence:
-`docs/reviews/acer/2026-10-29_INSTALLER_216_GROUP_QEMU/`.
+`docs/reviews/acer/2026-10-29_INSTALLER_216_GROUP_QEMU/` (archived; see git history).
 
 **2026-10-29 recovered Acer ENOSPC and installer RAM-scratch fix:** The
 installer USB log named `initramfs-tools` postinst failing with
@@ -3933,7 +3933,7 @@ normalizes Parent static-client modes in pinning/staging and composition, and
 verifies readability in composed roots. 160 focused tests passed. No existing
 installed disk was modified and no new image built. A fresh A/B release bundle
 and installer plus installed acceptance are required; see
-`docs/agents/2026-10-29_ACER_INSTALLER_AND_PARENT_FIX_HANDOFF.md`.
+`2026-10-29_ACER_INSTALLER_AND_PARENT_FIX_HANDOFF.md` (archived; see git history).
 
 **2026-10-29 Acer installed-system Parent/settings fix bundle + installer:**
 Built a new A/B fixture bundle from `77d18c711`:

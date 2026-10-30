@@ -6,8 +6,9 @@ Run from any directory:
     python3 tools/audit_repository_docs.py --scope all
 
 Includes all tracked Markdown docs in the selected scope, not just root entry
-pages. Dated reviews/archived test reports may intentionally refer to retired
-historical captures; those appear only with --scope all. Never deletes files.
+pages. Historical plans and dated test procedures may intentionally refer to
+evidence removed in the 2026-10-30 cleanup (kept in git history); those appear
+only with --scope all. Never deletes files.
 """
 from __future__ import annotations
 
@@ -21,7 +22,7 @@ from urllib.parse import unquote, urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
 _LINK = re.compile(r"!?(?:\[[^\]\n]*\])\(([^)\n]+)\)")
-_HISTORICAL_PREFIXES = ("docs/archive/", "docs/reviews/", "docs/plans/")
+_HISTORICAL_PREFIXES = ("docs/plans/",)
 _HISTORICAL_TESTING = "docs/testing/"
 
 
@@ -47,10 +48,6 @@ def tracked_markdown(root: Path) -> tuple[Path, ...]:
 
 def maintained(path: Path) -> bool:
     name = path.as_posix()
-    # The archive index is a maintained navigation page even though the
-    # archived evidence it links to is intentionally historical.
-    if name == "docs/archive/README.md":
-        return True
     if name.startswith(_HISTORICAL_PREFIXES):
         return False
     if name.startswith(_HISTORICAL_TESTING):

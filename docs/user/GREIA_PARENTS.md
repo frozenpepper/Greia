@@ -1,97 +1,129 @@
 # Greia Parents: the simple guide
 
-Greia Parents is where adults manage a Greia computer. Children use Greia's pictures, games and Activities; parents have separate controls for profiles, the device and each child's experience.
+Greia Parents is where adults manage a Greia computer. Children use the
+pictures and games. You use Parents to set up children, choose what they see
+and look after the computer.
 
-You can access parents' controls **on Greia itself** or, when supported by the installed release, **in a web browser on another device**. The core idea is local management, without a mandatory cloud account.
-
-> **Release note:** Current source uses HTTPS for the network Parents App. Greia automatically creates its own local certificate, so your browser will normally show a certificate warning the first time. Device and browser acceptance testing is still required before calling a public installer release-ready.
+You can open it **on the Greia computer itself**, or **in a web browser on
+your phone or laptop** when both are on the same home network. You do not
+need an account or the internet.
 
 ## Open Parents on the Greia computer
 
-1. Turn on Greia and reach the screen where children **choose their picture or name**. This is the **child-selection screen** (sometimes called the login screen).
-2. On the physical keyboard, **press and hold S and T together** for **five full seconds**.
-3. When the Greia Parents panel appears, **release both keys**.
-4. Enter the **Parent password** and continue.
+1. Switch Greia on and wait for the screen where children **pick their
+   picture or name**.
+2. On the keyboard, **press and hold S and T together** for **five full
+   seconds**.
+3. When the Parents panel appears, let go.
+4. Type the **Parent password**.
 
-**S + T opens the on-device settings panel only from child selection.** It will not open from a game, a child's Home page or the first-child setup wizard. There is no need to press Ctrl, Alt or a function key.
+The first Parent password on this preview is `greia`, in lowercase. It is
+different from any password you give a child. Change it as soon as you can.
+The installer's final screen shows the password for your version.
 
-The initial Parent password on current development installs is `greia` (lowercase). It is separate from any password you choose for your child. Change it when you have access to the change-password control; consult the actual release's welcome/completion screen for its initial credential.
+This shortcut works only on the child-picking screen. It does not work inside
+a game, on a child's home page or during the first-child setup. If nothing
+happens, go back to the child-picking screen (use the child's profile switcher
+on Greia's home screen, or press Escape). Then hold both keys down
+for the whole five seconds and try again. You need a keyboard.
 
-If the panel does not open, return to child selection (from Greia Home, choose the current child's profile/switcher, or use Escape on the keyboard). Make sure both keys stay down together for all five seconds and try again. The on-device panel requires a keyboard.
+**What you can do here:** change the language, connect to Wi-Fi, adjust sound
+and microphone, add children, and see connection information. What you see
+depends on your computer and Greia version.
 
-### What you can do on the device
+## Open Parents from your phone or laptop
 
-The built-in panel provides practical device setup, including language, Wi-Fi, sound/microphone settings, child accounts and selected maintenance/connection information. Available tabs and controls depend on the exact device and version. You do **not** need Linux or a terminal to use it.
+The browser version does the same job and is easier to use.
 
-## Open the browser-based Parents App
+1. Put your phone or laptop and the Greia computer on the **same home Wi-Fi or
+   network**.
+2. On Greia, open the Parents panel (above) and sign in. Find the
+   connection information. It shows an address that looks like
+   `https://192.168.1.20:8766`. Yours will differ.
+3. Type **that exact address** into your phone's or laptop's browser.
+4. The first time, the browser will warn that the site is not verified. This
+   is expected: Greia makes its own security certificate (its own ID card),
+   because it cannot get a public one. On your own Greia, on your own network,
+   choose **Advanced**, then **Continue**. Never continue to an address you
+   do not recognise.
+5. Sign in with the Parent password. Later visits from the same browser can
+   reconnect without it, until you remove that browser.
 
-Greia also has a lightweight browser-based Parents App, developed as part of the open-source Greia project. Its separate source repository is being prepared for public source release, so access may still be restricted until that publication is announced. It is a separate interface to the **same Greia management system**, not a different operating system. It works from a phone, tablet or laptop with a browser when it can reach the Greia device.
+If Greia has no network address, the browser cannot reach it. Use the panel on
+the Greia computer instead. **Never open this to the internet and never set up
+port forwarding on your router.**
 
-### Directly from a Greia computer (currently available in development)
+## What you can manage
 
-1. Make sure Greia and your phone/laptop are connected to the **same local network**.
-2. On the Greia computer, open the on-device Parents panel with **S + T for five seconds**, sign in and look at its connection/Info information.
-3. The panel shows an address in the form `https://<GREIA-IP>:8766`. Type the **actual address displayed on your Greia** into your phone's or laptop's browser.
-4. On your first visit, the browser may warn that Greia's certificate is not publicly verified. For your own Greia, on your home network, you can use your browser's **Advanced / Continue** option. Do not continue to an unfamiliar address.
-5. Sign in with the **Greia Parent password** when asked. A paired browser can reconnect on later visits while its device credential remains valid.
+The browser app has four areas: **Home**, **Children**, **Activities** and
+**This Greia**.
 
-If Greia has no working network address, the browser route cannot connect. You can still use the on-device controls. Do not expose port 8766 to the internet or forward it on your router.
+- **Home:** the chosen child, recent play, and time information.
+- **Children:** add or rename a child, choose a picture, set an approximate
+  age and how challenging games should be, protect a profile with a password,
+  and set play-time limits where available.
+- **Activities:** see what is installed and choose what each child sees:
+  *Automatic* (by age), *Always show* or *Hide from child*.
+- **This Greia:** language, network, input, display, sound, security, access
+  and system controls. It shows only what your computer supports.
 
-### Open-source standalone browser host (advanced/optional)
-
-The source of the Parents App is in the separate [Greia Parent App HTML repository](https://github.com/frozenpepper/Greia-Parent-App-Html). The project intends to publish this source for people who want to inspect, run or contribute to the standalone local host. Access to that separate repository may still be restricted until its public-source publication is announced.
-
-For a developer with **Node.js/npm installed**, the current source workflow is `npm run serve`, then open `http://127.0.0.1:8080/` on the host computer. The host discovers validated Greia devices on the local network and lets you select one. **Normal parents do not need to install Node.js or clone a repository:** they can use the Greia-served page when it is available.
-
-There is no mandatory remote account or monthly subscription for the local Parents App. The standalone host's discovery is not an authentication bypass: the Greia Parent password and device-specific pairing still apply.
-
-## What can parents manage?
-
-The browser interface organizes common tasks into **Home**, **Children**, **Activities** and **This Greia**.
-
-- **Home:** quick view of the selected child, recent activity, visible Activities and available device/time information.
-- **Children:** add or rename a child profile, choose a picture, set an approximate age, adjust challenge preferences, optionally protect a child's profile with a password, and configure available play-time limits.
-- **Activities:** see what is installed, filter and search it, and decide which Activities each child sees. The options include automatic age-based visibility, **Always show** and **Hide from child**. Difficulty and discovery preferences can be adjusted independently.
-- **This Greia:** supported language, network, input, display, audio, security, access and system controls. The app shows only what this device actually supports.
-
-Some features described in plans — especially public Activity-store/update, system recovery and backup flows — are not yet fully delivered. A missing or disabled control may simply mean the installed release does not support that operation.
+Some planned features are not finished: sharing Activities through a store,
+full backup and restore, and some system recovery tools. If a button is
+missing or greyed out, your version does not have it yet.
 
 ## Change Greia's language
 
-The current development version offers **English, Italian, Spanish and French**. The choices come from the languages actually included in that Greia release, so this list may expand in later versions. You can change the computer's language without reinstalling it:
+Greia offers **English, Italian, Spanish and French**. You can change it
+without reinstalling.
 
-1. Open **Greia Parents → This Greia → Language** in the browser, or open
-   the on-device Parents panel with **S + T** held for five seconds at the
-   child-selection screen, then choose its **Language** tab.
-2. Select the language by its name and confirm. It becomes the computer's
-   default language and stays selected after restart.
-3. If a particular child has a separate language preference, their profile
-   can take priority over that computer default. An Activity offered only in
-   another language may use its own fallback; that does not change Greia's
-   chosen language.
+1. In the browser, go to **This Greia**, then **Language**. Or open the panel
+   on the Greia computer with **S + T** and choose its **Language** tab.
+2. Pick the language and confirm. It becomes the computer's language and
+   stays after a restart.
+3. A child can have their own language, which wins over the computer's.
 
-Only languages actually included and approved in that Greia release appear.
-Contributors preparing additional languages do not automatically expose
-unfinished translations to families.
+## Common setups
 
-## Three common family setups
+**One child:** make the profile at first start, pick a picture and age, and
+leave Activities on Automatic.
 
-**One child:** create the profile at first startup, choose the child's picture and optional age, and leave Activities on Automatic. You can adjust individual games later.
+**Several children:** make one profile per child. Each has their own saved work
+and settings. Set visible Activities and time limits for each.
 
-**Several children:** make one profile for each child in Parents. Each gets their own preferences and saved work. Set separate Activity visibility or time limits as needed.
-
-**A Greia laptop and a parent's phone:** connect both to the same home Wi-Fi. When the browser Parents App is available and the release's connection security is approved, use it for convenient management. If the network is unavailable, use the on-device **S + T** panel.
+**Greia laptop and your phone:** join the same home Wi-Fi and use the browser
+version. If the network is down, use the panel on the Greia computer.
 
 ## Passwords and privacy
 
-Greia distinguishes the **Parent password** from an optional **child profile password**. The Parent password grants management access; do not share it with a child. Parent browsers have separate, revocable credentials so losing one device does not require signing out every other device.
+The **Parent password** gives full control. Do not share it with a child. A
+child's own password, if you set one, only opens that child's profile. Each
+phone or laptop you connect gets its own sign-in that you can remove
+separately, so losing one device does not affect the others.
 
-The current design stores child profiles and progress locally and works offline for normal child Activities. Avoid exposing the parent management service outside your home network. The current development source serves the network Parents App over **local HTTPS with a device-generated certificate**; browser and actual-device acceptance still determine public-release readiness.
+Children's profiles and progress stay on the Greia computer. Normal Activities
+work offline. See the [privacy page](../../PRIVACY.md).
 
 ## Activities from other creators
 
-Greia defines a portable `.greiaactivity` file. Once an installed version **advertises Activity installation as available**, open **Activities** in the browser Parents App, choose **Install Activity**, select the file and follow the Greia validation/confirmation steps.
+Greia has a file type for Activities made by others (`.greiaactivity`). When
+your version supports it, **Activities** in the browser app will offer
+**Install Activity**. Greia checks the file before installing.
 
-**Current ordinary/release profiles still do not advertise Activity installation until its separate release acceptance is complete.** If the button is absent or unavailable, do not work around it by copying files or enabling SSH. The [Activity creation guide](../development/CREATE_AN_ACTIVITY.md) explains development-time testing and packaging.
+This preview does not offer that button yet. Do not try to get around it by
+copying files or turning on remote access. If you want to make Activities,
+read [Make an Activity](../development/CREATE_AN_ACTIVITY.md).
 
-If you are stuck, report your Greia version, device model and the exact screen/message, without sharing passwords.
+## For developers
+
+The browser app is a separate open-source project,
+[Greia-Parent-App-Html](https://github.com/frozenpepper/Greia-Parent-App-Html).
+Its source may still be private until the project announces it. Normal
+parents never need it: Greia serves the page itself. A developer with
+Node.js can run it locally with `npm run serve` and open
+`http://127.0.0.1:8080/`. It finds Greia computers on your network. The
+Parent password and pairing still apply.
+
+## Stuck?
+
+Write to greia@frozenpepper.it with your Greia version, your computer's
+model, and the exact message on screen. Never include passwords.

@@ -5,7 +5,7 @@ set -Eeuo pipefail
 #
 # IMPORTANT: this tool is deliberately separate from build-live-usb.sh.
 # The latter is the physically proven Acer media writer documented in
-# docs/INSTALLATION_USB_BOOT_POSTMORTEM.md. Safety/read-back checks must not
+# docs/engineering/boot/INSTALLATION_USB_BOOT_POSTMORTEM.md. Safety/read-back checks must not
 # mutate that firmware-sensitive recipe merely to make verification convenient.
 #
 # Usage:

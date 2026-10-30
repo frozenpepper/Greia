@@ -27,7 +27,7 @@ Adapter and runtime package sets are composed by `tools/build_profile.py`; profi
 
 The current proven installed release/update path is legacy-BIOS i386 A/B on **disposable QEMU**, alongside existing x86 single-root development builders. Recognizing `arm64` in the profile schema does not create a buildable/bootable Pi image: Pi requires its own verified board-specific builder, boot and install route. Do not translate an x86 artifact into an ARM release by changing manifest values.
 
-The experimental source-only `raspberry-pi-400-arm64` and `raspberry-pi-500-arm64` profiles declare board-specific Pi native A/B layout, installer and update adapters. Their package sets can be validated, but `check-phase0-builder` still correctly rejects ARM64. No bootable Pi media exists and user installation is not ready. See `docs/reviews/2026-10-19_RASPBERRY_PI_INSTALLER_SOURCE_REVIEW.md`.
+The experimental source-only `raspberry-pi-400-arm64` and `raspberry-pi-500-arm64` profiles declare board-specific Pi native A/B layout, installer and update adapters. Their package sets can be validated, but `check-phase0-builder` still correctly rejects ARM64. No bootable Pi media exists and user installation is not ready. See `2026-10-19_RASPBERRY_PI_INSTALLER_SOURCE_REVIEW.md` (archived; see git history).
 
 Likewise, the architecture recognizes a future `web` Activity runtime family, but no Web engine/package set is implemented yet. Declaring `web` therefore fails closed during package resolution until a measured platform-owned Web adapter exists.
 
@@ -68,7 +68,7 @@ docs/testing/2026-08-15_ACER_REMOTE_AGENT_ACCEPTANCE.md
 
 ## Developer release candidate
 
-`legacy-x86-i686-rc` is `legacy-x86-i686` plus the `developer-remote` set in both artifacts, hostname `greia-rc` and `boot.console_policy = "quiet"`: the child sees no console text while SSH stays on for agents. It is `experimental` and never an ADR 0036 release. Runbook: `docs/INSTALLER_IMAGE_CREATION_AND_BOOT.md` §13.
+`legacy-x86-i686-rc` is `legacy-x86-i686` plus the `developer-remote` set in both artifacts, hostname `greia-rc` and `boot.console_policy = "quiet"`: the child sees no console text while SSH stays on for agents. It is `experimental` and never an ADR 0036 release. Runbook: `docs/engineering/boot/INSTALLER_IMAGE_CREATION_AND_BOOT.md` §13.
 
 ## Useful commands
 

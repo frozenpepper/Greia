@@ -1,32 +1,16 @@
 ---
 name: greia-os-work
-description: Task router for substantive Greia OS/platform/Shell/Parent/installer/simulator/build/runtime/hardware-service work. Load only the task-specific local docs required for the work.
+description: Use for substantive Greia OS/platform work: Shell/launcher, Parent app/API, installer, A/B and application updates, image build/composition, boot/GRUB/initramfs, display/input/audio services, Simulator, Wi-Fi/SSH, profiles. Task router: read only the sections and companion docs the task needs.
 ---
 
 # Greia OS Work — task router
 
 **Status:** LIVING derived contributor router  
-**Reviewed:** 2026-09-21
+**Reviewed:** 2026-10-30
 
-This file tells an agent **what to read for the task**. It is deliberately not a second architecture manual.
+## When to use / Read first
 
-## Current voice screening and direction correction (2026-10-21)
-
-Screening policy v2 requires ASR >0.8; tail/internal pauses below 1.5s do not warn.
-Reassess matching saved reports without another model run; see automated review
-procedure §3a. Master design owns identity/register/timbre; per-cue prompts own
-only performance. Defaults are neutral for all six characters. Do not revive
-v2's persona-prefixed frozen overrides for the next Dani/Momo/Tito replacement.
-
-## Shared human listening tool (2026-10-21)
-
-After automated review, use shared `takeboard` (catalog/skill/README at
-`/Volumes/Test1/Works/takeboard`) for HTML generated/master comparison and
-save/export/reload of human state, 1–5 scores and notes. Greia's thin adapter
-is `tools/export_voice_review_batch.py`; exact commands are in
-`docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md` §6. Keep its manifests external.
-Machine findings never initialize human acceptance. Takeboard edits only its
-review JSON; importing decisions into Greia receipts/runtime is a separate task.
+Use for any substantive change to the Greia OS, platform, Shell, Parent, installer, simulator, build, runtime or hardware-service code. This file tells an agent **what to read for the task**; it is deliberately not a second architecture manual. Read `AGENTS.md` and `HANDOVER.md` first, then go to the one section below that matches the task. Neighbouring routes: Activity code → `skills/greia-activity-authoring/SKILL.md`; art → `skills/greia-visual-authoring/SKILL.md`; prerecorded speech → `skills/greia-voice-production/SKILL.md`; new language → `skills/greia-language-expansion/SKILL.md`.
 
 ## Extending Greia's language set
 
@@ -72,113 +56,37 @@ docs/testing/LOCAL_AGENT_START_HERE.md
 
 Driver firmware for the installed target is found with `modinfo` (directly and through isenkram), so any service that resolves it (`greia-install-transaction`, `greia-system-update`) must keep `/usr/lib/modules` readable: never add `ProtectKernelModules=yes` there; deny module loading with the capability bounding set and `SystemCallFilter=~@module` (pinned by `tests/test_firmware_resolution_unit_contract.py`). Production compositions pass `LinuxKernelModules` to the resolvers so unreadable metadata is an incomplete plan (pre-erase refusal), never "no firmware needed". Fixture tests with fake `modinfo` cannot prove this; check a hardening change in a real `systemd-run` sandbox.
 
-## Pi 400/500 source-only adapter (owner-authorized, 2026-10-19)
+## Pi 400/500 (source-only)
 
-For Pi A/B release work, read `docs/reviews/2026-10-19_RASPBERRY_PI_RESEARCH_LED_VERIFICATION.md` before changing the firmware path. The `greia_platform.pi_boot_observation` module is read-only and **not** a boot-health verifier or production boot transaction: big-endian chosen-firmware values and a root= hint cannot establish the actual mounted root or boot-device ancestry. Pi kernel, DTB, EEPROM partition walk and FAT A/B success all need real-board proof. Preserve the no-erase Pi installer gate.
+Pi support is **not implemented as a bootable installer**. Experimental ARM64 profiles and native Pi A/B partition and boot-asset source exist (`src/greia_platform/pi_boot_assets.py`). The full installer deliberately refuses Pi before erasure, and the Phase 0 image composer refuses ARM64; preserve that no-erase gate. `greia_platform.pi_boot_observation` is read-only and **not** a boot-health verifier or production boot transaction: big-endian chosen-firmware values and a `root=` hint cannot establish the actual mounted root or boot-device ancestry. Pi kernel, DTB, EEPROM partition walk and FAT A/B success all need real-board proof. Validate the **committed file**, not merely staged Git blobs or a review claim. Remaining boot/update/hardware work is owned by the 2026-09-15 lifecycle plan.
 
-## Pi 400/500 source-only adapter (owner-authorized, 2026-10-19)\n\nPi support is **not implemented as a bootable installer**. Experimental ARM64 profiles and native Pi A/B partition and boot-asset source now exist. The full installer deliberately refuses Pi before erasure, and the Phase 0 image composer refuses ARM64. For hard findings, precise tests and remaining required boot/update/hardware work, consult `docs/reviews/2026-10-19_RASPBERRY_PI_INSTALLER_SOURCE_REVIEW.md` and the authoritative 2026-09-15 lifecycle plan. Validate the **committed file**, not merely staged Git blobs or a review claim. No hosted Actions runs without owner opt-in.\n\n## Physical installer boot: live-root service identities (2026-10-29)
+## Physical installer boot: live-root service identities and scratch space
 
-When reviewing the legacy-x86 USB installer, check the actual *live installer*
-`/etc/group` against `greia-installer.service`
-`SupplementaryGroups=` before claiming boot acceptance. The first physical
-Acer 2026-10-28 candidate failed at `216/GROUP`: target-role `netdev`
-provisioning did not apply to the live root, so the GUI never started.
-The shared composer now creates the live groups and the composed-root verifier
-rejects any missing identity. Route acceptance through
-`docs/reviews/2026-10-29_ACER_USB_INSTALLER_216_GROUP.md`. QEMU transaction-
-socket acceptance alone does **not** prove the systemd UI launches. Retest the
-actual default service in QEMU and on hardware after a corrected image rebuild.
+- When reviewing the legacy-x86 USB installer, check the actual *live installer* `/etc/group` against `greia-installer.service` `SupplementaryGroups=` before claiming boot acceptance. A target-role group (e.g. `netdev`) provisioned only for the installed target does not exist in the live root and fails the unit with `216/GROUP`, so the GUI never starts. The shared composer creates the live groups and the composed-root verifier rejects any missing identity. QEMU transaction-socket acceptance alone does **not** prove the systemd UI launches: retest the actual default service in QEMU and on hardware after a rebuild.
+- Keep transient apt/initramfs bytes out of the SYSTEM_A slot (`mkinitramfs` needs a ~182 MiB temporary tree plus a ~42 MiB initrd; the 1,664 MiB slot otherwise fails with `zstd ... No space left on device`). The installer mounts a bounded 256 MiB tmpfs at `/run/greia-installer-scratch` and directs `TMPDIR` and `Dir::Cache::archives` there. Do not relax capacity checks or enlarge boot-control/PERSIST to hide this.
 
-The next physical Acer install failed inside the `initramfs-tools` postinst
-with `zstd ... No space left on device`: the 1,664 MiB SYSTEM_A slot held the
-payload and hardware-support packages, while `mkinitramfs` needed an ~182 MiB
-temporary tree plus a 42 MiB initrd. Keep transient apt/initramfs bytes out
-of SYSTEM_A: the installer mounts a bounded 256 MiB tmpfs at
-`/run/greia-installer-scratch` and directs `TMPDIR` and
-`Dir::Cache::archives` there. Do not relax capacity checks or enlarge
-boot-control/PERSIST to hide this. Route to
-`docs/reviews/2026-10-29_ACER_USB_INSTALL_ENOSPC_INITRAMFS.md`.
+## Install / update / release lifecycle
 
-## Current blocking route: post-R1 product-composition closure + multiplatform lifecycle plan
-
-Install/update/release/multiplatform lifecycle work routes to
+Route install, update, release and multiplatform lifecycle work to
 `docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md`
 (the ADR 0036 successor plan), not to signed-bundle or Gate-P5/V12G/D6
 closure. That plan owns lifecycle sequencing and closure criteria; the
 2026-08-08 architecture-remediation plan remains blocking only for its
-remaining non-lifecycle obligations.
+non-lifecycle obligations. `HANDOVER.md` §2/§8 records current state: Session 04
+(real legacy-i386 fresh install, first acceptance, alternating updates and
+rollback with current bundles) is tracked there as open until the Linux
+lifecycle predicates actually pass, and exact shipped installer/update/boot-health
+product composition is closed only through the lifecycle plan.
 
-Session 03 was closed by the Linux owner-command release build on 2026-09-23.
-Session 04 remains OPEN: fresh A/B install, first acceptance, alternating
-updates and rollback must execute using real current bundles. The current consolidated Linux test route is
-`docs/testing/GREIA_UPDATE_RELEASE_ACCEPTANCE.md`. Older dated A/B and
-application-package work orders remain detailed reference material, not
-additional stop/reuse gates.
-
-The 2026-10-23 Parent delivery, persistent mounts and restart integration are
-source work. Do not call them installed/device acceptance before that work
-order runs. `legacy-x86-i686` and its RC profile remain single-root and cannot
-activate A/B updates; do not advertise a software-only migration.
-
-ADR 0038 separately supports Python, built-in Activity, Parent Activity and
-combined `.greia_update` application packages on single-root or A/B images
-that contain the bootstrap marker/helper. This updates application code; it
-does not convert a single-root disk to A/B or make full-system updates
-available there. Read `docs/development/GREIA_SOFTWARE_UPDATE_PACKAGES.md`
-before building or accepting these packages. A legacy image without the
-bootstrap has no package-upload capability or manual bootstrap CLI.
-
-Linux execution evidence is in
-`docs/reviews/2026-10-24_SOFTWARE_UPDATE_LINUX_ACCEPTANCE_RESULT.md`: the first
-RC run passed application update/rollback cases only on a manually repaired
-clone. A clean fixed-source rebuild/install remains required. Parent Activity
-storage is owned by `greiapanel:greiapanel`; root update transactions must hand
-new artifacts back to that owner without granting the child write access.
-
-For disposable Acer A/B acceptance only, use the explicit
-`tools/greia_release.py build-acceptance-fixture` command in the work orders.
-Its output is experimental and rejected by the public update-index builder.
-The ordinary release build still requires an accepted release-safe boot cover. `greia-early-framebuffer-v1` is registered after the 2026-10-28 QEMU visual acceptance; physical Acer visual acceptance remains outstanding.
-Do not treat fixture build/boot success as release eligibility.
-
-The old signed `.greiaupdate` v2 flow and release signing keys are
-superseded by ADR 0036 and are not the normal production route; older
-references to them are historical only.
-
-**2026-10-27 owner-authorized update implementation/acceptance:** use the
-single current [update release acceptance guide](../../docs/testing/GREIA_UPDATE_RELEASE_ACCEPTANCE.md).
-The former 1275-era single-stage source gate is historical, not an active
-constraint. Its diagnostic already captured a real `sda2` capacity-observation
-refusal ([result](../../docs/reviews/2026-10-27_AB_OLD_RELEASE_STAGE_DIAGNOSTIC_RESULT.md),
-[analysis](../../docs/reviews/2026-10-27_AB_OLD_RELEASE_STAGE_REFUSAL_ANALYSIS.md)).
-Implement a portable block-capacity observation with i386 coverage in current
-`main`, then run consolidated current-source A/B and lightweight package tests
-on disposable Linux/QEMU installations. One work session may fix, retry and
-proceed through the complete relevant matrix; do not stop after every ordinary
-failure or require new frozen-source approvals. Do not weaken disk identity,
-bounded writes, startup health, recovery, PERSIST protection or child-session
-safety. Language JSON delivery has source-level tests; installed acceptance on fresh
-current images remains to do. The pre-release legacy receiver bridge was
-removed: no old-development-image upgrade/migration acceptance is required.
-
-The installed updater discovers the fixed published bundle directly. Status
-is reporting/recovery progress, not a package-admission requirement. Device
-jobs, slot journals and recovery remain. Routine Python/Activity updates use
-small `.greia_update` packages without rebuilding OS images for each update.
-Session 04 remains OPEN until the Linux lifecycle predicates actually pass.
-
-Session 04 owns the real legacy-i386 fresh-install/update/rollback lifecycle. The
-`POSTR1-P1-INSTALLER-RED` / Gate-P5/V12G/D6 routing below is historical and
-superseded for lifecycle sequencing. Source composition primitives (T3-S) are
-done; exact shipped installer/update/boot-health product composition (T3-P)
-remains OPEN/BLOCKING until closed through the 2026-09-15 plan. T7 remains
-valid only in its disposable/device-harness scope. See `HANDOVER.md` §2/§8
-and the active lifecycle plan for current disposition.
-
-Do not start Raspberry Pi 400/500 work, UEFI work, destructive Acer
-installation, or backup work in this lane, and do not treat shipped
-product composition as complete. Pi/UEFI adapters resume only after the
-common product lifecycle is proven.
+- **Execution route (owner-authorized):** `docs/testing/GREIA_UPDATE_RELEASE_ACCEPTANCE.md` is the single current guide: implement, repair and test on disposable Linux/QEMU installations, one session may fix, retry and proceed through the whole relevant matrix without new frozen-source approvals after each ordinary failure. Older dated A/B and package work orders are reference material, not extra stop/reuse gates. Do not weaken disk identity, bounded writes, startup health, recovery, PERSIST protection or child-session safety. Block-capacity observation must stay portable with i386 coverage.
+- **No backward compatibility** with old development images, pre-manifest reader migrations or legacy bridge packages; reinstall fresh current images. Rollback to the last healthy installed release is a required feature.
+- **Single-root images:** `legacy-x86-i686` and its RC profile are single-root and cannot activate A/B updates; do not advertise a software-only migration.
+- **Application packages (ADR 0038):** typed Python, built-in Activity, Parent Activity and combined `.greia_update` packages work on single-root or A/B images that contain the bootstrap marker/helper. They update application code only; they do not convert a single-root disk to A/B or enable full-system updates. Read `docs/development/GREIA_SOFTWARE_UPDATE_PACKAGES.md` before building or accepting them. An image without the bootstrap has no package-upload capability or manual bootstrap CLI. Routine Python/Activity updates use these small packages, not a rebuilt OS image. Parent Activity storage is owned by `greiapanel:greiapanel`: root update transactions hand new artifacts back to that owner without granting the child write access.
+- **Discovery:** the installed updater discovers the fixed published bundle directly; status is reporting/recovery progress, not a package-admission requirement. Device jobs, slot journals and recovery remain.
+- **Fixtures:** for disposable Acer A/B acceptance only, use `tools/greia_release.py build-acceptance-fixture`. Its output is experimental and rejected by the public update-index builder; the ordinary release build still requires an accepted release-safe boot cover (`greia-early-framebuffer-v1`; QEMU visual acceptance passed, physical Acer visual acceptance outstanding). Fixture build/boot success is not release eligibility.
+- The old signed `.greiaupdate` v2 flow and release signing keys are superseded by ADR 0036 and are not the normal production route.
+- Language JSON delivery has source-level tests; installed acceptance on fresh current images is separate.
+- Pi 400/500 adapters, UEFI work, destructive Acer installation and backup work do not start in this lane; do not treat shipped product composition as complete. Pi/UEFI adapters resume only after the common product lifecycle is proven.
 
 ## Creations Library / first-party Activity release workstream
 
@@ -193,7 +101,7 @@ src/greia_platform/creation_media.py
 src/greia_platform/creations.py
 ```
 
-P1 remains the trusted repository; P2 provides the manifest-bound **publish-own-private-file/import-child-selected-handle** seam over the existing per-session socket. P3 SOURCE-WIP includes the common gallery/picker renderer, audio preview owner, authenticated nonblocking request/poll/cancel coordinator, and **trusted modal presentation**: Legacy-X keeps native window handles private, re-proves the foreground window's `_NET_WM_PID` against the supervised process before raising Greia's existing Shell window, and restores the Activity afterward; Simulator diverts its existing remote display/input transport to the same Shell picker and prevents Activity frame overwrite while the modal is active. Painting is the first real PNG producer+consumer and exposes child-visible up-arrow publish / down-arrow import actions; import polls at a bounded cadence and saves an independent private editable copy. **All of this latest modal/import work is untested in a complete checkout/GUI**, so do not call P3 accepted yet. Do not mount a shared folder, duplicate choosers per app or expose arbitrary library listing/deletion to an Activity. Follow `P3_TRUSTED_PICKER_DISPLAY_CONTRACT.md` and the consolidated deferred acceptance before promotion. Wayland/KMSDRM still require their own backend implementation of the same runtime-neutral modal lease.
+P1 is the trusted repository; P2 is the manifest-bound **publish-own-private-file/import-child-selected-handle** seam over the existing per-session socket; P3 is the common gallery/picker renderer, audio preview owner, authenticated nonblocking request/poll/cancel coordinator and **trusted modal presentation** (Legacy-X keeps native window handles private, re-proves the foreground window's `_NET_WM_PID` against the supervised process before raising Greia's Shell window, and restores the Activity afterward; the Simulator diverts its remote display/input transport to the same Shell picker and blocks Activity frame overwrite while the modal is active). Painting is the first PNG producer+consumer. Current promotion status is in `PROGRESS.md` and `HANDOVER.md`; do not call P3 accepted without the GUI acceptance there. Do not mount a shared folder, duplicate choosers per app or expose arbitrary library listing/deletion to an Activity. Follow `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/P3_TRUSTED_PICKER_DISPLAY_CONTRACT.md`. Wayland/KMSDRM need their own backend implementation of the same runtime-neutral modal lease.
 
 ## Broad architecture / new platform seam
 
@@ -221,16 +129,16 @@ Then as relevant:
 
 ```text
 docs/engineering/BOOT_PIPELINE_AGENT_GUIDE.md
-docs/INSTALLATION_ISSUES_LOG.md
-docs/INSTALLATION_USB_BOOT_POSTMORTEM.md
-docs/INSTALLED_OS_BOOT_POSTMORTEM.md
+docs/engineering/boot/INSTALLATION_ISSUES_LOG.md
+docs/engineering/boot/INSTALLATION_USB_BOOT_POSTMORTEM.md
+docs/engineering/boot/INSTALLED_OS_BOOT_POSTMORTEM.md
 docs/design/GREIA_BOOT_EXPERIENCE.md
 docs/design/GREIA_BOOT_PROGRESS.md
 ```
 
 Do not modify physical boot/recovery state from memory.
 
-Live installer recovery source (2026-10-17): live entries require
+Live installer recovery source: live entries require
 `nonetworking` (disables live-boot ifupdown setup, not userspace iwd/networkd).
 `greia-installer.service` owns bounded `Restart=always` retries and invokes
 `installer-exit-cover` after stopping; xinit's successful exit cannot be used
@@ -238,7 +146,7 @@ to infer that the installer client succeeded. Exact limits and paths belong
 to the unit/helper and `build/lib/verify-composed-root.sh`. Rebuilt-image and
 physical quiet-screen/recovery evidence remain separate from source tests.
 
-Quiet media presentation (owner decision 2026-10-18): the quiet Syslinux
+Quiet media presentation (owner decision): the quiet Syslinux
 template clears the stock version/copyright banner with the one-byte
 `build/live-syslinux/clear.msg` (`DISPLAY /boot/syslinux/clear.msg`); the writer
 places the byte on quiet media only and the read-only verifier requires and
@@ -246,16 +154,16 @@ byte-compares it, refusing any `DISPLAY` on the diagnostic/recovery template.
 `console=tty1` + `panic=0` stay (a panic still prints), and the hidden
 `verbose` label remains the recovery path. This separated the clear file from
 the fatal `console=null` rollback of 2026-08-20. See
-`docs/INSTALLATION_ISSUES_LOG.md` §34–§35.
+`docs/engineering/boot/INSTALLATION_ISSUES_LOG.md` §34–§35.
 
-Installer completion power-off (2026-10-18): the unprivileged UI writes
+Installer completion power-off: the unprivileged UI writes
 `/run/greia-installer/finish-request`; the root
 `greia-installer-finish.path` watches it and `greia-installer-finish.service`
 performs the single power-off after lowering PID1's `LogLevel` to `emerg`, so
 `systemd-shutdown` teardown text never draws over the Greia cover. The UI must
 not call `systemctl poweroff` directly (logind/polkit denies `nobody`). The
 composed-root verifier enforces the units, helper and silence. See
-`docs/INSTALLATION_ISSUES_LOG.md` §36.
+`docs/engineering/boot/INSTALLATION_ISSUES_LOG.md` §36.
 
 ## Installer, image composition or build pipeline
 
@@ -307,7 +215,7 @@ src/greia_platform/ui_*.py
 
 Collections provide semantic data; do not create category-specific copies of common Shell behavior.
 
-Interactive Home (2026-10-16): `home_animator.HomeAnimator` is the single owner of Home ambient motion (greeter reactions/blink/sleep, ≤3 falling apples, sun sparkles, two drifting clouds; ≤6 live effects, sprites pre-scaled once per layout). `home_animation_presentation.HomeAnimationMixin` draws it as an overlay after the cached Home blit and presents small dirty-rect frames through the Shell loop hooks `_present_ambient_frame` / `_ambient_wait_seconds` (`presentation.py`): ≤24 fps, awake window 20 s after input, then zero redraws (one `sleepy` swap at 60 s). Scenery geometry is `home_scenery.py` (scene-space facts mirrored from `home_landscape.svg`, switched off wherever it would touch a target/HUD). Portals and system chrome always win hit-testing. Other Shell presentation makes the greeter react via `_home_react(kind)` (`surprised`/`happy`/`cheer`/`wave`), never by drawing it. Add new ambient effects inside `HomeAnimator` (bounded, no per-tick surface work), not as new animating sources in the loop. Tests: `tests/test_launcher_home_animator.py`, `HomeAmbientPacingTests` in `tests/test_launcher_pacing_dirty_redraw.py`.
+Interactive Home: `home_animator.HomeAnimator` is the single owner of Home ambient motion (greeter reactions/blink/sleep, ≤3 falling apples, sun sparkles, two drifting clouds; ≤6 live effects, sprites pre-scaled once per layout). `home_animation_presentation.HomeAnimationMixin` draws it as an overlay after the cached Home blit and presents small dirty-rect frames through the Shell loop hooks `_present_ambient_frame` / `_ambient_wait_seconds` (`presentation.py`): ≤24 fps, awake window 20 s after input, then zero redraws (one `sleepy` swap at 60 s). Scenery geometry is `home_scenery.py` (scene-space facts mirrored from `home_landscape.svg`, switched off wherever it would touch a target/HUD). Portals and system chrome always win hit-testing. Other Shell presentation makes the greeter react via `_home_react(kind)` (`surprised`/`happy`/`cheer`/`wave`), never by drawing it. Add new ambient effects inside `HomeAnimator` (bounded, no per-tick surface work), not as new animating sources in the loop. Tests: `tests/test_launcher_home_animator.py`, `HomeAmbientPacingTests` in `tests/test_launcher_pacing_dirty_redraw.py`.
 
 ## Protected Activity Home/Back and lifecycle chrome
 
@@ -316,8 +224,6 @@ Read:
 ```text
 docs/adr/0019-platform-owned-activity-system-navigation.md
 docs/product/ACTIVITY_SYSTEM_NAVIGATION.md
-docs/archive/reviews/2026-08-29_R7_R73_ACTIVITY_CHROME_MIGRATION_TRANCHE.md
-docs/archive/reviews/2026-08-31_R7_SIMULATOR_RUNTIME_INTEGRATION_REJECTION_AND_CORRECTION.md
 src/greia_launcher/system_chrome.py
 src/greia_launcher/system_chrome_legacy_x.py
 src/greia_launcher/trusted_chrome_supervisor.py
@@ -388,7 +294,7 @@ Physical device/controller details stay below runtime-neutral semantics. Ordinar
 Read:
 
 ```text
-docs/INSTALLATION_ISSUES_LOG.md            (§13 wireless link ownership)
+docs/engineering/boot/INSTALLATION_ISSUES_LOG.md            (§13 wireless link ownership)
 src/greia_platform/wifi.py                 (iwd backend: available/scan/connect)
 build/installer-overlay/etc/iwd/main.conf  (live-installer L3 owner)
 build/overlay/etc/iwd/main.conf            (installed-target L3 owner)
@@ -517,7 +423,7 @@ New authoring-time provider adapters belong only under
 `tools/greia_voice_core`, with Modal a proposed authoring backend,
 not a current runtime feature.
 
-### Installed Parent locale translation seam (2026-10-13)
+### Installed Parent locale translation seam
 
 On-device Parent Settings `ParentSettingsOverlay` renders semantic
 password/authentication, eight tabs, title and device language controls
@@ -586,7 +492,6 @@ Read:
 ```text
 docs/adr/0029-real-runtime-activity-simulator.md
 docs/development/GREIA_ACTIVITY_SIMULATOR.md
-docs/archive/reviews/2026-08-31_R7_SIMULATOR_RUNTIME_INTEGRATION_REJECTION_AND_CORRECTION.md
 src/greia_simulator/
 ```
 
@@ -654,9 +559,7 @@ and published with the code in one application generation. For release acceptanc
 current source with the current receiver. No support for old development images,
 pre-manifest reader migrations or legacy bridge packages is required.
 See `docs/testing/2026-10-27_LANGUAGE_UPDATE_PACKAGE_ACCEPTANCE.md`
-for current-source and installed evidence boundaries, and
-`docs/reviews/2026-10-27_UPDATE_RELEASE_ACCEPTANCE_RESULT.md` for the installed
-A/B plus application-package result. A/B application updates resolve the
+for current-source and installed evidence boundaries. A/B application updates resolve the
 booted slot UUID from the installed layout plus `root=PARTUUID=`; terminal job
 publication and candidate cleanup share the job lock. A/B images must enable
 `greia-candidate-recovery.timer` so a candidate that boots but never becomes
@@ -697,7 +600,6 @@ Read:
 ```text
 docs/adr/0031-platform-owned-microphone-processing.md
 docs/architecture/GREIA_AUDIO_SERVICE.md
-docs/archive/reviews/2026-08-24_ACER_MICROPHONE_PHYSICAL_ACCEPTANCE.md
 skills/greia-activity-authoring/MICROPHONE_RECORDING.md
 ```
 
@@ -705,19 +607,7 @@ Preserve the platform-owned on-demand route, Parent-owned settings, honest raw f
 
 ## Prerecorded voice/speech production
 
-After generation, use `docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md` and
-`tools/regenerate_voice_corpus.py review` for installed-file signal/receipt and
-eligible ASR screening. Reports live externally; generation DONE, automated
-coverage and human acceptance are separate. This command neither synthesizes,
-changes files nor grants approval, and cannot download models.
-
-For the owner-authorized 2026-10-19 existing-corpus replacement, use
-`tools/regenerate_voice_corpus.py` and
-`docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md`. This scoped exception permits
-replacing accepted runtime speech with new pending-review takes while retaining
-isolated deterministic letters/syllables and originals for recovery. Per-character
-tone/mood defaults and per-cue `delivery_prompt` use the existing VoiceEngine;
-no child-runtime synthesis or second production backend is introduced.
+Route to `skills/greia-voice-production/SKILL.md`; it owns all voice rules (engine, masters, verification, corpus replacement/recovery, held producers). Summary of the OS-side boundary: new prerecorded Greia speech is authoring-time work through `tools/greia_voice.py`; OS/Activity/shared-library code must not grow a parallel TTS/ASR backend, and Greia OS never installs voice/TTS models. Launcher spoken labels are a separate accepted prerecorded Shell asset set. Generation DONE, automated screening (`docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md`, `tools/regenerate_voice_corpus.py review`) and human acceptance are separate evidence states; machine PASS never grants acceptance.
 
 Read:
 
@@ -726,15 +616,10 @@ skills/greia-voice-production/SKILL.md
 tools/greia_voice_core/README.md
 docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md
 docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md
+docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md
 ```
 
-Canonical entry:
-
-```bash
-python3 tools/greia_voice.py doctor
-```
-
-All new production goes through VoiceEngine. As of the owner decision 2026-10-21, Dani, Momo and Tito use the selected v0.3 masters while Lilli, Leo and Flash retain their exact v0.2 IDs and bytes; shared local VoxStage/VoxCPM2 is the default and Chatterbox remains explicitly selectable. Dani’s compatible speech kind clones Dani; pedagogical pronunciation remains native/system. Start/reuse the installed `voxstage start` worker before the Greia readiness probe; use `voxstage unload` after production only when the shared worker is idle and this session is finished. New provider metadata and setup live in the voice-production skill and engine docs. Ordinary registry changes preserve accepted audio; the separate owner-authorized corpus operation replaced selected rows as listening-pending. The original accepted shared v0.2 baseline contained 180 reactions + 12 introductions; consult current per-cue acceptance after replacements; runtime resolver/product placement remain separate concerns. Launcher spoken labels are a separate accepted prerecorded Shell asset set.
+Canonical readiness entry: `python3 tools/greia_voice.py doctor`.
 
 ## Progression / achievements / Badge Library
 
@@ -813,7 +698,7 @@ is load-bearing:
   the correct shared mode without weakening `RestrictSUIDSGID=yes`;
 - never swallow a failed profile-directory permission repair.
 
-First-profile setup (2026-10-17): `ProfileStore.ensure_initialized` marks its
+First-profile setup: `ProfileStore.ensure_initialized` marks its
 placeholder in `profiles.json` (`first_profile_setup`); while only that
 placeholder exists the child Shell runs the voiced setup wizard
 (`greia_launcher.first_profile_*`, `docs/product/FIRST_BOOT_PROFILE_SETUP.md`)
@@ -834,7 +719,7 @@ is broken. Display-dependent operations such as screenshot/input still require
 a valid bounded developer display endpoint.
 
 
-### Activity launch feedback localization (2026-10-13 source WIP)
+### Activity launch feedback localization
 
 The Shell-owned `src/greia_launcher/launch_feedback.py`
 is now the small typed owner of launch overlay, badge,
@@ -847,7 +732,7 @@ tile badge. Focused pure tests:
 provider-free suite and display acceptance still pending.
 
 
-### Activity launch hand-off (2026-10-17)
+### Activity launch hand-off
 
 `LauncherApplication._launch_selected` (`src/greia_launcher/main.py`) presents the launch screen before `supervisor.start` (package validation, brokers and sandbox set-up used to run with no feedback), captures it as a `LaunchCard` and publishes it to `<activity data>/.greia/launch-card` (`greia_platform.activity_launch_cover.LaunchCardPublisher`; fail-soft, symlink-safe, discarded when the launch lifecycle returns). The Activity entry paints it right after the Activity's first `set_mode` and removes it; the Shell treats the missing card as "covered" and stops repainting its hidden wait screen. Keep that order (present, publish, start) and keep the card a raw frame of what the Shell shows, so the hand-off stays seamless; a future display backend (R7) can keep the same contract. READY timing is unchanged. The entry opens the Activity's first window `HIDDEN` and shows it with a second `set_mode(..., SHOWN)` before painting the card, because a window mapped by the first `set_mode` showed one black frame (51–83 ms on the Acer at 4d6e9c5e); keep both calls pure Pygame.
 
@@ -856,17 +741,16 @@ Home during the launch (ADR 0019 *Launch phase*): `TrustedChromeActivitySupervis
 Return tap guard: after any launch ends, the Shell ignores taps in the top-left Home/Back corner for 1.5 s (`greia_launcher.return_tap_guard`, wired in `main.py`/`presentation.py`), because a child's repeated Home tap otherwise lands on the Shell's profile button under the same spot and logs the profile out. Taps elsewhere act immediately. Test: `tests/test_launcher_return_tap_guard.py`.
 
 
-### Launch-time package validation cost (2026-10-17)
+### Launch-time package validation cost
 
 `RuntimeManager.prepare_launch` still runs the runtime adapter's full package validation (Python: path policy, backend independence, curated import allowlist, dynamic-import rejection), but cheaper:
 
 - `PythonRuntimeAdapter.validate_package` walks the tree once with `os.scandir` (`_python_package_sources`) and parses and walks each `.py` once. `greia_platform.activity_backend_policy.scan_python_source` returns the backend findings plus the `Import`/`ImportFrom`/`Call` nodes in `ast.walk` order, so the adapter no longer runs its own walk. The old code walked every AST three times; the walks, not `ast.parse`, were most of the cost. Findings and import nodes are identical to the old scanner (checked over every repo source).
 - `greia_launcher.launch_validation_cache.LaunchValidationCache` (owned by the `RuntimeManager`, so one per Shell process, in memory only, LRU of at most 64 × 16-byte digests) skips re-validation when a package passed earlier in the same process and its stat fingerprint (`greia_platform.activities.package_tree_fingerprint`: path, type, size, mtime_ns, ctime_ns and inode of every entry; no content read) is unchanged. Any difference, or an error computing the fingerprint, runs the full validation again, and an edited package that still passes launches normally. The fingerprint is only a cache key, not anti-tamper. Failures are never cached. Only `BUILT_IN` trust in a root-owned tree this process cannot write qualifies (`read_only_built_in_package`), so the trust comes from the launch authority (`prepare_launch(..., package_trust=authority.package_trust)`). Parent, developer and writable-checkout packages are validated on every launch.
-- Acer N270, standalone: full validation 0.7/1.2/1.2/7.5 s became 0.3/0.55/0.55/3.4 s (workshop_settings, colline_allegre, viaggio_delfino, enciclopedia_greia), and a reused validation takes 0.003–0.08 s. Through the Shell, tap→READY for enciclopedia_greia went from 14.0/13.4 s to 9.0 s on first launch and 5.0–7.0 s on repeats (PHYSICAL DEVICE, xdotool input, temporary overlay that has since been reverted).
 - What still costs time is the first launch per Shell process (one `ast.parse` per file, about 2 s for enciclopedia_greia). A root-owned validation record written on the final installed tree (deploy/image step, the same place as the bytecode prefix) could remove it. That is not built: the built-in index is generated before tar/squashfs/installer copies, which change mtimes and inodes, so a fingerprint recorded in the index would not match on the device. Tests: `tests/test_launch_validation_cache.py`.
 
 
-### Display-string API contract and render-path audit (2026-10-13)
+### Display-string API contract
 
 `LocalizedResources.text(key, variables=None)` is the actual public
 string lookup in `src/greia_platform/localization.py`; there is **no**
@@ -881,17 +765,17 @@ required translations as release blockers. The real My Time/Creations
 local-agent acceptance queue remains `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`;
 source key parity alone cannot certify translated runtime behavior.
 
-## High-resolution layer, Wi-Fi resume hook and Parent API locking (2026-10-21)
+## High-resolution layer, Wi-Fi resume hook and Parent API locking
 
 - **High-resolution layer:** `src/greia_platform/hires_surface.py` is transparent to Activities; opt in with `PygameReferenceCanvas(hires=True)`. It activates at a CONTAIN scale of at least 1.2x (`HIRES_MIN_SCALE`), loads `@2x` art, and is disabled for diagnosis with `GREIA_ACTIVITY_HIRES=0`. Platform code that needs real pygame calls uses `RAW`, not the patched functions. Contract: `docs/design/GREIA_ACTIVITY_CANVAS_AND_VIEWPORT_AUTHORING.md` §9.3.
 - **Wi-Fi resume hook:** `build/overlay/usr/lib/systemd/system-sleep/greia-wifi-resume` covers iwl3945, iwl4965, b43, b43legacy, brcmsmac, ath5k; after resume it waits for the interface and iwd station and reloads the driver only on failure. Not yet verified on the Aspire until reimage.
 - **Parent API threading:** `src/greia_parent/production_api.py` serializes every request with a server-wide lock except the Wi-Fi scan/connect endpoints, which use a separate Wi-Fi lock so a slow association cannot freeze the panel.
 
-## Installer single-root layout and EFI seam (2026-10-21, UNPROVEN)
+## Installer single-root layout and EFI seam (UNPROVEN)
 
-The whole-disk installer no longer hard-codes its partition commands: `src/greia_installer/efi_boot.py` defines `SingleRootLayout` (`bios-single-ext4`, `uefi-or-bios-gpt-ext4`), `SysfsFirmwareProbe` and `plan_efi_boot`. `InstallationEngine._select_layout` picks the EFI layout only if the live installer booted via EFI and the target profile composed `boot-grub-efi`; BIOS machines keep the old command arrays. Add new firmware/boot variants as new layout classes or command plans there, not as `if` branches in `engine.install`. Target images carry only the `-bin` GRUB EFI packages (the non-bin ones conflict with `grub-pc`). Evidence is source and fake-runner tests only; see `docs/INSTALLER_IMAGE_CREATION_AND_BOOT.md` section 14.
+The whole-disk installer no longer hard-codes its partition commands: `src/greia_installer/efi_boot.py` defines `SingleRootLayout` (`bios-single-ext4`, `uefi-or-bios-gpt-ext4`), `SysfsFirmwareProbe` and `plan_efi_boot`. `InstallationEngine._select_layout` picks the EFI layout only if the live installer booted via EFI and the target profile composed `boot-grub-efi`; BIOS machines keep the old command arrays. Add new firmware/boot variants as new layout classes or command plans there, not as `if` branches in `engine.install`. Target images carry only the `-bin` GRUB EFI packages (the non-bin ones conflict with `grub-pc`). Evidence is source and fake-runner tests only; see `docs/engineering/boot/INSTALLER_IMAGE_CREATION_AND_BOOT.md` section 14.
 
-## Fresh A/B BIOS GRUB adapter (2026-10-24, SOURCE / UNPROVEN)
+## Fresh A/B BIOS GRUB adapter (SOURCE / UNPROVEN)
 
 Fresh A/B installation has its own mandatory BIOS bootloader seam: production
 composition injects `device_seams.build_bios_bootloader_installer` as
@@ -908,147 +792,23 @@ requires a blank-disk BIOS install followed by a real installed-disk boot
 through BIOS GRUB into Greia. That predicate remains pending on Linux.
 
 
-### 2026-10-22 voice priority continuation
+## A/B installer initial device preferences (source only)
 
-The owner resumed the existing frozen 667 problematic short recordings through
-`tools/finish_voice_priority.py`, wrapping VoiceEngine/CorpusRunner. It checks
-installed takes and recovers saved providers before fresh, carries three-take
-cumulative budgets and requires Base target score >0.8 with no signal warnings.
-Read the voice-production skill and corpus manual for execution/recovery;
-this does not authorize deferred retakes or accept new audio as human-reviewed.
+Fresh A/B install seeds the authorized locale and hardware settings in the PERSIST device-settings namespace and copies the selected tested iwd profile into network-state on a best-effort basis. First boot assigns seeded settings files to the Parent identity before child/Parent services start. Needs a rebuilt image and installed validation before any acceptance claim.
 
+## Live installer SSH (owner decision)
 
-Automatic short voice requests (2026-10-22): normal VoxStage speech now routes
-≤4 words through localized carrier/cut/final-Base checks at VoiceEngine entry.
-CLI/JSON/Python routing/word/character overrides live in the usage README; native
-pedagogical speech stays excluded. Three total takes, no published failed target.
-Explicit corpus raw synthesis bypasses auto wrapping to preserve frozen scripts.
-The general separate verification queue is still proposed.
+The Wi-Fi page owns a live-installer SSH toggle, off by default on ordinary installer images (`greia` / `greia`, ordinary password sudo). The fixed local installer transaction operations start/stop only live `ssh.service`; this does not enable SSH on the installed release. Use the Linux USB patch work order for physical acceptance; the installer demo and screenshot renderer do not prove networking.
 
+## Parent client startup permissions
 
-### 2026-10-22 correction: normal API v7; frozen corpus stopped
+The installed Parent client web root must be readable by the unprivileged Parent service's integrity precheck (a 0700 web root broke it on the Acer). Pin/stage/compose normalize its directories and files and composed-root verification checks their readability; keep both when touching the Parent client pin or compose path. A fixed image needs a new A/B bundle and acceptance.
 
-Normal automatic short requests now use `tools/voice_carrier_search.py` v7:
-PCM-first bounded suffix candidates, no raw-intro ASR, exactly one target-only
-Base match. The normal API uses score >0.8 plus equal canonical unit count and
-identical numeric sequence; exact locale words/digits 0–100 are equivalent.
-Final delivered signal/ASR checks remain mandatory unless explicitly disabled.
-ASR/IO failures require recovery and must not spend a fresh take. See the
-VoiceEngine README and `docs/reviews/2026-10-22_TARGET_ONLY_VOICE_EXTRACTION_V7.md`.
-The historical 667-cue producer remains stopped on v6; never resume unchanged.
-A versioned corpus adapter must preserve source/master/job provenance and
-cumulative budgets before any synthesis or installation. Saved replay candidates
-are external and listening-pending, not installed or human-approved.
+## Parent SSH switch (source only)
 
-V7 corpus saved-source recovery now has a no-synthesis adapter:
-`tools/recover_voice_candidates.py` (stage, then `--install` the same completed
-external folder). Existing CorpusRunner/RunStore own installation/backups and
-human_review stays PENDING. Frozen corpus v6 producers remain stopped; consult
-the voice skill/corpus manual before any further work.
+Owner decision: explicit Parent-controlled `greia` / `greia` SSH for normal images as well as developer images. SSH defaults off on normal images; root login stays disabled. The installed Parent API uses the fixed-operation `greia-parent-ssh.socket` service and reports capability only when available. The socket/unit needs a full-system image or update; real systemd, reboot and physical login/disable acceptance remain pending.
 
-Authoring speech update2026-10-22: normal short intros now use a period and warm
-clear careful-reading defaults. The final-take corpus adapter uses normal
-VoiceEngine, required verification, one remaining cumulative take and existing
-transactions; infrastructure uncertainty stops for exact-job recovery using
-GenerationResult.evidence_dir. The220-file v2 plan is prepared but not started:
-12 live prompt probes8PASS/4rejected miss readiness. Read current HANDOVER/voice
-skill before execution. HTTP response timeout now defaults120s independently of
-job wait; never repeat an uncertain POST or restart the shared VoxStage worker.
+## Parent Activity upload
 
+Parent install/remove capabilities follow actual package-store writability and the explicit off override. The API holds the shared profile-session lock and requires the idle profile picker before publishing a generation; the Shell refreshes its Parent source when that pointer changes. Keep package validation and Parent trust, and do not remove the session fence: publication collects old generations. Active profile status is mode 0660 and explicitly assigned the shared runtime directory group before publication, because `/run/greia-os` is not setgid. A real package upload, listing and removal passed through the Parent API on the Acer; browser picker and child launch remain unverified.
 
-Owner method-repair correction2026-10-22: corpus final-take-v7-02 is OWNER
-STOPPED, not prepared/unstarted or runnable. Automatic continuation is deleted.
-Owner permits bounded diagnostics on two consistently rejected targets only.
-Current comparison v2 supports standard cardinals0–100 EN/IT/FR/ES, guards exact
-numeric values/literals and removes internal-marker score inflation. Normal
-Whisper verification and review/reassess v4 share it; historical v1 evidence
-is retained. Source preparation and alternate natural-carrier prompts remain
-experimental, not production defaults. Read HANDOVER and paired-method report;
-no bulk restart or threshold relaxation follows from a small diagnostic result.
-
-
-Natural completion update2026-10-22: owner authorized a new bounded natural-
-method run for247 unresolved priority cues. It injects NaturalCarrierPolicy and
-MethodAttemptBudget into existing ShortPhrasePipeline, with up to3actual new
-calls and historical counters retained. Existing transactions install only final
-Base/count/number/signal passes, human pending. Initial real-corpus canary hit
-METHOD_REVIEW_REQUIRED (2installed,3exhausted,242unstarted); do not blindly resume.
-Read docs/agents/GREIA_NATURAL_VOICE_COMPLETION.md and HANDOVER for active method
-repair. Alternate policy selection is explicit; normal API defaults unchanged.
-
-
-Current voice continuation correction2026-10-22: BOTH natural producers are held
-for poor yield; do not restart natural-context-v1 or natural-context-speech-v1.
-Latest exact audit7installed pending,240remaining. Explicit saved-only English spoken
-comparison can recover homophonic recognition errors without another provider
-call; normal API defaults and historical policies remain unchanged. Read the
-current natural completion guide/HANDOVER for diagnostic state and remaining
-lists. A failed prompt experiment never authorizes a blind bulk continuation.
-
-
-2026-10-22 context safety correction: the82-source packaged-context experiment
-failed on an uncut-intro OGG false approval. Neither context version is selected.
-Two additional saved diagnostic takes pass unchanged isolated checks and were
-installed pending through existing transactions; no new synthesis/default change.
-Current7installed/240remaining, all actual corpus/diagnostic calls retained. Follow
-PACKAGED_CONTEXT_SAFETY_REVIEW and HANDOVER for optional saved-WAV scope; never
-restart held producers or claim failed experimental gates passed.
-
-
-## A/B installer initial device preferences (2026-10-29; source only)
-
-Fresh A/B install seeds the authorized locale and hardware settings in the
-PERSIST device-settings namespace, and copies the selected tested iwd profile
-into network-state on a best-effort basis. First boot assigns seeded settings
-files to the Parent identity before child/Parent services start. These source
-changes need a rebuilt image and installed validation. The reported Acer Parent
-service outage remains undiagnosed; the revised unavailable message is not
-evidence of a repaired service.
-
-
-## Live installer SSH (owner decision 2026-10-29; source/demo)
-
-The Wi-Fi page owns a live-installer SSH toggle, off by default on ordinary
-installer images (`greia` /
-`greia`, ordinary password sudo). The fixed local installer transaction
-operations start/stop only live `ssh.service`; this does not enable SSH on the
-installed release. Use the existing Linux USB patch work order for physical
-acceptance; the installer demo and screenshot renderer do not prove networking.
-
-
-## Parent client startup permissions (2026-10-29)
-
-The Acer's installed Parent client web root was 0700, causing the Parent
-service's unprivileged integrity precheck to fail. Pin/stage/compose now
-normalize its directories and files; composed-root verification checks their
-readability. See `docs/agents/2026-10-29_ACER_INSTALLER_AND_PARENT_FIX_HANDOFF.md`
-for physical read-only evidence and the required new A/B bundle and acceptance.
-
-
-## Parent SSH switch (2026-10-30; source only)
-
-Owner selected explicit Parent-controlled `greia` / `greia` SSH for normal
-images as well as developer images. SSH defaults off on normal images; root
-login remains disabled. The installed Parent API uses the fixed-operation
-`greia-parent-ssh.socket` service and reports capability only when available.
-The new socket/unit requires a full-system image or update, and real systemd,
-reboot and physical login/disable acceptance remain pending.
-
-
-## Parent Activity upload (2026-10-30; source and local HTTP evidence)
-
-Parent install/remove capabilities follow actual package-store writability
-and the explicit off override. The API holds the shared profile-session lock
-and requires the idle profile picker before publishing a generation; the
-Shell refreshes its Parent source when that pointer changes. Keep package
-validation and Parent trust, and do not remove the session fence: publication
-collects old generations. Installed Linux and child-launch acceptance remain pending; Acer Parent API upload has since passed below.
-
-Active profile status is mode 0660 and explicitly assigned the shared runtime
-directory group before publication: existing `/run/greia-os` is not setgid.
-The Acer upload capability became available after the first package, but a
-409 at the profile picker exposed the group issue; the physical API retry passed below.
-
-Acer physical Parent-API follow-up: both application packages applied; the
-shared-group repair cleared the picker refusal, and a real package upload,
-listing and removal passed. Browser picker and child launch remain unverified.

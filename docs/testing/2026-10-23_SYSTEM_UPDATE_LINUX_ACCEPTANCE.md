@@ -7,7 +7,7 @@ Date: 2026-10-23. Status: **UNPROVEN runtime work order**, under Session 04 of
 Implementation source freeze: `4eaad25471fe47b72e900ea2f34777f41be5542b` (770 affected tests
 OK, 2 skipped, after commit). Later documentation-only commits preserve that
 source boundary. The full repository gate remains NOT GREEN as detailed in
-`docs/reviews/2026-10-23_SYSTEM_UPDATE_IMPLEMENTATION_EVIDENCE.md`.
+`2026-10-23_SYSTEM_UPDATE_IMPLEMENTATION_EVIDENCE.md` (archived; see git history).
 The owner requested this committed handoff for another agent on another machine.
 Do not run image composition, mounts, QEMU or installation on the Mac.
 
@@ -29,7 +29,7 @@ the earlier pinned SHA and report package acceptance.
 ## Current execution route after the Linux report (2026-10-25)
 
 For the initial clean-source A/B smoke only, use the short, current route in
-[`2026-10-25_AB_SMOKE_RETRY.md`](2026-10-25_AB_SMOKE_RETRY.md). It rebuilds
+`2026-10-25_AB_SMOKE_RETRY.md` (archived; see git history). It rebuilds
 both experimental bundles and a clean matching installer from one committed
 `main` SHA, then runs install → first boot → healthy A-to-B with the existing
 `ProductHarness`. Its role-aware hash interpretation supersedes the older
@@ -309,7 +309,7 @@ full-suite evidence is not green: the initial run reported 5,876 tests with 17
 failures, 28 errors, and 8 skips; later runs aborted with signal 6 during
 `typography.clear` in the Activity tempo test. Detailed output and baseline
 comparisons are in
-`docs/reviews/2026-10-23_SYSTEM_UPDATE_IMPLEMENTATION_EVIDENCE.md` and
+`2026-10-23_SYSTEM_UPDATE_IMPLEMENTATION_EVIDENCE.md` (archived; see git history) and
 `/tmp/greia-update-completion/`. No Linux build, QEMU guest, installation,
 authenticated Parent browser/device, or physical device run has been completed.
 

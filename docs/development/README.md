@@ -17,10 +17,10 @@ present candidate, exact source state and accepted procedure before touching
 bootloaders, boot artwork or USB writers. Historical reading:
 
 ```text
-docs/archive/reviews/2026-08-20_ACER_INSTALLER_BOOT_REGRESSION.md
-docs/INSTALLATION_USB_BOOT_POSTMORTEM.md
-docs/INSTALLED_OS_BOOT_POSTMORTEM.md
-docs/INSTALLER_IMAGE_CREATION_AND_BOOT.md
+2026-08-20_ACER_INSTALLER_BOOT_REGRESSION.md (archived; see git history)
+docs/engineering/boot/INSTALLATION_USB_BOOT_POSTMORTEM.md
+docs/engineering/boot/INSTALLED_OS_BOOT_POSTMORTEM.md
+docs/engineering/boot/INSTALLER_IMAGE_CREATION_AND_BOOT.md
 ```
 
 The current recovery rule is deliberately conservative: the proven Syslinux/FAT32 writer and observable `console=tty1` development boot are restored; final-media integrity checking lives in the separate read-only `tools/verify-live-usb.sh`. Do not reintroduce the rejected Syslinux clear-screen/`console=null` or raw-full-colour boot-art experiments before a new physical acceptance pass.
@@ -47,7 +47,7 @@ For present physical Acer/update acceptance, the **current** handover and
 release/install lifecycle plan own the execution boundary. The August review
 remains a cautionary case study, not a standing instruction to flash its image.
 
-Historical Acer root-mount/service failures remain documented in `docs/INSTALLED_OS_BOOT_POSTMORTEM.md`.
+Historical Acer root-mount/service failures remain documented in `docs/engineering/boot/INSTALLED_OS_BOOT_POSTMORTEM.md`.
 
 ### Lightweight application update packages
 

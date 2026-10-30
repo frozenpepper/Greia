@@ -14,7 +14,7 @@ criteria for removing those classes. It does **not** supersede
 which remains the active blocking platform plan (T3-P OPEN/BLOCKING).
 
 Root-cause evidence for every instance named here lives in
-`docs/INSTALLATION_ISSUES_LOG.md` §§1–16.
+`docs/engineering/boot/INSTALLATION_ISSUES_LOG.md` §§1–16.
 
 ---
 

@@ -2,13 +2,23 @@
 
 Thanks for your interest in Greia. It is a child-first educational operating
 system for very low-end and ARM hardware, and it is still pre-release: there
-is no supported binary release yet, and much of the work is about making the
+is no supported release for families yet, and much of the work is about making the
 platform safe and solid before families use it.
 
 This guide covers how to set up a checkout, how to run the checks, and what a
 good change looks like. Repository-wide rules for both humans and coding
 agents are in [AGENTS.md](AGENTS.md); the documentation map is
 [docs/DOCUMENTATION.md](docs/DOCUMENTATION.md).
+
+## Quick start
+
+```bash
+git clone https://github.com/frozenpepper/Greia.git && cd Greia   # 1. clone
+python3 -m pip install -r requirements-dev.txt                    # 2. dev dependencies (Python 3.11+)
+python3 tools/greia_simulator.py                                  # 3. run the real Shell in the Simulator
+make verify                                                       # 4. run the full gate before review
+git switch -c my-change                                           # 5. work on a branch and open a pull request
+```
 
 ## Ground rules that shape every change
 
@@ -127,21 +137,19 @@ Do not commit generated test videos, screenshots, temporary outputs or local mod
 
 ## Pull requests
 
-1. If you have access to the private Greia repository, create your own branch for the contribution (or use a private fork if GitHub permits it). External contributors must not commit directly to `main`.
+1. Work on your own branch, or in your own fork if you do not have write
+   access. Never push directly to `main`: it is reserved for the owner and the
+   core coding agents (see the branch policy in `AGENTS.md`).
 2. Keep each pull request focused on one problem.
 3. In the description, say what changed, why, and exactly which checks you
    ran and where (desktop, Simulator, VM or which device).
 4. Run `make verify`, or at least the affected test modules, before asking
    for review.
 
-GitHub-hosted Actions are manual-only in this repository; maintainers run
-verification locally or on owner-approved machines.
-
-## Repository approval policy
-
-External contributors have access to the full repository so they can run Greia and test their work. They submit pull requests for owner review; `@frozenpepper` is named in `.github/CODEOWNERS`.
-
-**Review rules and technical enforcement are different.** The owner asks external contributors to use branches and pull requests, and `.github/CODEOWNERS` documents the intended reviewer. On a private repository under a free personal GitHub account, branch protection may not be enforceable; collaborators who receive write access can technically push directly to `main` even though project policy forbids it. Only grant private write access to collaborators you trust to follow the PR workflow. If the repository's plan/settings later allow branch protection, the owner can enforce PR approval there. No paid subscription or repository transfer is a prerequisite for contributing under the present trust-based workflow.
+The owner reviews every pull request; `@frozenpepper` is the code owner named
+in `.github/CODEOWNERS`. GitHub-hosted Actions are manual-only in this
+repository, so maintainers run verification locally or on owner-approved
+machines.
 
 ## Coding agents
 

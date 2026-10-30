@@ -267,7 +267,7 @@ native→22,050Hz mono PCM preparation collaborator, with both hashes retained.
 It is not the default ShortPhrasePipeline recipe. Normalized replays and prompt
 experiments live outside the repository. The owner stopped the corpus to repair
 the method; new small diagnostics do not authorize bulk restart or installation.
-See [paired method evidence](../../docs/reviews/2026-10-22_VOICE_METHOD_PAIRED_EXPERIMENT.md).
+See paired method evidence (archived; see git history).
 
 The actual delivered rendition is checked after packaging, including decoded
 lossy delivery. Parakeet token timestamps are retained only when supplied by the
@@ -309,7 +309,7 @@ Do not resume it unchanged. Normal API v7 does not mutate frozen plans or
 retroactively replace their extraction policy. The saved-only adapter
 `tools/recover_voice_candidates.py` now reconciles v7 metadata and budgets for
 FAILED source rows without synthesis. Further generation still requires a
-separately evidenced continuation. See `docs/reviews/2026-10-22_V7_SAVED_CORPUS_RECOVERY.md`.
+separately evidenced continuation. See `2026-10-22_V7_SAVED_CORPUS_RECOVERY.md` (archived; see git history).
 
 The finisher retains its original narrower selection (1–3 words or 4 words with
 ≤28 alphanumerics); the new automatic API default does not expand that scope.
@@ -584,7 +584,7 @@ and reproduces prefix/suffix PCM derivation. Count/number/signal vetoes and comp
 word-clock rules remain mandatory. Full recorded results and strategy metadata
 stay separate from human review. Installation uses existing recoverable originals,
 journals and PENDING receipts. Attempt budgets are copied unchanged, never spent
-or reset. See `2026-10-22_SAVED_CONTEXT_CORPUS_ADAPTER.md` for executed evidence;
+or reset. See `2026-10-22_SAVED_CONTEXT_CORPUS_ADAPTER.md` (archived; see git history) for executed evidence;
 this limited saved recovery does not establish live-generation reliability.
 
 
@@ -619,4 +619,4 @@ was
 read-only earliest-failed-predicate attribution over the 25 retained cases.
 That investigation restriction was superseded by the new explicit production
 order. See
-`docs/reviews/2026-10-22_SAVED_CONTEXT_CORPUS_ADAPTER.md` for exact evidence.
+`2026-10-22_SAVED_CONTEXT_CORPUS_ADAPTER.md` (archived; see git history) for exact evidence.

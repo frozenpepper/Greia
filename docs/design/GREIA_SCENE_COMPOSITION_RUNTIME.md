@@ -158,7 +158,7 @@ activities/nascondino_bosco/
 Acceptance:
 
 ```text
-docs/testing/2026-08-21_SCENE_COMPOSITOR_NASCONDINO_SIMULATOR.md
+2026-08-21_SCENE_COMPOSITOR_NASCONDINO_SIMULATOR.md (archived; see git history)
 ```
 
 ## Pygame realization

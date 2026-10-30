@@ -37,7 +37,7 @@ Narrower authorities:
 | Practical visual-authoring workflow | `skills/greia-visual-authoring/SKILL.md` |
 | **SVG authoring recipe (binding, ACCEPTED 2026-10-15)** — canvas, palette tokens, strokes, shading, forbidden constructs, budgets, review procedure | `docs/design/GREIA_SVG_AUTHORING_RULES.md` |
 | Visual style, palette, typography | `docs/design/GREIA_VISUAL_STYLE_GUIDE.md` |
-| Library audit and redraw backlog (2026-10-15) | `docs/reviews/visual/2026-10-15_asset_library_audit/REVIEW.md` |
+| Library audit and redraw backlog (2026-10-15) | `docs/reviews/visual/2026-10-15_asset_library_audit/REVIEW.md` (archived; see git history) |
 | Art/core-asset requirements | `docs/design/GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md` |
 | Character construction grammar | `docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md` |
 | Character expressions/motion | `docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md` |
@@ -649,7 +649,7 @@ The existing primitive launch/error/empty presentations remain fallbacks.
 Current acceptance protocol:
 
 ```text
-docs/testing/2026-08-21_V5_SHARED_FEEDBACK_SIMULATOR.md
+2026-08-21_V5_SHARED_FEEDBACK_SIMULATOR.md (archived; see git history)
 ```
 
 Do not claim the empty-state consumer PASS if current normal Greia policy cannot legitimately reach an empty presented Activity collection. `SOURCE / NOT EXERCISED` is a valid result.
@@ -989,7 +989,7 @@ ui.empty.basket
 Current protocol:
 
 ```text
-docs/testing/2026-08-21_V5_SHARED_FEEDBACK_SIMULATOR.md
+2026-08-21_V5_SHARED_FEEDBACK_SIMULATOR.md (archived; see git history)
 ```
 
 Current continuation authority:

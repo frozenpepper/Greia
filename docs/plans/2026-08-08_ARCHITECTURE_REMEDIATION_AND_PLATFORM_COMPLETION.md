@@ -4,7 +4,7 @@
 **Created:** 2026-08-08
 **Source baseline:** `0.13.0-phase0-dev`
 **Authority:** subordinate to the Greia architecture constitution and accepted ADRs; authoritative for implementation ordering and progress tracking while active
-**Plan audit:** 2026-08-08 full re-audit completed after an assistant-response consistency failure. See `docs/archive/reviews/2026-08-08_ACTIVE_PLAN_AUDIT_AND_CORRECTION.md`.
+**Plan audit:** 2026-08-08 full re-audit completed after an assistant-response consistency failure. See `2026-08-08_ACTIVE_PLAN_AUDIT_AND_CORRECTION.md` (archived; see git history).
 
 ---
 
@@ -656,7 +656,7 @@ Do not rewrite old entries; append corrections.
 - Decisions: **R0 is COMPLETE. R5 is SOURCE-CLOSED as a new reviewed reimplementation, not historical recovery. R6.1 and R6.2 are SOURCE-CLOSED.** Current source also keeps the R1–R4 safety/storage spine green under the complete gate. Source closure does not promote direct-graphics or physical-hardware evidence: Acer/Pi/DRM/KMS obligations remain in R7/R8/R14.
 - Remaining blockers: the next blocking architectural phase is R7 direct graphics/session architecture. Later package/backup/parent/recovery/certification phases remain open per the dependency map.
 - Next exact step: begin R7 by inventorying every `DISPLAY`, Xauthority, XShm, `xinput`, `xrandr`, Xorg package/config/service and SDL/Pygame assumption; classify interface vs provisional backend dependencies; then implement the direct display/input path beneath the stable R6 HAL without deepening X11.
-- Evidence document: `docs/reviews/2026-08-09_R5_REIMPLEMENTATION_AND_R6_INTEGRATED_CLOSURE.md`.
+- Evidence document: `docs/reviews/2026-08-09_R5_REIMPLEMENTATION_AND_R6_INTEGRATED_CLOSURE.md` (archived; see git history).
 - Key commits: `0cfb82aa89df5ebc9c03a01061ebd8da82f8f4dd`, `5bd867c9488fcd61a598813cdf7a42c396ec3b2c`, `e790a36e36b845d0a9d0ecf057180ffd3a213af3`, `2819f73dcc57c3b69d002532c03f5d2021e7c10f`, `7562471d868a23cd90d88b43aed2501988eb5740`.
 
 ## 2026-08-09 — R7 serial ownership and backend-neutral display-session tranche
@@ -742,7 +742,7 @@ Do not rewrite old entries; append corrections.
 
 ## 2026-08-16 — Ubuntu aggregate source gate PASS + Activity-bytecode validation fix
 
-- Implemented: fixed the last reachable failure in the canonical Ubuntu aggregate source gate. `tests/test_core_creation_activities.py` loads the first-party Writing/Painting Activities directly from the Activity tree via `importlib.util.spec_from_file_location` + `exec_module`, which wrote `__pycache__` caches into the Activity folders that the later `validate` stage must reject. The test module now sets `sys.dont_write_bytecode = True` so the Activity tree stays bytecode-free. Documented in `docs/archive/reviews/2026-08-16_UBUNTU_ACTIVITY_BYTECODE_VALIDATION_FIX.md`; HANDOVER updated.
+- Implemented: fixed the last reachable failure in the canonical Ubuntu aggregate source gate. `tests/test_core_creation_activities.py` loads the first-party Writing/Painting Activities directly from the Activity tree via `importlib.util.spec_from_file_location` + `exec_module`, which wrote `__pycache__` caches into the Activity folders that the later `validate` stage must reject. The test module now sets `sys.dont_write_bytecode = True` so the Activity tree stays bytecode-free. Documented in `2026-08-16_UBUNTU_ACTIVITY_BYTECODE_VALIDATION_FIX.md` (archived; see git history); HANDOVER updated.
 - Tests/evidence: on the owner-controlled Ubuntu host, `bash tools/run_hardware_enablement_source_gate.sh` exits **0** at `f305aed…` + fix: focused HE suites 77+32 PASS, full suite 530 PASS, project validation 4 Activities PASS, shell-check/footprint PASS. This is the first genuinely executed complete aggregate source gate since `097f0281888a58f6f26425807ce99d9f35449313` (232/232).
 - Decisions: the Activity tree must remain free of Python bytecode; test modules that load Activity source must suppress bytecode writes rather than leave caches that violate Activity validation.
 - Remaining blockers: proceed through the current rerun runbook — build the `legacy-x86-i686` installer, verify image SHA-256, positively identify the SD, raw-write, and physical read-back verify. Later hardware-enablement evidence still requires a canonical installer build, VM installation, and diverse physical-machine acceptance.
@@ -774,7 +774,7 @@ Do not rewrite old entries; append corrections.
 - Decisions: the Acer exposed general architecture defects; hardware fixes are complete only when physical behavior, authoritative build input, hardware-independent regression and root-cause documentation agree. Build-host probing is not target-hardware authority. Base builders fail closed; profile/package-set labels do not mint credentials. `All` is the launcher root; launcher-local category Back is distinct from ADR-0019 Activity Home/Back. Educational tags are not launcher navigation metadata. R7 remains open and Xorg/xinit remains a provisional compatibility backend. This tranche does **not** close R10: updates/removal/rollback/signature/revocation/save migration remain open. `activities.install` remains false on ordinary/release systems while Parent transport is provisional HTTP.
 - Remaining blockers: run the new focused source tests and current `make verify` on an owner-controlled checkout; rebuild and inspect exact live/target images; verify target initramfs contents/media UUID-payload coherence/key-only developer behavior; repeat physical Acer install/boot/input/launcher acceptance and basic acceptance on additional x86 hardware; visually accept Activity labels/category header/back/scroll/hover/launch behavior at 1024×600; complete R7 direct display/input/system-chrome evidence; finish secure Parent pairing/encrypted transport; finish R10 update/remove/rollback/signature/revocation/save-migration policy and implementation.
 - Next exact step: execute the focused suites named in `HANDOVER.md`, then `make verify`. If green, rebuild the legacy installer/target via canonical builders, inspect generated initramfs/media contracts, repeat physical install/boot/launcher acceptance, verify explicit key-only developer provisioning, and exercise an owner-enabled `.greiaactivity` install through the Parent HTML client. Preserve the first genuine failure and do not weaken gates to obtain PASS.
-- Commit(s): key correction-loop commits include `39d3c46b345e6a5b412fb84b89712e1e6060792`, `48f15ae95349243023fb8798745eac4a70c184ca`, `43687167fc7b51720499ba59cfef6783d1a2b35c`, `33dbe71a4982723e8659f6546bb91deab78b0dcc`, `eeca76c0b87e617785d4b53bae7b0bd337031091`, `8ad1153df01b108a7f15eef4f533a54aa8d0677c`, `40eca5312577eb7d08e8ca485938d6c45984c370`, `7fe0a3a41926a271e47598be4bbc92044b37a8ae`, `d392cfb2065eb123b5bc1c1555e364c7d5fd89f8`, `7bb7119c69881910bca430a2a7ec403da5c0456d`; exact current state and broader tranche history are recorded in `HANDOVER.md` and `docs/archive/reviews/2026-08-18_REAL_HARDWARE_INSTALLATION_AND_LAUNCHER_REVIEW.md`.
+- Commit(s): key correction-loop commits include `39d3c46b345e6a5b412fb84b89712e1e6060792`, `48f15ae95349243023fb8798745eac4a70c184ca`, `43687167fc7b51720499ba59cfef6783d1a2b35c`, `33dbe71a4982723e8659f6546bb91deab78b0dcc`, `eeca76c0b87e617785d4b53bae7b0bd337031091`, `8ad1153df01b108a7f15eef4f533a54aa8d0677c`, `40eca5312577eb7d08e8ca485938d6c45984c370`, `7fe0a3a41926a271e47598be4bbc92044b37a8ae`, `d392cfb2065eb123b5bc1c1555e364c7d5fd89f8`, `7bb7119c69881910bca430a2a7ec403da5c0456d`; exact current state and broader tranche history are recorded in `HANDOVER.md` and `2026-08-18_REAL_HARDWARE_INSTALLATION_AND_LAUNCHER_REVIEW.md` (archived; see git history).
 
 ## 2026-08-18 — R12 preparatory Parent credential/SSH policy reconciliation (non-closing)
 
@@ -905,7 +905,7 @@ This plan may be marked complete only when:
 
 - Implemented and physically accepted the ADR 0031 lightweight microphone route on the reference Acer Aspire One (Atom N270, Debian 12 i686): `greia_mic_light` as an in-process ALSA ExtPlug (`src/greia_platform/audio_alsa/`) running SpeexDSP denoising at its in-spec 24 kHz via FIR decimation from the 48 kHz transport, with a primed delay-line FIFO; on-demand only (no daemon, zero idle cost). Boot probe service maintains `/run/greia-audio/lightweight-ready` from a real capture probe; verified recreated automatically after a real reboot.
 - Integration finding: SDL 2.26 (pygame 2.1.2) cannot open arbitrary ALSA PCM names, so routed `audio.basic` launches now also receive `ALSA_CONFIG_PATH` composing the Activity's ALSA view (raw `hw:` hints hidden, `default`/`sysdefault` resolved to the routed asymmetric PCM: capture through the denoiser, playback through stock dmix). New SDK accessor `get_sdl_capture_device()` designates the SDL-enumerated device carrying the route; Teatrino migrated off first-device enumeration. Processing-off and non-`audio.basic` launches verified to receive no route.
-- Physical evidence (see `docs/archive/reviews/2026-08-24_ACER_MICROPHONE_PHYSICAL_ACCEPTANCE.md`): live route proof during real launcher-driven Teatrino recording (capture hardware at 48000 Hz owned by the Teatrino pid); measured −19.9 dB stationary noise-floor reduction with voice band preserved (stimulus A/B within ~1.5 dB), zero glitches, ~5–10% of one core, +0.4 MB RSS; Parent API default/off/restore/reboot-persistence PASS; negative capability check PASS. Owner A/B verdict: routed clearly better. Advanced endpoint intentionally not installed (`available.advanced = false`).
+- Physical evidence (see `2026-08-24_ACER_MICROPHONE_PHYSICAL_ACCEPTANCE.md` (archived; see git history)): live route proof during real launcher-driven Teatrino recording (capture hardware at 48000 Hz owned by the Teatrino pid); measured −19.9 dB stationary noise-floor reduction with voice band preserved (stimulus A/B within ~1.5 dB), zero glitches, ~5–10% of one core, +0.4 MB RSS; Parent API default/off/restore/reboot-persistence PASS; negative capability check PASS. Owner A/B verdict: routed clearly better. Advanced endpoint intentionally not installed (`available.advanced = false`).
 - Commits: microphone tranche landed across `51ad24e`..`2972127` on `main` (plugin, composition, launcher/SDK/Teatrino migration, tests, this evidence). Parent client pin unchanged at `f64067b` (runtime bytes identical to the locally tested `ce8ef76`; 45/45 npm tests, syntax checks, desktop+mobile visual review PASS).
 - Remaining: image-build integration must compile the ALSA plugin into future i686 images (images without it honestly fall back to raw); R7 display/session direct KMS architecture remains the first blocking architecture gate.
 
@@ -1148,7 +1148,7 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
 
 ## 2026-08-29 — R7.1 Activity backend-independence + R7.2 Legacy-X containment source tranche
 
-- Implemented: made Activity display/input backend independence a real source-enforced R7 invariant rather than a documentation aspiration. Added structured `greia_platform.activity_backend_policy`, standalone Activity validation enforcement, project-level enforcement, installed Python-runtime validation, repository-wide `tools/audit_activity_backend_independence.py`, and regression coverage that preserves ordinary backend-neutral SDL/Pygame use while rejecting backend-specific Activity authority/selection. Hardened the live display/session boundary without changing the production backend: extracted the launcher's one-shot X11 focus repair behind `ShellWindowController`; trusted installed composition selects `LegacyXShellWindowController` while development uses a no-op implementation; removed backend selection/sniffing from that collaborator; kept the generic hardware settings watcher backend-neutral and moved current executable Legacy-X selection into `greia_platform.hardware_session_legacy_x`; updated `greia-x-session` to invoke that explicit edge; removed ordinary Activity Bubblewrap `/dev/dri` authority and pinned negative device-node regression tests. Added `docs/archive/reviews/2026-08-29_R7_R72_LEGACY_X_CONTAINMENT_INVENTORY.md` and the exact source+Acer acceptance protocol `docs/testing/2026-08-29_R7_R72_LEGACY_X_CONTAINMENT_SOURCE_AND_ACER_ACCEPTANCE.md`.
+- Implemented: made Activity display/input backend independence a real source-enforced R7 invariant rather than a documentation aspiration. Added structured `greia_platform.activity_backend_policy`, standalone Activity validation enforcement, project-level enforcement, installed Python-runtime validation, repository-wide `tools/audit_activity_backend_independence.py`, and regression coverage that preserves ordinary backend-neutral SDL/Pygame use while rejecting backend-specific Activity authority/selection. Hardened the live display/session boundary without changing the production backend: extracted the launcher's one-shot X11 focus repair behind `ShellWindowController`; trusted installed composition selects `LegacyXShellWindowController` while development uses a no-op implementation; removed backend selection/sniffing from that collaborator; kept the generic hardware settings watcher backend-neutral and moved current executable Legacy-X selection into `greia_platform.hardware_session_legacy_x`; updated `greia-x-session` to invoke that explicit edge; removed ordinary Activity Bubblewrap `/dev/dri` authority and pinned negative device-node regression tests. Added `2026-08-29_R7_R72_LEGACY_X_CONTAINMENT_INVENTORY.md` (archived; see git history) and the exact source+Acer acceptance protocol `docs/testing/2026-08-29_R7_R72_LEGACY_X_CONTAINMENT_SOURCE_AND_ACER_ACCEPTANCE.md`.
 - Tests/evidence: the new/updated regression source is committed, but **no current-head focused-suite PASS, current-head `make verify` PASS, or new physical Acer R7.2 PASS is claimed in this connector-only continuation**. The acceptance protocol requires the exact-current focused R7.1/R7.2 suite, repository Activity audit with `blockers=0`, aggregate `make verify`, then exact-SHA physical Acer Shell focus/pointer, Writing, Painting, abrupt Activity crash recovery, 20/20 launch-return cycles, log review and performance sanity. Historical Acer/Xorg and Activity evidence remains useful baseline evidence only and is not promoted to current-head acceptance.
 - Decisions: ADR 0014 remains authoritative: X11 is a migration baseline, **not** the target Greia architecture. R7's direct/appliance target remains DRM/KMS-centered; a minimal compositor/Wayland implementation is architecturally valid if measured evidence shows it is the thinnest practical trusted session/surface path, while serial/direct KMS remains an evidence candidate rather than a preselected winner. Activity source/API independence is mandatory regardless of which direct backend wins. Xorg package/profile/Xwrapper/xinit/input files remain explicit compatibility plumbing until equivalent or stronger replacement evidence exists; containment is not deletion. Ordinary Activities are not DRM/input device owners. A future Wayland transport must project only the required compositor socket into the Activity sandbox rather than exposing the host `XDG_RUNTIME_DIR`. Current runtime source intentionally has tap-to-click enabled after the 2026-08-23 Acer responsiveness fix while `AGENTS.md` still states the older default-off rule; this is recorded as a separate owner-policy/documentation contradiction and must not be silently changed inside R7.2.
 - Remaining blockers: execute the exact R7.2 source+Acer acceptance protocol; preserve the first genuine failure; do not restore broad `/dev/dri` or raw input to obtain PASS. If accepted, R7.3 must move trusted Home/Back chrome and protected-region/system input out of Activity authority on the current compatibility backend before final backend migration/selection. Controller/input brokerage, exact direct/compositor resource evidence, and the physical replacement-backend Acer gate remain open. Pi evidence remains R8/R14 work.
@@ -1269,7 +1269,7 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
   - Focused R7.2 suite (7 test modules, 35 tests): **PASS**
   - Focused R7.3 suite (11 test modules, 57 tests): **PASS**
   - Final-five Simulator gate (real Greia Simulator headless, external workspace outside repo per `SimulatorWorkspace` boundary): `writing PASS`, `painting PASS`, `workshop_settings PASS`, `shape_garden PASS`, `orchestra_animali PASS` — each 8s survival, first frame produced, clean stop through gate.
-  - E3 visual runtime capture remains accepted at `03bf76acb3e4c3f6d40b346d510f55a4763efc2d` (11/11 PNGs, 11/11 Git blobs, 7/7 Simulator, 59/59 focused tests, verify PASS, visual ACCEPTED per `docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/runtime/REVIEW.md` added this tranche). E4 remains UNBLOCKED/NEXT but deferred per protocol §6 acceptance SHA freeze.
+  - E3 visual runtime capture remains accepted at `03bf76acb3e4c3f6d40b346d510f55a4763efc2d` (11/11 PNGs, 11/11 Git blobs, 7/7 Simulator, 59/59 focused tests, verify PASS, visual ACCEPTED per `docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/runtime/REVIEW.md` (archived; see git history) added this tranche). E4 remains UNBLOCKED/NEXT but deferred per protocol §6 acceptance SHA freeze.
 
 - Physical Acer R7.2/R7.3: **INCOMPLETE** — no reference Acer reachable in this environment. `greia-dev.local` returns `NXDOMAIN`; `tools/greia_remote.py --password greia status` → `ssh: Could not resolve hostname greia-dev.local` (exit 255); `snapshot` similarly fails; `tools/deploy_to_acer.py` requires `pexpect` + reachable host and also fails. Source gates above are therefore **green but physical evidence was not executed here**. The exact SHA e2b831da is frozen for the operator's Acer run; no Activity/E4/R7 source commits were made after the SHA freeze.
 
@@ -1279,12 +1279,12 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
 
 - Next exact step: operator deploys **e2b831da** to the reference Acer (`python3 tools/deploy_to_acer.py`, `wait --timeout 180`, `snapshot`), then executes `docs/testing/2026-08-29_R7_R72_LEGACY_X_CONTAINMENT_SOURCE_AND_ACER_ACCEPTANCE.md` §§9–14 and `docs/testing/2026-08-29_R7_R73_TRUSTED_SYSTEM_CHROME_SOURCE_AND_ACER_ACCEPTANCE.md` §§7–13 exactly, capturing `r72-shell.png`, Writing/Painting/hostile/crash/durability/performance/logs evidence, and returning `ACCEPTED`/`REJECTED`/`INCOMPLETE` with first-failure detail.
 
-- Commit(s): `e2b831da` (festa mock fix, pushes origin/main same); this docs tranche `docs/reviews/visual/.../runtime/REVIEW.md` + `encyclopedia/HANDOVER.md` + `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` + `docs/plans/2026-08-28_...` + `docs/plans/2026-08-20_...` + `docs/plans/2026-08-29_R7_R73_ACTIVITY_MODERNIZATION.md` §8 + `docs/plans/2026-08-29_R7_R73_ACTIVITY_QUEUE.md` + `HANDOVER.md` + this plan entry.
+- Commit(s): `e2b831da` (festa mock fix, pushes origin/main same); this docs tranche `docs/reviews/visual/.../runtime/REVIEW.md` (archived; see git history) + `encyclopedia/HANDOVER.md` + `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` + `docs/plans/2026-08-28_...` + `docs/plans/2026-08-20_...` + `docs/plans/2026-08-29_R7_R73_ACTIVITY_MODERNIZATION.md` §8 + `docs/plans/2026-08-29_R7_R73_ACTIVITY_QUEUE.md` + `HANDOVER.md` + this plan entry.
 
 ## 2026-08-31 — R7 current-head Simulator/runtime integration correction
 
 - Implemented: preserved the source-green R7.2/R7.3 boundary established at `3944ba74` (1507 tests PASS, backend audit blockers=0, system-chrome audit blockers=0) and corrected the two runtime failures exposed immediately afterward. Encyclopedia's `ad947269` presentation split was bisect-proven to have broken Greia's real script-mode Activity import graph because the new facade used package-relative imports only; `3447c36e` restores explicit package-vs-script imports without reverting the split. The headless hostile fixture then exposed that Simulator remote Home still depended on Activity `pygame.event.get()`; `8742f286` adds a bounded protected-input Simulator bridge/backend and `c50b395e` composes it through the existing `SystemChromeCoordinator` / `TrustedChromeActivitySupervisor`, so protected Home is consumed before Activity input and non-cooperative Activities enter the real graceful/forced stop lifecycle. `3a2d9290` also makes the observed Atom deployment extraction bound canonical (180 s for the known slow extraction/chown operation, ordinary SSH probes remain 60 s) so future frozen evidence runs do not require a local timeout patch.
-- Tests/evidence: latest actually executed exact-source evidence remains `3944ba74`: focused discovery gate PASS (136 tests), both audits blockers=0, `make verify` PASS (1507), project/Activity/shell validation PASS; Writing/Painting/Volo Draghetto Simulator PASS; Encyclopedia Simulator FAIL before READY; hostile Simulator Home FAIL; partial Acer Shell boot/focus/pointer PASS with no child-visible Linux, no Activity DRM/raw-input requirement, logs reviewed. Post-fix regression source is committed but not executed in this connector: `d9343bb2` fresh-process Encyclopedia script-mode import probe and `4eac5572` protected Home diversion/composition behavior. Full correction record: `docs/archive/reviews/2026-08-31_R7_SIMULATOR_RUNTIME_INTEGRATION_REJECTION_AND_CORRECTION.md`.
+- Tests/evidence: latest actually executed exact-source evidence remains `3944ba74`: focused discovery gate PASS (136 tests), both audits blockers=0, `make verify` PASS (1507), project/Activity/shell validation PASS; Writing/Painting/Volo Draghetto Simulator PASS; Encyclopedia Simulator FAIL before READY; hostile Simulator Home FAIL; partial Acer Shell boot/focus/pointer PASS with no child-visible Linux, no Activity DRM/raw-input requirement, logs reviewed. Post-fix regression source is committed but not executed in this connector: `d9343bb2` fresh-process Encyclopedia script-mode import probe and `4eac5572` protected Home diversion/composition behavior. Full correction record: `2026-08-31_R7_SIMULATOR_RUNTIME_INTEGRATION_REJECTION_AND_CORRECTION.md` (archived; see git history).
 - Decisions: do not revert the Encyclopedia quality split; fix the broken import-mode seam. Do not extend hostile timeouts or teach the hostile fixture to cooperate; Home must remain platform-owned independent of Activity event consumption. Keep ordinary high-rate Activity pointer/text traffic on the existing direct bounded route and divert only the protected system region. The Acer Writing black/Starting observation is not attributed to Encyclopedia by inference; it must be retested independently. No R7 authority was broadened and no Activity receives `/dev/input` or `/dev/dri`.
 - Remaining blockers: exact-current post-fix focused source gate + audits + `make verify`; exact-current real-Shell Simulator proof that Encyclopedia reaches first frame/Home return and hostile Home forces return; then same-SHA complete Acer R7.2/R7.3 Writing, Painting, hostile 10/10, abrupt-crash and normal 20/20 durability lanes. R7.4/controller and remaining direct/compositor evidence remain blocked until that physical verdict is accepted.
 - Next exact step: pull/freeze current `main`, run discovery-focused tests including `test_encyclopedia_script_launch.py` and `test_simulator_system_chrome.py`, both audits and `make verify`; if green run the five-case headless Simulator matrix; only if that is green deploy the exact same SHA with canonical `tools/deploy_to_acer.py` and complete both physical acceptance protocols without local source/tool edits.
@@ -1292,7 +1292,7 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
 
 ## 2026-09-01 — R7 Writing physical-surface fix verification and Acer retest
 
-- Implemented: diagnosed the Acer Writing black/dot physical failure at `83ed5d58` as `ACTIVITY_X11_RENDERING_OR_SURFACE_FAILURE` (alive/READY/mapped/topmost but blank+pointer). Root cause was `WritingRenderer` drawing directly to the responsive physical SDL surface while the composition root also created `PygameReferenceCanvas` and called `canvas.present(clear=theme.background)` which overwrote the valid Writing frame with the untouched 1024x600 logical reference surface before `pygame.display.flip()`. The fix at `d947eb7ef5ad3703cb7293a8bba73bf9db9277e4` removes `PygameReferenceCanvas` from the production Writing composition and passes `canvas=None` to the existing optional `WritingApp` seam, keeping the responsive physical renderer unchanged and without touching Legacy-X stacking/session behavior (disproved as cause). Added `tests/test_writing_physical_surface_contract.py` (2 tests) to prevent recreation of the reference canvas or re-enabling the legacy seam. Documented in `docs/archive/reviews/2026-08-31_R7_ACER_WRITING_BLACK_SURFACE_ROOT_CAUSE_AND_FIX.md`.
+- Implemented: diagnosed the Acer Writing black/dot physical failure at `83ed5d58` as `ACTIVITY_X11_RENDERING_OR_SURFACE_FAILURE` (alive/READY/mapped/topmost but blank+pointer). Root cause was `WritingRenderer` drawing directly to the responsive physical SDL surface while the composition root also created `PygameReferenceCanvas` and called `canvas.present(clear=theme.background)` which overwrote the valid Writing frame with the untouched 1024x600 logical reference surface before `pygame.display.flip()`. The fix at `d947eb7ef5ad3703cb7293a8bba73bf9db9277e4` removes `PygameReferenceCanvas` from the production Writing composition and passes `canvas=None` to the existing optional `WritingApp` seam, keeping the responsive physical renderer unchanged and without touching Legacy-X stacking/session behavior (disproved as cause). Added `tests/test_writing_physical_surface_contract.py` (2 tests) to prevent recreation of the reference canvas or re-enabling the legacy seam. Documented in `2026-08-31_R7_ACER_WRITING_BLACK_SURFACE_ROOT_CAUSE_AND_FIX.md` (archived; see git history).
 
 - Tests/evidence at **d947eb7ef5ad3703cb7293a8bba73bf9db9277e4** (clean, origin/main same, `PY=/opt/homebrew/bin/python3.12`):
   - `test_writing_physical_surface_contract.py`: **PASS** (2 tests – production composition does not create reference canvas, legacy seam disabled)
@@ -1392,7 +1392,7 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
 
 - No production source modified during this machine-only run (all Parent policy changes via UpdateParentApiApplication on Acer, correct authority).
 
-- Commit for this entry: docs-only (HANDOVER.md, this plan, docs/reviews/2026-09-01_R7_R72_R73_AND_PARENT_CONTROLS_PHYSICAL_ACCEPTANCE.md).
+- Commit for this entry: docs-only (HANDOVER.md, this plan, docs/reviews/2026-09-01_R7_R72_R73_AND_PARENT_CONTROLS_PHYSICAL_ACCEPTANCE.md (archived; see git history)).
 
 ## 2026-09-02 — Launcher spoken labels final verification (Collection + Activity, IT/EN)
 
@@ -2166,13 +2166,13 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
 
 ## 2026-09-13 — Persistent apt/pool cache port onto footprint-hygiene builders (`POSTR1-P5-APTCACHE-PORT`)
 
-- Implementation (no earlier entry rewritten): new `build/lib/apt-cache.sh` (`GREIA_APT_CACHE=/var/cache/greia-apt`, `GREIA_POOL_CACHE=/var/cache/greia-pool`; `mount_apt_archives_cache`/`mount_pool_cache` bind-mount + print mountpoint); `build/build-image.sh` + `build/build-installer-image.sh` source the helper and bind-mount after `/run` tmpfs + resolver stub into `MOUNTS` (image: apt cache; installer live root: apt + pool), released by existing `cleanup()`/`safe_unmount_paths` before footprint measurement and pre-`mksquashfs`; `apt-get clean` -> `autoclean` in the three builders with only the `archives/*.deb` removal term dropped (lists + footprint-hygiene block kept); `build/populate-hardware-support-pool.sh` routes both `Dir::Cache::archives=` through `POOL_CACHE_IN_CHROOT` (default `/var/cache/greia-pool`, host side `POOL_CACHE_HOST` defaulting to the live-joined path so standalone runs stage the same pool), then in-chroot `autoclean` + copy `*.deb` into fresh `POOL_DIR` before `finalize_hardware_support_pool.py`; contract test `test_builds_share_a_persistent_apt_cache_instead_of_redownloading` added; never-clear rule recorded in `docs/agents/GREIA_AGENT_OPERATIONS.md`, rebuild-reuse noted in `docs/INSTALLER_IMAGE_CREATION_AND_BOOT.md`, `HANDOVER.md` §14 updated. No profile/package-set/limit/gate/installed-content change; no second cache mechanism; A/B wiring intact.
+- Implementation (no earlier entry rewritten): new `build/lib/apt-cache.sh` (`GREIA_APT_CACHE=/var/cache/greia-apt`, `GREIA_POOL_CACHE=/var/cache/greia-pool`; `mount_apt_archives_cache`/`mount_pool_cache` bind-mount + print mountpoint); `build/build-image.sh` + `build/build-installer-image.sh` source the helper and bind-mount after `/run` tmpfs + resolver stub into `MOUNTS` (image: apt cache; installer live root: apt + pool), released by existing `cleanup()`/`safe_unmount_paths` before footprint measurement and pre-`mksquashfs`; `apt-get clean` -> `autoclean` in the three builders with only the `archives/*.deb` removal term dropped (lists + footprint-hygiene block kept); `build/populate-hardware-support-pool.sh` routes both `Dir::Cache::archives=` through `POOL_CACHE_IN_CHROOT` (default `/var/cache/greia-pool`, host side `POOL_CACHE_HOST` defaulting to the live-joined path so standalone runs stage the same pool), then in-chroot `autoclean` + copy `*.deb` into fresh `POOL_DIR` before `finalize_hardware_support_pool.py`; contract test `test_builds_share_a_persistent_apt_cache_instead_of_redownloading` added; never-clear rule recorded in `docs/agents/GREIA_AGENT_OPERATIONS.md`, rebuild-reuse noted in `docs/engineering/boot/INSTALLER_IMAGE_CREATION_AND_BOOT.md`, `HANDOVER.md` §14 updated. No profile/package-set/limit/gate/installed-content change; no second cache mechanism; A/B wiring intact.
 - Reference gap: orbiter commit `e36dd148` unreachable from this lane (SSH denied, revision absent locally); behavior reconstructed from the brief's explicit file/line contract. Orbiter populated caches (243 MiB/314 debs, 150 MiB/58 debs) untouched by this source change.
 - Verification: four focused suites green, `bash -n` + `make shell-check` clean, full `make verify` per attempt report (evidence: T-BAG `POSTR1-P5-APTCACHE-PORT/attempts/implementer-1/report.md`).
 
 ## 2026-09-14 — Apt-cache debootstrap-era .deb fix (`POSTR1-P5-APTCACHE-FIX`)
 
-- Implementation (no earlier entry rewritten): `build/build-image.sh` + `build/build-installer-image.sh` bind-mount the persistent apt cache BEFORE `debootstrap` (live root: apt + pool together) so base downloads land in `GREIA_APT_CACHE` and no shadowed `.deb`/`partial` survives on the produced root/squashfs; `build/lib/apt-cache.sh` header + `docs/agents/GREIA_AGENT_OPERATIONS.md` + `docs/INSTALLER_IMAGE_CREATION_AND_BOOT.md` corrected to mandate before-debootstrap mounting; contract test strengthened to assert `$(mount_apt_archives_cache) < debootstrap --arch= < apt-get` per builder (fails on the old post-debootstrap order). Fast path kept (`autoclean`, no `clean`, no host-cache clear, `MOUNTS`/`safe_unmount_paths` intact); hygiene block + A/B wiring intact; no profile/limit/gate/scope change.
+- Implementation (no earlier entry rewritten): `build/build-image.sh` + `build/build-installer-image.sh` bind-mount the persistent apt cache BEFORE `debootstrap` (live root: apt + pool together) so base downloads land in `GREIA_APT_CACHE` and no shadowed `.deb`/`partial` survives on the produced root/squashfs; `build/lib/apt-cache.sh` header + `docs/agents/GREIA_AGENT_OPERATIONS.md` + `docs/engineering/boot/INSTALLER_IMAGE_CREATION_AND_BOOT.md` corrected to mandate before-debootstrap mounting; contract test strengthened to assert `$(mount_apt_archives_cache) < debootstrap --arch= < apt-get` per builder (fails on the old post-debootstrap order). Fast path kept (`autoclean`, no `clean`, no host-cache clear, `MOUNTS`/`safe_unmount_paths` intact); hygiene block + A/B wiring intact; no profile/limit/gate/scope change.
 - Verification: overlay-contract 23/23 green plus the three hardware/installer suites green; `bash -n` + `make shell-check` clean; full suite 3368 OK (skipped=3), validate/footprint clean. Positive control: new ordering GREEN on both builders, synthetic old ordering RED. Real-image proof deferred to `POSTR1-P5-APTCACHE-REPROOF` (evidence: T-BAG `POSTR1-P5-APTCACHE-FIX/attempts/implementer-1/report.md`).
 
 ## 2026-09-14 — Gate-P5 closure re-run V12C: RED on new shipped defect D3, T3-P stays OPEN (`POSTR1-P5-GATE-CLOSURE-V12C`)
@@ -2271,7 +2271,7 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
   `test_boot_diagnostics_hardening` 18 OK (68/68); `bash -n` clean on
   `verify-development-installer.sh`, `verify-live-usb.sh`,
   `build-and-flash-development-usb.sh`. `make verify` deliberately not run for this USB
-  cycle. Root-cause class recorded in `docs/INSTALLATION_ISSUES_LOG.md` §13.
+  cycle. Root-cause class recorded in `docs/engineering/boot/INSTALLATION_ISSUES_LOG.md` §13.
 - T3-P is **not** addressed by this entry and remains OPEN/BLOCKING. Next: rebuild and
   flash the physical Acer `legacy-x86-i686-dev` Syslinux/FAT32 installer and obtain owner
   hardware evidence that the installer now lists and joins a WPA2 network, and that the
@@ -2404,7 +2404,7 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
   `installer_wifi_setup` 6, `installer_wifi_build_contract` 4, `installer_wifi_persistence` 2,
   `parent_production_api` 7, `installer_pointer_setup` 28, `installer_state` 7,
   `installer_hardware_adapter` 4; `bash -n` clean on the four tools. Root cause recorded in
-  `docs/INSTALLATION_ISSUES_LOG.md` §18.
+  `docs/engineering/boot/INSTALLATION_ISSUES_LOG.md` §18.
 - T3-P is not addressed by this entry and remains OPEN/BLOCKING. Next: rebuild and flash, then owner
   acceptance of a real join, then the Acer install / installed-first-boot run.
 
@@ -3362,11 +3362,11 @@ Parent policy endpoints (`/profiles/{id}/activity-policy`) validated overrides a
 
 ### 2026-10-16 — Acer reference-floor performance: launch, idle CPU, memory, input (PHYSICAL, developer device)
 
-Three on-device sweeps of the built-in catalogue on the developer Acer Aspire One (Atom N270, 1 GB) and one targeted re-measure, recorded in `docs/reviews/acer/2026-10-16_ACER_ACTIVITY_SWEEP.md`. Repaired on device: Shell crash on every launch (profile directory modes), launch latency (startup imports, read-only bytecode prefix `/usr/lib/greia/pycache`, ready-timeout policy `runtime/activity-launch.toml`, deferred sound synthesis past READY, `SDL_FRAMEBUFFER_ACCELERATION=0`), per-frame redraw on static screens (`greia_platform.frame_governor.FrameGovernor` in all 45 Activities: reference-floor profile, decoration freeze, blocking idle wait via `greia_platform.input_wait`), pointer save-under, Shell memory bounds, Shell mixer idle-close, two history keys over the 64-byte policy limit (plus an all-Activity key-bounds test and stderr reporting of rejected events). Measured median launch 7.4 s (was crash/16.3 s), Activity idle 7–16% (was 88%), Shell RSS flat ~145 MB, pointer repaint ~53 ms, NRestarts 0. Input was remote `xdotool`. This is developer-device evidence for the R7/performance obligations, not acceptance of the production display/session design; nothing here deepens X11 coupling (the blocking wait uses SDL's own event wait and falls back to sliced polling). Open: Activity-side audio-device idle cost and static-screen first-input latency (~250 ms).
+Three on-device sweeps of the built-in catalogue on the developer Acer Aspire One (Atom N270, 1 GB) and one targeted re-measure, recorded in `2026-10-16_ACER_ACTIVITY_SWEEP.md` (archived; see git history). Repaired on device: Shell crash on every launch (profile directory modes), launch latency (startup imports, read-only bytecode prefix `/usr/lib/greia/pycache`, ready-timeout policy `runtime/activity-launch.toml`, deferred sound synthesis past READY, `SDL_FRAMEBUFFER_ACCELERATION=0`), per-frame redraw on static screens (`greia_platform.frame_governor.FrameGovernor` in all 45 Activities: reference-floor profile, decoration freeze, blocking idle wait via `greia_platform.input_wait`), pointer save-under, Shell memory bounds, Shell mixer idle-close, two history keys over the 64-byte policy limit (plus an all-Activity key-bounds test and stderr reporting of rejected events). Measured median launch 7.4 s (was crash/16.3 s), Activity idle 7–16% (was 88%), Shell RSS flat ~145 MB, pointer repaint ~53 ms, NRestarts 0. Input was remote `xdotool`. This is developer-device evidence for the R7/performance obligations, not acceptance of the production display/session design; nothing here deepens X11 coupling (the blocking wait uses SDL's own event wait and falls back to sliced polling). Open: Activity-side audio-device idle cost and static-screen first-input latency (~250 ms).
 
 ### 2026-10-17 — Acer motion games, launch hand-off, launch validation cache (PHYSICAL developer device + SOURCE)
 
-Motion games made playable on the Atom reference floor (per-pixel-alpha blit cost on pygame 2.1.2/SDL 2.26.5 ≈ 0.22 µs/px; RLE preparation via `greia_platform.pygame_blit` in games, control kit and cast poses; deadline frame pacing; scenes settle when the child stops): 19–24 fps during play. Launch hand-off: Shell launch card before `supervisor.start`, Activity repaints it in a hidden-then-shown first window (0 black frames filmed over 20 launches), protected Home visible from the card and cancelling a loading launch through the supervisor (ADR 0019 §8), all pure pygame/SDL with no added X11 coupling. Launch validation: single-pass source scan and a bounded per-session cache keyed by a stat-only fingerprint for unchanged built-ins in root-owned trees (not an integrity mechanism; Parent/developer/writable packages always fully validated). Evidence: `docs/reviews/acer/2026-10-16_ACER_ACTIVITY_SWEEP.md`; remote `xdotool` input only. No remediation phase closed by this work.
+Motion games made playable on the Atom reference floor (per-pixel-alpha blit cost on pygame 2.1.2/SDL 2.26.5 ≈ 0.22 µs/px; RLE preparation via `greia_platform.pygame_blit` in games, control kit and cast poses; deadline frame pacing; scenes settle when the child stops): 19–24 fps during play. Launch hand-off: Shell launch card before `supervisor.start`, Activity repaints it in a hidden-then-shown first window (0 black frames filmed over 20 launches), protected Home visible from the card and cancelling a loading launch through the supervisor (ADR 0019 §8), all pure pygame/SDL with no added X11 coupling. Launch validation: single-pass source scan and a bounded per-session cache keyed by a stat-only fingerprint for unchanged built-ins in root-owned trees (not an integrity mechanism; Parent/developer/writable packages always fully validated). Evidence: `2026-10-16_ACER_ACTIVITY_SWEEP.md` (archived; see git history); remote `xdotool` input only. No remediation phase closed by this work.
 
 
 ### 2026-10-19 — Owner-directed canonical voice/provider migration (SOURCE + AUTHORING)
@@ -3382,7 +3382,7 @@ Motion games made playable on the Atom reference floor (per-pixel-alpha blit cos
 - Prepared `tools/regenerate_voice_corpus.py` and `docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md` for the owner's requested existing Activity/system speech replacement, preserving deterministic isolated letters/syllables. This is a scoped successor operation within the existing four-language workstream, not a competing plan or platform-phase bypass.
 - Focused inventory, serial runner, SQLite replacement/restore journal and derived-catalogue collaborators use the existing VoiceEngine, force selected VoxStage/v0.2 references, retain external originals/candidates, expose progress/heartbeat/status and stop on unresolved provider/installation failures. Unknown scripts remain explicit blockers; newly installed audio/receipts/shared rows remain human-review pending.
 - Added semantic `delivery_prompt` support across CLI/batch/warm service, six editable character performance defaults and effective direction provenance. Explicit unsupported acting prompts are rejected by retained Chatterbox/native providers. Masters and child-runtime architecture remain unchanged.
-- Executed 52 focused voice tests PASS and a single external Lilli English/custom-direction provider smoke; persisted worker request/recording direction verified, output still listening-pending, worker unloaded. Final `make -k verify`: 5,468 tests, 1 failure/4 errors/8 skips, the same inherited ARM64/profile executable/macOS installer/MBR-message failures; project validation retains its ARM64 assumption failure. Shell/footprint steps ran. Full gate NOT GREEN. Detailed evidence: `docs/reviews/2026-10-19_VOICE_CORPUS_TOOL.md` and HANDOVER.
+- Executed 52 focused voice tests PASS and a single external Lilli English/custom-direction provider smoke; persisted worker request/recording direction verified, output still listening-pending, worker unloaded. Final `make -k verify`: 5,468 tests, 1 failure/4 errors/8 skips, the same inherited ARM64/profile executable/macOS installer/MBR-message failures; project validation retains its ARM64 assumption failure. Shell/footprint steps ran. Full gate NOT GREEN. Detailed evidence: `2026-10-19_VOICE_CORPUS_TOOL.md` (archived; see git history) and HANDOVER.
 - Read-only prepared inventory: 5,308 files; 4,543 ready, 167 metadata-blocked, 598 preserved (441 isolated teaching targets, 150 historical shared clips, six canonical references, boot chime). Full corpus replacement is UNEXECUTED. Next agent recovers exact legacy scripts, pilots tone/mood prompts, then launches/monitors/resumes the tool and retains listening gates. No remediation/lifecycle phase closed; no image/Simulator/physical acceptance claimed. Source documentation/skills and installed copies updated; unrelated video artifacts preserved.
 
 ### 2026-10-21 — Voice corpus v2 recovery and bounded packaging footprint
@@ -3455,7 +3455,7 @@ v2 explicit PERSONA overrides remain untouched but must not be reused. Owner
 rejects current Dani/Momo/Tito voices; six new unselected immutable master
 auditions generated (two each, 11.84–16.00s), listener on 8795. Shared worker
 unloaded after jobs finished. Source research/trace/job evidence is in
-`docs/reviews/2026-10-21_VOICE_DIRECTION_AND_REFERENCE_REVIEW.md`; 5–30s is
+`2026-10-21_VOICE_DIRECTION_AND_REFERENCE_REVIEW.md` (archived; see git history); 5–30s is
 practical guidance, not proof that old refs were invalid. New master selection
 and cloned-line checks precede the draft 1340-file replacement (392/284/664).
 No master/runtime file changed; no new corpus regeneration launched.
@@ -3697,7 +3697,7 @@ preserves the v6 midpoint extraction/100ms guard; actual delivered PCM is checke
 languages, 15 final passes/9 fail-closed, no new TTS or installation. Full local
 make verify executed during development: 5,672 tests with 1 failure/3 errors/8
 skips in known non-voice cases, NOT GREEN. Evidence/source boundaries in HANDOVER
-and `docs/reviews/2026-10-22_AUTOMATIC_SHORT_VOICE_ROUTING.md`. Old priority producer
+and `2026-10-22_AUTOMATIC_SHORT_VOICE_ROUTING.md` (archived; see git history). Old priority producer
 stopped/reconciled (completed ask_Y retained); continuation carries historical
 counts and selected sources. Shared separate generation/verification queues
 remain future work; no platform/hardware or human-listening closure claimed.
@@ -3730,7 +3730,7 @@ pass, with three explicitly held cases. All 66 extra-word and 17 wrong-number
 controls reject. No synthesis, installation or human acceptance in this tranche.
 Focused voice111/corpus18/finisher4 PASS; full make verify 5,711 tests has the
 known 1 failure/3 errors/8 skips, NOT GREEN. Exact evidence/limits/next corpus
-adapter task: `docs/reviews/2026-10-22_TARGET_ONLY_VOICE_EXTRACTION_V7.md`.
+adapter task: `2026-10-22_TARGET_ONLY_VOICE_EXTRACTION_V7.md` (archived; see git history).
 This does not close any remediation phase or hardware/release gate.
 
 
@@ -3745,7 +3745,7 @@ installed (human-review PENDING),270 preserved. Post-install audit: exactly27 of
 plan and budgets unchanged,27 backups verified. Remaining frozen priority309.
 Focused voice121/corpus18/finisher4 PASS; full make verify5,721 tests remains known
 1failure/3errors/8skips, NOT GREEN. Evidence/next saved-source audit:
-`docs/reviews/2026-10-22_V7_SAVED_CORPUS_RECOVERY.md`. No fresh synthesis or phase,
+`2026-10-22_V7_SAVED_CORPUS_RECOVERY.md` (archived; see git history). No fresh synthesis or phase,
 release or human-listening closure is claimed.
 
 
@@ -3760,7 +3760,7 @@ exact54 changed,613 unchanged;54 backups and all source/budget identities verifi
 Remaining255 (35 exhausted,220 with one take left), plus five held provenance
 records to reconcile before new synthesis. Focused126+18+4 PASS; full make verify
 5,726 tests still known1failure/3errors/8skips, NOT GREEN. Evidence/continuation:
-`docs/reviews/2026-10-22_OTHER_SAVED_SOURCE_RECOVERY.md`. No phase/release/human
+`2026-10-22_OTHER_SAVED_SOURCE_RECOVERY.md` (archived; see git history). No phase/release/human
 acceptance closure is claimed.
 
 
@@ -3776,7 +3776,7 @@ Actual48kHz saved check20/24PASS,24negative controls reject; fresh12-case period
 warm probe8PASS/4rejected, missing predeclared readiness, so220-file v2 batch is
 PREPARED NOT STARTED. Voice137/corpus18/finisher4/client21 focused PASS; full
 5,738 tests remains known1failure/3errors/8skips, NOT GREEN. Exact current boundary
-and next four-case diagnosis: `docs/reviews/2026-10-22_PERIOD_WARM_VOICE_CONTINUATION.md`.
+and next four-case diagnosis: `2026-10-22_PERIOD_WARM_VOICE_CONTINUATION.md` (archived; see git history).
 No phase, release, human-listening or entire-corpus completion is claimed.
 
 
@@ -3790,7 +3790,7 @@ Added experimental source-preparation collaborator; normal prompt/processing
 defaults and masters unchanged.16 diagnostic jobs on two hard targets compare
 four recipes with matched seeds; no corpus install/budget reset or bulk restart.
 Detailed actual results/verification in
-`docs/reviews/2026-10-22_VOICE_METHOD_PAIRED_EXPERIMENT.md` and HANDOVER. This scoped
+`2026-10-22_VOICE_METHOD_PAIRED_EXPERIMENT.md` (archived; see git history) and HANDOVER. This scoped
 authoring change does not close remediation/platform/runtime/hardware phases.
 
 
@@ -3894,7 +3894,7 @@ policy tests PASS. `make verify` aborts during tests (`Abort trap: 6`), NOT GREE
 Recorded parent/child method screen is 7/25 (28%), so both bulk producers remain
 held. Next scoped action is read-only earliest-failed-predicate attribution over
 the 25 existing cases; no ASR, model, provider, worker, budget/gate change, or
-installation in that investigation. Details: `docs/reviews/2026-10-22_SAVED_CONTEXT_CORPUS_ADAPTER.md`.
+installation in that investigation. Details: `2026-10-22_SAVED_CONTEXT_CORPUS_ADAPTER.md` (archived; see git history).
 
 ### 2026-10-23 — Parakeet verification default and bounded VoiceEngine diagnostic
 
@@ -3915,7 +3915,7 @@ rejections. It explicitly injected the prior natural-carrier prompt recipe and d
 not change production prompts, thresholds, masters, installed audio, corpus budgets
 or the held bulk state. All new outputs await human listening. Per-case evidence
 and the 51-item Takeboard batch are documented in
-`docs/reviews/2026-10-23_PARAKEET_VOICE_PIPELINE.md`.
+`2026-10-23_PARAKEET_VOICE_PIPELINE.md` (archived; see git history).
 ### 2026-10-23 — Versioned Parakeet lexical normalization
 
 Added `locale-number-tokens-v3-chck-orthographic` to new Parakeet verification
@@ -3932,7 +3932,7 @@ is NOT GREEN. Failures include broader voice integration contract mismatches,
 the MBR expectation mismatch and environment errors including unavailable
 `lsblk`; see `/tmp/greia-parakeet-ck-make-verify.log`. This is a voice-workstream
 source update only; no architecture phase is closed. Evidence and exact next
-review state are in HANDOVER and `docs/reviews/2026-10-23_VOICE_CK_NORMALIZATION.md`.
+review state are in HANDOVER and `2026-10-23_VOICE_CK_NORMALIZATION.md` (archived; see git history).
 
 ### 2026-10-23 — Correction: frozen-plan comparison pin and final verification
 
@@ -3985,7 +3985,7 @@ The terminal audit verifies all 667 frozen pairs: 147 replacement pairs, 90
 preserved originals, and 430 unchanged out-of-scope pairs. The separate 1,241-
 record unreviewed Takeboard batch is served at `http://127.0.0.1:8818/`; exact
 batch/audit/provenance locations are in HANDOVER and
-`docs/reviews/2026-10-23_FULL_PARAKET_VOICE_CORPUS_REPLACEMENT.md`.
+`2026-10-23_FULL_PARAKET_VOICE_CORPUS_REPLACEMENT.md` (archived; see git history).
 
 Post-run `make verify` ran 5,833 tests and is NOT GREEN: one MBR assertion
 failure, two installer `lsblk` errors on macOS, one ARM64 build-profile error,
@@ -4028,7 +4028,7 @@ passes all 667 frozen audio/receipt pairs (25 replacements, 52 unchanged
 selected originals, 590 unchanged out-of-scope pairs). Focused spoken-target
 voice tests passed 237/237. `make verify` ran 5,839 tests and remains NOT GREEN
 (2 failures, 3 errors, 8 skipped); details are in HANDOVER and
-`docs/reviews/2026-10-23_SPOKEN_TARGET_VOICE_REPLACEMENT.md`. No architecture
+`2026-10-23_SPOKEN_TARGET_VOICE_REPLACEMENT.md` (archived; see git history). No architecture
 phase or release gate is closed by this audio operation.
 
 

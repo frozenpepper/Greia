@@ -260,8 +260,8 @@ src/greia_launcher/child_shell.py
 Accepted protocols:
 
 ```text
-docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md
-docs/testing/2026-08-21_COLLECTION_PRIMARY_VOCABULARY_SIMULATOR.md
+2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md (archived; see git history)
+2026-08-21_COLLECTION_PRIMARY_VOCABULARY_SIMULATOR.md (archived; see git history)
 ```
 
 Evidence class: **SIMULATOR VISUAL REVIEW**.
@@ -276,7 +276,7 @@ Accepted components include `SceneDefinition`, `SceneNode`, `SceneCamera`, `Pyga
 
 Accepted via:
 
-`docs/testing/2026-08-21_SCENE_COMPOSITOR_NASCONDINO_SIMULATOR.md`
+`2026-08-21_SCENE_COMPOSITOR_NASCONDINO_SIMULATOR.md` (archived; see git history)
 
 Evidence class: **SIMULATOR VISUAL REVIEW**.
 
@@ -289,16 +289,16 @@ Evidence class: **SIMULATOR VISUAL REVIEW**.
 | Stable guide | `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` |
 | Resume | `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` |
 | Product discovery authority | `docs/product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md` |
-| Runtime visual focus | **Existing V5 runtime/scene/shared UI foundations accepted where recorded. Encyclopedia E3 runtime pack is ACCEPTED at `03bf76ac`. Current focus (2026-10-15): art-direction reset and library redraw under `docs/design/GREIA_SVG_AUTHORING_RULES.md` (ACCEPTED), per `docs/reviews/visual/2026-10-15_asset_library_audit/REVIEW.md` Shell storybook redesign (Home, picker, Collection pages, Sea theme folder, My Creations, launch screen) and control-kit art are SOURCE + headless DESKTOP VISUAL REVIEW only (2026-10-15).** |
+| Runtime visual focus | **Existing V5 runtime/scene/shared UI foundations accepted where recorded. Encyclopedia E3 runtime pack is ACCEPTED at `03bf76ac`. Current focus (2026-10-15): art-direction reset and library redraw under `docs/design/GREIA_SVG_AUTHORING_RULES.md` (ACCEPTED), per `docs/reviews/visual/2026-10-15_asset_library_audit/REVIEW.md` (archived; see git history) Shell storybook redesign (Home, picker, Collection pages, Sea theme folder, My Creations, launch screen) and control-kit art are SOURCE + headless DESKTOP VISUAL REVIEW only (2026-10-15).** |
 | Authoring focus | **Shared library v1 is REGISTERED (catalogue 0.6.0: `bg.*`, `prop.*`, `creature.*`, `icon.hud.*`, `fx.*`, cast variants). Cast poses, P0 Activity icons and the full flat core-icon family are done. Next art work is gap-filling only on demand from the P7 Activity reworks (W2); Opus remains the SVG model. Encyclopedia E4 remains governed by its own subplan.** |
 | Checkpoint 2026-10-16 | **All 45 Activities are reworked on the shared library and control kit (P7 W0–W3, SOURCE + DESKTOP VISUAL REVIEW only).** Catalogue is 0.7.0 (62 vocabulary pictures added, `a779b10f`). Encyclopedia **E4 is COMPLETE** (`7b1f6b2c`, 36 authored storybook scenes, canonical cairo backend; 43 PNGs reproduce byte-for-byte); **E5 interaction visual-language pass is next**. Many Activities authored private art kept Activity-local as candidates awaiting library promotion (Serra plants, Specchi mosaic tiles, Alfabeto pictures, Stelle constellations, Morbidi parts, Teatrino puppets, bridge/marble-run/picnic sets, Volo dragon, Colline buggy, instruments, pet props, tokens; full list in `P7_ACTIVITY_QUALITY_PROGRAM.md` §8). No Simulator or physical visual review of the reworks exists. |
 | Checkpoint 2026-10-16 (awards) | **Award frames redrawn as flat `ui.award.<family>` renditions (bronze medal / silver scalloped medal / gold cup / special rosette + grey locked silhouettes); badge celebration and trophy-shelf Badge Library consume them. SOURCE + DESKTOP VISUAL REVIEW only.** |
 | Checkpoint 2026-10-21 (@2x) | **Shared and Activity-private runtime art now has `<name>@2x.png` siblings (same SVG masters, exact 2x) used only by the high-resolution layer at >=1.2x; 13 Activity PNGs have none because the shipped PNG no longer matches its SVG. SOURCE + DESKTOP VISUAL REVIEW only; no Aspire visual review of the new art.** |
 | Parent mark (2026-10-30) | Parent client reuses the existing website Greia star-G asset instead of its placeholder; SOURCE + local browser review, not installed physical review. |
-| Encyclopedia forensic audit | `docs/archive/reviews/2026-08-28_ENCYCLOPEDIA_GRAPHICS_FORENSIC_AUDIT.md` — prior graphics rejected as final product quality |
+| Encyclopedia forensic audit | `2026-08-28_ENCYCLOPEDIA_GRAPHICS_FORENSIC_AUDIT.md` (archived; see git history) — prior graphics rejected as final product quality |
 | Encyclopedia visual subplan | `docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md` |
-| Encyclopedia current source review | `docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/SOURCE_REVIEW.md` |
-| Encyclopedia runtime gate | `docs/testing/2026-08-29_ENCYCLOPEDIA_E3_SECTION_RUNTIME_REVIEW.md` |
+| Encyclopedia current source review | `SOURCE_REVIEW.md` (archived; see git history) |
+| Encyclopedia runtime gate | `2026-08-29_ENCYCLOPEDIA_E3_SECTION_RUNTIME_REVIEW.md` (archived; see git history) |
 | Generic library | full source harvest complete; Batch A owner-reviewed selectively |
 | Generic Batch B rule | remains unauthorized; Encyclopedia topic-specific art should normally stay Activity-local |
 | Canonical cast | six-character v0.1 runtime family accepted; integrate intentionally rather than tiny corner stamps |
@@ -586,11 +586,11 @@ The entries below preserve the workstream chronology. Corrections/new state are 
 - No per-object Batch A redraw loop authorized.
 
 ## 2026-08-22 — Canonical Cast v0.1 Runtime Acceptance Recheck & Final Integrity Closure
-- Resolved all review blockers from `OWNER_REVIEW.md` and `OWNER_REVIEW_CAPTURE_INTEGRITY.md`.
+- Resolved all review blockers from `OWNER_REVIEW.md` and `OWNER_REVIEW_CAPTURE_INTEGRITY.md` (archived; see git history).
 - Implemented bounded failed-rendition cache (max 64 entries) in `PygameSceneRenderer` avoiding per-frame decode churn.
 - Demonstrated cold required default failure safe-fallback screen and isolated single-target non-default fallback (`flash_happy.png`).
 - Direct on-screen developer diagnostics proved active variant, fallback state, outer viewport, and UI scale.
-- Formally accepted and closed via `docs/reviews/visual/2026-08-22_canonical-cast-v01-final-capture/OWNER_REVIEW.md`.
+- Formally accepted and closed via `docs/reviews/visual/2026-08-22_canonical-cast-v01-final-capture/OWNER_REVIEW.md` (archived; see git history).
 
 ## 2026-08-22 — Shape Garden Real Visual-Authoring Workflow Exercise
 - Exercised full end-to-end authoring workflow on first-party Activity `org.greia.shape-garden` (`activities/shape_garden/`).
@@ -598,7 +598,7 @@ The entries below preserve the workstream chronology. Corrections/new state are 
 - Integrated canonical geometry companion Dani (`character.dani`) with happy reaction on shape creation.
 - Preserved 100% educational geometry mechanics, added organic green sprout stems, grounded shadows, and spawn growth delight.
 - Verified responsive presentation across 4 viewports (1024x600 normal, 1024x600 large, 1366x768 compact, 1280x800 normal), motion-disabled mode, and fail-soft optional node resilience.
-- Curated review folder `docs/reviews/visual/2026-08-22_shape-garden-visual-authoring-workflow/` and transfer bundle `GREIA_VISUAL_REVIEW_SHAPE_GARDEN_AUTHORING_WORKFLOW_2026-08-22.zip`.
+- Curated review folder `docs/reviews/visual/2026-08-22_shape-garden-visual-authoring-workflow/` (archived; see git history) and transfer bundle `GREIA_VISUAL_REVIEW_SHAPE_GARDEN_AUTHORING_WORKFLOW_2026-08-22.zip`.
 - Generic library gap outcome: `NO_GAP`. Generic Batch B remains unauthorized.
 
 ## 2026-08-22 — Costruiamo Ponti Real Visual-Authoring Stress Exercise
@@ -610,7 +610,7 @@ The entries below preserve the workstream chronology. Corrections/new state are 
   - `KEEP_EXISTING_INTENTIONAL`: Preserved 100% of puzzle mechanics, 4-material requirements, sound synthesis, storage persistence, event emissions, and platform Home button integration.
 - Integrated canonical traveler Flash (`character.flash`) with `neutral` idle, `happy` walking hop, spring bounce, and `surprised` trampoline rebound.
 - Captured complete 13-PNG evidence suite across all 3 worlds, material selection, crossing success, trampoline failure rebound, 2 responsive viewports (1024x600 large, 1366x768 compact), static motion-disabled mode, and fail-soft procedural fallback.
-- Created review package `docs/reviews/visual/2026-08-22_costruiamo-ponti-visual-authoring-stress/` and transfer bundle `GREIA_VISUAL_REVIEW_COSTRUIAMO_PONTI_AUTHORING_STRESS_2026-08-22.zip`.
+- Created review package `docs/reviews/visual/2026-08-22_costruiamo-ponti-visual-authoring-stress/` (archived; see git history) and transfer bundle `GREIA_VISUAL_REVIEW_COSTRUIAMO_PONTI_AUTHORING_STRESS_2026-08-22.zip`.
 - Generic library gap outcome: `NO_GAP`. Generic Batch B remains unauthorized.
 
 ## 2026-08-22 — Painting Visual Productization Exercise
@@ -620,13 +620,13 @@ The entries below preserve the workstream chronology. Corrections/new state are 
   - `CREATE_ORIGINAL`: Designed and rendered a complete activity-local UI asset family in `activities/painting/assets/` (`tool_gallery.png`, `tool_undo.png`, `tool_new.png`, `tool_eraser.png`, `brush_small.png`, `brush_medium.png`, `brush_large.png`, `canvas_card_frame.png`, `color_well_dish.png`) with clean SVG masters in `source/` and build-time PNGs in `runtime/`.
   - `KEEP_EXISTING_INTENTIONAL`: Preserved 100% of PaintingRepository, StrokeHistory, autosave idle loop, undo limits, and platform Home button integration.
   - Mascot Decision: Intentionally omitted mascot to ensure the child's drawing canvas remains generous, uncluttered, and unencumbered.
-- Captured complete 12-PNG evidence suite in `docs/reviews/visual/2026-08-22_painting-visual-productization/` across empty canvas, drawing in progress, rich multi-color drawing, palette selection affordances, best product proof, 3 responsive viewports (1024x600 large, 1366x768 compact, 1280x800 normal), static motion-disabled mode, fail-soft procedural fallback, and gallery saved thumbnail persistence.
+- Captured complete 12-PNG evidence suite in `docs/reviews/visual/2026-08-22_painting-visual-productization/` (archived; see git history) across empty canvas, drawing in progress, rich multi-color drawing, palette selection affordances, best product proof, 3 responsive viewports (1024x600 large, 1366x768 compact, 1280x800 normal), static motion-disabled mode, fail-soft procedural fallback, and gallery saved thumbnail persistence.
 - Packaged owner transfer bundle: `GREIA_VISUAL_REVIEW_PAINTING_PRODUCTIZATION_2026-08-22.zip`.
 - Generic library gap outcome: **`NO_GAP`**. Generic Batch B remains unauthorized.
 
 ## 2026-08-22 — First-Party Activity Visual Audit & Batch 1 Productization
 - Executed full headless Simulator visual audit across all 19 first-party Activities at 1024×600, scoring each 1–5 on 8 dimensions.
-- Created audit matrix `docs/reviews/visual/2026-08-22_first-party-activity-visual-audit/VISUAL_AUDIT.md`, `visual-audit.json`, 5×4 owner contact sheet `CONTACT_SHEET.png`, and objective selection report `BATCH_1_SELECTION.md`.
+- Created audit matrix `docs/reviews/visual/2026-08-22_first-party-activity-visual-audit/VISUAL_AUDIT.md` (archived; see git history), `visual-audit.json`, 5×4 owner contact sheet `CONTACT_SHEET.png`, and objective selection report `BATCH_1_SELECTION.md`.
 - Selected lowest-scoring non-benchmarked priority targets for Batch 1:
   1. `org.greia.treno-numeri` (Initial score: 1.9 / 5.0 → Productized: **4.8 / 5.0**)
   2. `org.greia.labirinto-magico` (Initial score: 1.9 / 5.0 → Productized: **4.8 / 5.0**)
@@ -635,14 +635,14 @@ The entries below preserve the workstream chronology. Corrections/new state are 
   - `treno_numeri`: Illustrated steam engine, Dani robot conductor mascot, rotating brass wheels, wooden fruit crates, scenic countryside valley, smoke particles.
   - `labirinto_magico`: Tito the Fox adventurer mascot, rotating magical vortex portal goal, 3D faceted crystal stars, beveled walls with depth shadows, tactile arrow D-pad.
   - `acquario_magico`: Illustrated tropical species (clownfish, sea turtle, octopus, dolphin, pufferfish), dual coral reefs, sunlight water caustics, day/night bioluminescence.
-- Full 8-screenshot evidence suite, `AUTHORING_AUDIT.md`, `authoring-audit.json`, and `simulator-trace.json` generated for all 3 targets under `docs/reviews/visual/2026-08-22_first-party-batch-1/<activity>/`.
+- Full 8-screenshot evidence suite, `AUTHORING_AUDIT.md`, `authoring-audit.json`, and `simulator-trace.json` generated for all 3 targets under `docs/reviews/visual/2026-08-22_first-party-batch-1/<activity>/` (archived; see git history).
 - Batch review document `OWNER_RECHECK.md` and root transfer bundle `GREIA_VISUAL_REVIEW_FIRST_PARTY_ACTIVITY_BATCH_1_2026-08-22.zip` packaged.
 - Generic library gap conclusion: `NO_GAP`. Generic Batch B remains unauthorized.
 
 ## 2026-08-28 — Encyclopedia visual forensic correction and reauthoring gate
 - Owner rejected the complete 43-page Encyclopedia screenshot set as aesthetically unacceptable despite green mechanical breadth.
 - Primary forensic review identified the systemic cause: final real-world subject art and section worlds are dominated by raw Pygame primitives, sparse flat backgrounds, floating instrumentation-like discovery bubbles, corner-stamped mascots and weak interaction payoff.
-- Recorded the rejection and preservation boundary in `docs/archive/reviews/2026-08-28_ENCYCLOPEDIA_GRAPHICS_FORENSIC_AUDIT.md`.
+- Recorded the rejection and preservation boundary in `2026-08-28_ENCYCLOPEDIA_GRAPHICS_FORENSIC_AUDIT.md` (archived; see git history).
 - Added bounded visual subplan `docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md`.
 - Preserved the healthy 43-page runtime/navigation/research architecture and the already-landed generic headless capture-settle repair.
 - Paused broad 43-page visual recapture and final pointer/responsive acceptance until real graphics change.
@@ -657,18 +657,18 @@ The entries below preserve the workstream chronology. Corrections/new state are 
 - Encyclopedia visual subplan E1 + E2 closed on the source/runtimer-artefact axis. Six 1024×600 PNGs built from the committed SVG masters (346 621 bytes), committed and pushed on `main` at `08fe71b`; `tools/build_encyclopedia_visual_assets.py --check` byte-verifies the committed pack against rebuilt masters.
 - Three permanent review tools added under `tools/`: golden-master capture (one real Greia Shell session per page, launches the built-in `org.greia.enciclopedia` through the real launcher/profile-picker/catalogue path, captures initial + post-ACTIVATE frames, exercises the protected Greia Home return), review-set builder (3×2 contact sheet + 4 curated PNGs), and owner-transfer ZIP packager.
 - Captured 10 1024×600 prototype frames (Home, Animals, Lion initial+ACTIVATE, Saturn initial+ACTIVATE, Gears initial+ACTIVATE, Pyramids initial+ACTIVATE) plus one compact (1024×600 + `interface_size=compact`) and one larger (1280×800 + `interface_size=normal`) responsive row, from the real headless Greia Simulator at `08fe71b`.
-- Curated review set committed at `docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/` with `REVIEW.md` (including a per-page defect log) and `layout-audit.json` derived from the real `PageShellLayout`, `PORTAL_CENTERS`, and per-page discovery centers. Non-committed owner-transfer ZIP: `GREIA_VISUAL_REVIEW_ENCYCLOPEDIA_GOLDEN_MASTER_2026-08-28.zip` (677 KB).
+- Curated review set committed at `docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/` (archived; see git history) with `REVIEW.md` (including a per-page defect log) and `layout-audit.json` derived from the real `PageShellLayout`, `PORTAL_CENTERS`, and per-page discovery centers. Non-committed owner-transfer ZIP: `GREIA_VISUAL_REVIEW_ENCYCLOPEDIA_GOLDEN_MASTER_2026-08-28.zip` (677 KB).
 - `make verify`: 1462/1462 PASS on the real checkout at the final SHA. Focused Encyclopedia tests: 19/19 PASS. The only source correction needed was a one-file tightening of the over-broad runtime-cue vs voice-ledger parity check in `tests/test_encyclopedia_authoring_tools.py` (subtract `VisualLibrary.ART_ASSETS`).
 - Pre-reader/no-reading review on the six prototypes: `PRE_READER_CORE_FLOW_PASS=yes`, `TEXT_REQUIRED_FOR_GAMEPLAY=no`, `NO_READING_FIRST_ACTION_PASS=yes`, `PRIMARY_INSTRUCTION_CHANNEL=visual`.
 - This is `SIMULATOR VISUAL REVIEW` evidence only. **Owner direction approval still pending.** E3 section-page migration and E4 entry migration remain hard-blocked.
 
 ## 2026-08-28 — Encyclopedia E2R refinement (per primary review)
 
-- Addressed every E2R correction in `docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/PRIMARY_REVIEW_2026-08-29.md` on the same six pages: Home miniature worlds, Animals sun/Back fix + habitat props, Lion deeper mane + felt-tag tokens + integrated Tito + strengthened mane reveal, Saturn preserved reference + telescope-card tokens + Leo at telescope + full orbit path reveal, Gears real workshop + no rack collision + workshop-tag tokens + contact-point motion reveal, Pyramids authored workers + excavation tokens + Leo field-guide + outlined base block reveal.
+- Addressed every E2R correction in `PRIMARY_REVIEW_2026-08-29.md` (archived; see git history) on the same six pages: Home miniature worlds, Animals sun/Back fix + habitat props, Lion deeper mane + felt-tag tokens + integrated Tito + strengthened mane reveal, Saturn preserved reference + telescope-card tokens + Leo at telescope + full orbit path reveal, Gears real workshop + no rack collision + workshop-tag tokens + contact-point motion reveal, Pyramids authored workers + excavation tokens + Leo field-guide + outlined base block reveal.
 - Discovery-token silhouettes are now scene-native (felt tag / telescope card / workshop tag / excavation marker). Shared interaction/state logic remains one component (`draw_discovery_token` accepts a `token_shape` parameter).
 - Baked presenters removed from the six SVGs; runtime canonical character draws at the integrated scene position.
 - Source at `8fa41a3`: `make verify` 1462/1462, focused Encyclopedia tests 19/19, build `--check` PASS 6, headless Simulator 6/6 sessions PASS, protected Greia Home 6/6, ACTIVATE payoffs 4/4, pre-reader/no-reading `yes/yes/yes/visual`.
-- Updated curated review set + new `initial-vs-activated` comparison sheet under `docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/`. New non-committed owner ZIP `GREIA_VISUAL_REVIEW_ENCYCLOPEDIA_GOLDEN_MASTER_2026-08-28.zip` (685 KB).
+- Updated curated review set + new `initial-vs-activated` comparison sheet under `docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/` (archived; see git history). New non-committed owner ZIP `GREIA_VISUAL_REVIEW_ENCYCLOPEDIA_GOLDEN_MASTER_2026-08-28.zip` (685 KB).
 - `libpng error: bad adaptive filter value` line in the child log remains an unresolved diagnostic per the local-agent brief §7.
 - **Owner direction approval is still pending.** E3/E4 remain hard-blocked.
 
@@ -856,7 +856,7 @@ OPEN. No duplicate screenshot pipeline was created.
 
 ## 2026-10-15 — Art direction reset, SVG rules accepted, library audit, repository weight retired (DESIGN SPEC / SOURCE)
 
-The full-library audit (`docs/reviews/visual/2026-10-15_asset_library_audit/REVIEW.md`; SOURCE + DESKTOP VISUAL REVIEW only) found off-model cast art inside Activities, placeholder Activity icons, a glossy-3D core-icon outlier, three coexisting vector dialects and about 7.5 MiB of retire-able tracked weight. Main-agent decisions: `docs/design/GREIA_SVG_AUTHORING_RULES.md` is ACCEPTED as the binding recipe (tile hues per Collection accepted); Opus is the selected SVG authoring model (bake-off `icon_marble_run`, `leo_celebrate`, `scene_river_valley`); production waves are cast poses, P0 Activity icons, core icons. Housekeeping executed: retired `assets/source/generated_variants`, `assets/visual/authoring_kit`, `assets/visual/authoring_candidates`, the core-icon contact sheet (now git-ignored) and the superseded `pack_candidates/{forest_meadow,workshop}/2026-08-21` sets (131 files, 7,606,588 bytes); the cast-provenance pack candidates and legacy per-character `blink.svg` stay until the cast catalogue provenance is repointed. `compose_install_runtime_assets` now installs only the runtime asset subtree (no SVG masters or candidate packs). Earlier ledger entries are unchanged; this is not Simulator, VM or physical evidence.
+The full-library audit (`docs/reviews/visual/2026-10-15_asset_library_audit/REVIEW.md` (archived; see git history); SOURCE + DESKTOP VISUAL REVIEW only) found off-model cast art inside Activities, placeholder Activity icons, a glossy-3D core-icon outlier, three coexisting vector dialects and about 7.5 MiB of retire-able tracked weight. Main-agent decisions: `docs/design/GREIA_SVG_AUTHORING_RULES.md` is ACCEPTED as the binding recipe (tile hues per Collection accepted); Opus is the selected SVG authoring model (bake-off `icon_marble_run`, `leo_celebrate`, `scene_river_valley`); production waves are cast poses, P0 Activity icons, core icons. Housekeeping executed: retired `assets/source/generated_variants`, `assets/visual/authoring_kit`, `assets/visual/authoring_candidates`, the core-icon contact sheet (now git-ignored) and the superseded `pack_candidates/{forest_meadow,workshop}/2026-08-21` sets (131 files, 7,606,588 bytes); the cast-provenance pack candidates and legacy per-character `blink.svg` stay until the cast catalogue provenance is repointed. `compose_install_runtime_assets` now installs only the runtime asset subtree (no SVG masters or candidate packs). Earlier ledger entries are unchanged; this is not Simulator, VM or physical evidence.
 
 ## 2026-10-15 — Shared art library v1 registered, Shell redesign, control-kit art, core icons complete (SOURCE / DESKTOP VISUAL REVIEW)
 

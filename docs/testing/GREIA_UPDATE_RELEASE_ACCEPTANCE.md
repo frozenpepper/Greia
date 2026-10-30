@@ -1,7 +1,7 @@
 # Greia update release acceptance — one practical work order
 
 **Status:** EXECUTED 2026-10-27/28 at source `810caa91f`; both lanes passed.
-See [`2026-10-27_UPDATE_RELEASE_ACCEPTANCE_RESULT.md`](../reviews/2026-10-27_UPDATE_RELEASE_ACCEPTANCE_RESULT.md).
+See `2026-10-27_UPDATE_RELEASE_ACCEPTANCE_RESULT.md` (archived; see git history).
 This document remains the execution router for reruns. **Owner direction:** fix the updater and confirm working updates promptly, in consolidated runs. **Authority:** ADR 0036 (A/B), ADR 0038 (application generations), and the September lifecycle plan. This document replaces dated update-diagnostic handoffs as the **execution router**, not their factual findings. The previous `1275` diagnostic already captured the failure; there is no need to run its frozen-source comparison or repeat its old single-stage job.
 
 **Pre-release policy:** Greia has no released installed base to preserve. Do not build or test migration bridges, legacy reader paths, old image upgrades or upgrade-format backwards compatibility. Test only fresh images from the current code and updates between coherent *current* acceptance releases. Retain rollback to the previous healthy installation or application generation: rollback is correctness, not backwards compatibility.
@@ -27,7 +27,7 @@ inactive-slot filesystem is unavailable: block topology observation failed:
 slot device capacity is unobservable: sda2
 ```
 
-Analysis: [old-release stage refusal](../reviews/2026-10-27_AB_OLD_RELEASE_STAGE_REFUSAL_ANALYSIS.md); saved execution: [diagnostic result](../reviews/2026-10-27_AB_OLD_RELEASE_STAGE_DIAGNOSTIC_RESULT.md).
+Analysis: old-release stage refusal (archived; see git history); saved execution: diagnostic result (archived; see git history).
 
 Current owner: `src/greia_platform/system_updates.py`, `_block_node_size_bytes` through `_observe_production_topology`. The primary `BLKGETSIZE64` ioctl is hard-coded as `0x80081272` (64-bit request encoding); the guest is i386; the fallback calls `blockdev --getsize64`, which might be missing or denied. Do not assume a specific root cause from the aggregate error alone.
 
@@ -75,7 +75,7 @@ Use the existing repository tools and retained detailed examples, checking CLI h
 
 ## Single final report and commit
 
-Commit implementation and tests to `main` (no branch/PR unless the owner requests one); preserve concurrent work. Publish **one concise** `docs/reviews/<date>_UPDATE_RELEASE_ACCEPTANCE_RESULT.md` containing:
+Commit implementation and tests to `main` (no branch/PR unless the owner requests one); preserve concurrent work. Write **one concise** result report (kept on the external evidence volume, not in the tracked tree; its summary goes to `HANDOVER.md`) containing:
 
 - tested source SHA(s), host/guest architecture, artifact/package identities, evidence/log paths;
 - a compact PASS/FAIL/NOT RUN table: A/B install, A first boot, stage B, arm, B healthy acceptance, rollback, interruption recovery; Python, Activity, combined, rejected update/recovery, Parent disconnected continuation;

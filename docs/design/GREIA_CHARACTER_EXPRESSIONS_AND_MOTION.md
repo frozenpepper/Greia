@@ -71,7 +71,7 @@ This document defines design/source semantics. Runtime consumption must continue
 
 ## Runtime Semantic States and Motion API (v0.1)
 
-Promoted and verified under `docs/testing/2026-08-22_CANONICAL_CAST_V01_PROMOTION_RUNTIME_SIMULATOR.md`:
+Promoted and verified under `2026-08-22_CANONICAL_CAST_V01_PROMOTION_RUNTIME_SIMULATOR.md` (archived; see git history):
 
 ### 1. Semantic States (`CharacterState`)
 - `neutral`: Maps to runtime variant `default` (standard authored calm/friendly expression).

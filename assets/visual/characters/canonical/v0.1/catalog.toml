@@ -3,7 +3,7 @@ id = "greia.characters.canonical.v0.1"
 name = "Greia Canonical Character Cast"
 version = "0.1.0"
 status = "stable-source"
-authority = "docs/testing/2026-08-22_CANONICAL_CAST_V01_PROMOTION_RUNTIME_SIMULATOR.md"
+authority = "2026-08-22_CANONICAL_CAST_V01_PROMOTION_RUNTIME_SIMULATOR.md (archived; see git history)"
 notes = "Promoted stable source masters, registered 5-state vector sets, shared cast poses (pose_cheer, pose_point, pose_think, pose_wave, pose_play), extra expressions (sad, angry, silly), and authoring components for Greia's six canonical mascots."
 
 [provenance]

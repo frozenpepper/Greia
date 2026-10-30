@@ -210,7 +210,7 @@ Current accepted simulator evidence covers:
 The first accepted run exposed an extra top-level `Care` portal because arbitrary package categories were still projected as Collections. The bounded-primary-vocabulary source correction is now implemented and awaits its dedicated simulator gate:
 
 ```text
-docs/testing/2026-08-21_COLLECTION_PRIMARY_VOCABULARY_SIMULATOR.md
+2026-08-21_COLLECTION_PRIMARY_VOCABULARY_SIMULATOR.md (archived; see git history)
 ```
 
 Until that gate passes, do not claim simulator acceptance for the primary-vocabulary/More correction itself.
@@ -438,7 +438,7 @@ Current source provides:
 
 Current acceptance boundary:
 
-- Collection-first Home with bounded primary vocabulary & Browse recovery: **SIMULATOR VISUAL REVIEW** via `docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md` and `docs/testing/2026-08-21_COLLECTION_PRIMARY_VOCABULARY_SIMULATOR.md`.
+- Collection-first Home with bounded primary vocabulary & Browse recovery: **SIMULATOR VISUAL REVIEW** via `2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md` (archived; see git history) and `2026-08-21_COLLECTION_PRIMARY_VOCABULARY_SIMULATOR.md` (archived; see git history).
 
 Still not implemented:
 

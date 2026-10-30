@@ -6,7 +6,7 @@
 
 ## 2026-10-15 — P7 Activity Quality Program started
 
-All 45 Activities played headlessly and design-audited (docs/reviews/activities/2026-10-15_activity_design_audit/). Decisions and waves: [P7_ACTIVITY_QUALITY_PROGRAM.md](./P7_ACTIVITY_QUALITY_PROGRAM.md). Child-facing language/case pass over all 45 committed (5086085d, 1c8b8e60, 661df616, 3ee4bda1); Shell Home redesign 5e7e089e. Source + headless desktop evidence only.
+All 45 Activities played headlessly and design-audited (docs/reviews/activities/2026-10-15_activity_design_audit/ (archived; see git history)). Decisions and waves: [P7_ACTIVITY_QUALITY_PROGRAM.md](./P7_ACTIVITY_QUALITY_PROGRAM.md). Child-facing language/case pass over all 45 committed (5086085d, 1c8b8e60, 661df616, 3ee4bda1); Shell Home redesign 5e7e089e. Source + headless desktop evidence only.
 
 ## A. At-a-glance checkpoint — 2026-10-08
 

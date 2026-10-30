@@ -19,7 +19,7 @@ that sound to its letter, and finally build short words from their sounds.
 * ``CONFUSABLE_PICTURES`` — picture pairs a child could name with the other
   word's first sound (a rose is also "a flower"); they never share a task.
 
-IT/EN review: docs/reviews/2026-08-24_OFFICINA_DEI_SUONI_AUDIO_REVIEW.md.
+IT/EN review: 2026-08-24_OFFICINA_DEI_SUONI_AUDIO_REVIEW.md (archived; see git history).
 ES/FR are staged curricula; their phoneme and word audio is not approved and
 they have no build lessons (the build stage falls back to the first sound).
 """

@@ -427,7 +427,7 @@ requires a separately pinned registered comparison policy. The current recovered
 examples use the narrow Oscar/Oskar spelling policy and the pre-existing finite
 English spoken-letter policy; ordinary/default and historical policies are
 unchanged. Both installed clips remain human-listening-pending. See
-`docs/reviews/2026-10-22_SAVED_CONTEXT_CORPUS_ADAPTER.md` for exact installation
+`2026-10-22_SAVED_CONTEXT_CORPUS_ADAPTER.md` (archived; see git history) for exact installation
 proof and current evidence boundaries.
 
 
@@ -475,7 +475,7 @@ observations now meet the extraction text predicate against `Trova Oskar`; those
 requests had stopped before package/final verification under v2, so they are not
 full-pipeline passes. No ASR, TTS, package creation, installation or receipt
 mutation was performed in the replay. Exact transcript strings, hashes and the
-new full-text listening batch are in `docs/reviews/2026-10-23_VOICE_CK_NORMALIZATION.md`.
+new full-text listening batch are in `2026-10-23_VOICE_CK_NORMALIZATION.md` (archived; see git history).
 
 ### 2026-10-23 — Owner-authorized versioned full-corpus execution
 

@@ -77,7 +77,7 @@ E4 factual-entry migration          UNBLOCKED / NEXT
 Primary repair review:
 
 ```text
-docs/reviews/visual/2026-08-29_encyclopedia_owner_direct_repairs/REVIEW.md
+docs/reviews/visual/2026-08-29_encyclopedia_owner_direct_repairs/REVIEW.md (archived; see git history)
 ```
 
 ---
@@ -153,7 +153,7 @@ The v6 pass deliberately reauthored the four weaker section pages again rather t
 Source-review authority:
 
 ```text
-docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/SOURCE_REVIEW.md
+SOURCE_REVIEW.md (archived; see git history)
 ```
 
 Current maintainer-local contact sheet:
@@ -285,7 +285,7 @@ is mandatory. Any mismatch means stop and rebuild normally; never weaken the sou
 Canonical protocol:
 
 ```text
-docs/testing/2026-08-29_ENCYCLOPEDIA_E3_SECTION_RUNTIME_REVIEW.md
+2026-08-29_ENCYCLOPEDIA_E3_SECTION_RUNTIME_REVIEW.md (archived; see git history)
 ```
 
 Capture/review tools:
@@ -344,13 +344,13 @@ Home + six-section runtime contact review      ACCEPTED
 E4 factual-entry migration                     UNBLOCKED / NEXT
 ```
 
-E3 is ACCEPTED per `docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/runtime/REVIEW.md` (Disposition: ACCEPTED, SHA 03bf76ac, 11/11 SHA-256, 11/11 Git blobs, visual ACCEPTED). Do not rerun E3 merely because unrelated Activities changed.
+E3 is ACCEPTED per `docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/runtime/REVIEW.md` (archived; see git history) (Disposition: ACCEPTED, SHA 03bf76ac, 11/11 SHA-256, 11/11 Git blobs, visual ACCEPTED). Do not rerun E3 merely because unrelated Activities changed.
 
 ---
 
 ## 9. Local-agent and narration boundaries
 
-The owner explicitly asked the primary agent to perform current visual-authoring work directly. `docs/testing/GREIA_ENCYCLOPEDIA_V01_LOCAL_AGENT_NEXT.md` remains HOLD unless the owner explicitly changes that instruction.
+The owner explicitly asked the primary agent to perform current visual-authoring work directly. Local agents do not take this Encyclopedia visual work (the old local-agent work order stays on HOLD and was archived 2026-10-30) unless the owner explicitly changes that instruction.
 
 Narration remains separate:
 
@@ -374,4 +374,4 @@ E3 COMPLETE / ACCEPTED at 03bf76ac (evidence HEAD 69cf8966)
 E4 UNBLOCKED / NEXT — do not start until this acceptance window ends and owner explicitly authorizes
 ```
 
-Current post-activity-pass acceptance SHA is e2b831da (Activity modernization COMPLETE, source gate green, Simulator 5/5 final Activity decompositions PASS, focused R7.2/R7.3 PASS; physical Acer INCOMPLETE due to no hardware in this environment). See `docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/runtime/REVIEW.md`.
+Current post-activity-pass acceptance SHA is e2b831da (Activity modernization COMPLETE, source gate green, Simulator 5/5 final Activity decompositions PASS, focused R7.2/R7.3 PASS; physical Acer INCOMPLETE due to no hardware in this environment). See `docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/runtime/REVIEW.md` (archived; see git history).

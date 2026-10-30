@@ -1,9 +1,13 @@
 ---
 name: greia-language-expansion
-description: Use when asked to translate, stage, record or add an OS/Activity/installer/Parent language to Greia.
+description: Use when asked to translate, stage, record, promote or add an OS, Activity, installer or Parent language to Greia (manifest-based language registry, scaffold/check tools, voice and acceptance steps).
 ---
 
 # Add or translate a Greia language
+
+## When to use / Read first
+
+Use for any request to translate, stage, record, promote or retire an installer/OS/Parent/Activity language. Read `docs/development/ADD_A_GREIA_LANGUAGE.md` first; this skill is the short agent checklist on top of it.
 
 **Start:** `docs/development/ADD_A_GREIA_LANGUAGE.md`. The one offered-language registry is now the set of `src/greia_platform/languages/<locale>/manifest.json` files, consumed by installer, Shell, Parent Settings and the Parent API. Do not add a second hardcoded language list.
 

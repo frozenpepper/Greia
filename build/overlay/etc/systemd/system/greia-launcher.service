@@ -65,7 +65,7 @@ Environment=PYTHONPYCACHEPREFIX=/usr/lib/greia/pycache
 Environment=HOME=/var/lib/greia-kid
 # Present the Shell window through SDL's software framebuffer, not SDL 2.26's
 # X11 GL "texture framebuffer". Acer N270/GMA 950 re-sweep at 0f560c2e
-# (docs/reviews/acer/2026-10-16_ACER_ACTIVITY_SWEEP.md R.2): set_mode
+# (2026-10-16_ACER_ACTIVITY_SWEEP.md (archived; see git history) R.2): set_mode
 # 0.7-1.2 s -> 0.03-0.15 s and ~70 MB less RSS per process because Mesa/libGL
 # is never loaded. Activities get the same hint from the Python runtime
 # adapter; the launcher does not forward this variable itself.

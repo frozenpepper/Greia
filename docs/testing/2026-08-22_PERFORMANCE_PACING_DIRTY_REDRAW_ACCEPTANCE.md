@@ -15,7 +15,7 @@ The candidate performance changes are primarily:
 
 The owner review is:
 
-`docs/archive/reviews/performance/2026-08-22_launcher-pacing-dirty-redraw/OWNER_REVIEW.md`
+`OWNER_REVIEW.md` (archived; see git history)
 
 Read it before modifying source.
 
@@ -255,7 +255,7 @@ Also run any newly added focused performance/redraw tests explicitly and report 
 
 Create:
 
-`docs/reviews/performance/2026-08-22_launcher-pacing-dirty-redraw/`
+`docs/reviews/performance/2026-08-22_launcher-pacing-dirty-redraw/` (archived; see git history)
 
 Preserve the existing owner review there.
 

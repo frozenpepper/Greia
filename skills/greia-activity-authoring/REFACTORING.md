@@ -2,10 +2,10 @@
 
 **Status:** mandatory companion for substantive Activity refactors  
 **Audience:** coding agents, maintainers, reviewers  
-**First calibrated on:** `activities/clinica_cuccioli` (2026-08-23)  
+**First calibrated on:** `activities/clinica_cuccioli`  
 **Calibration correction:** the first structural pass was architecturally cleaner but **did not launch** until runtime/tooling contracts were repaired. A second local pass then proved that **launching is still not acceptance**: child interaction semantics and the complete-session/end-screen path must also be exercised. This document deliberately preserves both lessons.
 
-Use this companion together with `CORE.md` and `ENGINEERING.md` whenever an existing Activity is being structurally refactored rather than merely receiving a tiny isolated fix.
+Use this companion together with `SKILL.md` and `ENGINEERING.md` whenever an existing Activity is being structurally refactored rather than merely receiving a tiny isolated fix.
 
 A refactor is not successful because the code is cleaner, imports on one developer path, launches once, or has newly authored unit tests. It is successful only when the Activity still satisfies its **product, package, runtime, lifecycle, compatibility, interaction and terminal-state contracts** and has actually passed the appropriate integration gate.
 

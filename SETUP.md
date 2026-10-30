@@ -1,7 +1,7 @@
 # Greia Setup Index
 
 **Status:** LIVING workstation / contributor / operator setup router  
-**Reviewed:** 2026-10-19
+**Reviewed:** 2026-10-30
 **Canonical repository:** `frozenpepper/Greia`
 
 This file answers one question: **what does this workstation/operator role need to read and install?** It does not replace the narrower manuals that own exact procedures. New contributors should start with `CONTRIBUTING.md`; this file covers the heavier roles.
@@ -86,7 +86,6 @@ Read:
 
 ```text
 skills/greia-activity-authoring/SKILL.md
-skills/greia-activity-authoring/CORE.md
 docs/development/GREIA_ACTIVITY_SIMULATOR.md
 docs/development/GREIA_ACTIVITY_TEXT_TYPOGRAPHY_AND_EMOJI.md
 docs/product/ACTIVITY_INPUT_STANDARDS.md
@@ -148,25 +147,16 @@ produces external resumable reports. Optional ASR uses existing cached weights
 only; disabled/unavailable ASR is incomplete screening. This does not grant
 human acceptance or install anything. Generation DONE is a separate state.
 
-For the explicit owner-requested 2026-10-19 corpus regeneration/replacement,
-use `tools/regenerate_voice_corpus.py` with
-`docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md`. It reuses this installed stack,
-keeps external originals/candidates, preserves deterministic isolated letters
-and syllables, and reports progress/recovery. Character acting defaults are in
-`tools/greia_voice_core/character_delivery.json`, with a `delivery_prompt`
-semantic override per recording. New takes remain listening-pending.
-
-For the bounded 2026-10-21 short-cue carrier extraction experiment, use
-`tools/voice_carrier.py` through the workflow in
-`docs/agents/GREIA_SPOKEN_CARRIER_EXTRACTION.md`. It consumes mono PCM16
-VoiceEngine WAVs, preserves raw provider receipts, and only extracts after an
-exact raw carrier-prefix check, valid timing, one separate low-energy-gap check
-and an extracted-signal floor of 80 ms cumulative voiced frames. Standalone CLI
-target verification defaults to exact matches; an explicitly frozen corpus
-`warn` policy keeps target-transcript mismatches visible for human review. Its
-ASR/alignment and sample-cut evidence are technical screening, not acceptance.
-The tool uses the prepared Whisper authoring venv described in §7.5 and cached
-model weights only.
+Corpus regeneration/replacement (owner-requested 2026-10-19, v3 run
+2026-10-21) uses `tools/regenerate_voice_corpus.py` with
+`docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md`: external originals and
+candidates are kept, deterministic isolated letters and syllables are
+preserved, and every new take is listening-pending. Character acting defaults
+are in `tools/greia_voice_core/character_delivery.json`, with a
+`delivery_prompt` override per recording. Short-cue carrier extraction
+(`tools/voice_carrier.py`, `docs/agents/GREIA_SPOKEN_CARRIER_EXTRACTION.md`)
+is technical screening only, never acceptance, and uses cached model weights
+only.
 
 Canonical entry point:
 
@@ -200,13 +190,11 @@ pedagogical_speech
 dani_system_speech
 ```
 
-**Owner direction correction (2026-10-21):** voice-defining pitch/register,
-timbre, age and texture belong in master design only. All six fallback delivery
-entries now use neutral conversational performance; explicit per-cue directions
-must be acting/emotion/pace, not repeated persona definitions. Completed v2
-receipts retain their actual historic prompts. The 2026-10-21 v0.3 selection
-promoted Dani v5 candidate 02, Momo v3 candidate 01 and Tito v3 candidate 01;
-Lilli, Leo and Flash remain unchanged from v0.2.
+**Owner direction (2026-10-21):** voice-defining pitch/register, timbre, age
+and texture belong in master design only. Per-cue directions must be
+acting/emotion/pace, not repeated persona definitions. The active v0.3 masters
+are Dani v5 candidate 02, Momo v3 candidate 01 and Tito v3 candidate 01;
+Lilli, Leo and Flash keep their v0.2 masters.
 
 ### 7.1 Base engine and default character production
 
@@ -259,15 +247,11 @@ that server's choice. `request --timeout` controls the response wait (default
 owns its warm worker: `voxstage unload` releases model memory after production;
 closing a Greia client does not stop a service used by other projects.
 
-### 7.3 Shared reactions + character introductions — authoring COMPLETE
+### 7.3 Shared reactions + character introductions
 
-The accepted authoring set is now:
-
-```text
-180 shared reactions
-+ 12 character introductions
-= 192 owner-accepted clips
-```
+The owner-accepted v0.2 baseline is 180 shared reactions plus 12 character
+introductions (192 clips). Rows that the 2026-10-21 v3 replacement regenerated
+for Dani, Momo and Tito are listening-pending again (see §12).
 
 Canonical accepted assets:
 
@@ -290,8 +274,6 @@ Design/status authority:
 docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md
 docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md
 ```
-
-**Do not call this production/listening pending anymore.** Generation and owner listening are complete for v0.2.
 
 Still separate/pending where applicable:
 
@@ -422,7 +404,7 @@ Read:
 skills/greia-os-work/SKILL.md
 skills/greia-os-work/BOOT.md
 docs/agents/GREIA_AGENT_OPERATIONS.md
-docs/INSTALLER_IMAGE_CREATION_AND_BOOT.md
+docs/engineering/boot/INSTALLER_IMAGE_CREATION_AND_BOOT.md
 docs/engineering/BOOT_PIPELINE_AGENT_GUIDE.md
 ```
 
@@ -441,7 +423,7 @@ sudo bash tools/build-and-flash-development-usb.sh legacy-x86-i686-dev /dev/sdX
 sudo bash tools/build-and-flash-development-usb.sh legacy-x86-i686-rc /dev/sdX ./out --operator-key ~/greia-operator.pub
 ```
 
-The release-candidate runbook (frozen SHA, operator public key, USB identification, required PASS lines, pre-build gates G1–G11) is `docs/INSTALLER_IMAGE_CREATION_AND_BOOT.md` §13. Boot console policy (`diagnostic` vs `quiet`, hidden verbose paths) is §7 there.
+The release-candidate runbook (frozen SHA, operator public key, USB identification, required PASS lines, pre-build gates G1–G11) is `docs/engineering/boot/INSTALLER_IMAGE_CREATION_AND_BOOT.md` §13. Boot console policy (`diagnostic` vs `quiet`, hidden verbose paths) is §7 there.
 
 Do not add destructive disk/removable-media writes to a generic setup helper.
 
@@ -463,7 +445,7 @@ Do not add destructive disk/removable-media writes to a generic setup helper.
 | Voice policy/status | `docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md` |
 | Parent source/API | `docs/architecture/GREIA_PARENT_MANAGEMENT.md` |
 | Developer remote | `docs/agents/GREIA_AGENT_OPERATIONS.md` |
-| Installer/image creation | `docs/INSTALLER_IMAGE_CREATION_AND_BOOT.md` |
+| Installer/image creation | `docs/engineering/boot/INSTALLER_IMAGE_CREATION_AND_BOOT.md` |
 | Public-release gate | `docs/release/GREIA_PUBLIC_RELEASE_READINESS.md` |
 
 ## 12. Current readiness ledger
@@ -476,7 +458,7 @@ Do not add destructive disk/removable-media writes to a generic setup helper.
 | Voice Production Engine | implemented/canonical; provider readiness is workstation-specific and reported by `doctor` |
 | Character production (all six) | shared local VoxStage/VoxCPM2 default behind VoiceEngine; Chatterbox explicitly selectable |
 | Pedagogical production | independent macOS native provider; Dani now uses the cloned-character route |
-| Whisper verification | optional advisory verifier; never acceptance authority |
+| ASR verification | Parakeet-TDT v3 for new requests, Whisper retained for historical review; advisory only, never acceptance authority |
 | Shared reactions | **180 EN/IT recordings were owner-accepted in the v0.2 baseline**; selected Dani/Momo/Tito rows included in the 2026-10-21 v3 corpus replacement are now pending fresh listening, with prior bytes/receipts backed up externally |
 | Character introductions | **12 EN/IT introductions were owner-accepted in the v0.2 baseline**; selected Dani/Momo/Tito introductions included in the 2026-10-21 v3 replacement are now pending fresh listening; product placement separate |
 | Shared runtime resolver | separate integration task where still pending |

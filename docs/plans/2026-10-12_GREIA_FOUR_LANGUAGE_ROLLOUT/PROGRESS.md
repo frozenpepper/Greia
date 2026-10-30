@@ -1517,7 +1517,7 @@ Disk: +70.1 MiB audio (EN 13.5, IT 14.6, ES 21.4, FR 20.7) + 2.0 MiB receipts. O
 
 ## 2026-10-19 — Owner-selected new canonical voices and default renderer
 
-The owner accepted the six selected voice designs and their 24 EN/IT/FR/ES comparison samples, then authorized adoption as the active masters and default Voice Studio renderer. New character production now uses v0.2 cloned masters and local shared-worker VoxStage/VoxCPM2 by default, including Dani. Chatterbox remains explicitly selectable; pedagogical pronunciation remains the native/system route. Existing accepted shipping audio/receipts were preserved; this change is not a catalogue-wide re-recording. Source owners, current setup and living producer/Activity guidance were updated. Real engine integration smoke outputs remain review-pending technical evidence, separate from the owner's acceptance of the original comparison batch. Current verification and inherited suite blockers are recorded in `docs/reviews/2026-10-19_VOXSTAGE_VOICE_MIGRATION.md` and HANDOVER; no runtime/hardware language-acceptance claims are added.
+The owner accepted the six selected voice designs and their 24 EN/IT/FR/ES comparison samples, then authorized adoption as the active masters and default Voice Studio renderer. New character production now uses v0.2 cloned masters and local shared-worker VoxStage/VoxCPM2 by default, including Dani. Chatterbox remains explicitly selectable; pedagogical pronunciation remains the native/system route. Existing accepted shipping audio/receipts were preserved; this change is not a catalogue-wide re-recording. Source owners, current setup and living producer/Activity guidance were updated. Real engine integration smoke outputs remain review-pending technical evidence, separate from the owner's acceptance of the original comparison batch. Current verification and inherited suite blockers are recorded in `2026-10-19_VOXSTAGE_VOICE_MIGRATION.md` (archived; see git history) and HANDOVER; no runtime/hardware language-acceptance claims are added.
 
 
 ## 2026-10-19 — Existing-corpus replacement tool and per-recording direction prepared
@@ -1528,7 +1528,7 @@ The modular tool inventories exact scripts/identities, resolves blocked metadata
 
 Prepared inventory outside Git: `/Volumes/Test1/Works/Greia-voice-auditions/2026-10-19-corpus-prepared/`: **5,308 files; 4,543 READY; 167 BLOCKED_METADATA; 598 PRESERVED**, including 441 isolated teaching targets, 150 historical shared clips, six canonical references and boot chime. All READY requests have an explicit prompt. Scripts missing from the older eight Activity corpora require recovery, not guessing. `resolve` can fill those gaps while retaining completed work. Full corpus replacement was **NOT launched**, and no existing runtime audio or accepted master was replaced during tool preparation.
 
-Evidence: 52 focused voice tests PASS; one real external Lilli English/custom-prompt smoke completed (job `20261019-100927-df5c3cf4`), exact prompt visible in persisted worker request and recording direction, receipt PENDING; worker unloaded. Final `make -k verify`: 5,468 tests, 1 failure/4 errors/8 skips, same inherited profile/executable/macOS installer/MBR failures; global validator still blocks on ARM64 builder assumption. Shell/footprint ran; aggregate NOT GREEN. See `docs/reviews/2026-10-19_VOICE_CORPUS_TOOL.md` and HANDOVER. No new human listening, Simulator/physical playback or release-image acceptance. The next local agent follows the new runbook, resolves legacy script gaps, pilots and runs/monitors the corpus operation, fixing owning modules as needed.
+Evidence: 52 focused voice tests PASS; one real external Lilli English/custom-prompt smoke completed (job `20261019-100927-df5c3cf4`), exact prompt visible in persisted worker request and recording direction, receipt PENDING; worker unloaded. Final `make -k verify`: 5,468 tests, 1 failure/4 errors/8 skips, same inherited profile/executable/macOS installer/MBR failures; global validator still blocks on ARM64 builder assumption. Shell/footprint ran; aggregate NOT GREEN. See `2026-10-19_VOICE_CORPUS_TOOL.md` (archived; see git history) and HANDOVER. No new human listening, Simulator/physical playback or release-image acceptance. The next local agent follows the new runbook, resolves legacy script gaps, pilots and runs/monitors the corpus operation, fixing owning modules as needed.
 
 ### 2026-10-21 — Automated review after corpus production
 
@@ -1636,7 +1636,7 @@ v2 explicit PERSONA overrides remain untouched but must not be reused. Owner
 rejects current Dani/Momo/Tito voices; six new unselected immutable master
 auditions generated (two each, 11.84–16.00s), listener on 8795. Shared worker
 unloaded after jobs finished. Source research/trace/job evidence is in
-`docs/reviews/2026-10-21_VOICE_DIRECTION_AND_REFERENCE_REVIEW.md`; 5–30s is
+`2026-10-21_VOICE_DIRECTION_AND_REFERENCE_REVIEW.md` (archived; see git history); 5–30s is
 practical guidance, not proof that old refs were invalid. New master selection
 and cloned-line checks precede the draft 1340-file replacement (392/284/664).
 No master/runtime file changed; no new corpus regeneration launched.
@@ -1779,7 +1779,7 @@ and retirement; aligned `SYSTEM_LANGUAGE_AND_LOCALIZATION.md`, release gate,
 family Parents guide, voice authoring guides and skill index. New speech still
 uses the selected VoxStage/VoxCPM2 and Parakeet-TDT v3 verification;
 historical Whisper instructions remain explicitly historical. Old
-twelve-language proposal moved to `docs/archive/plans/`.
+twelve-language proposal moved to `docs/archive/plans/` (archived; see git history).
 
 Repository-wide, safe clean-up removed only the obsolete September website
 prototype tree (21 historical files / 3,518,032 bytes), and shortened the

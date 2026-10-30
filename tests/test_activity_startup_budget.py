@@ -1,6 +1,6 @@
 """Guard: representative Activities stay cheap between set_mode and first frame.
 
-The 2026-10-16 Acer re-sweep (docs/reviews/acer/2026-10-16_ACER_ACTIVITY_SWEEP.md,
+The 2026-10-16 Acer re-sweep (2026-10-16_ACER_ACTIVITY_SWEEP.md (archived; see git history),
 R.2) measured 2-9 s of Activity "content build" on the Atom N270 before the
 first frame, dominated by sound effects synthesised in pure Python at start-up.
 Cues are now defined in a ``DeferredSoundBank`` and built after READY.

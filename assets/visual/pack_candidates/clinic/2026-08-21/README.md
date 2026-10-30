@@ -2,8 +2,8 @@
 
 **Pack ID:** `greia.environment.clinic.2026-08-21-candidate`  
 **Parent Plan:** `docs/plans/2026-08-21_BASE_ART_PACK_REAUTHORING.md`  
-**Runbook:** `docs/testing/2026-08-21_CLINIC_CARE_BASE_PACK_REAUTHORING.md`  
-**Review Evidence:** `docs/reviews/visual/2026-08-21_clinic-care-base-pack-reauthoring/`
+**Runbook:** `2026-08-21_CLINIC_CARE_BASE_PACK_REAUTHORING.md` (archived; see git history)  
+**Review Evidence:** `docs/reviews/visual/2026-08-21_clinic-care-base-pack-reauthoring/` (archived; see git history)
 
 ## Summary
 

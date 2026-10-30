@@ -1,14 +1,16 @@
 ---
 name: greia-visual-authoring
-description: Task router for Greia visual asset creation, reuse, adaptation, scene composition, character art, Activity visual integration and visual acceptance. Load only the task-specific local docs required for the work.
+description: Use when creating, redrawing, reusing, adapting or registering Greia visual assets (SVG/PNG art, scenes, characters, icons, badges, boot art), integrating art into an Activity or the Shell, or reviewing rendered visuals. Task router: load only the task-specific docs it names.
 ---
 
 # Greia Visual Authoring — task router
 
 **Status:** living derived contributor router  
-**Reviewed:** 2026-10-15 (shared library v1)
+**Reviewed:** 2026-10-30
 
-Keep this file small. It tells an agent **what to read for the visual task**; it is not a duplicate art/style/runtime manual.
+## When to use / Read first
+
+Use for any visual-asset or visual-integration task. Read the universal rules and the shared-library/SVG recipe below, then only the "Read by task" section that matches. Keep this file small: it tells an agent **what to read for the visual task**; it is not a duplicate art/style/runtime manual. The stable visual-system entry point is `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`.
 
 ## Universal rules
 
@@ -23,7 +25,7 @@ These apply to substantive Greia visual work:
 7. Meaningful visual work requires inspection of actual rendered pixels. A producer-written `PASS` is not visual acceptance.
 8. If visual work changes Activity runtime code/assets/resources, also follow the Activity authoring router and final Simulator launch gate.
 
-## Use the shared art library first (catalogue 0.6.0)
+## Use the shared art library first
 
 Before drawing anything, look for it in the registered library (inventory: `assets/visual/README.md`, selection: `assets/catalog/shared_visuals_v1_source.toml`, generated runtime catalogue: `assets/catalog/shared_visuals_v1.toml`, PNGs: `assets/visual/runtime/v1/`):
 
@@ -32,7 +34,7 @@ Before drawing anything, look for it in the registered library (inventory: `asse
 | Biome layers, wallpapers, rooms, stage (1024×600) | `bg.<biome>.<layer>` |
 | Props: food, vocab nouns, everyday, nature, blocks, shapes, instruments | `prop.<family>.<name>` |
 | Creatures: pets (need states), marine, woodland | `creature.<role>.<name>` |
-| HUD glyphs | `icon.hud.<name>` (control-kit glyphs: `ui/controls/v1`) |
+| HUD glyphs | `icon.hud.<name>` (control-kit pieces: `ui.*`, art under `assets/visual/ui/controls`) |
 | FX frames | `fx.<name>` |
 | Cast variants (pose_cheer/point/think/wave/play, sad, angry, silly) | `character.<id>` variants |
 
@@ -40,20 +42,20 @@ Consume by semantic ID through the catalogue and the bounded PNG cache; never sc
 
 **Registering a new shared asset** (demonstrated gap only): author the SVG per the rules below, add a `[[visuals]]`/`[[visuals.variants]]` block to `shared_visuals_v1_source.toml` (`id`, `kind`, `role`; variant `name`, `source`, `output`, `width`, `height`), run `make visual-assets` then `make visual-assets-check`, and commit SVG, PNG and both catalogues. **Alias:** a second ID may declare the identical source/output/size as an existing one (e.g. `prop.vocab.cat` = `creature.pet.kitten` neutral); the builder renders it once. Never add a second drawing for an animal that already has a creature. `tests/test_shared_visual_library.py` fails on a missing/mis-sized rendition or an unregistered PNG.
 
-## Authoring or redrawing any SVG (mandatory recipe, 2026-10-15)
+## Authoring or redrawing any SVG (mandatory recipe)
 
 `docs/design/GREIA_SVG_AUTHORING_RULES.md` is binding for every new or redrawn vector asset, shared or Activity-private. Practical workflow:
 
-1. Read the rules doc (canvas per kind, palette tokens, strokes, shading, contact shadow, Activity icon tile, forbidden constructs, budgets). Do not invent base hues; do not copy the superseded blur-filter/glossy dialects from older packs, only the canonical cast v0.1 masters and the 2026-10-15 bake-off winners (`icon_marble_run`, `leo_celebrate`, `scene_river_valley`) are reference-quality.
-2. Author with **Opus** (the selected SVG authoring model per the 2026-10-15 bake-off). Cast poses derive from the canonical components; never redraw a cast member from scratch or in Activity code.
+1. Read the rules doc (canvas per kind, palette tokens, strokes, shading, contact shadow, Activity icon tile, forbidden constructs, budgets). Do not invent base hues; do not copy the superseded blur-filter/glossy dialects from older packs; only the canonical cast v0.1 masters and the bake-off winners named in the rules doc are reference-quality.
+2. Author with **Opus** (the selected SVG authoring model). Cast poses derive from the canonical components; never redraw a cast member from scratch or in Activity code.
 3. Lint with the grep in rules §9 (must print nothing), then check size/path/gradient budgets (§11).
 4. Render with `rsvg-convert` (>= 2.40) at 256/64/48 into the scratch folder (never inside the repo) and inspect pixels at 1:1; check the 48 px legibility list (§12) and a contact sheet next to the neighbours (`python3 tools/visual_family_contact_sheet.py`).
 5. Shared runtime art: register it in `assets/catalog/shared_visuals_v1_source.toml`, run `make visual-assets` then `make visual-assets-check`, commit the PNG renditions with the catalogue. Activity-private art: commit `assets/source/*.svg` beside the `rsvg-convert` PNG.
 6. Record evidence with the correct label and delete the scratch folder. Only `assets/visual/runtime/` + catalogues (not SVG masters) are installed on the image.
 
-7. **@2x rule (2026-10-21):** every new or redrawn SVG-backed runtime asset must also get its `<name>@2x.png` through the build tool (`python3 tools/build_visual_renditions.py --rasterizer /opt/local/bin/rsvg-convert`; never hand-made, never `--no-hires` for committed art). Commit the `@2x` with the 1x file; the 1x stays for the reference netbook.
+7. **@2x rule:** every new or redrawn SVG-backed runtime asset must also get its `<name>@2x.png` through the build tool (`python3 tools/build_visual_renditions.py --rasterizer <path to rsvg-convert>`; never hand-made, never `--no-hires` for committed art). Commit the `@2x` with the 1x file; the 1x stays for the reference netbook.
 
-Inventory, verdicts and the redraw backlog: `docs/reviews/visual/2026-10-15_asset_library_audit/REVIEW.md`.
+Library inventory: `assets/visual/README.md`; per-family reviews live under `docs/reviews/visual/`.
 
 Start from the task map below. Do **not** read every visual document by default.
 
@@ -95,21 +97,20 @@ docs/design/GREIA_GENERIC_ART_LIBRARY_TAXONOMY.md
 Use the repository discovery helper instead of manually crawling source folders:
 
 ```bash
-python tools/visual_authoring_library.py collections
-python tools/visual_authoring_library.py search <need>
-python tools/visual_authoring_library.py show <semantic-id>
-python tools/visual_authoring_library.py gallery --output tmp/greia-visual-library.html
+python3 tools/visual_authoring_library.py collections
+python3 tools/visual_authoring_library.py search <need>
+python3 tools/visual_authoring_library.py show <semantic-id>
+python3 tools/visual_authoring_library.py gallery --output tmp/greia-visual-library.html
 ```
 
 Prefer `library_status = "preferred"` for direct reuse. Treat `candidate_reference` as reference/adaptation material unless a narrower accepted document says otherwise.
 
-For a visual selection pass, create `tmp/` if needed, run the new `gallery`
+For a visual selection pass, create `tmp/` if needed, run the `gallery`
 subcommand and open the generated standalone HTML in a development-host
 browser. It exposes all assets with large source previews and filter controls
 without creating another catalogue or requiring hosted services. The output
 path must not exist; choose a fresh path for repeated captures. Review
 source-art pixels at low sizes and runtime before admitting preferred art.
-Gallery implementation is source-WIP until its test/screenshot gate runs.
 
 The canonical authoring index lives under:
 

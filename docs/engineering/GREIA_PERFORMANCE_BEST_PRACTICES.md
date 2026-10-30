@@ -39,7 +39,7 @@ Use the repository evidence vocabulary. For performance work specifically:
 | Simulator | semantic contracts over synthetic HAL facts | memory/CPU/display-backend behavior |
 | Physical (named machine + SHA) | real user-visible frame/CPU/memory behavior | R7 backend closure by itself |
 
-A physical claim must name the machine, connection, source SHA and measurement mechanism, and belongs in `HANDOVER.md`, the active-plan ledger, or a dated `docs/reviews/performance/<date>_<topic>/` report.
+A physical claim must name the machine, connection, source SHA and measurement mechanism, and belongs in `HANDOVER.md`, the active-plan ledger, or a dated `docs/reviews/performance/<date>_<topic>/` (archived; see git history) report.
 
 ### 2.3 Instruments
 

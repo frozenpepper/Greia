@@ -5,7 +5,7 @@ Inputs (captured by tools/encyclopedia_v01_golden_master_capture.py):
   tmp/encyclopedia-goldenmaster-2026-08-28-e2r-compact/compact/screenshots/*.png
   tmp/encyclopedia-goldenmaster-2026-08-28-e2r-large/large/screenshots/*.png
 
-Outputs (committed under docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/):
+Outputs (the 2026-08-28 golden-master review set was archived on 2026-10-30; see git history):
   screenshots/01-home.png            1024x600 reference view
   screenshots/02-lion-activated.png  1024x600 representative interaction state
   screenshots/03-home-compact.png    compact (1024x600 + interface-size=compact) row

@@ -124,7 +124,7 @@ The authored reference scene uses 1024×600 design coordinates, `fit = "cover"`,
 Protocol executed:
 
 ```text
-docs/testing/2026-08-21_SCENE_COMPOSITOR_NASCONDINO_SIMULATOR.md
+2026-08-21_SCENE_COMPOSITOR_NASCONDINO_SIMULATOR.md (archived; see git history)
 ```
 
 Retained runtime facts:
@@ -139,12 +139,12 @@ Retained runtime facts:
 - optional atmosphere failure (`fog_strip.png`) skips only the affected layer;
 - the six responsive simulator rows were exercised;
 - measured scene run was **258 frames / 10.01 s = 25.8 FPS** simulator sanity;
-- curated screenshots are committed under `docs/reviews/visual/2026-08-21_scene-compositor-nascondino/`.
+- curated screenshots are committed under `docs/reviews/visual/2026-08-21_scene-compositor-nascondino/` (archived; see git history).
 
 Primary source/evidence cross-check:
 
 ```text
-docs/reviews/visual/2026-08-21_scene-compositor-nascondino/PRIMARY_REVIEW.md
+docs/reviews/visual/2026-08-21_scene-compositor-nascondino/PRIMARY_REVIEW.md (archived; see git history)
 ```
 
 That review found the local-agent visual audit overstated/incorrectly transcribed several facts: target label was 18 px rather than claimed 22 px; recorded target-card geometry disagreed with source; Large-interface scaling was claimed where the fixed HUD did not use that preference; and the scene's `cover` behavior was described as letterbox/pillarbox. These are folded into the next actor/HUD gate instead of starting another isolated micro-cycle.
@@ -197,7 +197,7 @@ Accepted simulator facts:
 - `SCOIATTOLO` fits cleanly inside available text spans across all interface sizes without clipping, collision, or ellipsis;
 - 112 px clear horizontal safety margin between star pill ($x=210$) and target card ($x=322..337$);
 - 10-second idle performance sanity: 230 frames / 10.01 s = **23.0 FPS**;
-- Curated screenshot review set committed under `docs/reviews/visual/2026-08-21_scene-actor-lilli-nascondino/`;
+- Curated screenshot review set committed under `docs/reviews/visual/2026-08-21_scene-actor-lilli-nascondino/` (archived; see git history);
 - Transfer archive prepared at project root for independent owner/ChatGPT pixel inspection: `./GREIA_VISUAL_REVIEW_SCENE_ACTOR_LILLI_2026-08-21.zip`.
 
 ## S5 — Character and reusable FX integration

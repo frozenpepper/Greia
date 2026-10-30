@@ -4,7 +4,7 @@
 This is a short operator checklist for the next release cut, **not** a replacement
 for the normative [release-readiness gate](GREIA_PUBLIC_RELEASE_READINESS.md),
 the [multiplatform lifecycle plan](../plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md),
-or the [latest detailed update/image evidence](../reviews/2026-10-28_UPDATE_SYSTEMS_SITUATION_AND_FIRST_IMAGE.md).
+or the latest detailed update/image evidence (archived; see git history).
 Update the verdict from measured new evidence, not from elapsed time.
 
 ## Proposed first release scope
@@ -41,7 +41,7 @@ The reference candidate is the `acer-aspire-one-i386-ab` A/B profile, without
   the Greia-owned graphical handoff) and is registered release-safe for the
   technical-preview composition. Physical Acer visual acceptance remains an
   ordinary-family gate. See
-  [the acceptance record](2026-10-28_BOOT_COVER_ACCEPTANCE.md).
+  the acceptance record (archived; see git history).
 - `make verify` is **GREEN**: 6,013 tests, OK, 5 skipped at source
   `8bac176bd3d3b562fcf6785cdf663aecf0dcceec`. The maintained documentation
   audit reports 437 Markdown files and zero unresolved repository links.

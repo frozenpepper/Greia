@@ -26,7 +26,7 @@ _FIRMWARE_PREFIXES = ("lib/firmware/", "usr/lib/firmware/")
 
 #: Firmware packages that are ALWAYS pool candidates, even when isenkram's
 #: Contents metadata misses them (2026-10-21 legacy-hardware reviews:
-#: ``docs/reviews/2026-10-21_LEGACY_X86_NETBOOK_HARDWARE_RISKS.md`` section 5.1
+#: ``2026-10-21_LEGACY_X86_NETBOOK_HARDWARE_RISKS.md`` (archived; see git history) section 5.1
 #: and ``..._PRE_M1_MAC_HARDWARE_SUPPORT.md`` section 3).  This is only a
 #: candidate list: ``populate-hardware-support-pool.sh`` still drops any name
 #: that APT cannot resolve in ``main non-free-firmware`` for the target suite,

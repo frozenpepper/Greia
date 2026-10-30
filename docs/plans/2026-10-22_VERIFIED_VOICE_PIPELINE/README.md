@@ -325,8 +325,8 @@ unbounded retakes or bulk production.
 
 ## Design review record
 
-[Source baseline](evidence/source-baseline.json) records current hashes and shared
-dirty paths. [Adversarial review](evidence/adversarial-review.md) records the two
+Source baseline (archived; see git history) records current hashes and shared
+dirty paths. Adversarial review (archived; see git history) records the two
 planning review passes and unresolved live predicates. Document validation checks
 plan structure only; it does not prove the future pipeline works.
 

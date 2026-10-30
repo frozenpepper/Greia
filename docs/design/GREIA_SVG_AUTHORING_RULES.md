@@ -2,7 +2,7 @@
 
 **Status:** ACCEPTED (2026-10-15, main agent; tile hues per Collection accepted). Binding SVG recipe for all new and redrawn Greia shared art and Activity-private art.
 **Derived from:** `GREIA_VISUAL_STYLE_GUIDE.md` §16/§20, `runtime/theme-defaults.toml`, the canonical cast masters in `assets/visual/characters/canonical/v0.1/`, and the 2026-10-15 SVG bake-off winners (`icon_marble_run`, `leo_celebrate`, `scene_river_valley`).
-**Audit context:** `docs/reviews/visual/2026-10-15_asset_library_audit/REVIEW.md`
+**Audit context:** `docs/reviews/visual/2026-10-15_asset_library_audit/REVIEW.md` (archived; see git history)
 **Owners elsewhere:** colour values → `runtime/theme-defaults.toml` (UI/surfaces) and canonical cast SVGs (character ink/materials); runtime rendition contract → `tools/build_visual_renditions.py`; cast identity → `GREIA_CANONICAL_CAST_SYSTEM.md`. This file owns only the *recipe*.
 
 The recipe in one line: **flat shapes, one warm cocoa contour, at most two-stop fills, one highlight and one shade per mass, explicit ellipse shadows, no filters, no text, no raster — rendered by `rsvg-convert` at build time.**

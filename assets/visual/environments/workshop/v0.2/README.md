@@ -3,7 +3,7 @@
 **Pack ID:** `greia.environment.workshop.v0.2`  
 **Status:** Promoted  
 **Parent Plan:** `docs/plans/2026-08-21_BASE_ART_PACK_REAUTHORING.md`  
-**Authority:** `docs/reviews/visual/2026-08-21_workshop-pack-finalization/PRIMARY_PROMOTION_REVIEW.md`
+**Authority:** `PRIMARY_PROMOTION_REVIEW.md` (archived; see git history)
 
 ## Overview
 

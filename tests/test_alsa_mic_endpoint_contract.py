@@ -1,6 +1,6 @@
 """Contract tests for the Greia-owned ALSA microphone endpoint (ADR 0031).
 
-Physical review: docs/reviews/acer/2026-10-17_ACER_MIC_NOISE_FILTER.md.
+Physical review: 2026-10-17_ACER_MIC_NOISE_FILTER.md (archived; see git history).
 These are source contracts; they cannot prove the module opens on hardware.
 """
 

@@ -11,7 +11,7 @@ Greia needs a practical way for Activity authors to test work without installing
 
 A VM reproduces many Linux details irrelevant to Activity iteration. A mock Greia-themed preview has the opposite failure: it can drift from the actual launcher, manifest parser, permissions, profile state, runtime adapters and responsive layout. ADR 0027 already requires preview tooling to use the same transform/layout implementation as runtime rather than a fake preview algorithm. The same principle applies to the complete Activity environment.
 
-The first implementation was deliberately reviewed adversarially in `docs/archive/reviews/2026-08-19_ACTIVITY_SIMULATOR_ADVERSARIAL_REVIEW.md`. That review exposed composition duplication, a shadowable Python bootstrap, unsafe Shell restart semantics, unsafe source-folder staging, Activity-visible simulator identity and weaker-than-required evidence/portability boundaries. The hardened decision below makes the non-drift goal mechanical rather than aspirational.
+The first implementation was deliberately reviewed adversarially in `2026-08-19_ACTIVITY_SIMULATOR_ADVERSARIAL_REVIEW.md` (archived; see git history). That review exposed composition duplication, a shadowable Python bootstrap, unsafe Shell restart semantics, unsafe source-folder staging, Activity-visible simulator identity and weaker-than-required evidence/portability boundaries. The hardened decision below makes the non-drift goal mechanical rather than aspirational.
 
 ## Decision
 
