@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "historyId": "85536c6e-46db-4e64-92f3-e0fceb0ec9a7",
+  "currentRevision": null,
+  "pendingChanges": false,
+  "files": {
+    "hyperframes.json": {
+      "hash": "53dbce1e19aa713cbb12ee0bc4d206143b45ab15e6ffbfcaa8f69572d4d24d50",
+      "content": "/Users/taio84/.cache/hyperframes/history/85536c6e-46db-4e64-92f3-e0fceb0ec9a7/blobs/53/53dbce1e19aa713cbb12ee0bc4d206143b45ab15e6ffbfcaa8f69572d4d24d50"
+    },
+    "index.html": {
+      "hash": "e44bd3da39bbb0ecf1e42d3d9a019c65652a8d2d0853bb1c7627e83432f1026d",
+      "content": "/Users/taio84/.cache/hyperframes/history/85536c6e-46db-4e64-92f3-e0fceb0ec9a7/blobs/e4/e44bd3da39bbb0ecf1e42d3d9a019c65652a8d2d0853bb1c7627e83432f1026d"
+    },
+    "meta.json": {
+      "hash": "87f4254ae28df4240d169ac3dab09d5005616d1422278daf189b7fde8790576b",
+      "content": "/Users/taio84/.cache/hyperframes/history/85536c6e-46db-4e64-92f3-e0fceb0ec9a7/blobs/87/87f4254ae28df4240d169ac3dab09d5005616d1422278daf189b7fde8790576b"
+    }
+  },
+  "revisions": {},
+  "checks": {
+    "latest": null,
+    "revisions": {},
+    "unversioned": []
+  },
+  "snapshots": {
+    "latest": {
+      "revision": null,
+      "id": "32c64176-b7e5-4fa5-95cb-d8c4bc66519b-2"
+    },
+    "revisions": {},
+    "unversioned": [
+      {
+        "scope": "full",
+        "id": "32c64176-b7e5-4fa5-95cb-d8c4bc66519b-0",
+        "image": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/launch-video/storyboard/variants/C/snap/frame-00-at-0.5s.png",
+        "time": 0.5,
+        "metadata": {
+          "width": 1920,
+          "height": 1080,
+          "zoomScale": 1,
+          "browserGpuMode": "auto",
+          "warnings": [],
+          "partial": false
+        },
+        "createdAt": 1792204356761,
+        "contentHash": "78c700f02bd712d92e999d0405efb91c2968e594d8ca544a7435b96b9d2ec70d",
+        "revision": null,
+        "inputFingerprint": "6f029d1dc6629fdce10b0362498e2bc699e219a7d6cb5067e6a3c649a1b4b911",
+        "inputScope": "local-project-files",
+        "attribution": "inputs-changed"
+      },
+      {
+        "scope": "full",
+        "id": "32c64176-b7e5-4fa5-95cb-d8c4bc66519b-1",
+        "image": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/launch-video/storyboard/variants/C/snap/frame-01-at-1.5s.png",
+        "time": 1.5,
+        "metadata": {
+          "width": 1920,
+          "height": 1080,
+          "zoomScale": 1,
+          "browserGpuMode": "auto",
+          "warnings": [],
+          "partial": false
+        },
+        "createdAt": 1792204356761,
+        "contentHash": "92fdd6bb4675c980aabf53e8c1fcedca03881cc11c8aa9444061e3fa46df30c8",
+        "revision": null,
+        "inputFingerprint": "6f029d1dc6629fdce10b0362498e2bc699e219a7d6cb5067e6a3c649a1b4b911",
+        "inputScope": "local-project-files",
+        "attribution": "inputs-changed"
+      },
+      {
+        "scope": "full",
+        "id": "32c64176-b7e5-4fa5-95cb-d8c4bc66519b-2",
+        "image": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/launch-video/storyboard/variants/C/snap/frame-02-at-2.5s.png",
+        "time": 2.5,
+        "metadata": {
+          "width": 1920,
+          "height": 1080,
+          "zoomScale": 1,
+          "browserGpuMode": "auto",
+          "warnings": [],
+          "partial": false
+        },
+        "createdAt": 1792204356761,
+        "contentHash": "9689327384a0d187a3af6b126983643b7502cb955725762c6f50a83b47ac2b6f",
+        "revision": null,
+        "inputFingerprint": "6f029d1dc6629fdce10b0362498e2bc699e219a7d6cb5067e6a3c649a1b4b911",
+        "inputScope": "local-project-files",
+        "attribution": "inputs-changed"
+      }
+    ]
+  }
+}

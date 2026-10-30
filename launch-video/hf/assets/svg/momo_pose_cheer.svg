@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Momo pose_cheer: canonical v0.1 paths verbatim; stub arms swung up about
+       the shoulder, canonical happy face, 12 px hop. -->
+  <defs>
+    <linearGradient id="momoBody" x1="0%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#C084FC"/>
+      <stop offset="50%" stop-color="#9333EA"/>
+      <stop offset="100%" stop-color="#7E22CE"/>
+    </linearGradient>
+  </defs>
+
+  <g id="shadow">
+    <ellipse cx="128" cy="229" rx="43" ry="7" fill="#6A5147" opacity="0.11"/>
+  </g>
+
+  <g id="fx" stroke="#8A5A12" stroke-width="2.5" stroke-linejoin="round">
+    <path d="M24 40 Q26 50 36 52 Q26 54 24 64 Q22 54 12 52 Q22 50 24 40 Z" fill="#FDE68A"/>
+    <path d="M232 40 Q234 50 244 52 Q234 54 232 64 Q230 54 220 52 Q230 50 232 40 Z" fill="#FDE68A"/>
+  </g>
+
+  <g id="character" transform="translate(0 -12)">
+    <g id="antennae">
+      <path d="M105 77 C95 57 96 45 105 37" stroke="#6D4BB6" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <circle cx="105" cy="35" r="8" fill="#FBBF24" stroke="#4B372F" stroke-width="2.5"/>
+      <path d="M151 76 C164 59 165 47 159 39" stroke="#6D4BB6" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <circle cx="158" cy="37" r="7" fill="#F43F5E" stroke="#4B372F" stroke-width="2.5"/>
+    </g>
+
+    <g id="stub_arms">
+      <ellipse cx="65" cy="150" rx="12" ry="21" fill="#7E22CE" stroke="#4B372F" stroke-width="2.5" transform="translate(-17 -42) rotate(-30 65 150)"/>
+      <ellipse cx="191" cy="148" rx="12" ry="21" fill="#7E22CE" stroke="#4B372F" stroke-width="2.5" transform="translate(17 -42) rotate(30 191 148)"/>
+    </g>
+
+    <g id="fluff_body">
+      <path d="M128 68 C144 64 155 72 163 83 C180 80 190 91 187 107 C203 116 202 132 190 142 C198 159 191 174 177 179 C176 194 164 205 149 203 C142 215 126 220 114 212 C98 218 84 211 79 198 C63 197 55 185 59 171 C45 160 46 145 58 136 C49 120 55 105 69 99 C68 84 82 75 96 80 C105 68 117 65 128 68 Z" fill="url(#momoBody)" stroke="#4B372F" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+
+    <g id="belly_glow">
+      <ellipse cx="128" cy="145" rx="48" ry="44" fill="#E9D5FF" opacity="0.36"/>
+    </g>
+
+    <g id="feet">
+      <ellipse cx="103" cy="209" rx="14" ry="8.5" fill="#2DD4BF" stroke="#4B372F" stroke-width="2.5"/>
+      <ellipse cx="153" cy="209" rx="14" ry="8.5" fill="#2DD4BF" stroke="#4B372F" stroke-width="2.5"/>
+    </g>
+
+    <g id="face">
+      <g id="cheeks">
+        <ellipse cx="88" cy="154" rx="10" ry="6" fill="#FDA4AF" opacity="0.55"/>
+        <ellipse cx="169" cy="153" rx="10" ry="6" fill="#FDA4AF" opacity="0.55"/>
+      </g>
+
+      <g id="eyes">
+        <path d="M97 132 Q107 120 117 132" stroke="#352B3A" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+        <path d="M140 130 Q149 118 158 130" stroke="#352B3A" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+      </g>
+
+      <g id="mouth">
+        <path d="M106 158 Q128 186 150 158 Q148 190 128 193 Q108 188 106 158 Z" fill="#581C87" stroke="#352B3A" stroke-width="1.5"/>
+        <path d="M125 159 L135 159 L130 171 Z" fill="#FFFBEB"/>
+        <path d="M116 174 Q128 185 140 174" fill="#F43F5E"/>
+      </g>
+    </g>
+
+    <g id="spots">
+      <circle cx="91" cy="105" r="5.5" fill="#F3E8FF" opacity="0.7"/>
+      <circle cx="163" cy="102" r="4.5" fill="#F3E8FF" opacity="0.7"/>
+      <circle cx="170" cy="176" r="4" fill="#F3E8FF" opacity="0.7"/>
+    </g>
+  </g>
+</svg>
