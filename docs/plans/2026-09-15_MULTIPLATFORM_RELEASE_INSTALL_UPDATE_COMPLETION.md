@@ -3948,3 +3948,17 @@ first boot was Italian; Parent service served HTTPS 200 and accepted the
 The LaCie USB was reflashed and full readback matched. Wi-Fi hardware,
 installed panel click-through, physical Acer install and rollback remain
 unexecuted.
+
+**2026-10-30 installed-generation fix bundle + installer, USB reflashed:**
+Built a new A/B fixture bundle from `89aa68891`
+(`a564ed0b3b260f1c0f9b0d8e1d66bb7cba875d75a9affeda4607c1e56af46a8b`,
+714,525,618 bytes) and installer
+`018ae1d2d17415694b7fd47b590f3a44160153890e9a02bf56c3ae649b90aaf6`
+(2,273,312,768 bytes). The launcher now resolves the installed generation
+symlink (`installed_root.py`) across Shell/bootstrap/supervisor/broker.
+Parent permissions fix retained: new bundle Parent client `0755`, pinned
+integrity check passes as `greiapanel`. Full gate: 6,027 tests, one
+documented full-suite-only launcher-memory failure that passes isolated;
+focused tests pass. The LaCie `/dev/sdc` was reflashed and full readback
+matched. Physical Acer install/first boot, Wi-Fi hardware and rollback remain
+unexecuted.
