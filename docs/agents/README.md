@@ -3,6 +3,7 @@
 Read in this order, then pick the row that matches your task.
 
 1. [AGENTS.md](../../AGENTS.md): rules and product contracts. Always.
+   The owner's core agents also read [CORE_TEAM.md](CORE_TEAM.md).
 2. [SETUP.md](../../SETUP.md): what to install for your role.
 3. [HANDOVER.md](../../HANDOVER.md): current state and next step.
 4. [GREIA_AGENT_OPERATIONS.md](GREIA_AGENT_OPERATIONS.md): how to work in this
@@ -59,5 +60,5 @@ microphone, voice and more). The skill names the one you need.
 
 - Run `make verify` and say where each check ran (desktop, Simulator, VM or device).
 - Update the document, skill or ADR your change made wrong.
-- Update HANDOVER.md and the active plan, as AGENTS.md requires.
+- Core-team agents: update HANDOVER.md and the active plan, as [CORE_TEAM.md](CORE_TEAM.md) requires. Outside agents: follow "Sharing what you found" in AGENTS.md.
 - Do not claim a result that did not run on the stated commit.

@@ -40,7 +40,7 @@ Updated 2026-10-30. Newest first inside each topic; the dated source entries are
 
 ## Active workstreams
 
-Blocking and lifecycle authorities (rules in `AGENTS.md`):
+Blocking and lifecycle authorities (rules in `docs/agents/CORE_TEAM.md`):
 
 - **Architecture remediation**: `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md` is the blocking plan for its remaining non-lifecycle obligations.
 - **Install, update and release lifecycle**: `docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md` (ADR 0036 successor).
@@ -49,7 +49,7 @@ Blocking and lifecycle authorities (rules in `AGENTS.md`):
 - **Parent authentication/runtime acceptance**: current HTTPS transport procedure is `docs/testing/2026-10-23_PARENT_HTTPS_ACCEPTANCE.md`; the older 2026-09-08 protocol is a historical authentication baseline. Self-signed HTTPS is implemented in source but awaits local tests and device/browser acceptance.
 - **Testing route**: `docs/testing/LOCAL_AGENT_START_HERE.md`; local-agent queue `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`.
 
-Scoped owner-authorized workstreams (moved verbatim from `AGENTS.md` on 2026-10-16):
+Scoped owner-authorized workstreams (moved verbatim from `AGENTS.md` on 2026-10-16; standing rules now in `AGENTS.md` § Standing owner decisions and `docs/agents/CORE_TEAM.md`):
 
 **Current owner-authorized Activity release + Creations workstream:** `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md` is the **single unified product/content implementation plan** for the typed child Creations Library, universal pre-reader picker/viewer, adaptable disk budget, Painting/Shape Garden/Theatre/voice/text interoperability, complete built-in Activity quality audit, and deliberate catalogue selection. Continue from `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PROGRESS.md` and append accurate session results. This owner-requested scoped program coordinates those features but **does not supersede** the architectural-remediation and release-install/first-boot lifecycle authorities above; those still govern safety prerequisites, image installation, update, rollback and hardware acceptance. Product/source work may proceed in parallel without making hardware claims. Do not spin up a second competing catalogue, picker, or creative-media plan.
 
@@ -105,6 +105,9 @@ promote unvoiced locales.
 ## Recent entries
 
 Add new entries at the top, newest first, at most 8 lines each; fold older ones into **Current state** or drop them when superseded.
+
+### 2026-10-30 — Generic AGENTS.md for outside agents; core-team rules split out (DOCUMENTATION)
+`AGENTS.md` is now the generic file every coding agent reads after cloning: orientation table, run/test, "Sharing what you found" (ask the owner, then a pull request or an email to greia@frozenpepper.it; what never to send), outside-contributor rules, pre-release policy, standing owner decisions, and the unchanged product contracts and engineering rules (contract numbering kept). Branch-on-`main` policy, authoritative read order, active plans, owner campaigns and continuity/progress duties moved verbatim to `docs/agents/CORE_TEAM.md`, which the owner's own agents **must** read. `CLAUDE.md` imports `AGENTS.md`. Added `.github/pull_request_template.md` and hardware/bug issue templates. Doc audit 0 unresolved links.
 
 ### 2026-10-30 — Greia group names; website and launch film leave the repo (SOURCE)
 Owner decision: the image now creates `greiaprofiles`/`greiasettings` (was `pipprofiles`/`pipsettings`) in compose, tmpfiles, first boot, services, installer engine, system controls and verifiers; the installer payload is `greia-rootfs.squashfs` and other `pip-` build names became `greia-`. No migration (pre-release policy): the **next image build** uses the new names, existing installs need a fresh image, and a Python-only update onto an old image does not change groups. Guard: `tests/test_greia_group_names.py`. Related tests 699 PASS, `make validate shell-check footprint` PASS; no image built yet. `website/` (with its `.site-ftp`), `launch-video/` and `final.mp4` (restored from LFS, OID verified) were checksum-copied to the untracked folders `../website/` and `../launch-video/` beside the checkout and removed from git; run `site-ftp` and `tools/build_installer_index.py --index ../website/updates/greia-updates.json` against the new folder.

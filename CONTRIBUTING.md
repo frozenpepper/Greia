@@ -139,7 +139,7 @@ Do not commit generated test videos, screenshots, temporary outputs or local mod
 
 1. Work on your own branch, or in your own fork if you do not have write
    access. Never push directly to `main`: it is reserved for the owner and the
-   core coding agents (see the branch policy in `AGENTS.md`).
+   core coding agents (see `docs/agents/CORE_TEAM.md`).
 2. Keep each pull request focused on one problem.
 3. In the description, say what changed, why, and exactly which checks you
    ran and where (desktop, Simulator, VM or which device).

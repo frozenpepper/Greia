@@ -25,14 +25,14 @@ staged language appear release-ready.
 
 ## Universal rules
 
-1. Work from current `main`; preserve concurrent changes. Read `AGENTS.md` and `HANDOVER.md` first.
+1. Work from current `main`; preserve concurrent changes. Read `AGENTS.md`, `docs/agents/CORE_TEAM.md` (core team) and `HANDOVER.md` first.
 2. Accepted ADRs own architecture; source/runtime declarations own exact implemented APIs/schemas/limits; product docs own accepted child-facing behavior.
 3. Greia Shell is the child-facing OS surface. Do not expose a generic Linux desktop/shell/package-management path during normal child use.
 4. Platform authority stays platform-owned: profiles/sessions, trust/packages, permissions, Home/Back, physical input, system controls, microphone routing/processing, storage/history, progression/rewards, install/update authority and hardware facts.
 5. Low-resource behavior is correctness. The Acer reference floor is not a later optimization target.
 6. GitHub-hosted Actions/execution are opt-in only and require explicit owner authorization.
 7. Claim only evidence that actually ran. Source, authoring-provider+human, browser, Simulator, VM/image and physical evidence are distinct.
-8. After substantive implementation, update the active plan/HANDOVER and affected living manuals/skills as required by `AGENTS.md`. Refresh affected ignored `.agents/skills/` copies from canonical `skills/` when this workstation uses installed copies.
+8. After substantive implementation, update the active plan/HANDOVER and affected living manuals/skills as required by `docs/agents/CORE_TEAM.md`. Refresh affected ignored `.agents/skills/` copies from canonical `skills/` when this workstation uses installed copies.
 9. New prerecorded Greia speech is authoring-time work through `tools/greia_voice.py`; OS/Activity/shared-library code must not grow a parallel TTS/ASR backend.
 10. Launcher spoken labels are Shell-owned prerecorded assets; no child-runtime TTS and no Activity-owned hover/focus speech.
 11. Display/session/input abstraction must preserve direct safe Activity SDL/Pygame rendering and high-rate input paths; do not introduce avoidable full-frame copies or generic high-rate IPC merely for abstraction symmetry.

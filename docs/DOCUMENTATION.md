@@ -14,7 +14,7 @@ When two documents disagree, resolve the conflict by **ownership/authority**, th
 
 ### 2.1 Repository-wide work rules — `AGENTS.md`
 
-`AGENTS.md` owns mandatory contributor/agent behavior and non-negotiable repository/product constraints: branch policy, required reading/updating, hosted-execution restrictions, evidence discipline, low-resource/platform invariants and continuity rules.
+`AGENTS.md` owns mandatory contributor/agent behavior and non-negotiable repository/product constraints for every agent: orientation, contribution and reporting routes, hosted-execution restrictions, evidence discipline and low-resource/platform invariants. `CLAUDE.md` only imports it. `docs/agents/CORE_TEAM.md` owns the owner's core-team process: branch-on-`main` policy, authoritative read order, active-plan routing and continuity/progress duties.
 
 A narrower document may strengthen but not weaken these rules.
 

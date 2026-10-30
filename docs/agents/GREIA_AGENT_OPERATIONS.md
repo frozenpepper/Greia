@@ -168,7 +168,7 @@ target through BIOS GRUB into Greia before A/B update acceptance.
 
 ## 2. Repository and concurrent-work discipline
 
-Repository-wide branch policy is owned by `AGENTS.md`:
+The core team's branch policy is owned by `docs/agents/CORE_TEAM.md` (outside contributors use branches/forks and pull requests, per `AGENTS.md`):
 
 - work directly on `main` by default;
 - do not create a feature/review/safety/temporary branch unless the owner explicitly asks;
@@ -724,7 +724,7 @@ first blocker / next exact legitimate step
 whether concurrent main advanced
 ```
 
-Update the active plan, `HANDOVER.md`, manuals/skills and product/ADR docs only where `AGENTS.md` requires them for the kind of work performed.
+Update the active plan, `HANDOVER.md`, manuals/skills and product/ADR docs only where `docs/agents/CORE_TEAM.md` requires them for the kind of work performed.
 
 Do not rewrite dated historical evidence to make it agree with current source. Append corrections or update the living owner instead.
 

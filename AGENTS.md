@@ -1,73 +1,121 @@
-# AGENTS.md — Greia Project Contracts
+# AGENTS.md — Greia for coding agents
 
-This repository implements a child-first educational Linux appliance/platform. These rules apply repository-wide.
+Greia is a child-first educational operating system: a small, offline Linux
+appliance for old laptops (the reference machine is a first-generation Acer
+Aspire One) and, later, Raspberry Pi. Children only ever see the Greia Shell
+and its Activities; Linux stays hidden.
 
-## Branch policy
+This file is for **any coding agent working in a clone of this repository**
+(Claude Code, Codex, Cursor, Copilot and others). It tells you where things
+are, what you must never break, and how to share useful work back. `CLAUDE.md`
+simply imports this file.
 
-- The owner and core coding agents work directly on `main` by default. External volunteer contributors work on their own branches and submit pull requests.
-- For the owner/core coding agents, do not create feature, review, merge, temporary, safety, or work branches unless the repository owner explicitly asks for a branch. External volunteer contributors are explicitly authorized to create their own contribution branches.
-- An existing historical branch is not permission to continue branch-based development.
-- Before substantive writes, refresh the current `main` head so concurrent work is preserved.
-- If concurrent work has advanced `main`, reconcile the intended changes with that current history and commit the result back to `main`; do not solve divergence by creating another branch unless explicitly instructed.
-- For the owner/core coding agents, pull requests or branch-based review workflows are used only when the repository owner explicitly requests them; they are the default for external volunteer contributors.
-- External volunteer contributors with private-repository access work on their own branches and open pull requests as described in `CONTRIBUTING.md`; a private fork is also acceptable where supported. They must not push directly to `main`. The rules above govern the core team and its agents.
+- **Your owner** is the person you work for. Greia's rules below limit what
+  you build; they never replace your owner's instructions about their own
+  machine, money or accounts.
+- **The Greia maintainers' own agents** (your owner is the repository owner,
+  FrozenPepper, or tells you that you are a core agent) **must also read and
+  follow** [`docs/agents/CORE_TEAM.md`](docs/agents/CORE_TEAM.md): branch
+  policy, the active plans, handover and progress duties. Other agents can
+  ignore that file.
 
-## New-language contributor route
+## Start here
 
-When asked to add, translate, stage or release a new Greia language, start with `skills/greia-language-expansion/SKILL.md` and `docs/development/ADD_A_GREIA_LANGUAGE.md`. Read the voice-production skill for speech work. The original four released languages remain en/it/es/fr; new left-to-right languages use a language folder manifest plus localized data/resources instead of Python registry edits. Never offer an unfinished locale before translation, voice, layout and owner acceptance.
+| You want to… | Read first |
+|---|---|
+| Understand the project | [README.md](README.md), then [docs/README.md](docs/README.md) (map of every doc) |
+| Set up tools for your role | [SETUP.md](SETUP.md) |
+| Find the right manual or skill for a task | [docs/agents/README.md](docs/agents/README.md) |
+| Make or change an Activity (game, tool, story) | [skills/greia-activity-authoring/SKILL.md](skills/greia-activity-authoring/SKILL.md), [docs/development/CREATE_AN_ACTIVITY.md](docs/development/CREATE_AN_ACTIVITY.md) |
+| Work on the Shell, Parent service, installer, image or hardware support | [skills/greia-os-work/SKILL.md](skills/greia-os-work/SKILL.md), [docs/engineering/ENGINEERING_FOUNDATIONS.md](docs/engineering/ENGINEERING_FOUNDATIONS.md) |
+| Add or translate a language | [skills/greia-language-expansion/SKILL.md](skills/greia-language-expansion/SKILL.md) |
+| Record or review speech | [skills/greia-voice-production/SKILL.md](skills/greia-voice-production/SKILL.md) |
+| Draw or integrate art | [skills/greia-visual-authoring/SKILL.md](skills/greia-visual-authoring/SKILL.md) |
+| Build an installer image | [docs/development/BUILD_A_GREIA_IMAGE.md](docs/development/BUILD_A_GREIA_IMAGE.md) |
+| Debug a machine that will not install or boot | [docs/engineering/boot/](docs/engineering/boot/), [docs/release/INSTALLER_FAILURE_LOGS_ON_USB.md](docs/release/INSTALLER_FAILURE_LOGS_ON_USB.md) |
+| Change architecture | [docs/architecture/GREIA_ARCHITECTURE.md](docs/architecture/GREIA_ARCHITECTURE.md) and the accepted ADRs in [docs/adr/](docs/adr/) |
 
-## Authoritative read order and active plan
+When two documents disagree, [docs/DOCUMENTATION.md](docs/DOCUMENTATION.md)
+says which one owns the fact. Do not pick whichever is convenient; fix the
+stale one.
 
-Before installing or configuring any Greia toolchain, repository skill, simulator dependency, Parent App checkout, voice backend, developer remote-control environment or OS/image build host, read **`SETUP.md`**. It is the canonical setup index and readiness ledger; the narrower documents it references remain authoritative for their exact procedures.
+## Run and test
 
-Before changing implementation or architecture, read:
+```bash
+python3 -m pip install -r requirements-dev.txt   # Python 3.11+
+python3 tools/greia_simulator.py                 # the real Shell on your desktop
+PYTHONPATH=src python3 -m unittest discover -s tests   # quick unit run
+make verify                                      # the full gate before a pull request
+```
 
-1. `README.md`;
-2. **`docs/DOCUMENTATION.md` — documentation authority, ownership and freshness model**;
-3. `docs/architecture/GREIA_ARCHITECTURE.md`;
-4. `docs/adr/0012-platform-architecture-constitution.md`;
-5. `docs/adr/0014-greia-identity-arm-parity-and-direct-graphics-direction.md`;
-6. relevant narrower accepted ADRs, especially ADR 0013 for image composition and later ADRs for trust/runtime/storage/progression boundaries;
-7. **`docs/adr/0018-lightweight-ui-foundation.md` — mandatory lightweight Screen/Overlay/Collection UI architecture and low-resource UI rules**;
-8. **`docs/adr/0019-platform-owned-activity-system-navigation.md` — mandatory platform-owned Activity Home/Back chrome and protected-input architecture**;
-9. **`docs/adr/0020-runtime-neutral-input-profiles-and-controller-support.md` — mandatory runtime-neutral input profiles, controller support and physical-input authority**;
-   - **`docs/adr/0037-shared-activity-control-kit.md` — shared Activity control kit (buttons/HUD/prompt/completion, focus navigation) extending ADR 0018–0020; use it instead of hand-drawn Activity controls**;
-   - **`docs/adr/0038-lightweight-application-update-packages.md` — typed `.greia_update` Python/Activity/combined packages; ADR 0036 remains the full-system A/B route**;
-10. **`docs/engineering/ENGINEERING_FOUNDATIONS.md` — mandatory OOP, polymorphism, maintainability, dependency and performance guidance**;
-11. **`docs/product/PHASE0_CORE_CREATION_ACTIVITIES.md` — mandatory first-user-ready-image writing and painting requirement**;
-12. **`docs/product/ACTIVITY_SYSTEM_NAVIGATION.md` — mandatory universal Home/Back child-navigation requirement**;
-13. **`docs/product/ACTIVITY_INPUT_STANDARDS.md` — mandatory Phase-0 keyboard/pointer/touch/controller interaction standards**;
-14. **`docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md` — MANDATORY ACTIVE IMPLEMENTATION PLAN for its remaining non-lifecycle obligations**;
-15. **`docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md` — MANDATORY CURRENT INSTALL/UPDATE/RELEASE LIFECYCLE ROUTE (ADR 0036 successor plan; owns install/update/release sequencing and closure criteria)**;
-16. **`docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` — MANDATORY MAIN ENTRY POINT for Greia art/graphics/visual-asset architecture, source-library structure, composition, runtime rendition/caching and documentation navigation whenever the work touches visual assets or visual integration**;
-    - **`docs/design/GREIA_SVG_AUTHORING_RULES.md` — binding SVG recipe for every new or redrawn shared or Activity-private vector asset (Opus is the selected SVG authoring model)**;
-17. **`docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md` — MANDATORY CURRENT ART/VISUAL WORKSTREAM PLAN whenever designing, generating, refining, reviewing, integrating, or migrating Greia character art, scenes, props, FX, reusable visual assets, or visual UI treatment**;
-18. **`docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` — current visual-workstream resume contract when continuing art/graphics work across sessions**;
-19. `HANDOVER.md`;
-20. **`docs/agents/GREIA_AGENT_OPERATIONS.md` — mandatory project/build/test-hardware operating manual for agents**;
-21. **`skills/greia-os-work/SKILL.md` whenever creating, modifying, reviewing, refactoring, optimizing, testing or documenting Greia OS/platform/Shell/Parent/installer/simulator/build/runtime/hardware-service implementation**;
-22. `skills/greia-activity-authoring/SKILL.md` whenever creating, modifying, reviewing, validating, optimizing, packaging, deploying, or testing an Activity;
-23. `skills/greia-visual-authoring/SKILL.md` whenever creating, modifying, reviewing, generating, or integrating Greia visual assets or Activity art;
-24. phase-specific testing/review documents referenced by `HANDOVER.md` or the active plan. Older reviews and lessons were removed from the working tree on 2026-10-30 (history: see git); nothing there is current instruction.
+The Simulator and desktop tests prove source behaviour only. Never claim they
+prove a VM or a real computer, and never claim a test you did not run.
 
-`docs/DOCUMENTATION.md` defines which document class owns which fact. In short:
+## Sharing what you found
 
-- `AGENTS.md` owns repository-wide work rules and non-negotiable product constraints;
-- accepted ADRs own normative architecture decisions;
-- source/runtime declarations own exact implemented APIs/schemas/command vocabularies;
-- product requirement documents own explicit child-facing scope/UX requirements where referenced here;
-- `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` is the stable visual-system synthesis/index and points humans/agents to the narrower visual authorities and exact source owners;
-- the active plan owns sequencing and closure criteria;
-- `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` owns the short current visual-session resume path;
-- `HANDOVER.md` owns current branch/evidence state;
-- `docs/testing/*` owns exact named test procedures;
-- agent operations/OS work/Activity/visual skills are derived living manuals and must track their implementation owners.
+Greia gets better when agents report back. If you:
 
-Do not resolve contradictions by choosing whichever document is convenient. Identify the owner of the fact and correct stale derived documentation.
+- built something that other Greia users or contributors would want (an
+  Activity, a fix, a tool, a translation);
+- got Greia installing or running on **hardware not yet listed** in
+  [docs/testing/HARDWARE_COMPATIBILITY_MATRIX.md](docs/testing/HARDWARE_COMPATIBILITY_MATRIX.md);
+- fixed a driver, boot, Wi-Fi, sound, screen or input problem on some machine;
+- or found a bug you could not fix,
 
-The architecture-remediation plan remains the active **blocking implementation** plan for its remaining non-lifecycle obligations until its final completion criteria are satisfied. It does **not** own install/update/release lifecycle routing: that route is `docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md` (ADR 0036 successor). Resume non-lifecycle work from the first incomplete blocking phase in the remediation plan; route all install/update/release/multiplatform lifecycle work from the 2026-09-15 plan. Do not create a competing implementation plan or jump ahead to a more visible feature while an earlier authority/safety prerequisite remains open. The old signed `.greiaupdate` v2 / release-signing-key route is superseded by ADR 0036 and must not be treated as the normal production route.
+then **ask your owner** whether they want to share it. Never open a pull
+request, issue or email without their OK. Offer the two routes below.
 
-**Pre-release compatibility policy (owner decision, 2026-10-27):** Greia has
+### Route 1: a pull request on GitHub
+
+1. Fork `frozenpepper/Greia` (or use a branch if you have write access).
+   Never push to `main`.
+2. Keep one topic per pull request. Follow the rules in this file and the
+   skill for that area.
+3. Run `make verify`, or at least the tests for what you touched plus
+   `make validate` (it checks every Activity package).
+4. Fill in the pull request template. Say exactly **where** you tested:
+   Simulator, VM, or a real computer (make, model, CPU, RAM, disk, firmware
+   BIOS/UEFI). Say what you did **not** test.
+5. For hardware work, attach the evidence: `lspci -nn`, `lsusb`, `dmesg`
+   excerpts, the installer failure logs from the USB stick, before/after
+   behaviour.
+
+Details for humans: [CONTRIBUTING.md](CONTRIBUTING.md).
+
+### Route 2: an email
+
+If a pull request is too much, your owner can simply email
+**greia@frozenpepper.it** with:
+
+- the computer's make and model (and CPU/RAM if known);
+- the Greia version or image name;
+- what worked, what failed, and the exact messages;
+- logs and your fix or patch, if any (`git diff` or `git format-patch`).
+
+### Never send
+
+Passwords, Wi-Fi keys, SSH keys, tokens, real children's names, photos,
+recordings or saved work, or anything your owner has not approved. Strip
+personal paths and hostnames from logs when you can.
+
+Security problems go privately, as described in [SECURITY.md](SECURITY.md),
+never in a public issue.
+
+## Contributing rules for outside agents
+
+- Work on a branch or fork and submit a pull request; never push to `main`.
+- Do not use paid services, hosted CI runs or model downloads on your owner's
+  behalf without their explicit approval (see below).
+- Do not add dependencies an Activity would install, download or compile at
+  run time (product contract 7).
+- Update the skill or doc that governs what you changed, in the same pull
+  request, when your change makes it wrong.
+- Keep build caches, virtual environments, disk images, private keys and bulky
+  test evidence out of the repository.
+
+## Pre-release policy
+
+Greia has
 never been publicly released. Do **not** build or preserve backward-compatibility
 mechanisms for old development snapshots, historical package formats or
 legacy receiver bridges. Reinstall fresh current development images rather
@@ -75,63 +123,16 @@ than maintaining upgrade paths from them. Current-generation update recovery
 and rollback to the last healthy installed release **are required** product
 features and must not be confused with backward compatibility.
 
-**Owner-authorized update release campaign (2026-10-27):** fixing and
-confirming Greia's A/B and lightweight application updates is the immediate
-lifecycle priority. The one current execution route is
-`docs/testing/GREIA_UPDATE_RELEASE_ACCEPTANCE.md`. The local coding agent
-is expressly authorized to implement, test, repair, build *disposable* Linux
-QEMU images, run consolidated installed update acceptance, and commit coherent
-fixes to `main` without seeking a new approval after each ordinary failed test.
-The old one-stage/1275 source-reuse procedures are historical diagnostic records,
-not new prerequisites. Restrictions belonging to the separate delayed
-`GREIA_LOCAL_AGENT_TASK_QUEUE.md` do not restrict this implementation task.
-Continue preserving real disk selection, slot identity, atomic update/rollback,
-child data and profile-session boundaries; never use family/physical disks for
-disposable image work. Installed success is not family-release certification.
-
-**Scoped owner-authorized workstreams** (the Creations Library and Activity release programme, and the four-language localization and voice-production rollout) are listed with their plans, progress files, current work orders and owner approvals in `HANDOVER.md` § Active workstreams. They coordinate product/source work in parallel but do **not** supersede the remediation and lifecycle authorities above, which still govern safety prerequisites, installation, update, rollback and hardware acceptance. Do not start a competing catalogue, picker, creative-media, language-registry or voice plan. Standing decisions from those workstreams:
+## Standing owner decisions
 
 - committed recordings are owner-reviewed and accepted; never regenerate them for perceived provenance problems. New speech goes through `tools/greia_voice.py` and needs fresh human acceptance;
 - scoped owner exception (2026-10-19, extended by owner direction 2026-10-21): the requested corpus replacement uses `tools/regenerate_voice_corpus.py` and `docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md`, with the selected masters for that run (the completed v2 run used v0.2; the separately authorized v3 run uses the exact selected v0.3 identities), acting-only prompts, deterministic isolated letter/syllable preservation, recoverable originals and new listening-pending receipts. This does not retrospectively accept any new takes;
 - do not add file anti-tampering, signing or elaborate asset verification; users may edit their own files;
 - the canonical selectable language set is loaded from `src/greia_platform/languages/<locale>/manifest.json`; currently en, it, es, fr are owner-released and ship with their audio. Additional languages require an owner-authorized, fully translated and accepted manifest/data pack. Do not create another language registry.
 
-The visual-foundation plan is the current **art/visual workstream** plan. It owns art sequencing, checkpoints and append-only art progress while active, but it is subordinate to the blocking architecture plan and accepted ADRs. `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` is the stable visual-system architecture/index and must remain interpretable after the current plan becomes historical. Art/design/library work may advance where it does not bypass platform prerequisites; a visual task must not be used as justification to deepen provisional X11 coupling, invent a parallel runtime/UI architecture, weaken protected system chrome, or claim hardware/runtime evidence that did not execute.
+## New-language contributor route
 
-After every substantive **implementation** turn:
-
-1. append an accurate progress entry to `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`; append install/update/release/multiplatform lifecycle progress to `docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md` instead;
-2. update `HANDOVER.md` with the exact current phase, implemented work, verification/evidence, blockers, and next exact step;
-3. run the verification required by the active phase before claiming it complete;
-4. update `docs/agents/GREIA_AGENT_OPERATIONS.md` if repository/build/test-hardware/remote-control procedure changed;
-5. update `skills/greia-os-work/SKILL.md` whenever OS/platform architecture navigation, extension seams, engineering practice, performance guidance, audio/platform ownership, testing/evidence or contributor workflow changed materially;
-6. update `skills/greia-activity-authoring/SKILL.md` in the same tranche whenever the Activity manifest/API/runtime policy/trust model/shared assets or UI/input canon/performance requirements/validation or deployment workflow changed;
-7. update `docs/DOCUMENTATION.md` when documentation ownership/precedence/freshness rules change;
-8. update the applicable `docs/product/*` requirement when accepted child-facing product scope or UX changes materially;
-9. update `docs/engineering/ENGINEERING_FOUNDATIONS.md` when repository-wide implementation/extension rules change materially;
-10. commit coherent work to the canonical GitHub repository.
-
-After every substantive **art/visual-design** turn:
-
-1. update the short **Current checkpoint** in `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`;
-2. append a dated entry to that plan’s **Progress ledger**; never rewrite earlier art-history entries to make experiments look cleaner;
-3. update `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` when the stable visual-system architecture, library structure, runtime consumption seam, composition model or documentation map changes materially;
-4. update `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` when the current visual phase, next exact action, blocker, testing rule or evidence boundary changes;
-5. update `skills/greia-visual-authoring/SKILL.md` when practical model/contributor guidance changes;
-6. update `docs/design/GREIA_VISUAL_STYLE_GUIDE.md` or `docs/design/GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md` when a reusable visual rule/inventory decision becomes accepted rather than merely planned;
-7. update `HANDOVER.md` when the art workstream’s continuation state, accepted direction, evidence boundary, blocker, or next exact step changes materially;
-8. keep visual evidence scoped accurately as DESIGN SPEC, SOURCE, DESKTOP VISUAL REVIEW, SIMULATOR VISUAL REVIEW, PHYSICAL VISUAL REVIEW, or REJECTED EXPERIMENT;
-9. commit coherent accepted/reviewable work to the canonical GitHub repository.
-
-For substantive documentation-only work, update `HANDOVER.md` when the continuation contract changes and preserve a dated review when useful; an implementation-plan progress entry is required only when implementation/phase state actually changes.
-
-Do not rewrite earlier progress entries to make history appear cleaner. Append corrections explicitly.
-
-The agent operations manual and OS work/Activity/visual authoring skills are **living derived contracts**. A source or accepted-design change that makes one materially wrong is not completely documented until the affected manual/skill is corrected.
-
-When—and only when—the active remediation plan's final completion criteria are all satisfied, the contributor closing it MUST mark the plan complete, append final evidence, update `HANDOVER.md`, and **remove this active-plan reference and these special resume/progress instructions from `AGENTS.md`**. The completed plan remains under `docs/plans/` as historical evidence.
-
-When—and only when—the visual-foundation plan’s completion criteria are satisfied or the owner explicitly replaces it, close/preserve it as history and remove or replace its current-art-plan references here and in `HANDOVER.md`. Keep `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` as the stable visual-system entry point unless the owner explicitly replaces that documentation architecture.
+When asked to add, translate, stage or release a new Greia language, start with `skills/greia-language-expansion/SKILL.md` and `docs/development/ADD_A_GREIA_LANGUAGE.md`. Read the voice-production skill for speech work. The original four released languages remain en/it/es/fr; new left-to-right languages use a language folder manifest plus localized data/resources instead of Python registry edits. Never offer an unfinished locale before translation, voice, layout and owner acceptance.
 
 ## GitHub Actions and paid/hosted execution
 
@@ -291,7 +292,7 @@ PYTHONPATH=src python3 -m unittest discover -s tests -v
 
 Activity validation intentionally rejects cached bytecode inside Activity folders.
 
-Do not claim a test result that did not execute against the stated commit/checkout. Exact current executed evidence belongs in `HANDOVER.md` or a dated evidence report.
+Do not claim a test result that did not execute against the stated commit/checkout. Exact current executed evidence belongs in `HANDOVER.md` (core team) or in your pull request description.
 
 ## Evidence labels
 
@@ -307,18 +308,3 @@ Use these terms accurately:
 - **COMPLETE** — explicitly named closure criteria satisfied.
 
 For visual/art work, additionally use the scope labels defined by the current art plan: **DESIGN SPEC**, **SOURCE**, **DESKTOP VISUAL REVIEW**, **SIMULATOR VISUAL REVIEW**, **PHYSICAL VISUAL REVIEW**, and **REJECTED EXPERIMENT**.
-
-## Packaging and continuity
-
-Every substantive implementation turn should leave:
-
-- updated `HANDOVER.md`;
-- updated active plan/ADRs where implementation state or decisions changed;
-- updated product requirements when accepted child-facing scope changed;
-- updated agent operations/OS work/Activity skill when their governed contracts changed;
-- updated engineering foundations when repository-wide implementation/extension rules changed;
-- no build caches, venvs, downloaded package archives, disk images, private keys, or heavyweight transient evidence inside the source tree.
-
-Every substantive art/visual-design turn should additionally leave the current art plan checkpoint/append-only ledger, `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`, `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md`, and visual-authoring skill/design authorities consistent with the work actually accepted.
-
-The GitHub repository is the canonical long-term source of truth; chat transcripts are not.
