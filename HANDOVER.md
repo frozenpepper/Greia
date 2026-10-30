@@ -2,6 +2,27 @@
 
 **Purpose:** the short current state for contributors and agents: active workstreams, recent results, blockers and next steps. It is not an archive.
 
+**2026-10-30 Website download page and contact (DESKTOP VISUAL REVIEW):**
+Owner requested a prominent Downloads page that always links the latest
+installer, flashing/boot/install instructions and the project contact
+greia@frozenpepper.it. The owner had uploaded installer
+`greia-os-installer-i386-ab-0.13.1-preview.1-build-9ba22f764ed1.img`
+(2,273,312,768 bytes, SHA-256
+`e8d8bb8b9af2cbfcd4c149fe8e0e441e3bc956349e813edb54d126fd9afed2ef`, MBR with
+an ESP and an active ext4 root) to `greia/os-images/` on the site; this build is
+newer than the 28 October candidate recorded below. Installers are now listed in
+`greia_os.installers` of the existing `updates/greia-updates.json`, written by
+the new `tools/build_installer_index.py` (parses the new versioned artifact
+names); Parent/device update readers ignore that list. `website/downloads.html`
+with `release-index.js` reads the index for version, size, date and checksum,
+labels the image a technical preview (legacy BIOS tested, UEFI experimental) and
+shows real offscreen installer renders. The homepage gains a hero Download
+button, a download band and a contact band. Tests: 20 index tests, 15 Parent
+update-delivery tests and a 0-unresolved doc audit passed; desktop and phone
+layouts were reviewed in a local browser. The 28 October media-rights blocker
+for public binary distribution still stands; the owner placed the image
+publicly. Next: owner-approved `site-ftp` upload of the website and index.
+
 **2026-10-30 Acer Parent Activity upload — PHYSICAL API PASS:** On the Acer
 `192.168.2.10`, Parent applied Python package `greia-parent-activities-20261030`
 (job `92de7ebebee2482cb9bd3fd82ae8fc30`, SHA-256 `622fd2277c5e6f36aa9f081270e69e8c623ffb5edfc2dbd1bbc60aab5e602195`) and advertised install.

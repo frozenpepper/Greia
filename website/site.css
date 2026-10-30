@@ -54,3 +54,19 @@ html{scroll-padding-top:83px}body{background:var(--cream);color:var(--ink);overf
 @media(max-width:620px){.boot-window{top:1%}.boot-window img{mask-image:linear-gradient(to bottom,#000 0%,#000 82%,transparent 100%)}.opening-vignette{background:linear-gradient(0deg,#020512 0%,#020512e0 29%,#0205121c 70%,transparent 100%)}}
 @media(min-width:901px){.boot-window{left:50%}}
 @media(min-width:901px) and (max-width:1200px){.boot-window{left:70%}}
+/* FrozenPepper home badge (fp-home/), left of the Greia logo, with a thin divider */
+.fp-home{width:44px;height:44px;margin-right:-6px}.fp-home:after{content:'';position:absolute;top:6px;bottom:6px;right:-17px;border-right:1px solid #ffffff40}
+@media(max-width:620px){.fp-home{width:36px;height:36px;margin-right:6px}.fp-home:after{right:-8px}}
+/* Download band and contact band (latest installer read from updates/greia-updates.json by release-index.js) */
+.opening-actions .button,.opening-actions .hero-source{white-space:nowrap}
+.download-band{display:grid;grid-template-columns:1.25fr .75fr;gap:clamp(30px,5vw,80px);align-items:center;padding:clamp(80px,8vw,130px) clamp(22px,4vw,75px);background:var(--navy);color:#fff;background-image:radial-gradient(#ffdf6930 1px,transparent 1px);background-size:30px 30px}
+.download-band h2{font-size:clamp(46px,5.4vw,96px);line-height:.95;margin:0}.download-band h2 em{color:var(--butter)}.download-band-copy>p:last-child{font-size:clamp(17px,1.4vw,22px);font-weight:700;max-width:640px;margin:28px 0 0;color:#d8deeb}
+.download-band-card{display:grid;gap:12px;padding:30px;background:var(--cream);color:var(--ink);border:3px solid var(--ink);border-radius:26px;box-shadow:12px 13px 0 var(--butter);rotate:1.5deg}
+.download-band-label{font-size:11px;font-weight:900;letter-spacing:.16em}.download-band-version{font-size:clamp(28px,2.6vw,42px);line-height:1.05}.download-band-version span{color:var(--violet)}.download-band-meta{font-size:14px;font-weight:700;opacity:.75}
+.download-band-button{display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding:10px 10px 10px 24px;border-radius:50px;background:var(--ink);color:#fff;text-decoration:none;text-transform:uppercase;font-size:13px;font-weight:900;letter-spacing:.09em;box-shadow:0 6px 0 #000;transition:translate .15s}.download-band-button:hover{translate:0 -3px}.download-band-button b{display:grid;place-items:center;width:46px;height:46px;border-radius:50%;background:var(--butter);color:var(--ink);font-size:24px}
+.download-band-help{justify-self:start;font-size:12px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;border-bottom:1.5px solid currentColor;padding-bottom:4px}
+.contact-band{display:grid;grid-template-columns:1fr auto;gap:40px;align-items:center;padding:clamp(80px,8vw,120px) clamp(22px,4vw,75px);background:var(--mint);color:var(--ink)}.contact-band h2{font-size:clamp(46px,5.4vw,96px);line-height:.95;margin:0}.contact-band h2 em{color:var(--violet)}.contact-band p:last-child{font-size:19px;font-weight:700;max-width:560px;margin:24px 0 0}
+.contact-mail{display:inline-flex;align-items:center;gap:16px;padding:12px 12px 12px 28px;border-radius:60px;background:var(--ink);color:#fff;text-decoration:none;font-size:clamp(17px,1.8vw,28px);font-weight:900;box-shadow:8px 8px 0 var(--coral);transition:translate .15s}.contact-mail:hover{translate:0 -4px}.contact-mail b{display:grid;place-items:center;width:56px;height:56px;border-radius:50%;background:var(--butter);color:var(--ink);font-size:26px}
+.footer-status a{color:inherit}
+@media(max-width:900px){.download-band,.contact-band{grid-template-columns:1fr}.download-band-card{rotate:0deg;max-width:520px}}
+@media(max-width:620px){.download-band-card{padding:22px}.contact-mail{font-size:16px;padding-left:20px}.contact-mail b{width:44px;height:44px;font-size:20px}}

@@ -2,7 +2,7 @@
 
 This guide is for someone using **Windows or macOS to prepare a USB stick**, then installing Greia on a separate compatible computer. You do not need to know Linux or type terminal commands.
 
-> **Not available for ordinary families yet:** Greia has no published, supported installer image at the time of writing (October 2026). When the [Greia downloads page](../../website/downloads.html) lists a supported image for your exact device, follow its hardware notes and use this guide. An image marked *developer*, *experimental*, *RC*, or *unverified* is **not** a family release.
+> **Not available for ordinary families yet:** since 30 October 2026 the [Greia downloads page](https://www.frozenpepper.it/greia/downloads.html) offers a **technical-preview** installer for netbooks and PCs (reference: first-generation Acer Aspire One, legacy BIOS; UEFI start is experimental). It is for people comfortable trying new software. An image marked *technical preview*, *developer*, *experimental*, *RC*, or *unverified* is **not** a family release. Questions: greia@frozenpepper.it.
 
 ## Before you begin
 
@@ -23,7 +23,7 @@ You will need:
 3. Download the installer image to your Windows PC or Mac. It may be a `.img` file or a compressed image; follow the release's instruction if it must first be extracted.
 4. If the release provides a SHA-256 checksum, compare it using the platform-specific help linked by that release. If it does not match, delete the download and download it again. Do not use a file from an unknown mirror.
 
-No general-purpose Greia release is published yet. This step will become usable when a tested release is posted.
+The download page always shows the newest image with its version, size and SHA-256 checksum. No general-purpose family release is published yet.
 
 ## 2. Prepare the USB stick (Windows)
 
@@ -68,7 +68,7 @@ On some computers Secure Boot, firmware age or unsupported hardware can prevent 
 The current graphical installer is designed to guide you through:
 
 1. **Language:** choose from the languages shown by the installer. The current development release includes English, Italian, Spanish and French; future releases may offer more languages when their translations and spoken guidance are ready.
-2. **Welcome and keyboard:** read the short introduction and choose your keyboard layout.
+2. **Welcome and keyboard:** read the short introduction, press **Start** and choose your keyboard layout.
 3. **Computer's disk:** select the internal disk Greia should use. The installer offers only disks it considers eligible; **check the displayed model and size**.
 4. **Pointer and display:** check the mouse/touchpad and the display.
 5. **Wi-Fi (optional):** connect if you wish. Greia's core activities are intended to work offline.

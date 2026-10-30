@@ -4,9 +4,11 @@ The parent-facing Greia website lives here. Open `index.html` locally, or serve 
 
 ## Current publishing boundaries
 
-The site describes the Greia OS direction and current source/development capabilities. It is **DESKTOP VISUAL REVIEW**, not an installed-device acceptance result or a public installer release. The Downloads page deliberately disables platform installer controls until an actual verified release artifact and named hardware scope exist. The Activity library lists development previews; its per-Activity button stays disabled until a reviewed `.greiaactivity` package URL is added to that exact record in `library-data.js`. Parent authorization and Greia package checks still apply to installation.
+The site describes the Greia OS direction and current source/development capabilities. It is **DESKTOP VISUAL REVIEW**, not an installed-device acceptance result. The site is published to https://www.frozenpepper.it/greia/ with the shared `site-ftp` tool (project `greia`). Project contact: **greia@frozenpepper.it** (homepage contact band, Downloads page and every footer).
 
-The GitHub links point to the repository's canonical remote. Public repository visibility is a separate release-readiness gate. The site is not deployed by this work.
+The Downloads page offers the newest installer image per hardware target, read at page load from `updates/greia-updates.json` (`greia_os.installers`, see below). The first listed image is a **technical preview** for netbooks/PCs, not a family release; the page says so. Raspberry Pi controls stay disabled until a Pi image exists. The Activity library lists development previews; its per-Activity button stays disabled until a reviewed `.greiaactivity` package URL is added to that exact record in `library-data.js`. Parent authorization and Greia package checks still apply to installation.
+
+The GitHub links point to the repository's canonical remote. Public repository visibility is a separate release-readiness gate.
 
 ## Asset provenance
 
@@ -16,11 +18,24 @@ The GitHub links point to the repository's canonical remote. Public repository v
 - `greia-mark-light.svg` and `greia-lockup-light.svg` are website-specific small presentation derivatives. They do not replace the canonical boot/logo source.
 - `assets/screens/*-en.png` are English real-service Simulator captures of the Shell or named source Activities, captured 23 September 2026. `encyclopedia-it.png` is the corresponding Italian capture used only in the language comparison. These are development screenshots, not physical-device or release proof.
 - `assets/parent/this-greia-1024x600.png` is one real English Greia Parents development-client viewport from `../Greia-Parent-App-Html/tmp/parent-system-output-controls-acceptance-2026-09-02/1024x600_viewport.png`. The enlargement displays this single screen at a readable size.
+- `assets/installer/*.webp` are offscreen renders of the real installer drawing code (`tools/installer_screenshots.py`, English, 1024×600, 30 October 2026). Disk and Wi-Fi names are the tool's sample data; the completion screen's demo-only "Close the demo" button was painted out because the real installer powers off instead.
 - `assets/characters/`, `assets/voices/` and `assets/fonts/` are copies of accepted Greia cast art, recorded introductions and repository Nunito fonts for a standalone preview.
 
 ## Updating releases and packages
 
-When a verified installer exists, replace the disabled control for its specific hardware class in `downloads.html` with a link to the exact artifact and publish its supported models, checksum, instructions and evidence scope. Do not imply all x86 or ARM devices are certified by one file.
+Installer images are hosted at `https://www.frozenpepper.it/greia/os-images/` and listed in the same static index Parent clients read for updates, `updates/greia-updates.json`. Installers live in `greia_os.installers` (newest first per target id); device and Parent update readers only read `greia_os.channels`, so an installer entry never becomes an update offer. `release-index.js` fills every `data-installer="…"` element (version, size, date, checksum, file name, boot modes, USB size) and every `data-installer-link` with the newest image, so publishing a new image needs no HTML edit:
+
+```bash
+site-ftp -p greia put <image>.img os-images/           # upload the exact image
+python3 tools/build_installer_index.py --image <image>.img \
+    --base-url https://www.frozenpepper.it/greia/os-images \
+    --target legacy-x86-i386 --status technical-preview \
+    --notes-en notes-en.txt --notes-it notes-it.txt \
+    --index website/updates/greia-updates.json
+site-ftp -p greia put website/updates/greia-updates.json updates/
+```
+
+Use `--status release` only for a release-gated family image, and add a target to `TARGETS` in the tool (plus a card on the page) before listing a new device class. Do not imply all x86 or ARM devices are certified by one file. The flashing, boot-menu and installer instructions on the page follow `docs/user/INSTALL_FROM_USB.md`; keep the two consistent.
 
 For a verified individual Activity, set that item's `packageUrl` in `library-data.js` to its durable `.greiaactivity` URL after review. The library script then exposes its Download link in both the card and detail view. Keep Activity identity and screenshot provenance tied to the corresponding source manifest and package.
 

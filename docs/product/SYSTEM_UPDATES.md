@@ -464,6 +464,15 @@ Rules:
   durable device job; it does not relay an ordinary online bundle.
 - `parents_app` lets native Parent clients show "update available/required";
   the HTML client may ignore it.
+- `greia_os.installers` (added 2026-10-30) lists downloadable installer
+  images for the website's Downloads page, newest first per target `id`:
+  `version`, `build`, `status` (`technical-preview` | `release`),
+  `published_at`, `platform_family`, `architecture`, `boot`,
+  `reference_hardware`, `min_media_gb`, `notes` and
+  `image {url, file_name, size, sha256}`. It is written by
+  `tools/build_installer_index.py`, which `tools/build_update_index.py`
+  preserves. Device and Parent update readers read only `channels`, so an
+  installer entry is never an update offer.
 
 ## 9. Shared-data rule
 
