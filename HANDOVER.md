@@ -2,7 +2,25 @@
 
 **Purpose:** the short current state for contributors and agents: active workstreams, recent results, blockers and next steps. It is not an archive.
 
-**2026-10-30 Acer Parent Activity upload — physical retry in progress:**
+**2026-10-30 Acer Parent Activity upload — PHYSICAL API PASS:** On the Acer
+`192.168.2.10`, Parent applied Python package `greia-parent-activities-20261030`
+(job `92de7ebebee2482cb9bd3fd82ae8fc30`, SHA-256 `622fd2277c5e6f36aa9f081270e69e8c623ffb5edfc2dbd1bbc60aab5e602195`) and advertised install.
+The first actual upload failed 409 at the picker; the source indicates that
+Parent could not read the Shell status, and the group fix resolved the failure. Follow-up `greia-parent-session-20261030` (job
+`ebdd538923414fcb8d3b54654432dcbb`, SHA-256
+`c990d88ae5cb827a3fe914888dec87366c27616f90f1d0a431698562ae57eea2`) applied
+source `a04ee90d5`. At the picker, a valid temporary Parent-trusted package
+was uploaded (201), appeared in `GET /activities`, and was removed (200); the
+temporary pairings were revoked. This proves the physical Parent API package
+transaction, not browser upload, actual child-Shell launch, full image, SSH or
+logo delivery. The broad local `make verify` test process aborted with SIGABRT
+inside SDL2_ttf/HarfBuzz allocation; it did not complete or establish a green
+suite. `make validate shell-check footprint` passed separately; focused source
+and physical API evidence remain as recorded. The previous 409 and its correction are retained below. Next:
+check the child-facing launch path; build a full-system image/update on Linux
+for the separate Parent SSH unit and pinned browser logo/client changes.
+
+**2026-10-30 Acer Parent Activity upload — initial 409 and repair:**
 Python application update `greia-parent-activities-20261030` applied on Acer
 via the Parent HTTPS receiver and `activities.install` became true. A test
 package upload returned 409 even with the owner confirming the profile picker.
@@ -12,12 +30,11 @@ was mode 0660 but inherited the Shell primary group instead of the shared
 unreadable file as no active child. ActiveProfileSession now explicitly assigns
 the shared directory group before atomically publishing status, and the API
 distinguishes unavailable session state from a genuinely active profile.
-Focused tests: upload integration 2 PASS, profiles 23 PASS/1 skipped. This
-repair is SOURCE ONLY until a new application package is applied and the
-actual Acer upload, listing and cleanup pass. The first update was applied;
-the user-data and Activity test acceptance must not be inferred from that.
+Focused tests: upload integration 2 PASS, profiles 23 PASS/1 skipped. The
+follow-up application package was subsequently applied and the actual Acer
+upload, listing and cleanup passed, as recorded immediately above.
 
-**2026-10-30 Parent Activity upload (SOURCE + LOCAL HTTP; device pending):**
+**2026-10-30 Parent Activity upload (SOURCE + LOCAL HTTP; physical API follow-up above):**
 Owner requested uploads. The API now advertises install/remove if its real
 package store is writable, with an explicit off override. The shared profile
 session lock requires an idle profile picker during package mutation because
@@ -28,12 +45,11 @@ package and an active child, install a real validated package, discover it in
 the running registry and reject duplicates; removal follows the new pointer.
 Focused suites passed: Parent API 33, production Parent 8, package 16 + one
 Linux-only skip, removal 5, launcher composition 18, end-to-end 2, Parent
-Node 106 (pre-existing unrelated test edit present). Installed Linux/systemd,
-Bubblewrap, browser upload and physical Acer remain untested. The owner forbids
-VM/image builds on this Mac. Next: build the exact source package, exercise the
-installed path on the Linux host, then use the existing Parent update route
-on Acer and verify a real upload at the profile picker. Full-system delivery
-is still needed for the separate SSH systemd unit and updated browser bytes.
+Node 106 (pre-existing unrelated test edit present). Physical Parent API upload,
+listing and removal passed as described above; Bubblewrap, browser upload and
+child launch remain untested. The owner forbids VM/image builds on this Mac.
+Full-system delivery is still needed for the separate SSH systemd unit and
+updated browser bytes.
 
 **2026-10-30 Parent SSH and branding (SOURCE; Acer not updated):** Owner
 requested a Parent switch on normal images using SSH `greia` / `greia`, off

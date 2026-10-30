@@ -4081,9 +4081,29 @@ claimed.
 
 Acer accepted and applied application package `greia-parent-activities-20261030`
 and reported `activities.install=true`, but an actual package upload returned
-409 at the confirmed profile picker. The status writer used mode 0660 on a
-non-setgid shared directory, leaving the Parent unable to read the Shell-owned
-status group. Source now assigns the directory's shared group on atomic status
+409 at the confirmed profile picker. The source writer used mode 0660 on a non-setgid shared directory, which can
+leave Parent unable to read the Shell-owned status; the device file ownership
+was not directly inspected. Source now assigns the directory's shared group on atomic status
 writes and distinguishes unavailable session state from active child. Local
 profile and upload tests passed; apply this correction and retest on Acer
 before claiming the upload works. No phase closure or family-release claim.
+
+
+### 2026-10-30 — Acer Parent Activity upload verified (PHYSICAL API)
+
+On Acer, application updates `greia-parent-activities-20261030` and
+`greia-parent-session-20261030` applied. The earlier 409 at the picker was
+resolved by the shared-group status fix. A real `.greiaactivity` was uploaded
+through the authenticated Parent HTTPS API, returned 201, appeared in the
+Parent Activity listing and was removed with a 200 receipt; temporary test
+pairings were revoked. This does not prove browser file-picker behavior or a
+child-Shell launch. Full-system SSH/updated client delivery and other active
+phase gates remain open.
+
+Local `make verify` at source `a04ee90d5` did not complete: the Python test
+process aborted with SIGABRT, with the crash report's triggered native stack
+in SDL2_ttf/HarfBuzz allocation. This is not an identified root cause and is
+not a full-suite pass. Focused source and physical API results above stand.
+
+Subsequent `make validate shell-check footprint` completed successfully on the
+same source; this does not turn the aborted test suite into a full pass.

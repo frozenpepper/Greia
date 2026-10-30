@@ -979,5 +979,11 @@ The 2026-10-30 Acer test applied the Activity upload application update but
 returned 409 at the profile picker. ActiveProfileSession must atomically
 publish `active-profile.json` with its shared parent-directory group as well
 as mode 0660; `/run/greia-os` is not setgid on existing images. Parent and
-Shell must read the same lock-protected status. A follow-up physical retry is
-required; do not infer successful upload from the capability alone.
+Shell must read the same lock-protected status. The follow-up physical retry passed as recorded below; capability alone is not
+proof of upload success.
+
+
+Follow-up on 2026-10-30: both Python updates applied to Acer; the group fix
+resolved the picker refusal, and real Parent HTTPS Activity upload, listing
+and test-package removal passed. Browser file-picker and child launch remain
+untested; the SSH unit and current Parent client require full-system delivery.

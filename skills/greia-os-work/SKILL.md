@@ -1042,9 +1042,13 @@ and the explicit off override. The API holds the shared profile-session lock
 and requires the idle profile picker before publishing a generation; the
 Shell refreshes its Parent source when that pointer changes. Keep package
 validation and Parent trust, and do not remove the session fence: publication
-collects old generations. Installed Linux and physical acceptance are pending.
+collects old generations. Installed Linux and child-launch acceptance remain pending; Acer Parent API upload has since passed below.
 
 Active profile status is mode 0660 and explicitly assigned the shared runtime
 directory group before publication: existing `/run/greia-os` is not setgid.
 The Acer upload capability became available after the first package, but a
-409 at the profile picker exposed the group issue; physical retry is pending.
+409 at the profile picker exposed the group issue; the physical API retry passed below.
+
+Acer physical Parent-API follow-up: both application packages applied; the
+shared-group repair cleared the picker refusal, and a real package upload,
+listing and removal passed. Browser picker and child launch remain unverified.
