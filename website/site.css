@@ -70,3 +70,25 @@ html{scroll-padding-top:83px}body{background:var(--cream);color:var(--ink);overf
 .footer-status a{color:inherit}
 @media(max-width:900px){.download-band,.contact-band{grid-template-columns:1fr}.download-band-card{rotate:0deg;max-width:520px}}
 @media(max-width:620px){.download-band-card{padding:22px}.contact-mail{font-size:16px;padding-left:20px}.contact-mail b{width:44px;height:44px;font-size:20px}}
+/* Support & partner section: donations (never required), partnerships, commercial licensing */
+.support{background:var(--cream)}.support h2 em{color:var(--violet)}
+.support-tag{display:inline-block;font-size:11px;font-weight:900;letter-spacing:.14em}
+.support-layout{display:grid;grid-template-columns:.9fr 1.6fr;gap:24px;align-items:start}
+.support-give{position:sticky;top:100px;padding:34px;background:var(--butter);border:3px solid var(--ink);border-radius:28px;box-shadow:10px 11px 0 var(--coral)}
+.support-give h3{font-size:clamp(34px,3.2vw,58px);line-height:1;margin:18px 0 14px}.support-give>p{font-size:17px;font-weight:700;line-height:1.45;margin:0 0 18px}
+.support-give ul{list-style:none;padding:0;margin:0 0 26px;display:grid;gap:8px}.support-give li{padding:12px 14px;background:#fff8e9;border:1.5px solid var(--ink);border-radius:14px;font-size:14px;font-weight:700;line-height:1.35}.support-give li b{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:2px}
+.support-donate{display:flex;justify-content:space-between;align-items:center;padding:10px 10px 10px 26px;border-radius:50px;background:var(--ink);color:#fff;text-decoration:none;text-transform:uppercase;font-size:14px;font-weight:900;letter-spacing:.09em;box-shadow:0 6px 0 #000;transition:translate .15s}.support-donate:hover{translate:0 -3px}.support-donate b{display:grid;place-items:center;width:48px;height:48px;border-radius:50%;background:var(--coral);color:#fff;font-size:24px}
+.support-give small{display:block;margin-top:14px;font-size:13px;font-weight:700;opacity:.75}
+.support-ways{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.support-ways article{display:flex;flex-direction:column;padding:26px;background:#fff;border:2px solid var(--ink);box-shadow:6px 7px 0 var(--ink)}
+.support-ways article:nth-child(1){background:#e2dbff}.support-ways article:nth-child(2){background:#c9f0e3}.support-ways article:nth-child(3){background:#ffe3d6}.support-ways article:nth-child(4){background:#fff}.support-ways article:nth-child(5){background:#dfeeff}
+.support-ways article:last-child:nth-child(odd){grid-column:1/-1}
+.support-ways h3{font-size:clamp(25px,2vw,34px);line-height:1.06;margin:14px 0 10px}.support-ways p{font-size:15px;font-weight:700;line-height:1.45;margin:0 0 20px}
+.support-ways a,.support-license-links a{margin-top:auto;align-self:flex-start;font-size:12px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;border-bottom:2px solid currentColor;padding-bottom:4px}.support-ways a:hover{color:var(--violet)}
+.support-license{margin-top:60px;padding:clamp(28px,4vw,54px);background:var(--ink);color:#fff;border-radius:28px}
+.support-license .support-tag{color:var(--butter)}.support-license h3{font-size:clamp(36px,4vw,70px);line-height:1;margin:16px 0 34px}.support-license h3 em{color:var(--butter)}
+.support-license-cols{display:grid;grid-template-columns:1fr 1fr;gap:20px}.support-license-cols>div{padding:24px;border:1px solid #ffffff4d;border-radius:18px}.support-license-cols>div:first-child{border-color:var(--mint)}.support-license-cols b{display:block;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--mint)}.support-license-cols>div:last-child b{color:var(--butter)}.support-license-cols p{font-size:16px;font-weight:700;line-height:1.5;margin:10px 0 0;color:#dfe5f1}
+.support-license-links{display:flex;flex-wrap:wrap;align-items:center;gap:28px;margin-top:30px}.support-license-cta{background:var(--butter);color:var(--ink)!important;border:0!important;border-radius:40px;padding:16px 22px!important}.support-license-cta:hover{background:#fff}
+.contact-band p a{color:inherit}
+@media(max-width:1000px){.support-layout{grid-template-columns:1fr}.support-give{position:static}}
+@media(max-width:620px){.support-ways,.support-license-cols{grid-template-columns:1fr}.support-give{padding:24px}.support-ways article{padding:22px}.support-license{border-radius:20px}}

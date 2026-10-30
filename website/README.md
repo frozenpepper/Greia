@@ -8,6 +8,8 @@ The site describes the Greia OS direction and current source/development capabil
 
 The Downloads page offers the newest installer image per hardware target, read at page load from `updates/greia-updates.json` (`greia_os.installers`, see below). The first listed image is a **technical preview** for netbooks/PCs, not a family release; the page says so. Raspberry Pi controls stay disabled until a Pi image exists. The Activity library lists development previews; its per-Activity button stays disabled until a reviewed `.greiaactivity` package URL is added to that exact record in `library-data.js`. Parent authorization and Greia package checks still apply to installation.
 
+The homepage section `#support` ("Free for every child") says that Greia is and stays free for families, that donations are welcome but never required, and lists partnership routes: sponsors, NGOs, schools/universities, custom Activities, custom OS editions, and commercial licensing. Each route opens an email to greia@frozenpepper.it with its own subject. The licensing panel must stay consistent with `TRADEMARK.md` and `docs/governance/LICENSING_AND_TRADEMARK.md`: selling or preinstalling Greia and saying "Runs Greia OS" are free, while "Greia Approved", "Official Greia Partner" and logo branding need a written agreement. No formal certification programme is claimed. There is no donation platform yet: `#donate-link` (homepage) and `.dl-support-give` (Downloads) are email links. Swap in a real donation page URL there when one exists.
+
 The GitHub links point to the repository's canonical remote. Public repository visibility is a separate release-readiness gate.
 
 ## Asset provenance

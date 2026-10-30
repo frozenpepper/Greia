@@ -21,7 +21,13 @@ button, a download band and a contact band. Tests: 20 index tests, 15 Parent
 update-delivery tests and a 0-unresolved doc audit passed; desktop and phone
 layouts were reviewed in a local browser. The 28 October media-rights blocker
 for public binary distribution still stands; the owner placed the image
-publicly. Next: owner-approved `site-ftp` upload of the website and index.
+publicly. Follow-up the same day: the homepage gained a "Free for every child"
+support section (donations welcome, never required; sponsors, NGOs, schools,
+custom Activities, custom OS editions; commercial licensing consistent with
+`TRADEMARK.md`), the Downloads page gained a matching band, and `TRADEMARK.md`
+now names greia@frozenpepper.it as the partnership contact. There is no donation
+platform yet; the donate buttons open an email. Next: owner-approved `site-ftp`
+upload of the website and index.
 
 **2026-10-30 Acer Parent Activity upload — PHYSICAL API PASS:** On the Acer
 `192.168.2.10`, Parent applied Python package `greia-parent-activities-20261030`

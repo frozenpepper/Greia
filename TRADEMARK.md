@@ -40,5 +40,6 @@ We deliberately distinguish a **truthful mention of the software on a box**
 
 The [full Greia Licensing and Trademark Policy](docs/governance/LICENSING_AND_TRADEMARK.md)
 is authoritative; [ADR 0024](docs/adr/0024-project-licensing-and-trademark-boundary.md)
-explains the architectural decision. Contact the project maintainers through
-existing repository channels about a proposed official partnership.
+explains the architectural decision. Write to **greia@frozenpepper.it** about a
+proposed official partnership, sponsorship or custom work (see the
+[support section of the website](https://www.frozenpepper.it/greia/#support)).
