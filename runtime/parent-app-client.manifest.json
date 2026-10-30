@@ -25,8 +25,8 @@
       "sha256": "42134f24478852986ca102c7c02d6682d31caccdf1ea53088e3436926cb687cc"
     },
     "src/localization.js": {
-      "bytes": 89942,
-      "sha256": "dfdbdb01fd3df661d8ab5bd33ae7629e375b507713bf265a40aafe17954a7793"
+      "bytes": 90410,
+      "sha256": "056093f33eaf68253129b4fd3d7e876d2c3655cccc250e70b468b22c1918220c"
     },
     "src/state.js": {
       "bytes": 20178,
@@ -37,8 +37,8 @@
       "sha256": "3967822a5833cd5d53abb83ad453eed489e1031d68bef29b12501724d2cd74b2"
     },
     "src/views_activities.js": {
-      "bytes": 13359,
-      "sha256": "73d9aadbef85e958eb4e78a5194bd46d23ee0d444b9a0b37fbd6cf812ba88945"
+      "bytes": 13519,
+      "sha256": "0987cb863f89e5a982780ced5ccb3c7a62cc2d7f6e7aa9e6f2269ac731c6b7dc"
     },
     "src/views_device.js": {
       "bytes": 28404,
@@ -70,6 +70,6 @@
     }
   },
   "repository": "frozenpepper/Greia-Parent-App-Html",
-  "revision": "50f89d615aed7f771696e6176dcc1cf1b2cc8225",
+  "revision": "080b4b67e6302c11c5f5a874142ff184315d57d1",
   "schema_version": 1
 }

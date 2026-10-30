@@ -103,7 +103,7 @@ export function installActivityViews(proto){
           remove.addEventListener("click",async()=>{
             if(!await this.confirm(tr("activities.remove_title",{name:activityName(activity)}),tr("activities.remove_warning",{child:selected?.display_name||tr("activities.children_generic")})))return;
             remove.disabled=true;
-            try{await this.api.removeActivity(activity.activity_id);await this.state.refresh();this.showFlash(tr("activities.removed",{name:activityName(activity)}));}catch(error){this.showFlash(error?.message||tr("activities.remove_failed"),"error");}finally{remove.disabled=false;}
+            try{await this.api.removeActivity(activity.activity_id);await this.state.refresh();this.showFlash(tr("activities.removed",{name:activityName(activity)}));}catch(error){this.showFlash(error?.code==="profile_session_active"?tr("activities.profile_picker_required"):error?.message||tr("activities.remove_failed"),"error");}finally{remove.disabled=false;}
           });
           actions.append(remove);
         }else{
@@ -135,7 +135,7 @@ export function installActivityViews(proto){
     const input=document.createElement("input");input.type="file";input.accept=".greiaactivity,application/vnd.greia.activity+zip";drop.append(input);panel.append(drop);
     const chosen=el("p","file-name",tr("activities.no_file"));panel.append(chosen);input.addEventListener("change",()=>{chosen.textContent=input.files?.[0]?.name||tr("activities.no_file");});
     const actions=el("div","form-actions"),submit=button(tr("activities.install"),{iconName:"upload"});actions.append(submit);panel.append(actions);
-    submit.addEventListener("click",async()=>{const file=input.files?.[0];if(!file)return this.showFlash(tr("activities.choose_first"),"error");if(!file.name.toLowerCase().endsWith(".greiaactivity"))return this.showFlash(tr("activities.bad_extension"),"error");if(file.size<=0||file.size>MAX_ACTIVITY_PACKAGE_BYTES)return this.showFlash(tr("activities.too_large"),"error");submit.disabled=true;try{const result=await this.api.installActivity(file);dialog.close();await this.state.refresh();this.showFlash(tr("activities.installed",{name:result?.installed?.activity_id||tr("category.unknown")}));}catch(error){this.showFlash(error?.message||tr("activities.install_failed"),"error");}finally{submit.disabled=false;}});
+    submit.addEventListener("click",async()=>{const file=input.files?.[0];if(!file)return this.showFlash(tr("activities.choose_first"),"error");if(!file.name.toLowerCase().endsWith(".greiaactivity"))return this.showFlash(tr("activities.bad_extension"),"error");if(file.size<=0||file.size>MAX_ACTIVITY_PACKAGE_BYTES)return this.showFlash(tr("activities.too_large"),"error");submit.disabled=true;try{const result=await this.api.installActivity(file);dialog.close();await this.state.refresh();this.showFlash(tr("activities.installed",{name:result?.installed?.activity_id||tr("category.unknown")}));}catch(error){this.showFlash(error?.code==="profile_session_active"?tr("activities.profile_picker_required"):error?.message||tr("activities.install_failed"),"error");}finally{submit.disabled=false;}});
     body.append(panel);
   };
 }

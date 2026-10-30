@@ -149,7 +149,7 @@ Parents can currently:
 
 Still incremental/future package-management work includes explicit Activity update/remove product flows and the complete R10 lifecycle. The Parent App delegates package mutation to the Greia package-management service; it must not unzip/copy packages itself or run package-manager commands.
 
-Ordinary/release images currently keep `activities.install` unavailable pending independent package/release acceptance; adopting HTTPS does not automatically enable it. Developer/owner-enabled environments may advertise it through the typed capability.
+Owner direction 2026-10-30 enables new Activity package installation when the Parent-owned package store is writable; an explicit operator off override is supported. Install and removal require Greia to be at the profile picker. Package validation, separate Parent trust and child-save preservation remain mandatory. Source and local HTTP coverage exist; installed Linux and physical acceptance remain pending.
 
 ### Per-child Activity discovery and visibility
 

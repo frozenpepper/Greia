@@ -1033,3 +1033,13 @@ login remains disabled. The installed Parent API uses the fixed-operation
 `greia-parent-ssh.socket` service and reports capability only when available.
 The new socket/unit requires a full-system image or update, and real systemd,
 reboot and physical login/disable acceptance remain pending.
+
+
+## Parent Activity upload (2026-10-30; source and local HTTP evidence)
+
+Parent install/remove capabilities follow actual package-store writability
+and the explicit off override. The API holds the shared profile-session lock
+and requires the idle profile picker before publishing a generation; the
+Shell refreshes its Parent source when that pointer changes. Keep package
+validation and Parent trust, and do not remove the session fence: publication
+collects old generations. Installed Linux and physical acceptance are pending.

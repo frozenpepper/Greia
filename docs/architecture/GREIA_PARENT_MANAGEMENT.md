@@ -138,7 +138,7 @@ This applies to Activity install/update, backup/restore, OS/runtime update, and 
 
 ## 8. Activity and package boundary
 
-The Parent source can list Activities through the trusted Activity Registry and may expose package install/remove only behind explicit capability policy.
+The Parent source lists Activities through the trusted Activity Registry and advertises install/remove only when its real Parent package store is writable and no operator off override is set. New installations and removals hold the shared profile-session lock and require the profile picker, preventing deletion of files under an active Activity. The Shell follows changes to the atomic active-generation pointer on its bounded rescan and rebuilds launch authority before publishing the catalogue.
 
 Package validation and activation remain platform-package responsibilities. The Parent HTTP server does not unpack arbitrary archives directly into the Activity installation root.
 

@@ -594,6 +594,8 @@ class ComposedActivityRegistry(ActivityRegistry):
         # validated, or issuable until attached; see
         # :meth:`attach_deferred_sources`.
         self._deferred_sources = tuple(deferred_sources)
+        self._parent_pointer_stamp: object = object()
+        self.parent_source_needs_rescan = False
 
     @property
     def deferred_sources(self) -> tuple[ActivitySource, ...]:
@@ -623,6 +625,40 @@ class ComposedActivityRegistry(ActivityRegistry):
         self._roots = tuple(source.root for source in self._sources)
         return pending
 
+    def discovery_token(self) -> tuple[tuple[str, int, int, int], ...]:
+        """Follow the atomic Parent generation before observing package changes.
+
+        The active pointer names a generation; it is not itself a directory.
+        Keeping the boot-time resolved path would miss subsequent installs.
+        """
+        pointer = Path(os.environ.get(
+            "GREIA_PARENT_ACTIVITY_PACKAGE_ROOT", "/var/lib/greia-os/activity-packages"
+        )) / "active"
+        try:
+            info = pointer.stat()
+            stamp: object = (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
+        except OSError:
+            stamp = None
+        if stamp == self._parent_pointer_stamp:
+            return super().discovery_token()
+        parent = resolve_parent_active_set().source
+        sources = list(self._sources)
+        for index, source in enumerate(sources):
+            if source.source_id != parent.source_id or source.trust != PackageTrust.PARENT_TRUSTED_UNSIGNED:
+                continue
+            built_in = sources[0].root.resolve()
+            candidate = parent.root.resolve()
+            if candidate == built_in or candidate in built_in.parents or built_in in candidate.parents:
+                raise ActivityValidationError("parent Activity root must be separate from the built-in Activity root")
+            if source.root != parent.root:
+                sources[index] = parent
+                self._sources = tuple(sources)
+                self._roots = tuple(item.root for item in sources)
+                self.parent_source_needs_rescan = True
+            break
+        self._parent_pointer_stamp = stamp
+        return super().discovery_token()
+
     def discover_registrations(
         self, *, fail_closed: bool | None = None
     ) -> tuple[ActivityRegistration, ...]:
@@ -631,6 +667,7 @@ class ComposedActivityRegistry(ActivityRegistry):
             for item in self._collision_conflicts
         }
         result = super().discover_registrations(fail_closed=fail_closed)
+        self.parent_source_needs_rescan = False
         fresh = [
             item
             for item in self._collision_conflicts

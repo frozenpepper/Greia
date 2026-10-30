@@ -139,7 +139,7 @@ The v1 file format is the distribution container for both initial packages and f
 As of this document:
 
 - canonical new install is implemented;
-- the Parent upload/install seam exists behind capability/trust gating;
+- the Parent upload/install seam is advertised when the real package store is writable and the operator has not disabled it; installs and removals require the profile picker and hold the shared profile-session lock;
 - replacement/update, migration, rollback, and recovery remain part of R10 completion work.
 
 Consumers must not infer that because they can parse `.greiaactivity`, arbitrary replacement of an installed Activity is safe.

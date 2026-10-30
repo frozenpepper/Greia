@@ -557,3 +557,12 @@ Physical/Acer evidence is additionally required for claims that depend on physic
 ## 17. Keeping this skill current
 
 This file is the one-shot manual other agents rely on before any live test. Every Activity or platform tranche that discovers a performance, layout, graphics, input, audio or shared-asset lesson updates this file **in the same commit**, stating the rule and the measured reason (device, build, before → after). Fold the lesson into the section it belongs to and into §0 if it changes what a first attempt must do; do not append dated narrative sections, and delete any statement the change makes stale. When a rule's owner is an ADR, product requirement or platform module, update that owner too and keep this file pointing to it.
+
+
+## Parent package installation (2026-10-30; source evidence)
+
+The Parent app can offer `.greiaactivity` installation when the Parent package
+store is writable. Return Greia to the profile picker before install or
+removal; the shared session lock protects running Activity generations.
+Package validation and Parent trust remain unchanged. Actual installed Linux
+and physical-device acceptance remain separate from local HTTP tests.

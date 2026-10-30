@@ -1585,10 +1585,16 @@ export const CHROME_TRANSLATIONS = Object.freeze({
     "fr": "Installer une activité"
   },
   "activities.install_help": {
-    "en": "Add a Greia Activity package from this device.",
-    "it": "Aggiungi un pacchetto di attività Greia da questo dispositivo.",
-    "es": "Añade un paquete de actividades Greia desde este dispositivo.",
-    "fr": "Ajoutez un paquet d'activité Greia depuis cet appareil."
+    "en": "Return to the Greia profile picker, then choose an Activity package from this device.",
+    "it": "Torna alla scelta del profilo su Greia, poi scegli un pacchetto di attività da questo dispositivo.",
+    "es": "Vuelve al selector de perfiles de Greia y elige un paquete de actividades de este dispositivo.",
+    "fr": "Revenez au choix du profil sur Greia, puis choisissez un paquet d'activité sur cet appareil."
+  },
+  "activities.profile_picker_required": {
+    "en": "Return to the profile picker on Greia, then try again.",
+    "it": "Torna alla scelta del profilo su Greia, poi riprova.",
+    "es": "Vuelve al selector de perfiles de Greia y vuelve a intentarlo.",
+    "fr": "Revenez au choix du profil sur Greia, puis réessayez."
   },
   "activities.install_choose": {
     "en": "Choose a .greiaactivity file",

@@ -25,7 +25,6 @@ from greia_parent.credentials import (
 from greia_parent.package_api import (
     PackageParentApiApplication,
     PackageParentApiHTTPServer,
-    _activity_install_enabled,
 )
 from greia_parent.protocol import (
     API_BASE,
@@ -141,23 +140,6 @@ class ParentApiTests(unittest.TestCase):
         self.assertFalse(api_index_payload()["capabilities"]["activities.install"])
         with self.assertRaises(ValueError):
             api_index_payload({"invented.capability": True})
-
-    def test_activity_install_is_fail_closed_without_explicit_owner_or_dev_enablement(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
-            marker = Path(temporary) / "developer-remote"
-            with mock.patch.dict(
-                os.environ,
-                {"GREIA_DEVELOPER_REMOTE_MARKER": str(marker)},
-                clear=False,
-            ):
-                os.environ.pop("GREIA_PARENT_ACTIVITY_INSTALL", None)
-                self.assertFalse(_activity_install_enabled())
-                marker.write_text("enabled\n", encoding="utf-8")
-                self.assertTrue(_activity_install_enabled())
-                os.environ["GREIA_PARENT_ACTIVITY_INSTALL"] = "false"
-                self.assertFalse(_activity_install_enabled())
-                os.environ["GREIA_PARENT_ACTIVITY_INSTALL"] = "true"
-                self.assertTrue(_activity_install_enabled())
 
     def test_api_v1_startup_retires_legacy_shared_token_state(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

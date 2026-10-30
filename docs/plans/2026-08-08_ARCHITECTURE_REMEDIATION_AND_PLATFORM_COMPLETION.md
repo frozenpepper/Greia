@@ -4061,3 +4061,17 @@ capability gating and typed request checks, with current Parent client pin
 and login guidance. SSH stays off by default and root SSH stays disabled.
 Focused source tests are recorded in HANDOVER; no Linux systemd, image,
 Acer or login acceptance ran. R7 and later phase state remain unchanged.
+
+
+### 2026-10-30 — Parent Activity package upload (SOURCE + LOCAL HTTP)
+
+Owner requested installation on normal images. Capabilities now depend on the
+Parent package store being writable, with an explicit off override. Upload and
+removal hold the shared profile-session lock and require the profile picker;
+this protects running Activities while old package generations are collected.
+Shell rescans follow the atomic Parent generation pointer, including a change
+during boot. The client explains the picker rule. Local production-HTTP tests
+cover rejection, real install, discovery and duplicate refusal; focused suites
+and Parent-client integrity checks passed as recorded in HANDOVER. No Linux
+service sandbox, Bubblewrap, browser upload, physical Acer or phase closure is
+claimed.

@@ -963,3 +963,13 @@ advertises the capability only when its socket is accessible. These new unit
 files require a full-system image/update; a Python-only `.greia_update` cannot
 install them. Real systemd, SSH login, disable, reboot and Acer acceptance have
 not run. Do not assume the currently installed Acer already contains this.
+
+
+## Parent Activity installation (2026-10-30; source evidence)
+
+Normal-image Parent upload is offered when its package store is writable.
+Install/remove must happen at the profile picker under the shared session
+lock; the Shell watches the active generation pointer and refreshes authority.
+The local HTTP test covers real validation, rejection, install and registry
+discovery, but not installed systemd permissions, Bubblewrap, browser or Acer.
+Use a disposable installed Linux image for those checks before device delivery.

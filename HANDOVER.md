@@ -2,6 +2,24 @@
 
 **Purpose:** the short current state for contributors and agents: active workstreams, recent results, blockers and next steps. It is not an archive.
 
+**2026-10-30 Parent Activity upload (SOURCE + LOCAL HTTP; device pending):**
+Owner requested uploads. The API now advertises install/remove if its real
+package store is writable, with an explicit off override. The shared profile
+session lock requires an idle profile picker during package mutation because
+old generations are collected. The Shell refreshes its Parent source when the
+atomic active pointer changes, including a boot-time race. The pinned Parent
+client explains the picker boundary. Local production-HTTP tests reject a bad
+package and an active child, install a real validated package, discover it in
+the running registry and reject duplicates; removal follows the new pointer.
+Focused suites passed: Parent API 33, production Parent 8, package 16 + one
+Linux-only skip, removal 5, launcher composition 18, end-to-end 2, Parent
+Node 106 (pre-existing unrelated test edit present). Installed Linux/systemd,
+Bubblewrap, browser upload and physical Acer remain untested. The owner forbids
+VM/image builds on this Mac. Next: build the exact source package, exercise the
+installed path on the Linux host, then use the existing Parent update route
+on Acer and verify a real upload at the profile picker. Full-system delivery
+is still needed for the separate SSH systemd unit and updated browser bytes.
+
 **2026-10-30 Parent SSH and branding (SOURCE; Acer not updated):** Owner
 requested a Parent switch on normal images using SSH `greia` / `greia`, off
 by default. The new socket-activated fixed-operation service owns the SSH
@@ -16,8 +34,8 @@ SSH was closed, and it cannot acquire the new systemd unit through a
 Python-only update. Next: build a current full-system update on the existing
 Linux host, run disposable installed acceptance, then deliver the accepted
 update through the existing A/B Parent route and verify the switch on Acer.
-Activity package installation remains separately unavailable pending its
-package acceptance; this work does not enable it.
+The later Activity upload source work is described above; installed acceptance
+remains pending.
 
 **2026-10-30 Acer Shell installed-generation regression (SOURCE FIX; device
 retest pending):** Owner reports a successful Italian installation, S+T does

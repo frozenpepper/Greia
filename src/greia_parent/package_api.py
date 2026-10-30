@@ -28,6 +28,7 @@ from greia_platform.activity_packages import (
     ActivityPackageService,
 )
 from greia_platform.trust import ActivitySource, PackageTrust
+from greia_platform.profiles import ProfileError
 
 
 _ALLOWED_PACKAGE_TYPES = frozenset(
@@ -48,10 +49,9 @@ class PackageParentApiApplication(ParentApiApplication):
     def __init__(self, *args: object, **kwargs: object) -> None:
         super().__init__(*args, **kwargs)
         self.package_service = ActivityPackageService.from_environment()
-        self.activity_install_enabled = _activity_install_enabled()
-        # Install and remove are both package-code mutations and therefore share
-        # the same explicit owner/developer enablement boundary while transport
-        # remains provisional HTTP.
+        self.activity_install_enabled = _activity_install_enabled(self.package_service)
+        # Both operations use the same Parent-owned package store and validation
+        # authority. The capability reflects whether that store can be written.
         self.activity_remove_enabled = self.activity_install_enabled
 
     def index_payload(self) -> dict[str, object]:
@@ -206,7 +206,15 @@ class PackageParentApiRequestHandler(ParentApiRequestHandler):
                         raise ActivityPackageError("Activity package upload ended unexpectedly")
                     handle.write(chunk)
                     remaining -= len(chunk)
-            receipt = self.app.package_service.install_archive(upload)
+            # Publication removes the previous package generation. Hold the
+            # same lock the Shell uses for profile activation so no running
+            # Activity can lose its files halfway through a mutation.
+            with self.app.active_session.profile_picker_restart_guard():
+                receipt = self.app.package_service.install_archive(upload)
+        except ProfileError:
+            self._send_api_error(409, "profile_session_active",
+                                 "Return to the profile picker before installing an Activity")
+            return
         except (ActivityPackageError, ActivityValidationError, OSError) as exc:
             self._send_api_error(400, "activity_install_rejected", str(exc))
             return
@@ -237,7 +245,12 @@ class PackageParentApiRequestHandler(ParentApiRequestHandler):
             return
         activity_id = unquote(encoded_id)
         try:
-            receipt = self.app.package_service.uninstall(activity_id)
+            with self.app.active_session.profile_picker_restart_guard():
+                receipt = self.app.package_service.uninstall(activity_id)
+        except ProfileError:
+            self._send_api_error(409, "profile_session_active",
+                                 "Return to the profile picker before removing an Activity")
+            return
         except (ActivityPackageError, ActivityValidationError, OSError) as exc:
             self._send_api_error(400, "activity_remove_rejected", str(exc))
             return
@@ -257,19 +270,25 @@ class PackageParentApiHTTPServer(ParentApiHTTPServer):
         HTTPServer.__init__(self, address, PackageParentApiRequestHandler)
 
 
-def _activity_install_enabled() -> bool:
+def _activity_install_enabled(service: ActivityPackageService) -> bool:
+    """Advertise package operations when the real Parent store is writable.
+
+    An explicit false remains an operator override. The installed image creates
+    the store for greiapanel before this service starts. Do not create files just
+    to probe capability, and do not infer success from a developer marker alone.
+    """
     explicit = os.environ.get("GREIA_PARENT_ACTIVITY_INSTALL", "").strip().casefold()
-    if explicit in {"1", "true", "yes", "on"}:
-        return True
     if explicit in {"0", "false", "no", "off"}:
         return False
-    marker = Path(
-        os.environ.get(
-            "GREIA_DEVELOPER_REMOTE_MARKER",
-            "/etc/greia-os/developer-remote",
-        )
-    )
-    return marker.is_file()
+    root = service.state_root
+    target = root if root.exists() else root.parent
+    if not target.is_dir() or not os.access(target, os.W_OK | os.X_OK):
+        return False
+    for child in (service.generations_root, service.versions_root,
+                  service.staging_root, service.receipts_root):
+        if child.exists() and (not child.is_dir() or not os.access(child, os.W_OK | os.X_OK)):
+            return False
+    return True
 
 
 def main() -> int:

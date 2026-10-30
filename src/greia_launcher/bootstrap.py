@@ -264,6 +264,11 @@ class LauncherBootstrap:
         finally:
             emit_boot_marker("activity_discover_end")
         activity_discovery_token = composed.registry.discovery_token()
+        # If a Parent generation changed while boot was loading its index,
+        # force one live rescan after handoff instead of sealing a new token
+        # beside registrations from the old generation.
+        if composed.registry.parent_source_needs_rescan:
+            activity_discovery_token = None
         installed = is_installed_root(paths.root)
         emit_boot_marker("activity_runtime_build_begin")
         try:
