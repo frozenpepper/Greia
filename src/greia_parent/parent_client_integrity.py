@@ -1,3 +1,16 @@
+"""Fail-closed integrity check for the installed Parent browser client.
+
+``runtime/parent-app-client.toml`` pins ``repository``
+(``frozenpepper/Greia:parent-app``, the in-repo browser client source) and
+``revision``: the 40-hex Git tree id of the committed ``parent-app/`` directory
+at pin time. ``runtime/parent-app-client.manifest.json`` repeats both and lists
+every shipped runtime file with its size and SHA-256. The service checks that
+pin and manifest agree and that the installed files match the manifest exactly.
+The tree id is an identity label that is not re-derived on the device, because
+images carry no Git objects. ``tools/update_parent_client_pin.py`` produces the
+pin, manifest and image overlay from one committed tree.
+"""
+
 from __future__ import annotations
 
 import argparse

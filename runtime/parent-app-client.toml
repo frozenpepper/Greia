@@ -1,7 +1,13 @@
+# Frozen pin of the browser Parent client shipped in the image.
+# `repository` names the in-repo source directory (frozenpepper/Greia:parent-app).
+# `revision` is the Git TREE id of the committed `parent-app/` directory
+# (`git rev-parse HEAD:parent-app`), not a commit id. Do not edit by hand: after
+# committing parent-app/ run tools/update_parent_client_pin.py, which rewrites
+# this file, the manifest and build/overlay/usr/share/greia-parent-app/ together.
 schema_version = 1
 api_version = 1
-repository = "frozenpepper/Greia-Parent-App-Html"
-revision = "080b4b67e6302c11c5f5a874142ff184315d57d1"
+repository = "frozenpepper/Greia:parent-app"
+revision = "7e01bdb42834ce910154267cd45a1e35059f3779"
 runtime_root = "/usr/share/greia-parent-app"
 integration_state = "vendored-image-integrity-enforced"
 

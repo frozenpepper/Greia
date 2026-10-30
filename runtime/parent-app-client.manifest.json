@@ -69,7 +69,7 @@
       "sha256": "2c1ad3d11f6b0c3f32fd3b5f1e141cfbfa23a7aed4d2003f8ce5d90d5ee0c58b"
     }
   },
-  "repository": "frozenpepper/Greia-Parent-App-Html",
-  "revision": "080b4b67e6302c11c5f5a874142ff184315d57d1",
+  "repository": "frozenpepper/Greia:parent-app",
+  "revision": "7e01bdb42834ce910154267cd45a1e35059f3779",
   "schema_version": 1
 }

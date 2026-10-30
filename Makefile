@@ -1,15 +1,15 @@
 PYTHON ?= python3
 PYTHONPATH := src
-.PHONY: verify verify-full test test-full test-slow validate assets assets-check visual-assets visual-assets-check footprint shell-check clean-bytecode
+.PHONY: verify verify-full test test-full test-slow validate assets assets-check visual-assets visual-assets-check footprint shell-check parent-app-test clean-bytecode
 
 # Test lanes (owner: tests/suite_lanes.py). `verify`/`test` run the fast lane
 # every turn must keep green; `verify-full`/`test-full` add the heavy
 # end-to-end evidence suites (x8 QEMU rigs, install RSS gates,
 # whole-repository sweeps); `test-slow` runs only those.
-verify: clean-bytecode test validate shell-check footprint
+verify: clean-bytecode test validate shell-check footprint parent-app-test
 	$(MAKE) clean-bytecode
 
-verify-full: clean-bytecode test-full validate shell-check footprint
+verify-full: clean-bytecode test-full validate shell-check footprint parent-app-test
 	$(MAKE) clean-bytecode
 
 clean-bytecode:
@@ -49,3 +49,12 @@ shell-check:
 
 footprint:
 	build/footprint-source.sh
+
+# Browser Parent client unit tests (parent-app/). Node >= 18 is optional
+# tooling: without it the target prints a skip notice and succeeds.
+parent-app-test:
+	@if command -v node >/dev/null 2>&1 && [ "$$(node -p 'process.versions.node.split(".")[0]')" -ge 18 ]; then \
+		node --test parent-app/tests/*.test.js; \
+	else \
+		echo "parent-app-test: skipped (Node >= 18 not found on PATH)"; \
+	fi

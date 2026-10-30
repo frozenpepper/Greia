@@ -8,13 +8,21 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from tools.update_parent_client_pin import PinError, _commit_replacements, update_pin
+from tools.update_parent_client_pin import (
+    PIN_REPOSITORY,
+    PinError,
+    _commit_replacements,
+    check_pin,
+    update_pin,
+)
 
 HAS_GIT = shutil.which("git") is not None
 NEEDS_GIT = "device-deferred: git not installed on this host; needs recorded authority amendment per T01-FIX-ENV"
 
 
 class ParentClientPinUpdateTests(unittest.TestCase):
+    """The pin names the committed ``parent-app/`` tree and owns manifest + overlay."""
+
     def _git(self, root: Path, *args: str) -> str:
         completed = subprocess.run(
             ["git", "-C", str(root), *args],
@@ -25,40 +33,34 @@ class ParentClientPinUpdateTests(unittest.TestCase):
         )
         return completed.stdout.strip()
 
-    def _parent_checkout(self, root: Path) -> tuple[Path, str]:
-        parent = root / "parent"
-        (parent / "src").mkdir(parents=True)
-        (parent / "styles").mkdir()
-        (parent / "assets").mkdir()
-        (parent / "index.html").write_text(
+    def _greia_checkout(self, root: Path) -> Path:
+        """A temporary Greia git repo with committed parent-app/ and a stale pin."""
+
+        greia = root / "greia"
+        app = greia / "parent-app"
+        (app / "src").mkdir(parents=True)
+        (app / "styles").mkdir()
+        (app / "assets").mkdir()
+        (app / "tests").mkdir()
+        (app / "index.html").write_text(
             "<link rel=\"stylesheet\" href=\"./styles/app.css\">"
             "<script type=\"module\" src=\"./src/app.js\"></script>",
             encoding="utf-8",
         )
-        (parent / "src" / "app.js").write_text('import "./extra.js";\n', encoding="utf-8")
-        (parent / "src" / "extra.js").write_text("export const value = 1;\n", encoding="utf-8")
-        (parent / "styles" / "app.css").write_text(
+        (app / "src" / "app.js").write_text('import "./extra.js";\n', encoding="utf-8")
+        (app / "src" / "extra.js").write_text("export const value = 1;\n", encoding="utf-8")
+        (app / "styles" / "app.css").write_text(
             'body { background-image: url("../assets/icon.svg"); }\n',
             encoding="utf-8",
         )
-        (parent / "assets" / "icon.svg").write_text("<svg></svg>\n", encoding="utf-8")
-        (parent / "README.md").write_text("not runtime\n", encoding="utf-8")
+        (app / "assets" / "icon.svg").write_text("<svg></svg>\n", encoding="utf-8")
+        (app / "assets" / "unused.png").write_bytes(b"\x89PNG not referenced")
+        (app / "tests" / "app.test.js").write_text("// not runtime\n", encoding="utf-8")
+        (app / "README.md").write_text("not runtime\n", encoding="utf-8")
 
-        self._git(parent, "init", "-q")
-        self._git(parent, "config", "user.email", "tests@greia.invalid")
-        self._git(parent, "config", "user.name", "Greia Tests")
-        self._git(parent, "add", ".")
-        self._git(parent, "commit", "-q", "-m", "fixture")
-        return parent, self._git(parent, "rev-parse", "HEAD")
-
-    def _greia_checkout(self, root: Path) -> Path:
-        greia = root / "greia"
-        (greia / "runtime").mkdir(parents=True)
-        vendor = greia / "vendor" / "parent-app"
+        (greia / "runtime").mkdir()
         overlay = greia / "build" / "overlay" / "usr" / "share" / "greia-parent-app"
-        vendor.mkdir(parents=True)
         overlay.mkdir(parents=True)
-
         old_revision = "0" * 40
         (greia / "runtime" / "parent-app-client.toml").write_text(
             "\n".join(
@@ -87,9 +89,18 @@ class ParentClientPinUpdateTests(unittest.TestCase):
             + "\n",
             encoding="utf-8",
         )
-        (vendor / "stale.js").write_text("stale vendor\n", encoding="utf-8")
         (overlay / "stale.js").write_text("stale overlay\n", encoding="utf-8")
+
+        self._git(greia, "init", "-q")
+        self._git(greia, "config", "user.email", "tests@greia.invalid")
+        self._git(greia, "config", "user.name", "Greia Tests")
+        self._git(greia, "add", ".")
+        self._git(greia, "commit", "-q", "-m", "fixture")
         return greia
+
+    def _commit_all(self, greia: Path, message: str = "change") -> None:
+        self._git(greia, "add", ".")
+        self._git(greia, "commit", "-q", "-m", message)
 
     @staticmethod
     def _file_map(root: Path) -> dict[str, bytes]:
@@ -99,51 +110,121 @@ class ParentClientPinUpdateTests(unittest.TestCase):
             if path.is_file()
         }
 
-    def test_repin_updates_contract_vendor_and_image_overlay_from_same_bytes(self) -> None:
+    def test_repin_names_committed_tree_and_updates_contract_and_overlay(self) -> None:
         if not HAS_GIT:
             self.skipTest(NEEDS_GIT)
         with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
-            parent, revision = self._parent_checkout(root)
-            greia = self._greia_checkout(root)
+            greia = self._greia_checkout(Path(temporary))
+            tree = self._git(greia, "rev-parse", "HEAD:parent-app")
 
-            config, manifest_path, vendor, overlay = update_pin(greia, parent, revision)
+            config, manifest_path, overlay = update_pin(greia)
 
-            self.assertIn(f'revision = "{revision}"', config.read_text(encoding="utf-8"))
+            text = config.read_text(encoding="utf-8")
+            self.assertIn(f'revision = "{tree}"', text)
+            self.assertIn(f'repository = "{PIN_REPOSITORY}"', text)
+            self.assertIn('runtime_root = "/usr/share/greia-parent-app"', text)
             manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-            self.assertEqual(manifest["revision"], revision)
+            self.assertEqual(manifest["revision"], tree)
+            self.assertEqual(manifest["repository"], PIN_REPOSITORY)
             self.assertEqual(
                 set(manifest["files"]),
                 {"assets/icon.svg", "index.html", "src/app.js", "src/extra.js", "styles/app.css"},
             )
 
-            vendor_files = self._file_map(vendor)
             overlay_files = self._file_map(overlay)
-            self.assertEqual(vendor_files, overlay_files)
-            self.assertNotIn("stale.js", vendor_files)
-            self.assertNotIn("README.md", vendor_files)
-            self.assertEqual(set(vendor_files), set(manifest["files"]))
-
-            for relative, data in vendor_files.items():
+            self.assertEqual(set(overlay_files), set(manifest["files"]))
+            self.assertNotIn("stale.js", overlay_files)
+            for relative, data in overlay_files.items():
                 record = manifest["files"][relative]
                 self.assertEqual(record["bytes"], len(data))
                 self.assertEqual(record["sha256"], hashlib.sha256(data).hexdigest())
-                self.assertEqual(data, (parent / relative).read_bytes())
+                self.assertEqual(data, (greia / "parent-app" / relative).read_bytes())
 
-    def test_dirty_parent_checkout_refuses_before_mutating_greia(self) -> None:
+            self.assertEqual(check_pin(greia), [])
+
+    def test_runtime_bytes_come_from_head_not_the_working_tree(self) -> None:
         if not HAS_GIT:
             self.skipTest(NEEDS_GIT)
         with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
-            parent, revision = self._parent_checkout(root)
-            greia = self._greia_checkout(root)
-            before = self._file_map(greia)
-            (parent / "untracked.txt").write_text("dirty\n", encoding="utf-8")
+            greia = self._greia_checkout(Path(temporary))
+            committed = (greia / "parent-app" / "src" / "extra.js").read_bytes()
+            # A dirty tracked file is refused outright, so the only way to
+            # observe the difference is to assume-unchanged it past git status.
+            self._git(greia, "update-index", "--assume-unchanged", "parent-app/src/extra.js")
+            (greia / "parent-app" / "src" / "extra.js").write_text("tampered\n", encoding="utf-8")
 
-            with self.assertRaisesRegex(PinError, "dirty"):
-                update_pin(greia, parent, revision)
+            _config, _manifest, overlay = update_pin(greia)
 
-            self.assertEqual(self._file_map(greia), before)
+            self.assertEqual((overlay / "src" / "extra.js").read_bytes(), committed)
+
+    def test_uncommitted_or_untracked_parent_app_changes_refuse_before_mutating(self) -> None:
+        if not HAS_GIT:
+            self.skipTest(NEEDS_GIT)
+        for mutate in (
+            lambda app: (app / "untracked.txt").write_text("dirty\n", encoding="utf-8"),
+            lambda app: (app / "src" / "extra.js").write_text("dirty\n", encoding="utf-8"),
+            lambda app: (app / "tests" / "app.test.js").write_text("dirty\n", encoding="utf-8"),
+        ):
+            with self.subTest(mutate=mutate), tempfile.TemporaryDirectory() as temporary:
+                greia = self._greia_checkout(Path(temporary))
+                mutate(greia / "parent-app")
+                before = {
+                    **self._file_map(greia / "runtime"),
+                    **self._file_map(greia / "build"),
+                }
+
+                with self.assertRaisesRegex(PinError, "uncommitted or untracked"):
+                    update_pin(greia)
+                with self.assertRaisesRegex(PinError, "uncommitted or untracked"):
+                    check_pin(greia)
+
+                after = {
+                    **self._file_map(greia / "runtime"),
+                    **self._file_map(greia / "build"),
+                }
+                self.assertEqual(after, before)
+
+    def test_changes_outside_parent_app_do_not_block_the_pin(self) -> None:
+        if not HAS_GIT:
+            self.skipTest(NEEDS_GIT)
+        with tempfile.TemporaryDirectory() as temporary:
+            greia = self._greia_checkout(Path(temporary))
+            (greia / "unrelated.txt").write_text("other work\n", encoding="utf-8")
+            update_pin(greia)
+
+    def test_revision_follows_any_committed_parent_app_change(self) -> None:
+        if not HAS_GIT:
+            self.skipTest(NEEDS_GIT)
+        with tempfile.TemporaryDirectory() as temporary:
+            greia = self._greia_checkout(Path(temporary))
+            update_pin(greia)
+            self._commit_all(greia, "repin")
+            self.assertEqual(check_pin(greia), [])
+
+            (greia / "parent-app" / "tests" / "app.test.js").write_text("// edited\n", encoding="utf-8")
+            self._commit_all(greia, "edit tests only")
+            problems = check_pin(greia)
+            self.assertTrue(any("parent-app-client.toml" in item for item in problems), problems)
+
+            update_pin(greia)
+            self.assertEqual(check_pin(greia), [])
+
+    def test_check_reports_overlay_drift_without_writing(self) -> None:
+        if not HAS_GIT:
+            self.skipTest(NEEDS_GIT)
+        with tempfile.TemporaryDirectory() as temporary:
+            greia = self._greia_checkout(Path(temporary))
+            _config, _manifest, overlay = update_pin(greia)
+            (overlay / "src" / "app.js").write_text("tampered\n", encoding="utf-8")
+            (overlay / "extra.js").write_text("extra\n", encoding="utf-8")
+            (overlay / "assets" / "icon.svg").unlink()
+
+            problems = check_pin(greia)
+
+            self.assertIn("overlay differs from committed parent-app/src/app.js", problems)
+            self.assertIn("overlay has unexpected file extra.js", problems)
+            self.assertIn("overlay is missing assets/icon.svg", problems)
+            self.assertEqual((overlay / "src" / "app.js").read_text(encoding="utf-8"), "tampered\n")
 
     def test_failed_multi_path_swap_restores_previous_targets(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

@@ -1,19 +1,31 @@
 #!/usr/bin/env python3
-"""Synchronize Greia's frozen Parent HTML client from a reviewed checkout.
+"""Synchronize Greia's frozen Parent HTML client from the in-repo ``parent-app/``.
 
-The caller supplies a clean Parent checkout and the exact commit SHA that was
-reviewed/tested. Runtime files are discovered from the actual ``index.html``
-dependency graph and each runtime file is read once. Those exact captured bytes
-own all four Greia artifacts:
+``parent-app/`` is the single editable source of the browser Parent client.
+The installed image ships only a frozen, integrity-checked copy of its runtime
+closure, so after committing changes to ``parent-app/`` run this tool and
+commit its output.
+
+The pin ``revision`` is the 40-hex Git **tree id of the committed
+``parent-app/`` directory** (``git rev-parse HEAD:parent-app``). It names the
+exact reviewed source without needing a separate repository, and keeps the
+40-character format that ``greia_parent.parent_client_integrity`` and the pin/
+manifest equality check rely on.
+
+The tool refuses to run unless ``parent-app/`` has no uncommitted or untracked
+changes. Runtime files are discovered from the actual ``index.html`` dependency
+graph and read **from Git objects at ``HEAD:parent-app``** (never the working
+tree), each exactly once. Those exact bytes own all three Greia artifacts:
 
 - ``runtime/parent-app-client.toml``
 - ``runtime/parent-app-client.manifest.json``
-- ``vendor/parent-app/``
 - ``build/overlay/usr/share/greia-parent-app/``
 
 All replacement artifacts are staged before any current artifact is moved.
 Replacement then uses sibling backups so a failed multi-path swap can restore
 the previous checkout state instead of leaving a half-repinned tree.
+
+``--check`` computes the same result and reports drift without writing.
 """
 
 from __future__ import annotations
@@ -27,12 +39,17 @@ import shutil
 import subprocess
 import tempfile
 import uuid
+from dataclasses import dataclass
 from html.parser import HTMLParser
 from pathlib import Path, PurePosixPath
 from urllib.parse import urlsplit
 
 
+PARENT_APP_DIR = "parent-app"
+PIN_REPOSITORY = "frozenpepper/Greia:parent-app"
 REVISION_LINE = re.compile(r'^revision = "[0-9a-f]{40}"$', re.MULTILINE)
+REPOSITORY_LINE = re.compile(r'^repository = "[^"\n]*"$', re.MULTILINE)
+_REGULAR_FILE_MODES = frozenset({"100644", "100755"})
 STATIC_IMPORT = re.compile(
     r"(?:^|\n)\s*(?:import|export)\s+(?:[^;\n]*?\s+from\s+)?[\"']([^\"']+)[\"']",
     re.MULTILINE,
@@ -63,29 +80,56 @@ class _RuntimeHtmlParser(HTMLParser):
             self.references.append(str(values["src"]))
 
 
-def _git(parent_root: Path, *args: str) -> str:
+def _git(greia_root: Path, *args: str) -> bytes:
+    """Run one Git command (argument array, no shell) and return raw stdout."""
+
     try:
         completed = subprocess.run(
-            ["git", "-C", str(parent_root), *args],
+            ["git", "-C", str(greia_root), *args],
             check=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            text=True,
         )
-    except (OSError, subprocess.CalledProcessError) as exc:
-        raise PinError(f"could not inspect Parent checkout: {exc}") from exc
-    return completed.stdout.strip()
+    except subprocess.CalledProcessError as exc:
+        detail = exc.stderr.decode("utf-8", "replace").strip() or str(exc)
+        raise PinError(f"could not inspect Greia checkout: {detail}") from exc
+    except OSError as exc:
+        raise PinError(f"could not inspect Greia checkout: {exc}") from exc
+    return completed.stdout
 
 
-def _validate_parent_checkout(parent_root: Path, revision: str) -> None:
-    if not re.fullmatch(r"[0-9a-f]{40}", revision):
-        raise PinError("revision must be an exact 40-character lowercase Git SHA")
-    head = _git(parent_root, "rev-parse", "HEAD")
-    if head != revision:
-        raise PinError(f"Parent checkout HEAD is {head}, expected {revision}")
-    dirty = _git(parent_root, "status", "--porcelain")
+def _committed_tree_id(greia_root: Path) -> str:
+    """Return the tree id of ``HEAD:parent-app`` after requiring it to be clean."""
+
+    dirty = _git(
+        greia_root, "status", "--porcelain", "--untracked-files=all", "--", PARENT_APP_DIR
+    ).decode("utf-8", "replace").strip()
     if dirty:
-        raise PinError("Parent checkout is dirty; commit/review changes before pinning")
+        raise PinError(
+            "parent-app/ has uncommitted or untracked changes; "
+            "commit them before pinning (the pin names the committed tree)"
+        )
+    tree = _git(greia_root, "rev-parse", "--verify", f"HEAD:{PARENT_APP_DIR}").decode("ascii").strip()
+    if not re.fullmatch(r"[0-9a-f]{40}", tree):
+        raise PinError(f"unexpected tree id for HEAD:{PARENT_APP_DIR}: {tree!r}")
+    return tree
+
+
+def _tree_blobs(greia_root: Path, tree: str) -> dict[str, str]:
+    """Map every regular file in the tree to its blob id (symlinks/submodules refused)."""
+
+    listing = _git(greia_root, "ls-tree", "-r", "-z", tree)
+    blobs: dict[str, str] = {}
+    for record in listing.split(b"\0"):
+        if not record:
+            continue
+        meta, _, raw_path = record.partition(b"\t")
+        mode, kind, oid = meta.decode("ascii").split()
+        path = raw_path.decode("utf-8", "surrogateescape")
+        if kind != "blob" or mode not in _REGULAR_FILE_MODES:
+            raise PinError(f"parent-app/{path} is not a regular file (mode {mode})")
+        blobs[path] = oid
+    return blobs
 
 
 def _load_manifest_metadata(path: Path) -> dict[str, object]:
@@ -159,10 +203,13 @@ def _references_for(relative: PurePosixPath, data: bytes) -> list[PurePosixPath]
     return output
 
 
-def _discover_runtime_payloads(parent_root: Path) -> dict[str, bytes]:
-    """Capture the exact transitive runtime closure rooted at ``index.html``."""
+def _discover_runtime_payloads(greia_root: Path, tree: str) -> dict[str, bytes]:
+    """Capture the exact transitive runtime closure rooted at ``index.html``.
 
-    checkout = parent_root.resolve()
+    Bytes come from the committed Git objects of ``tree``, not the working tree.
+    """
+
+    blobs = _tree_blobs(greia_root, tree)
     pending = [PurePosixPath("index.html")]
     payloads: dict[str, bytes] = {}
     while pending:
@@ -170,14 +217,10 @@ def _discover_runtime_payloads(parent_root: Path) -> dict[str, bytes]:
         key = relative.as_posix()
         if key in payloads:
             continue
-        path = (checkout / Path(*relative.parts)).resolve()
-        try:
-            path.relative_to(checkout)
-        except ValueError as exc:
-            raise PinError(f"runtime file escapes Parent checkout: {relative}") from exc
-        if not path.is_file():
+        oid = blobs.get(key)
+        if oid is None:
             raise PinError(f"referenced Parent runtime file is missing: {relative}")
-        data = path.read_bytes()
+        data = _git(greia_root, "cat-file", "blob", oid)
         payloads[key] = data
         for dependency in _references_for(relative, data):
             if dependency.as_posix() not in payloads:
@@ -200,9 +243,11 @@ def _updated_config_text(config_path: Path, revision: str) -> str:
         config = config_path.read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError) as exc:
         raise PinError(f"could not read Parent pin config: {exc}") from exc
-    matches = REVISION_LINE.findall(config)
-    if len(matches) != 1:
+    if len(REVISION_LINE.findall(config)) != 1:
         raise PinError("Parent pin config must contain exactly one exact revision line")
+    if len(REPOSITORY_LINE.findall(config)) != 1:
+        raise PinError("Parent pin config must contain exactly one repository line")
+    config = REPOSITORY_LINE.sub(f'repository = "{PIN_REPOSITORY}"', config, count=1)
     return REVISION_LINE.sub(f'revision = "{revision}"', config, count=1)
 
 
@@ -294,44 +339,104 @@ def _commit_replacements(staged: list[tuple[Path, Path]]) -> None:
             _remove_path(temporary)
 
 
-def update_pin(greia_root: Path, parent_root: Path, revision: str) -> tuple[Path, Path, Path, Path]:
+@dataclass(frozen=True)
+class _Plan:
+    """The complete repin result computed from one committed ``parent-app`` tree."""
+
+    config_path: Path
+    manifest_path: Path
+    overlay_path: Path
+    tree: str
+    payloads: dict[str, bytes]
+    manifest_text: str
+    config_text: str
+
+    @classmethod
+    def compute(cls, greia_root: Path) -> "_Plan":
+        config_path = greia_root / "runtime" / "parent-app-client.toml"
+        manifest_path = greia_root / "runtime" / "parent-app-client.manifest.json"
+        overlay_path = greia_root / "build" / "overlay" / "usr" / "share" / "greia-parent-app"
+        tree = _committed_tree_id(greia_root)
+        _load_manifest_metadata(manifest_path)  # refuse to overwrite a foreign/corrupt manifest
+        payloads = _discover_runtime_payloads(greia_root, tree)
+        manifest = {
+            "files": _hash_runtime_payloads(payloads),
+            "repository": PIN_REPOSITORY,
+            "revision": tree,
+            "schema_version": 1,
+        }
+        return cls(
+            config_path=config_path,
+            manifest_path=manifest_path,
+            overlay_path=overlay_path,
+            tree=tree,
+            payloads=payloads,
+            manifest_text=json.dumps(manifest, indent=2, ensure_ascii=False) + "\n",
+            config_text=_updated_config_text(config_path, tree),
+        )
+
+
+def update_pin(greia_root: Path) -> tuple[Path, Path, Path]:
+    """Rewrite pin, manifest and image overlay from the committed ``parent-app/``."""
+
     greia_root = greia_root.resolve()
-    parent_root = parent_root.resolve()
-    _validate_parent_checkout(parent_root, revision)
-
-    config_path = greia_root / "runtime" / "parent-app-client.toml"
-    manifest_path = greia_root / "runtime" / "parent-app-client.manifest.json"
-    vendor_path = greia_root / "vendor" / "parent-app"
-    overlay_path = greia_root / "build" / "overlay" / "usr" / "share" / "greia-parent-app"
-
-    manifest = _load_manifest_metadata(manifest_path)
-    payloads = _discover_runtime_payloads(parent_root)
-    hashed = _hash_runtime_payloads(payloads)
-    rewritten_manifest = {
-        "files": hashed,
-        "repository": manifest.get("repository", "frozenpepper/Greia-Parent-App-Html"),
-        "revision": revision,
-        "schema_version": 1,
-    }
-    manifest_text = json.dumps(rewritten_manifest, indent=2, ensure_ascii=False) + "\n"
-    config_text = _updated_config_text(config_path, revision)
+    plan = _Plan.compute(greia_root)
 
     staged: list[tuple[Path, Path]] = []
     try:
-        staged.append((config_path, _stage_text_file(config_path, config_text)))
-        staged.append((manifest_path, _stage_text_file(manifest_path, manifest_text)))
-        staged.append((vendor_path, _stage_runtime_tree(vendor_path, payloads)))
-        staged.append((overlay_path, _stage_runtime_tree(overlay_path, payloads)))
-        # Refuse the swap if the reviewed checkout moved or became dirty while
-        # its dependency graph/bytes were being captured.
-        _validate_parent_checkout(parent_root, revision)
+        staged.append((plan.config_path, _stage_text_file(plan.config_path, plan.config_text)))
+        staged.append((plan.manifest_path, _stage_text_file(plan.manifest_path, plan.manifest_text)))
+        staged.append((plan.overlay_path, _stage_runtime_tree(plan.overlay_path, plan.payloads)))
+        # Refuse the swap if parent-app/ moved or became dirty while its
+        # dependency graph/bytes were being captured.
+        if _committed_tree_id(greia_root) != plan.tree:
+            raise PinError("parent-app/ changed while the pin was being computed")
         _commit_replacements(staged)
     except Exception:
         for _target, temporary in staged:
             _remove_path(temporary)
         raise
 
-    return config_path, manifest_path, vendor_path, overlay_path
+    return plan.config_path, plan.manifest_path, plan.overlay_path
+
+
+def _overlay_files(root: Path) -> dict[str, bytes]:
+    if not root.is_dir() or root.is_symlink():
+        return {}
+    return {
+        path.relative_to(root).as_posix(): path.read_bytes()
+        for path in sorted(root.rglob("*"))
+        if path.is_file()
+    }
+
+
+def check_pin(greia_root: Path) -> list[str]:
+    """Return human-readable drift between the committed tree and the pinned artifacts."""
+
+    greia_root = greia_root.resolve()
+    plan = _Plan.compute(greia_root)
+    problems: list[str] = []
+    try:
+        current_config = plan.config_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError) as exc:
+        raise PinError(f"could not read Parent pin config: {exc}") from exc
+    if current_config != plan.config_text:
+        problems.append(f"{plan.config_path.name} does not name tree {plan.tree}")
+    try:
+        current_manifest = plan.manifest_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError) as exc:
+        raise PinError(f"could not read Parent manifest: {exc}") from exc
+    if current_manifest != plan.manifest_text:
+        problems.append(f"{plan.manifest_path.name} does not match the committed runtime files")
+    overlay = _overlay_files(plan.overlay_path)
+    for relative in sorted(set(plan.payloads) | set(overlay)):
+        if relative not in overlay:
+            problems.append(f"overlay is missing {relative}")
+        elif relative not in plan.payloads:
+            problems.append(f"overlay has unexpected file {relative}")
+        elif overlay[relative] != plan.payloads[relative]:
+            problems.append(f"overlay differs from committed parent-app/{relative}")
+    return problems
 
 
 def parse_args() -> argparse.Namespace:
@@ -342,20 +447,31 @@ def parse_args() -> argparse.Namespace:
         default=Path(__file__).resolve().parents[1],
         help="Greia checkout root (default: inferred from this tool)",
     )
-    parser.add_argument("--parent-root", type=Path, required=True, help="reviewed Parent HTML checkout")
-    parser.add_argument("--revision", required=True, help="exact reviewed Parent commit SHA")
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="report drift between committed parent-app/ and the pin/manifest/overlay; write nothing",
+    )
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
     try:
-        config, manifest, vendor, overlay = update_pin(args.greia_root, args.parent_root, args.revision)
+        if args.check:
+            problems = check_pin(args.greia_root)
+            if problems:
+                for problem in problems:
+                    print(f"drift: {problem}")
+                print("run tools/update_parent_client_pin.py after committing parent-app/")
+                return 1
+            print("Parent client pin, manifest and overlay match the committed parent-app/")
+            return 0
+        config, manifest, overlay = update_pin(args.greia_root)
     except PinError as exc:
         raise SystemExit(f"parent pin update refused: {exc}")
     print(f"updated {config}")
     print(f"updated {manifest}")
-    print(f"synchronized {vendor}")
     print(f"synchronized {overlay}")
     return 0
 

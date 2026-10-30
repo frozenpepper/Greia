@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+import hashlib
 import json
-import os
 import stat
 import subprocess
 import shutil
@@ -19,15 +19,45 @@ from greia_parent.parent_client_integrity import (
 ROOT = Path(__file__).resolve().parents[1]
 PIN = ROOT / "runtime" / "parent-app-client.toml"
 MANIFEST = ROOT / "runtime" / "parent-app-client.manifest.json"
-VENDORED = ROOT / "vendor" / "parent-app"
+PARENT_APP = ROOT / "parent-app"
 IMAGE_OVERLAY = ROOT / "build" / "overlay" / "usr" / "share" / "greia-parent-app"
 
 
 class ParentClientImageIntegrationTests(unittest.TestCase):
-    def test_vendored_and_image_runtime_match_exact_frozen_contract(self) -> None:
+    def test_image_overlay_matches_exact_frozen_contract(self) -> None:
         contract = ParentClientRuntimeContract.load(MANIFEST, PIN)
-        contract.verify(VENDORED)
         contract.verify(IMAGE_OVERLAY)
+
+    def test_parent_app_source_matches_pinned_runtime_bytes(self) -> None:
+        """Fail when parent-app/ runtime files changed without repinning the image."""
+
+        contract = ParentClientRuntimeContract.load(MANIFEST, PIN)
+        advice = (
+            "run tools/update_parent_client_pin.py after committing parent-app/ "
+            "(the image overlay and runtime/parent-app-client.* must be repinned)"
+        )
+        manifest_paths = {item.path for item in contract.files}
+        overlay_paths = {
+            path.relative_to(IMAGE_OVERLAY).as_posix()
+            for path in IMAGE_OVERLAY.rglob("*")
+            if path.is_file()
+        }
+        self.assertEqual(overlay_paths, manifest_paths, f"overlay file set drifted: {advice}")
+        for item in contract.files:
+            source = PARENT_APP / item.path
+            self.assertTrue(source.is_file(), f"parent-app/{item.path} is missing: {advice}")
+            data = source.read_bytes()
+            self.assertEqual(
+                hashlib.sha256(data).hexdigest(),
+                item.sha256,
+                f"parent-app/{item.path} differs from the pinned manifest: {advice}",
+            )
+            self.assertEqual(len(data), item.bytes, f"parent-app/{item.path} size drifted: {advice}")
+            self.assertEqual(
+                data,
+                (IMAGE_OVERLAY / item.path).read_bytes(),
+                f"overlay/{item.path} differs from parent-app/{item.path}: {advice}",
+            )
 
     def test_parent_app_renders_the_connected_wifi_state(self) -> None:
         js = (IMAGE_OVERLAY / "src" / "views_device.js").read_text(encoding="utf-8")
@@ -50,12 +80,15 @@ class ParentClientImageIntegrationTests(unittest.TestCase):
         self.assertFalse((IMAGE_OVERLAY / "src" / "demo_api.js").exists())
         self.assertFalse((IMAGE_OVERLAY / "src" / "demo_management_api.js").exists())
 
-    def test_pin_records_completed_vendored_image_integration(self) -> None:
+    def test_pin_records_completed_image_integration(self) -> None:
         with PIN.open("rb") as handle:
             pin = tomllib.load(handle)
         manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
         self.assertEqual(pin["repository"], manifest["repository"])
         self.assertEqual(pin["revision"], manifest["revision"])
+        self.assertEqual(pin["repository"], "frozenpepper/Greia:parent-app")
+        # The revision is the Git tree id of the committed parent-app/ directory.
+        self.assertRegex(pin["revision"], r"^[0-9a-f]{40}$")
         self.assertEqual(pin["runtime_root"], "/usr/share/greia-parent-app")
         self.assertEqual(pin["integration_state"], "vendored-image-integrity-enforced")
 
@@ -78,7 +111,7 @@ class ParentClientImageIntegrationTests(unittest.TestCase):
         contract = ParentClientRuntimeContract.load(MANIFEST, PIN)
         with tempfile.TemporaryDirectory() as temporary:
             runtime = Path(temporary) / "parent-app"
-            shutil.copytree(VENDORED, runtime)
+            shutil.copytree(IMAGE_OVERLAY, runtime)
             (runtime / "src" / "unexpected.js").write_text("export {};\n", encoding="utf-8")
             with self.assertRaisesRegex(ParentClientIntegrityError, "unexpected"):
                 contract.verify(runtime)
@@ -87,7 +120,7 @@ class ParentClientImageIntegrationTests(unittest.TestCase):
         contract = ParentClientRuntimeContract.load(MANIFEST, PIN)
         with tempfile.TemporaryDirectory() as temporary:
             runtime = Path(temporary) / "parent-app"
-            shutil.copytree(VENDORED, runtime)
+            shutil.copytree(IMAGE_OVERLAY, runtime)
             app = runtime / "src" / "app.js"
             app.write_text(app.read_text(encoding="utf-8") + "\n// tampered\n", encoding="utf-8")
             with self.assertRaisesRegex(ParentClientIntegrityError, "size mismatch|digest mismatch"):
