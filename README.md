@@ -2,6 +2,8 @@
 
 **Greia turns an old laptop into a small learning computer for young children.**
 
+🌐 **Website:** [frozenpepper.it/greia](https://www.frozenpepper.it/greia/) · ⬇️ **Download the installer:** [frozenpepper.it/greia/downloads.html](https://www.frozenpepper.it/greia/downloads.html)
+
 A child switches it on, picks their own picture, and chooses something to
 play, draw, write or learn. There is no desktop, no terminal and no web
 browser to get lost in. Greia works without the internet, keeps each child's
@@ -13,8 +15,8 @@ the first-generation Acer Aspire One netbook. Raspberry Pi 400 and 500 are
 planned targets, but there is no Raspberry Pi image yet.
 
 > **Status: technical preview (`0.13.1-preview.1`), not a family release.**
-> A preview installer for Acer Aspire One class PCs is listed on the
-> [Greia website](https://www.frozenpepper.it/greia/downloads.html). It has
+> A preview installer for Acer Aspire One class PCs is on the
+> [downloads page](https://www.frozenpepper.it/greia/downloads.html). It has
 > passed testing in virtual machines. It has **not** yet been tested on enough
 > real computers, and some recordings still need replacing before a full
 > release. Try it on a spare computer, not one you rely on.
@@ -112,4 +114,4 @@ Say where you tested when you open a pull request.
   You may truthfully say a product "runs Greia OS".
 - **Privacy:** [PRIVACY.md](PRIVACY.md). **Security:** [SECURITY.md](SECURITY.md).
   **Conduct:** [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
-- **Contact:** greia@frozenpepper.it. **History:** [CHANGELOG.md](CHANGELOG.md).
+- **Website:** https://www.frozenpepper.it/greia/ · **Contact:** greia@frozenpepper.it. **History:** [CHANGELOG.md](CHANGELOG.md).
