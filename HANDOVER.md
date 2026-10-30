@@ -25,8 +25,10 @@ publicly. Follow-up the same day: the homepage gained a "Free for every child"
 support section (donations welcome, never required; sponsors, NGOs, schools,
 custom Activities, custom OS editions; commercial licensing consistent with
 `TRADEMARK.md`), the Downloads page gained a matching band, and `TRADEMARK.md`
-now names greia@frozenpepper.it as the partnership contact. There is no donation
-platform yet; the donate buttons open an email. Next: owner-approved `site-ftp`
+now names greia@frozenpepper.it as the partnership contact. Donations then moved to
+the owner's PayPal hosted button, loaded only on click to keep PRIVACY.md
+true (now amended), with `.github/FUNDING.yml` pointing GitHub's Sponsor button
+at `#support`; unrequested copy about what donations fund was removed. Next: owner-approved `site-ftp`
 upload of the website and index.
 
 **2026-10-30 Acer Parent Activity upload — PHYSICAL API PASS:** On the Acer

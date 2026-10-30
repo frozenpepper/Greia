@@ -37,8 +37,11 @@ receive unrestricted network or device access.
 ## Website and project source
 
 The Greia project website is static: it sets no analytics, advertising or
-tracking cookies and loads no third-party font or script service. GitHub hosts
-the source repository and its own metadata under GitHub's policies.
+tracking cookies and loads no third-party font or script service, with one
+exception you choose: clicking **Donate with PayPal** loads PayPal's donation
+button, and from then on PayPal's own privacy policy applies to that page.
+GitHub hosts the source repository and its own metadata under GitHub's
+policies.
 
 ## Questions
 
