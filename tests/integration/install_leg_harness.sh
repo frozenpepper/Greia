@@ -6,7 +6,7 @@ REPRO=/opt/greia-repro
 WORK=$REPRO/work
 MNT=$WORK/mnt
 POOL=$WORK/pool
-PAYLOAD=$REPRO/pip-rootfs.squashfs
+PAYLOAD=$REPRO/greia-rootfs.squashfs
 CG=$(awk -F: '/^[0-9]+::/{print $3}' /proc/self/cgroup)
 SELF=/sys/fs/cgroup$CG
 PART=$(cat "$WORK/part" 2>/dev/null); WHOLE=$(cat "$WORK/loop" 2>/dev/null)

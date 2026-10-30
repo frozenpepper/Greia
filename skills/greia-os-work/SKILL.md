@@ -689,9 +689,9 @@ The standard is not maximal documentation. The standard is a small set of curren
 For installed-target profile work, the shared Parent-created directory contract
 is load-bearing:
 
-- `/var/lib/greia-profiles/data` is setgid `pipprofiles`;
+- `/var/lib/greia-profiles/data` is setgid `greiaprofiles`;
 - Parent-created profile roots, `customization`, and `activities` must be
-  `2770` with the managed `pipprofiles` group **before** a profile is
+  `2770` with the managed `greiaprofiles` group **before** a profile is
   published;
 - child-owned `progress` and `storage` are not Parent-precreated;
 - the Parent unit currently uses `UMask=0007` so setgid inheritance produces

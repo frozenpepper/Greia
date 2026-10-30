@@ -644,7 +644,7 @@ class AbInstallCompositionNegativeTests(unittest.TestCase):
     def test_legacy_recovery_profile_stays_explicit_legacy(self) -> None:
         project_root = Path(__file__).resolve().parents[1]
         state = ServiceState(
-            payload=Path("/run/live/medium/payload/pip-rootfs.squashfs"),
+            payload=Path("/run/live/medium/payload/greia-rootfs.squashfs"),
             payload_digest=Path("/etc/greia-os/expected-payload.sha256"),
             project_root=project_root,
             compatible_profile_id="legacy-x86-i686",
@@ -670,7 +670,7 @@ class AbInstallCompositionNegativeTests(unittest.TestCase):
     def test_incoherent_profile_refuses_to_guess(self) -> None:
         project_root = Path(__file__).resolve().parents[1]
         state = ServiceState(
-            payload=Path("/run/live/medium/payload/pip-rootfs.squashfs"),
+            payload=Path("/run/live/medium/payload/greia-rootfs.squashfs"),
             payload_digest=Path("/etc/greia-os/expected-payload.sha256"),
             project_root=project_root,
             compatible_profile_id="mixed-profile",
@@ -688,7 +688,7 @@ class AbInstallCompositionNegativeTests(unittest.TestCase):
     def test_mode_executor_mismatch_refuses_at_construction(self) -> None:
         project_root = Path(__file__).resolve().parents[1]
         state = ServiceState(
-            payload=Path("/run/live/medium/payload/pip-rootfs.squashfs"),
+            payload=Path("/run/live/medium/payload/greia-rootfs.squashfs"),
             payload_digest=Path("/etc/greia-os/expected-payload.sha256"),
             project_root=project_root,
             compatible_profile_id="legacy-x86-i686",

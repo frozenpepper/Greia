@@ -27,8 +27,8 @@ for path in \
   "$MEDIA_ROOT/live/vmlinuz" \
   "$MEDIA_ROOT/live/initrd.img" \
   "$MEDIA_ROOT/live/filesystem.squashfs" \
-  "$MEDIA_ROOT/payload/pip-rootfs.squashfs" \
-  "$MEDIA_ROOT/payload/pip-rootfs.squashfs.sha256" \
+  "$MEDIA_ROOT/payload/greia-rootfs.squashfs" \
+  "$MEDIA_ROOT/payload/greia-rootfs.squashfs.sha256" \
   "$MEDIA_ROOT/.disk/live-uuid"
 do
   [[ -s "$path" ]] || {

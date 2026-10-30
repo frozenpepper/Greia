@@ -169,7 +169,7 @@ class SystemControlSettingsStore:
             return 0
 
     def _open_lock(self) -> IO[str]:
-        # The release image creates this file as greiapanel:pipsettings 0660.
+        # The release image creates this file as greiapanel:greiasettings 0660.
         # On developer/temp roots the first writer creates it; the setgid parent
         # directory supplies the shared group on the real appliance.
         fd = os.open(self.lock_path, os.O_RDWR | os.O_CREAT, 0o660)

@@ -40,7 +40,7 @@ default for reusable non-brand media.
 
 | Material | Location | License | Notes |
 |---|---|---|---|
-| Nunito Sans typeface (static instances of the upstream variable font) | `assets/fonts/nunito-sans/`, `website/assets/fonts/` | SIL Open Font License 1.1 | License text is beside each copy (`OFL.txt`); derivation is recorded in `build/trust/nunito-sans-2.3.2.provenance`. |
+| Nunito Sans typeface (static instances of the upstream variable font) | `assets/fonts/nunito-sans/` | SIL Open Font License 1.1 | License text is beside each copy (`OFL.txt`); derivation is recorded in `build/trust/nunito-sans-2.3.2.provenance`. |
 | Debian archive signing keyring | `build/trust/debian-archive-keyring-2025.1.gpg` | Debian's terms | Used to verify packages during image builds; provenance in the matching `.provenance` file. |
 
 Built Greia OS images also contain Linux and many Debian packages under their

@@ -1343,7 +1343,7 @@ class OverlayContractTests(unittest.TestCase):
             f"this file must not declare directories; found {directives}",
         )
         owner_of_record = self._read("build/overlay/etc/tmpfiles.d/greia-os.conf")
-        self.assertIn("d /run/greia-os 0770 greiakid pipprofiles -", owner_of_record)
+        self.assertIn("d /run/greia-os 0770 greiakid greiaprofiles -", owner_of_record)
 
     def test_update_service_module_reuses_shared_seams(self) -> None:
         import re

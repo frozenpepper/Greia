@@ -59,7 +59,7 @@ PART="$(greia_installer_root_partition "$LOOP")" || {
 mount -o ro,noload "$PART" "$MOUNT"
 
 LIVE="$MOUNT/live/filesystem.squashfs"
-TARGET="$MOUNT/payload/pip-rootfs.squashfs"
+TARGET="$MOUNT/payload/greia-rootfs.squashfs"
 [[ -r "$LIVE" ]] || { echo "Live installer squashfs is missing." >&2; exit 1; }
 [[ -r "$TARGET" ]] || { echo "Installed-system payload squashfs is missing." >&2; exit 1; }
 
@@ -275,7 +275,7 @@ check_runtime_directory_contract() {
   prepare="$(sqcat "$TARGET" usr/local/lib/greia-os/prepare-launcher-vt)" || exit 1
 
   for required in \
-    'd /run/greia-os       0770 greiakid pipprofiles' \
+    'd /run/greia-os       0770 greiakid greiaprofiles' \
     'd /run/greia-hardware 2750 greiakid greiapanel'
   do
     printf '%s\n' "$tmpfiles" | grep -Fq "$required" || {
@@ -300,9 +300,9 @@ check_runtime_directory_contract() {
   for required in \
     'profile_data_root=/var/lib/greia-profiles/data' \
     'if [ -L "$profile_data_root" ]' \
-    'install -d -m 2770 -o greiakid -g pipprofiles "$profile_data_root"' \
+    'install -d -m 2770 -o greiakid -g greiaprofiles "$profile_data_root"' \
     'b4-profile-child-roots-v1.done' \
-    'chown -h -- greiakid:pipprofiles'
+    'chown -h -- greiakid:greiaprofiles'
   do
     printf '%s\n' "$first_boot" | grep -Fq -- "$required" || {
       echo "installed-system payload: bounded profile ownership contract missing: $required" >&2
@@ -322,7 +322,7 @@ check_runtime_directory_contract() {
       exit 1
     }
   done
-  if printf '%s\n' "$prepare" | grep -Fq 'chown greiakid:pipprofiles /run/greia-os'; then
+  if printf '%s\n' "$prepare" | grep -Fq 'chown greiakid:greiaprofiles /run/greia-os'; then
     echo "installed-system payload: launcher preflight regained shared /run ownership." >&2
     exit 1
   fi

@@ -825,8 +825,8 @@ ls /run/greia-audio/
 
 Three separate boot loops came from provisioning, not application code:
 
-- `tmpfiles.d` named the group `greiaprofiles`, which `compose.sh` never
-  creates (`pipprofiles` is the real one). `systemd-tmpfiles` failed and left
+- `tmpfiles.d` named a group that `compose.sh` never created (the image then
+  used `pipprofiles`; since 2026-10-30 every file uses `greiaprofiles`). `systemd-tmpfiles` failed and left
   `/run/greia-os` root-owned, so Xorg could not write `Xorg.0.log`.
 - The audio endpoint probe shipped without its executable bit, so its oneshot
   failed `203/EXEC` and never wrote a marker.
@@ -857,9 +857,9 @@ Acceptance must therefore check the **newly created profile root after Parent
 creation**, not only B4/B5 markers:
 
 ```text
-data/<profile>             group pipprofiles, mode 2770
-data/<profile>/activities  group pipprofiles, mode 2770
-data/<profile>/customization group pipprofiles, mode 2770
+data/<profile>             group greiaprofiles, mode 2770
+data/<profile>/activities  group greiaprofiles, mode 2770
+data/<profile>/customization group greiaprofiles, mode 2770
 child-created progress/storage writable by greiakid
 ```
 

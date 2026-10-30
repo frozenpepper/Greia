@@ -24,7 +24,7 @@ class HardwareSupportPoolBuildScriptTests(unittest.TestCase):
             encoding="utf-8"
         )
         self.assertIn("TARGET_DPKG_STATUS", source)
-        self.assertIn("pip-rootfs.squashfs", source)
+        self.assertIn("greia-rootfs.squashfs", source)
         self.assertIn("unsquashfs -cat", source)
         self.assertIn("var/lib/dpkg/status", source)
         self.assertIn("Dir::State::status=/tmp/greia-target-dpkg-status", source)

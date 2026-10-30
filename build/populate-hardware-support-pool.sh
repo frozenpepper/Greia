@@ -52,7 +52,7 @@ if [[ $# -eq 4 ]]; then
   [[ -r "$TARGET_DPKG_STATUS" ]] || { echo "Target dpkg status not found: $TARGET_DPKG_STATUS" >&2; exit 1; }
   install -m 0644 "$TARGET_DPKG_STATUS" "$TARGET_STATUS_IN_CHROOT"
 else
-  TARGET_PAYLOAD="$(dirname "$LIVE_ROOT")/pip-rootfs.squashfs"
+  TARGET_PAYLOAD="$(dirname "$LIVE_ROOT")/greia-rootfs.squashfs"
   [[ -r "$TARGET_PAYLOAD" ]] || {
     echo "Canonical target payload not found beside live root: $TARGET_PAYLOAD" >&2
     exit 1

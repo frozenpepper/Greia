@@ -1152,7 +1152,7 @@ def build_live_service(
 
     root = project_root or Path(os.environ.get("GREIA_OS_ROOT", "/opt/greia-os"))
     payload = Path(
-        os.environ.get("GREIA_INSTALL_PAYLOAD", "/run/live/medium/payload/pip-rootfs.squashfs")
+        os.environ.get("GREIA_INSTALL_PAYLOAD", "/run/live/medium/payload/greia-rootfs.squashfs")
     )
     payload_digest = Path(
         os.environ.get("GREIA_INSTALL_PAYLOAD_DIGEST", "/etc/greia-os/expected-payload.sha256")

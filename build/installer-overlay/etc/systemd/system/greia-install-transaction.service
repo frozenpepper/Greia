@@ -29,7 +29,7 @@ Environment=PYTHONNOUSERSITE=1
 Environment=PYTHONDONTWRITEBYTECODE=1
 EnvironmentFile=-/etc/greia-os/installer-ab.env
 Environment=GREIA_OS_ROOT=/opt/greia-os
-Environment=GREIA_INSTALL_PAYLOAD=/run/live/medium/payload/pip-rootfs.squashfs
+Environment=GREIA_INSTALL_PAYLOAD=/run/live/medium/payload/greia-rootfs.squashfs
 Environment=GREIA_INSTALL_PAYLOAD_DIGEST=/etc/greia-os/expected-payload.sha256
 Environment=GREIA_TARGET_IMAGE_PROFILE=/etc/greia-os/target-image-profile.json
 Environment=GREIA_HARDWARE_SUPPORT_POOL=/opt/greia-hardware-support

@@ -218,11 +218,11 @@ for _ in {1..20}; do [[ -b "$TARGET_PART" ]] && break; sleep 0.2; done
 [[ -b "$TARGET_PART" ]] || { echo "Target image partition did not appear." >&2; exit 1; }
 mount -o ro,noload "$TARGET_PART" "$TARGET_MOUNT"
 MOUNTS+=("$TARGET_MOUNT")
-TARGET_PAYLOAD="$BUILD_DIR/pip-rootfs.squashfs"
-TARGET_PAYLOAD_DIGEST="$BUILD_DIR/pip-rootfs.squashfs.sha256"
+TARGET_PAYLOAD="$BUILD_DIR/greia-rootfs.squashfs"
+TARGET_PAYLOAD_DIGEST="$BUILD_DIR/greia-rootfs.squashfs.sha256"
 mksquashfs "$TARGET_MOUNT" "$TARGET_PAYLOAD" -comp xz -b 256K -noappend >/dev/null
 payload_sha256="$(sha256sum "$TARGET_PAYLOAD" | awk '{print $1}')"
-printf '%s  %s\n' "$payload_sha256" 'pip-rootfs.squashfs' > "$TARGET_PAYLOAD_DIGEST"
+printf '%s  %s\n' "$payload_sha256" 'greia-rootfs.squashfs' > "$TARGET_PAYLOAD_DIGEST"
 target_payload_sha256="$payload_sha256"
 safe_unmount_paths "$TARGET_MOUNT" || {
   echo "Cannot detach target payload filesystem." >&2
@@ -424,9 +424,9 @@ kernel_version="${kernel_name#vmlinuz-}"
 KERNEL_PATH="$LIVE_ROOT/boot/$kernel_name"
 INITRD_PATH="$LIVE_ROOT/boot/initrd.img-$kernel_version"
 [[ -r "$KERNEL_PATH" && -r "$INITRD_PATH" ]] || { echo "Matching live kernel/initrd missing for $kernel_version." >&2; exit 1; }
-INITRD_CHECK_DIR="$LIVE_ROOT/tmp/pip-initrd-check"
+INITRD_CHECK_DIR="$LIVE_ROOT/tmp/greia-initrd-check"
 rm -rf "$INITRD_CHECK_DIR"
-chroot "$LIVE_ROOT" unmkinitramfs "/boot/initrd.img-$kernel_version" /tmp/pip-initrd-check
+chroot "$LIVE_ROOT" unmkinitramfs "/boot/initrd.img-$kernel_version" /tmp/greia-initrd-check
 mapfile -t embedded_uuid_files < <(find "$INITRD_CHECK_DIR" -type f -path '*/conf/uuid.conf' -print)
 (( ${#embedded_uuid_files[@]} == 1 )) || {
   echo "Expected exactly one embedded live-media UUID; found ${#embedded_uuid_files[@]}." >&2
@@ -489,8 +489,8 @@ install -d "$USB_MOUNT/live" "$USB_MOUNT/payload" "$USB_MOUNT/boot/grub" "$USB_M
 cp "$LIVE_SQUASH" "$USB_MOUNT/live/filesystem.squashfs"
 cp "$KERNEL_PATH" "$USB_MOUNT/live/vmlinuz"
 cp "$INITRD_PATH" "$USB_MOUNT/live/initrd.img"
-cp "$TARGET_PAYLOAD" "$USB_MOUNT/payload/pip-rootfs.squashfs"
-cp "$TARGET_PAYLOAD_DIGEST" "$USB_MOUNT/payload/pip-rootfs.squashfs.sha256"
+cp "$TARGET_PAYLOAD" "$USB_MOUNT/payload/greia-rootfs.squashfs"
+cp "$TARGET_PAYLOAD_DIGEST" "$USB_MOUNT/payload/greia-rootfs.squashfs.sha256"
 # POSTR1-P2: the unsigned v3 A/B release bundle travels in the USB payload beside
 # the target squashfs and is re-asserted here — the installer-ab.env reference
 # above must resolve on the booted medium.

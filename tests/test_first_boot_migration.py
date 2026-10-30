@@ -89,12 +89,12 @@ class FreshImageMembershipTests(unittest.TestCase):
 
     def test_builder_creates_groups_and_audio_membership(self) -> None:
         builder = BUILDER.read_text(encoding="utf-8")
-        self.assertIn("groupadd --system pipsettings", builder)
-        self.assertIn("groupadd --system pipprofiles", builder)
+        self.assertIn("groupadd --system greiasettings", builder)
+        self.assertIn("groupadd --system greiaprofiles", builder)
         useradd = next(
             line
             for line in builder.splitlines()
-            if "--groups pipsettings,pipprofiles,audio,netdev greiakid" in line
+            if "--groups greiasettings,greiaprofiles,audio,netdev greiakid" in line
         )
         self.assertNotIn("video", useradd)
         self.assertNotIn("render", useradd)
@@ -104,8 +104,8 @@ class FreshImageMembershipTests(unittest.TestCase):
 
     def test_first_boot_state_roots_match_builder_groups(self) -> None:
         first_boot = FIRST_BOOT.read_text(encoding="utf-8")
-        self.assertIn("-g pipprofiles /var/lib/greia-profiles", first_boot)
-        self.assertIn("-g pipsettings /var/lib/greia-system-settings", first_boot)
+        self.assertIn("-g greiaprofiles /var/lib/greia-profiles", first_boot)
+        self.assertIn("-g greiasettings /var/lib/greia-system-settings", first_boot)
 
     def test_launcher_process_groups_resolve_at_exec(self) -> None:
         service = SERVICE.read_text(encoding="utf-8")
@@ -237,7 +237,7 @@ class ProfileDataOwnershipMigrationTests(unittest.TestCase):
     def test_profile_roots_are_repaired_for_shared_child_creation(self) -> None:
         block = self._migration_block()
         self.assertIn("-mindepth 1 -maxdepth 1 -type d", block)
-        self.assertIn("-exec chgrp -- pipprofiles {} +", block)
+        self.assertIn("-exec chgrp -- greiaprofiles {} +", block)
         self.assertIn("-exec chmod 2770 {} +", block)
 
     def test_only_child_owned_subtrees_are_recursively_reowned(self) -> None:
@@ -248,7 +248,7 @@ class ProfileDataOwnershipMigrationTests(unittest.TestCase):
         self.assertNotIn("-name customization", block)
         self.assertNotIn("-name activities", block)
         self.assertIn('find "$owned_root" -xdev -depth -print0', block)
-        self.assertIn("chown -h -- greiakid:pipprofiles", block)
+        self.assertIn("chown -h -- greiakid:greiaprofiles", block)
         self.assertNotIn(
             "find /var/lib/greia-profiles/data -depth -print0",
             block,
@@ -259,8 +259,8 @@ class ProfileDataOwnershipMigrationTests(unittest.TestCase):
         text = FIRST_BOOT.read_text(encoding="utf-8")
         guard = text.index('if [ ! -e "$profile_owner_migration" ]')
         marker = text.index('> "$profile_owner_migration"', guard)
-        self.assertLess(text.index("chgrp -- pipprofiles", guard), marker)
-        self.assertLess(text.index("chown -h -- greiakid:pipprofiles", guard), marker)
+        self.assertLess(text.index("chgrp -- greiaprofiles", guard), marker)
+        self.assertLess(text.index("chown -h -- greiakid:greiaprofiles", guard), marker)
 
     def test_migration_survives_unusual_profile_ids(self) -> None:
         block = self._migration_block()
@@ -269,7 +269,7 @@ class ProfileDataOwnershipMigrationTests(unittest.TestCase):
 
     def test_data_root_is_pre_created_not_only_repaired_afterwards(self) -> None:
         text = FIRST_BOOT.read_text(encoding="utf-8")
-        creation = 'install -d -m 2770 -o greiakid -g pipprofiles "$profile_data_root"'
+        creation = 'install -d -m 2770 -o greiakid -g greiaprofiles "$profile_data_root"'
         self.assertIn("profile_data_root=/var/lib/greia-profiles/data", text)
         self.assertIn('if [ -L "$profile_data_root" ]', text)
         self.assertIn('if [ -e "$profile_data_root" ] && [ ! -d "$profile_data_root" ]', text)
@@ -281,7 +281,7 @@ class ProfileDataOwnershipMigrationTests(unittest.TestCase):
 
     def test_fixed_data_root_is_normalized_without_recursive_walk(self) -> None:
         text = FIRST_BOOT.read_text(encoding="utf-8")
-        creation = 'install -d -m 2770 -o greiakid -g pipprofiles "$profile_data_root"'
+        creation = 'install -d -m 2770 -o greiakid -g greiaprofiles "$profile_data_root"'
         self.assertEqual(text.count(creation), 1)
         before_b4 = text[: text.index('if [ ! -e "$profile_owner_migration" ]')]
         self.assertIn(creation, before_b4)
@@ -291,7 +291,7 @@ class ProfileDataOwnershipMigrationTests(unittest.TestCase):
         text = FIRST_BOOT.read_text(encoding="utf-8")
         marker = text.index('> "$profile_owner_migration"')
         remainder = text[marker + len('> "$profile_owner_migration"'):]
-        self.assertNotIn("chown -h -- greiakid:pipprofiles", remainder)
+        self.assertNotIn("chown -h -- greiakid:greiaprofiles", remainder)
         self.assertNotIn("-name progress", remainder)
         self.assertNotIn("-name storage", remainder)
 
@@ -331,7 +331,7 @@ class ProfileSharedModeMigrationTests(unittest.TestCase):
         self.assertIn('-mindepth 2 -maxdepth 2 -type d', block)
         self.assertIn('-name customization', block)
         self.assertIn('-name activities', block)
-        self.assertIn('chgrp -- pipprofiles', block)
+        self.assertIn('chgrp -- greiaprofiles', block)
         self.assertIn('chmod 2770', block)
 
     def test_b5_does_not_recursively_reown_child_data(self) -> None:

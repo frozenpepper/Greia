@@ -3255,7 +3255,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--payload",
         type=Path,
-        default=Path("/run/live/medium/payload/pip-rootfs.squashfs"),
+        default=Path("/run/live/medium/payload/greia-rootfs.squashfs"),
     )
     parser.add_argument("--payload-digest", type=Path)
     parser.add_argument(

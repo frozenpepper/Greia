@@ -15,7 +15,7 @@ Typical use after uploading the image to the site's ``os-images/`` folder::
         --base-url https://www.frozenpepper.it/greia/os-images \\
         --target legacy-x86-i386 --status technical-preview \\
         --notes-en notes-en.txt --notes-it notes-it.txt \\
-        --index website/updates/greia-updates.json
+        --index ../website/updates/greia-updates.json
 
 Version and build are read from the standard installer file name
 (``greia-os-installer-<profile>-<version>-build-<commit>.img``, as written by

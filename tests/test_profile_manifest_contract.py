@@ -85,7 +85,7 @@ class WriterProducedContractTests(unittest.TestCase):
             # Live installer protocol readers (canonical `id` contract).
             state = ServiceState.from_target_profile(
                 manifest_path,
-                payload=Path("/run/live/medium/payload/pip-rootfs.squashfs"),
+                payload=Path("/run/live/medium/payload/greia-rootfs.squashfs"),
                 payload_digest=Path("/etc/greia-os/expected-payload.sha256"),
                 project_root=Path("/opt/greia-os"),
             )

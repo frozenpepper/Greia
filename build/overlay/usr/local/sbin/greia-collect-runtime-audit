@@ -15,7 +15,7 @@ case "$output_root" in
 esac
 mkdir -p "$output_root"
 stamp=$(date -u +%Y%m%dT%H%M%SZ 2>/dev/null || printf unknown-time)
-bundle_name="pip-runtime-audit-$stamp"
+bundle_name="greia-runtime-audit-$stamp"
 work_dir="$output_root/$bundle_name"
 archive="$output_root/$bundle_name.tar.gz"
 mkdir -p "$work_dir"

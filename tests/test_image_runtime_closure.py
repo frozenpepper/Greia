@@ -34,7 +34,7 @@ class ImageRuntimeClosureTests(unittest.TestCase):
         useradd = next(
             line
             for line in builder.splitlines()
-            if "--shell /usr/sbin/nologin --user-group --groups pipsettings,pipprofiles,audio,netdev greiakid" in line
+            if "--shell /usr/sbin/nologin --user-group --groups greiasettings,greiaprofiles,audio,netdev greiakid" in line
         )
         self.assertNotIn("video", useradd)
         self.assertNotIn("render", useradd)

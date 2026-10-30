@@ -105,7 +105,7 @@ class TargetImageCarriesFirstBootFixesTests(unittest.TestCase):
     def test_boot_health_credential_can_create_launcher_delivery_dir(self) -> None:
         """The generator may not run with CAP_DAC_OVERRIDE.
 
-        /run/greia-os is 0770 greiakid:pipprofiles, so the generator needs
+        /run/greia-os is 0770 greiakid:greiaprofiles, so the generator needs
         the parent group to create /run/greia-os/boot-health and the
         launcher primary group so the delivery directory/token are readable
         by greiakid rather than only by root.
@@ -115,10 +115,10 @@ class TargetImageCarriesFirstBootFixesTests(unittest.TestCase):
             TARGET_OVERLAY / "etc/systemd/system/greia-boot-health-credential.service"
         )
         self.assertIn("Group=greiakid", text)
-        self.assertIn("SupplementaryGroups=pipprofiles", text)
+        self.assertIn("SupplementaryGroups=greiaprofiles", text)
         service = _read(TARGET_OVERLAY / "etc/systemd/system/greia-boot-health.service")
         self.assertIn("Group=greiakid", service)
-        self.assertIn("SupplementaryGroups=pipprofiles", service)
+        self.assertIn("SupplementaryGroups=greiaprofiles", service)
         self.assertIn(
             "GREIA_BOOT_HISTORY_DIR=/run/greia-persist/greia/diagnostics", service
         )
@@ -198,7 +198,7 @@ class TargetImageCarriesFirstBootFixesTests(unittest.TestCase):
         self.assertIn('if [ -L "$profile_data_root" ]', text)
         self.assertIn('if [ -e "$profile_data_root" ] && [ ! -d "$profile_data_root" ]', text)
         self.assertIn(
-            'install -d -m 2770 -o greiakid -g pipprofiles "$profile_data_root"',
+            'install -d -m 2770 -o greiakid -g greiaprofiles "$profile_data_root"',
             text,
         )
 
@@ -211,7 +211,7 @@ class TargetImageCarriesFirstBootFixesTests(unittest.TestCase):
 
         block = text[guard:marker_write]
         self.assertIn("-mindepth 1 -maxdepth 1 -type d", block)
-        self.assertIn("-exec chgrp -- pipprofiles {} +", block)
+        self.assertIn("-exec chgrp -- greiaprofiles {} +", block)
         self.assertIn("-exec chmod 2770 {} +", block)
 
         # Recursive ownership is constrained to the child's own roots only.
@@ -221,7 +221,7 @@ class TargetImageCarriesFirstBootFixesTests(unittest.TestCase):
         self.assertNotIn("-name customization", block)
         self.assertNotIn("-name activities", block)
         self.assertIn('find "$owned_root" -xdev -depth -print0', block)
-        self.assertIn("chown -h -- greiakid:pipprofiles", block)
+        self.assertIn("chown -h -- greiakid:greiaprofiles", block)
 
         # The retired unbounded/recurring design must not return.
         self.assertNotIn(

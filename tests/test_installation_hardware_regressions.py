@@ -23,8 +23,8 @@ class RealHardwareInstallationRegressionTests(unittest.TestCase):
     def test_live_media_identity_and_payload_are_built_together(self) -> None:
         builder = self.read("build/build-installer-image.sh")
         self.assertIn('"$USB_MOUNT/.disk/live-uuid"', builder)
-        self.assertIn('"$USB_MOUNT/payload/pip-rootfs.squashfs"', builder)
-        self.assertIn('"$USB_MOUNT/payload/pip-rootfs.squashfs.sha256"', builder)
+        self.assertIn('"$USB_MOUNT/payload/greia-rootfs.squashfs"', builder)
+        self.assertIn('"$USB_MOUNT/payload/greia-rootfs.squashfs.sha256"', builder)
         self.assertIn('"$USB_MOUNT/payload/target-image-profile.json"', builder)
         self.assertIn("greia.live_media_id=$live_media_id", builder)
 
@@ -218,14 +218,14 @@ class RealHardwareInstallationRegressionTests(unittest.TestCase):
         first_boot = self.read("build/overlay/usr/local/lib/greia-os/first-boot")
         prepare = self.read("build/overlay/usr/local/lib/greia-os/prepare-launcher-vt")
 
-        self.assertIn("d /run/greia-os       0770 greiakid pipprofiles", tmpfiles)
+        self.assertIn("d /run/greia-os       0770 greiakid greiaprofiles", tmpfiles)
         self.assertIn("d /run/greia-hardware 2750 greiakid greiapanel", tmpfiles)
         self.assertIn("systemd-tmpfiles-setup.service", launcher)
         self.assertIn("systemd-tmpfiles-setup.service", parent)
         self.assertNotIn("RuntimeDirectory=greia-os", launcher)
         self.assertNotIn("/run/greia-hardware", first_boot)
         self.assertIn("Missing Greia runtime root", prepare)
-        self.assertNotIn("chown greiakid:pipprofiles /run/greia-os", prepare)
+        self.assertNotIn("chown greiakid:greiaprofiles /run/greia-os", prepare)
 
     def test_parent_activity_root_remains_traversable_without_exposing_private_children(self) -> None:
         first_boot = self.read("build/overlay/usr/local/lib/greia-os/first-boot")

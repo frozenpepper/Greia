@@ -63,8 +63,7 @@ Read `AGENTS.md`, `SETUP.md` §7, `HANDOVER.md`,
 `docs/architecture/GREIA_VOICE_PRODUCTION_ENGINE.md`.
 
 Work on current `main`; fetch/fast-forward safely before changing source.
-Preserve unrelated changes. At preparation time, `final.mp4` and `launch-video/`
-were unrelated untracked work. No hosted Actions, paid service, model download,
+Preserve unrelated changes. No hosted Actions, paid service, model download,
 image build or device installation is authorized by this work order.
 
 ```bash

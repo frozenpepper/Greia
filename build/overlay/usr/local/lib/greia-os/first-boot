@@ -61,7 +61,7 @@ if [ -e "$profile_data_root" ] && [ ! -d "$profile_data_root" ]; then
 fi
 # This fixed path is cheap to normalize on every boot and is required before
 # Parent starts. Unlike the old recursive sweep, it does not walk user data.
-install -d -m 2770 -o greiakid -g pipprofiles "$profile_data_root"
+install -d -m 2770 -o greiakid -g greiaprofiles "$profile_data_root"
 
 profile_owner_migration=/var/lib/greia-os/migrations/b4-profile-child-roots-v1.done
 if [ ! -e "$profile_owner_migration" ]; then
@@ -70,7 +70,7 @@ if [ ! -e "$profile_owner_migration" ]; then
     # Existing profile roots are Parent-owned but must remain writable by the
     # shared profile group so greiakid can create storage/progress immediately.
     find /var/lib/greia-profiles/data -mindepth 1 -maxdepth 1 -type d \
-      -exec chgrp -- pipprofiles {} + \
+      -exec chgrp -- greiaprofiles {} + \
       -exec chmod 2770 {} +
 
     # Only the child-owned roots change owner. Parent-owned customization and
@@ -80,7 +80,7 @@ if [ ! -e "$profile_owner_migration" ]; then
       -exec sh -c '
         for owned_root do
           find "$owned_root" -xdev -depth -print0 |
-            xargs -0 -r chown -h -- greiakid:pipprofiles
+            xargs -0 -r chown -h -- greiakid:greiaprofiles
           find "$owned_root" -xdev -depth -type d -print0 |
             xargs -0 -r chmod 2770
         done
@@ -102,11 +102,11 @@ if [ ! -e "$profile_shared_mode_migration" ]; then
   install -d -m 0755 /var/lib/greia-os/migrations
   if [ -d "$profile_data_root" ]; then
     find "$profile_data_root" -mindepth 1 -maxdepth 1 -type d \
-      -exec chgrp -- pipprofiles {} + \
+      -exec chgrp -- greiaprofiles {} + \
       -exec chmod 2770 {} +
     find "$profile_data_root" -mindepth 2 -maxdepth 2 -type d \
       \( -name customization -o -name activities \) \
-      -exec chgrp -- pipprofiles {} + \
+      -exec chgrp -- greiaprofiles {} + \
       -exec chmod 2770 {} +
   fi
   printf '%s\n' "b5-profile-shared-modes-v1" > "$profile_shared_mode_migration"
@@ -135,8 +135,8 @@ boot_progress 55
 # parent-installed Activity source without joining the Parent service group.
 install -d -m 0755 -o greiapanel -g greiapanel /var/lib/greia-os
 install -d -m 0750 -o greiakid -g greiakid /var/lib/greia-kid
-install -d -m 2770 -o greiakid -g pipprofiles /var/lib/greia-profiles
-install -d -m 2750 -o greiapanel -g pipsettings /var/lib/greia-system-settings
+install -d -m 2770 -o greiakid -g greiaprofiles /var/lib/greia-profiles
+install -d -m 2750 -o greiapanel -g greiasettings /var/lib/greia-system-settings
 # Fresh A/B installation seeds these two fixed settings before target users exist.
 for setting in /var/lib/greia-system-settings/language.json /var/lib/greia-system-settings/settings.json; do
     if [ -L "$setting" ]; then
@@ -144,7 +144,7 @@ for setting in /var/lib/greia-system-settings/language.json /var/lib/greia-syste
         exit 1
     fi
     if [ -f "$setting" ]; then
-        chown greiapanel:pipsettings "$setting"
+        chown greiapanel:greiasettings "$setting"
         chmod 0640 "$setting"
     fi
 done

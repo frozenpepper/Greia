@@ -447,9 +447,9 @@ HOSTS
   fi
 }
 
-# Appliance users have no passwords. pipprofiles owns the bounded profile
+# Appliance users have no passwords. greiaprofiles owns the bounded profile
 # registry/tree shared by the launcher and typed parent profile controls;
-# pipsettings owns only bounded input/display preference state.
+# greiasettings owns only bounded input/display preference state.
 # Target role only; the live-installer root carries no appliance accounts.
 #
 # netdev: iwd's shipped system-bus policy lets only root and group netdev talk
@@ -459,19 +459,19 @@ HOSTS
 # running services actually use; the account membership keeps the identity
 # self-describing. groupadd -f: netdev may already exist from a package.
 #
-# The group names stay pipsettings/pipprofiles on purpose: tmpfiles, first
-# boot, the installer engine and the verifiers all use them, and the
-# 2026-10-01 /run/greia-os boot loop came from one place using another name.
-# A rename needs one coordinated tranche with a migration.
+# tmpfiles, first boot, the installer engine and the verifiers must all use
+# these exact names: the 2026-10-01 /run/greia-os boot loop came from one
+# place using another name. tests/test_image_tmpfiles_identities.py and
+# tests/test_greia_group_names.py guard this.
 compose_create_users_groups() {
   local rootfs="$1"
-  chroot "$rootfs" groupadd --system pipsettings
-  chroot "$rootfs" groupadd --system pipprofiles
+  chroot "$rootfs" groupadd --system greiasettings
+  chroot "$rootfs" groupadd --system greiaprofiles
   chroot "$rootfs" groupadd --system -f netdev
   chroot "$rootfs" useradd --system --create-home --home-dir /var/lib/greia-kid \
-    --shell /usr/sbin/nologin --user-group --groups pipsettings,pipprofiles,audio,netdev greiakid
+    --shell /usr/sbin/nologin --user-group --groups greiasettings,greiaprofiles,audio,netdev greiakid
   chroot "$rootfs" useradd --system --create-home --home-dir /var/lib/greia-os \
-    --shell /usr/sbin/nologin --user-group --groups pipsettings,pipprofiles,netdev greiapanel
+    --shell /usr/sbin/nologin --user-group --groups greiasettings,greiaprofiles,netdev greiapanel
   chroot "$rootfs" useradd --create-home --home-dir /var/lib/greia-admin \
     --shell /bin/bash --groups sudo greiaadmin
   chroot "$rootfs" passwd --lock greiaadmin
@@ -662,7 +662,7 @@ GREIA_BUILTIN_GATE_EOF
 
   install -d -m 0755 "$rootfs/usr/lib/python3/dist-packages" \
     "$rootfs/usr/share/greia"
-  printf '%s\n' '/opt/greia-os/src' > "$rootfs/usr/lib/python3/dist-packages/pip_os.pth"
+  printf '%s\n' '/opt/greia-os/src' > "$rootfs/usr/lib/python3/dist-packages/greia_os.pth"
   ln -s greia-software/generations/base "$rootfs/opt/greia-os"
   ln -s ../../../opt/greia-os/activity-index-v1.json "$image_index"
   chown -R root:root "$generations_root"
@@ -696,7 +696,7 @@ compose_install_live_content() {
     --exclude '*' \
     "$project_root/assets/" "$rootfs/opt/greia-os/assets/"
   install -d -m 0755 "$rootfs/usr/lib/python3/dist-packages"
-  printf '%s\n' /opt/greia-os/src > "$rootfs/usr/lib/python3/dist-packages/pip_os.pth"
+  printf '%s\n' /opt/greia-os/src > "$rootfs/usr/lib/python3/dist-packages/greia_os.pth"
   chown -R root:root "$rootfs/opt/greia-os"
   chmod -R a-w "$rootfs/opt/greia-os"
 }

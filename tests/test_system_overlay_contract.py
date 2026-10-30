@@ -12,14 +12,14 @@ class SystemOverlayContractTests(unittest.TestCase):
     def test_hardware_state_directories_are_setgid_for_cross_service_reads(self) -> None:
         config = (PROJECT_ROOT / "build/overlay/etc/tmpfiles.d/greia-os.conf").read_text()
         self.assertIn(
-            "d /var/lib/greia-system-settings 2770 greiapanel pipsettings -",
+            "d /var/lib/greia-system-settings 2770 greiapanel greiasettings -",
             config,
         )
         self.assertIn("d /run/greia-hardware 2750 greiakid greiapanel -", config)
         # tmpfiles must name groups compose.sh actually creates (see
         # test_image_tmpfiles_identities); a missing group broke boot once.
-        self.assertIn("d /var/lib/greia-profiles 2770 greiakid pipprofiles -", config)
-        self.assertIn("d /run/greia-os 0770 greiakid pipprofiles -", config)
+        self.assertIn("d /var/lib/greia-profiles 2770 greiakid greiaprofiles -", config)
+        self.assertIn("d /run/greia-os 0770 greiakid greiaprofiles -", config)
 
     def test_wifi_resume_hook_is_installed_executable_and_bounded(self) -> None:
         hook = (
@@ -174,7 +174,7 @@ class SystemOverlayContractTests(unittest.TestCase):
         ):
             self.assertIn(boundary, supervisor)
         # --unshare-user is intentionally not used: its user-namespace root loses
-        # access to greiakid:pipprofiles group-owned profile dirs, so bwrap could
+        # access to greiakid:greiaprofiles group-owned profile dirs, so bwrap could
         # not traverse the activity-data source and every Activity failed to
         # launch. PID/network/UTS isolation plus read-only root remains.
         self.assertNotIn("--unshare-user", supervisor)
@@ -195,7 +195,7 @@ class SystemOverlayContractTests(unittest.TestCase):
         # report instead of recomputing it.
         self.assertIn("PROJECT_VERSION=", engine)
         self.assertIn("compose_root --profile", image_builder)
-        self.assertIn("pip-rootfs.squashfs.sha256", installer_builder)
+        self.assertIn("greia-rootfs.squashfs.sha256", installer_builder)
         self.assertIn("expected-payload.sha256", installer_builder)
         self.assertIn("target_payload_sha256", installer_builder)
         # Step 8A.5 split: the payload digest is verified by the root

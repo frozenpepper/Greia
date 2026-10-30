@@ -222,7 +222,7 @@ class InstallationEngine:
         self._verify_target(request.target)
         hardware_support = self._prepare_hardware_support(request, report)
 
-        target_mount = Path(tempfile.mkdtemp(prefix="pip-install-target."))
+        target_mount = Path(tempfile.mkdtemp(prefix="greia-install-target."))
         mounted: list[Path] = []
         layout, firmware = self._select_layout()
         partition = layout.root_partition(request.target.path)
@@ -843,7 +843,7 @@ class InstallationEngine:
                 str(target_root),
                 "chown",
                 "-R",
-                "greiapanel:pipsettings",
+                "greiapanel:greiasettings",
                 "/var/lib/greia-system-settings",
             ]
         )

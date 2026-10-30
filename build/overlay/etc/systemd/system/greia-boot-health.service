@@ -24,14 +24,14 @@ RequiresMountsFor=/run/greia-persist /var/lib/greia-os /boot/grub /etc/greia-os/
 [Service]
 Type=simple
 User=root
-# /run/greia-os is the launcher runtime root (0770 greiakid:pipprofiles).
+# /run/greia-os is the launcher runtime root (0770 greiakid:greiaprofiles).
 # The socket service must reach and consume/unlink the one-use delivery
 # token without CAP_DAC_OVERRIDE: greiakid grants read on the 0750
-# delivery directory / 0640 token, and pipprofiles grants traversal and
+# delivery directory / 0640 token, and greiaprofiles grants traversal and
 # the parent-directory write needed to invalidate it. The authority
 # record remains root-owned 0700 and is reached as its owner.
 Group=greiakid
-SupplementaryGroups=pipprofiles
+SupplementaryGroups=greiaprofiles
 WorkingDirectory=/opt/greia-os
 Environment=PYTHONPATH=/opt/greia-os/src
 Environment=PYTHONNOUSERSITE=1

@@ -15,7 +15,7 @@ Group=greiapanel
 # iwd's system-bus policy admits only root and group netdev; the Parent
 # Wi-Fi controls (list/join) need it (Acer parity audit A1, 2026-10-17).
 SupplementaryGroups=netdev
-# Parent-created profile directories live under the setgid pipprofiles tree and
+# Parent-created profile directories live under the setgid greiaprofiles tree and
 # must be born group-writable (2770). RestrictSUIDSGID remains enabled below,
 # so the service cannot repair a missing SGID bit after creation; the explicit
 # umask makes the inherited setgid + mkdir permissions satisfy the contract

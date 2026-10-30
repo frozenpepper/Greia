@@ -1,7 +1,8 @@
 """Every identity named in tmpfiles.d must actually be created by the image.
 
 This file owned a real boot break. greia-os.conf named the group
-``greiaprofiles``, which compose.sh never creates - it creates ``pipprofiles``.
+``greiaprofiles`` while compose.sh created ``pipprofiles`` (the 2026-10-30
+rename moved every file to ``greiaprofiles`` in one tranche).
 systemd-tmpfiles therefore failed with "Failed to resolve group" and left
 /run/greia-os as root:root 0755. Xorg runs as greiakid, so it could not open
 /run/greia-os/Xorg.0.log, exited, and greia-launcher.service went into a

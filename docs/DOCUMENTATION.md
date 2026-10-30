@@ -67,7 +67,7 @@ Accepted ADRs own architectural decisions. Current cross-cutting accepted decisi
 
 `docs/architecture/GREIA_ARCHITECTURE.md` is a living synthesis, not a second ADR system.
 
-The parent-facing website's page content, interactions, copied preview assets and release-link state live in `website/`; `website/README.md` records their provenance and publishing boundary. It summarizes the product for visitors and does not override product requirements, ADRs, source contracts or release evidence. The September website concept prototypes were retired from the active tree during release cleanup. Their design decision is recorded in the 2026-09-23 website design studies note (archived; see git history); the original HTML and preview assets remain recoverable through Git history.
+The parent-facing website (https://www.frozenpepper.it/greia/) is not part of this repository: since 2026-10-30 its source lives in the owner's separate local folder beside the checkout and is published with `site-ftp`. Only the update/installer index builders (`tools/build_update_index.py`, `tools/build_installer_index.py`) stay here. The website summarizes the product for visitors and does not override product requirements, ADRs, source contracts or release evidence. The September website concept prototypes were retired from the active tree during release cleanup. Their design decision is recorded in the 2026-09-23 website design studies note (archived; see git history); the original HTML and preview assets remain recoverable through Git history.
 
 ### 2.4 Exact implemented contracts — source/runtime declarations
 
@@ -328,7 +328,7 @@ Bulky evidence belongs outside Git unless a specific evidence authority requires
 **2026-10-26 release cleanup:** the superseded language-tier proposal moved
 from `docs/product/` to the former `docs/archive/plans/` (removed 2026-10-30; see git history). Twenty-one obsolete website
 study HTML/CSS/JS/image files (about 3.5 MB) were retired from
-`docs/design/website_mocks_2026-09-23/`; current `website/` is unchanged.
+`docs/design/website_mocks_2026-09-23/`; the website itself later left the repository (2026-10-30).
 Their decision and exact Git recovery revision are in
 the 2026-09-23 website design studies note (archived; see git history).
 The living `HANDOVER.md` was condensed from about 290 KB to about 44 KB,

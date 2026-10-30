@@ -239,7 +239,7 @@ class BootDiagnosticsHardeningTests(unittest.TestCase):
             encoding="utf-8"
         )
         self.assertIn("live/filesystem.squashfs", installer)
-        self.assertIn("payload/pip-rootfs.squashfs", installer)
+        self.assertIn("payload/greia-rootfs.squashfs", installer)
         self.assertIn("etc/shadow", installer)
         self.assertIn("multi-user.target.wants/ssh.service", installer)
         self.assertIn("prepare-developer-ssh", installer)
