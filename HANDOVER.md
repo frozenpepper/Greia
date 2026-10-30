@@ -7,6 +7,7 @@
 Updated 2026-10-30. Newest first inside each topic; the dated source entries are under **Recent entries**. Evidence labels follow `AGENTS.md`; nothing below is family-release certification.
 
 **Release status**
+- GitHub `frozenpepper/Greia` is **public** (seen 2026-10-30). `main` has the ruleset "Protect main": no force-push, no deletion, pull request required, repository admin bypass (the owner and core agents keep pushing to `main`). Secret scanning with push protection, private vulnerability reporting and Dependabot alerts are on; merged branches auto-delete; Projects is off. The only hosted workflow stays manual (`workflow_dispatch`).
 - Public source readiness: IN PROGRESS. Root entry points exist (`LICENSE`, `NOTICE.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`); the licensing/provenance audit is open (see `NOTICE.md`). Ordinary-family release: **NOT READY** (`docs/release/GREIA_PUBLIC_RELEASE_READINESS.md`).
 - Release checklist: `docs/release/FIRST_PUBLIC_RELEASE_EXECUTION.md`. Recommended first binary: one non-developer i386 A/B hardware-tested image, not a universal/Pi promise. Source publication can precede a public binary after public-tree/history rights and privacy review.
 - **Blocker (media rights):** 627 committed recordings use the macOS System Voice (257 would remain even in the 32-activity draft roster); public source/binary distribution stays blocked until the owner decides (`docs/release/2026-10-28_MACOS_SYSTEM_VOICE_AUDIO_INVENTORY.md`). The owner has already placed a technical-preview installer on the website.
