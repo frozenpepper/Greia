@@ -32,7 +32,7 @@ git rev-parse HEAD
 sudo bash tools/build-development-installer.sh legacy-x86-i686-dev ./out
 ```
 
-This high-level wrapper routes legacy-x86 builds through the accepted boot-artwork and installer steps. The result is intended at `out/greia-os-installer-legacy-x86-i686-dev.img` with a report beside it. Inspect the reports and verification output; **a file existing is not proof it is bootable**.
+This high-level wrapper routes legacy-x86 builds through the accepted boot-artwork and installer steps. The real image is named `out/greia-os-installer-<PROFILE>-<VERSION>-build-<COMMIT>.img`; `out/greia-os-installer-legacy-x86-i686-dev.img` is a compatibility symlink. A report is written beside it. Inspect the reports and verification output; **a file existing is not proof it is bootable**.
 
 For the specific quiet developer release candidate, the analogous profile is `legacy-x86-i686-rc`. Follow [the RC runbook](../INSTALLER_IMAGE_CREATION_AND_BOOT.md#13-release-candidate-build-runbook-legacy-x86-i686-rc) rather than substituting it silently for a normal release.
 

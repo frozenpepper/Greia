@@ -69,6 +69,18 @@ sudo bash tools/build-development-installer.sh \
   ./out
 ```
 
+The canonical installer artifact name now includes the repository version and
+build commit:
+
+```text
+greia-os-installer-<PROFILE>-<VERSION>-build-<12-char-commit>.img
+```
+
+The builder also creates `greia-os-installer-<PROFILE>.img` as a compatibility
+symlink for existing flash/verification front doors. Sidecar report/manifest
+names remain stable; the report records `version`, `build`, `output` and
+`compatibility_image`. A dirty source tree appends `-dirty` to the build id.
+
 These commands deliberately route legacy-x86 through:
 
 ```text

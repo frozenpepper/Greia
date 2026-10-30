@@ -67,7 +67,7 @@ For the quiet Acer RC, use `legacy-x86-i686-rc` only if explicitly requested, an
 For a build-only result:
 
 1. Retain the exact stdout/stderr log and command exit code.
-2. Read the resulting `out/greia-os-installer-<PROFILE>.img`, corresponding `-report.txt` and footprint/profile metadata.
+2. Read the resulting `out/greia-os-installer-<PROFILE>-<VERSION>-build-<COMMIT>.img` (the stable `out/greia-os-installer-<PROFILE>.img` is a compatibility symlink), corresponding `-report.txt` and footprint/profile metadata.
 3. Compare the report's image hash with a hash of the actual produced image.
 4. Verify the high-level builder's success markers, root partition/payload contract, boot console policy and footprint. A log ending early, a missing report or a failing verifier means **FAIL**, even if a partial image exists.
 5. Perform supported VM checks when the target and host permit them. Use the appropriate x86 CPU model (for i386, not `-cpu pentium3`; see installer runbook) and save exact outcomes.

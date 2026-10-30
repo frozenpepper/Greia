@@ -140,7 +140,15 @@ export AB_RELEASE_SRC
 OUTPUT_DIR="${positional[1]:-$PROJECT_ROOT/out}"
 mkdir -p "$OUTPUT_DIR"
 OUTPUT_DIR="$(realpath "$OUTPUT_DIR")"
-OUTPUT_IMAGE="$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}.img"
+BUILD_VERSION="$(tr -d '[:space:]' < "$PROJECT_ROOT/VERSION")"
+[[ -n "$BUILD_VERSION" ]] || { echo "Repository VERSION is missing or empty." >&2; exit 1; }
+BUILD_ID="$(git -C "$PROJECT_ROOT" rev-parse --short=12 HEAD 2>/dev/null || echo unknown)"
+if [[ "$BUILD_ID" != unknown ]] && ! git -C "$PROJECT_ROOT" diff-index --quiet HEAD -- 2>/dev/null; then
+  BUILD_ID="${BUILD_ID}-dirty"
+fi
+ARTIFACT_STEM="greia-os-installer-${PROFILE_ID}-${BUILD_VERSION}-build-${BUILD_ID}"
+OUTPUT_IMAGE="$OUTPUT_DIR/${ARTIFACT_STEM}.img"
+COMPAT_IMAGE="$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}.img"
 REPORT="$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}-report.txt"
 INSTALLER_PROFILE_REPORT="$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}-image-profile.json"
 PAYLOAD_PROFILE_REPORT="$OUTPUT_DIR/greia-os-${PROFILE_ID}-payload-image-profile.json"
@@ -613,9 +621,17 @@ install -m 0644 "$INSTALLER_PROFILE_MANIFEST" "$INSTALLER_PROFILE_REPORT"
   echo "live_base_system_manifest=$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}-live-base-system-manifest.txt"
   echo "live_security_support_report=$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}-live-security-support-status.txt"
   echo "payload_footprint_report=$OUTPUT_DIR/greia-os-${PROFILE_ID}-payload-footprint.txt"
+  echo "version=$BUILD_VERSION"
+  echo "build=$BUILD_ID"
   echo "output=$OUTPUT_IMAGE"
+  echo "compatibility_image=$COMPAT_IMAGE"
   echo "sha256=$(sha256sum "$OUTPUT_IMAGE" | awk '{print $1}')"
 } > "$REPORT"
+
+# Keep the historical stable name available for existing build/flash and
+# verification front doors while the real artifact carries its build identity.
+rm -f "$COMPAT_IMAGE"
+ln -s "$(basename "$OUTPUT_IMAGE")" "$COMPAT_IMAGE"
 
 echo "Created graphical installer image: $OUTPUT_IMAGE"
 echo "Hardware support manifest: $HARDWARE_SUPPORT_REPORT"
