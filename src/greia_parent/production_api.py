@@ -19,6 +19,7 @@ from greia_parent.update_api import (
     UpdateParentApiRequestHandler,
 )
 from greia_parent.web_client import render_parent_web_app
+from greia_platform.ssh_maintenance import ParentSocketSshMaintenanceProvider, SshMaintenanceService
 from greia_platform.wifi import IwdWifiBackend, WifiBackend, WifiError, WifiNetwork
 
 
@@ -40,6 +41,8 @@ class ProductionParentApiApplication(UpdateParentApiApplication):
         kwargs["wifi_backend"] = (
             wifi_backend if wifi_backend is not None else IwdWifiBackend()
         )
+        self._parent_ssh_provider = ParentSocketSshMaintenanceProvider()
+        kwargs.setdefault("ssh_service", SshMaintenanceService(self._parent_ssh_provider))
         super().__init__(*args, **kwargs)
         self.password_attempts = ParentPasswordAttemptLimiter()
         # One Wi-Fi operation (scan/association) at a time; also guards the
@@ -69,6 +72,7 @@ class ProductionParentApiApplication(UpdateParentApiApplication):
         capabilities = dict(payload["capabilities"])
         capabilities["activities.remove"] = self.activity_remove_enabled
         capabilities["network.manage"] = self._wifi_management_available()
+        capabilities["maintenance.ssh"] = self._parent_ssh_provider.available()
         payload["capabilities"] = capabilities
         return payload
 

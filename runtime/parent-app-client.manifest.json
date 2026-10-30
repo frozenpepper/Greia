@@ -1,8 +1,12 @@
 {
   "files": {
+    "assets/greia-mark-light.svg": {
+      "bytes": 5051,
+      "sha256": "062971b657eb0ece0d9e7cd190f7a7224fdfae9d808d354dbb135db954143b58"
+    },
     "index.html": {
-      "bytes": 3801,
-      "sha256": "2228ac85947d238f1fa34c360295db3dc86880c4cd1bf24eba7763552c9a7ef7"
+      "bytes": 3164,
+      "sha256": "7e60b687996a5037c608f97e68dc4d74147625233129064f0d2b63e96ac29ce5"
     },
     "src/api.js": {
       "bytes": 12076,
@@ -21,8 +25,8 @@
       "sha256": "42134f24478852986ca102c7c02d6682d31caccdf1ea53088e3436926cb687cc"
     },
     "src/localization.js": {
-      "bytes": 89708,
-      "sha256": "3ef2ea6143ef60a729270afdc8a71071761d430a64b64fbb662d2e0533ffb30c"
+      "bytes": 89942,
+      "sha256": "dfdbdb01fd3df661d8ab5bd33ae7629e375b507713bf265a40aafe17954a7793"
     },
     "src/state.js": {
       "bytes": 20178,
@@ -37,8 +41,8 @@
       "sha256": "73d9aadbef85e958eb4e78a5194bd46d23ee0d444b9a0b37fbd6cf812ba88945"
     },
     "src/views_device.js": {
-      "bytes": 28325,
-      "sha256": "c29e1d60c0ed13279e31fa52460314720be499a9f80ed07086f97a26419e16b4"
+      "bytes": 28404,
+      "sha256": "78e1c1d8b9dca4af3c1f816ebf9a50978836b6576de394c9d8e232d52e8e5145"
     },
     "src/views_device_layout.js": {
       "bytes": 3822,
@@ -57,8 +61,8 @@
       "sha256": "e3e6e40f57c54777c09f26a7aec3ceb4f9bf9b8806c9cf0e26aec7a098b8ccb8"
     },
     "styles/app.css": {
-      "bytes": 25629,
-      "sha256": "108193fcbefbfac58a459e250960028aa178816cc5a07d48f6b5ba0304438295"
+      "bytes": 25702,
+      "sha256": "ba94c581da88dd89c419200bc1421c7536149f75ffa85a28000d2d38cc824e14"
     },
     "styles/management.css": {
       "bytes": 3107,
@@ -66,6 +70,6 @@
     }
   },
   "repository": "frozenpepper/Greia-Parent-App-Html",
-  "revision": "51d6b589d6a1703fd3681f46ab373a19b201ac8f",
+  "revision": "50f89d615aed7f771696e6176dcc1cf1b2cc8225",
   "schema_version": 1
 }

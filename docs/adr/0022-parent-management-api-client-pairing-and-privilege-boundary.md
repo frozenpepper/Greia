@@ -116,7 +116,7 @@ The Parent API reuses platform services such as ProfileStore, Hardware Settings/
 
 Greia Parents does not use SSH as its transport. Normal release images do not enable SSH merely to support the Parent app.
 
-Any future Parent-controlled SSH enablement must remain a typed maintenance operation with constrained policy: no root login, no password SSH, key-based authorization, and explicit disable/revoke behavior.
+Owner decision 2026-10-30 supersedes the former key-only restriction: the explicit Parent-controlled switch enables SSH with login `greia` and password `greia`, including on normal images. SSH remains off by default, root login is disabled, and enable/disable remain typed maintenance operations. This does not enable the separate developer remote-control surface.
 
 ### 11. Foundations may land without falsely closing later platform phases
 

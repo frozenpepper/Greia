@@ -410,6 +410,7 @@ export function installDeviceViews(proto) {
           : tr("device.ssh.disabled_description"),
       ),
     );
+    if (active) card.append(el("p", "security-note", tr("device.ssh.login")));
     const action = button(active ? tr("device.ssh.turn_off") : tr("device.ssh.turn_on"), {
       iconName: "terminal",
       className: active ? "button danger" : "button secondary",

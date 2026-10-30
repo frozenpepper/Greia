@@ -1,0 +1,14 @@
+[Unit]
+Description=Greia Parent SSH maintenance socket
+After=local-fs.target
+
+[Socket]
+ListenStream=/run/greia-parent-ssh/control.sock
+DirectoryMode=0755
+SocketMode=0660
+SocketUser=root
+SocketGroup=greiapanel
+Accept=no
+
+[Install]
+WantedBy=sockets.target

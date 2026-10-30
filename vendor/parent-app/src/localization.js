@@ -2064,6 +2064,12 @@ export const CHROME_TRANSLATIONS = Object.freeze({
     "es": "El uso normal de Greia no requiere SSH",
     "fr": "L'utilisation normale de Greia ne nécessite pas SSH"
   },
+  "device.ssh.login": {
+    "en": "Username: greia · Password: greia",
+    "it": "Nome utente: greia · Password: greia",
+    "es": "Usuario: greia · Contraseña: greia",
+    "fr": "Identifiant : greia · Mot de passe : greia"
+  },
   "device.ssh.turn_on": {
     "en": "Turn SSH on",
     "it": "Attiva SSH",

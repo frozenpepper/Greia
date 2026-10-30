@@ -275,10 +275,10 @@ Current Parent surfaces can deliberately enable/disable SSH maintenance through 
 
 - the managed `greia` account is the administrative shell user;
 - root login is disabled;
-- a public key may be added as an additional automation path;
+- owner decision 2026-10-30: explicitly enabling the Parent switch permits the simple `greia` / `greia` login on normal images;
 - passwordless privilege escalation stays behind bounded Greia-owned controls, not generic passwordless sudo/root APIs;
 - host connection details may be shown after success;
-- the parent can disable SSH and revoke/replace key material through supported typed operations.
+- the parent can disable SSH through the same switch.
 
 During active development, developer/test images additionally provision the `greia` / `greia` login as described in `docs/agents/GREIA_AGENT_OPERATIONS.md` so the owner-controlled test agent can continue working after install and reboot. This development convenience is not a release security claim.
 

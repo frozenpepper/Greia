@@ -150,7 +150,7 @@ Clients do not see `xinput`, `xrandr`, ALSA, iwd, sysfs, or future direct-graphi
 
 ## 10. SSH boundary
 
-SSH is optional maintenance, not a dependency of Greia Parents. Normal images keep it absent/off unless deliberately enabled through the typed maintenance boundary.
+SSH is optional maintenance, not a dependency of Greia Parents. Normal images keep it off unless deliberately enabled through the typed maintenance boundary. Owner decision 2026-10-30 selects `greia` / `greia` for the explicitly enabled service, including normal images. Root login remains disabled. The installed socket-activated `greia-parent-ssh` service accepts only status/enable/disable from the Parent identity; it owns the systemd and account operations. Source implementation requires Linux and physical acceptance.
 
 Greia Parents itself continues to use the Parent API, never SSH.
 

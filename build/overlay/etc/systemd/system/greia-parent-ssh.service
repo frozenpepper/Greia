@@ -1,0 +1,14 @@
+[Unit]
+Description=Greia Parent SSH maintenance service
+Requires=greia-parent-ssh.socket
+After=greia-parent-ssh.socket greia-first-boot.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/greia-os
+Environment=PYTHONPATH=/opt/greia-os/src
+Environment=PYTHONNOUSERSITE=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/usr/bin/python3 -m greia_platform.parent_ssh_control
+Restart=no

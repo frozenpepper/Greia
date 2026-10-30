@@ -242,8 +242,9 @@ h1,h2,h3,.row-copy,.status-copy,.list-subtitle,.manager-summary-copy{overflow-wr
 .security-note{padding:10px 12px;border-radius:10px;background:var(--sun-soft);color:#735817;font-size:12px;margin:14px 0}
 
 
-/* Self-contained constellation mark; no runtime image dependency. */
+/* Greia’s shared star-G mark on its night background. */
 .brand-mark{overflow:hidden;position:relative;background:#050d20;color:var(--sun);transform:none;border-radius:16px}
+.brand-mark img{display:block;max-width:85%;max-height:85%;width:auto;height:auto}
 /* Shared accessibility and view details. No local font alias: installed font weights
    must never replace every requested weight with one arbitrary local face. */
 [hidden]{display:none!important}

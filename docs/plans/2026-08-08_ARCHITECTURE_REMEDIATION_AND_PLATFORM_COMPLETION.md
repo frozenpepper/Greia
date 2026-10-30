@@ -4051,3 +4051,13 @@ bootstrap composition regression tests plus focused supervisor, chrome, broker,
 Parent input and key-chord tests passed on macOS; strict ownership audit passed.
 No real Linux Bubblewrap/X11 or physical Acer acceptance ran. Retest those paths
 before release; this source fix does not close the R7 or device gates.
+
+
+### 2026-10-30 — Parent SSH switch (SOURCE; no phase closure)
+
+Owner explicitly chose the `greia` / `greia` login on normal images through
+the Parent switch. Added a socket-activated fixed-operation SSH authority,
+capability gating and typed request checks, with current Parent client pin
+and login guidance. SSH stays off by default and root SSH stays disabled.
+Focused source tests are recorded in HANDOVER; no Linux systemd, image,
+Acer or login acceptance ran. R7 and later phase state remain unchanged.

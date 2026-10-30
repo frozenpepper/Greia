@@ -2,6 +2,23 @@
 
 **Purpose:** the short current state for contributors and agents: active workstreams, recent results, blockers and next steps. It is not an archive.
 
+**2026-10-30 Parent SSH and branding (SOURCE; Acer not updated):** Owner
+requested a Parent switch on normal images using SSH `greia` / `greia`, off
+by default. The new socket-activated fixed-operation service owns the SSH
+state and the installed Parent API advertises it only when the socket exists.
+The Parent client also uses Greia's existing mark and displays the login.
+Source checks: 8 SSH-control tests, 8 production Parent tests, 34 Parent API
+tests, 5 socket-composition tests, 3 client-pin tests, both client integrity
+checks, and 106 Parent Node tests (the Node checkout had a pre-existing test
+edit). Linux systemd, login, disable, reboot and physical
+Acer acceptance have not run. Current Acer HTTPS responded at 192.168.2.10,
+SSH was closed, and it cannot acquire the new systemd unit through a
+Python-only update. Next: build a current full-system update on the existing
+Linux host, run disposable installed acceptance, then deliver the accepted
+update through the existing A/B Parent route and verify the switch on Acer.
+Activity package installation remains separately unavailable pending its
+package acceptance; this work does not enable it.
+
 **2026-10-30 Acer Shell installed-generation regression (SOURCE FIX; device
 retest pending):** Owner reports a successful Italian installation, S+T does
 nothing on the profile picker, and every Activity lacks Home. Direct Ethernet

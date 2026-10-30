@@ -294,6 +294,7 @@ Evidence class: **SIMULATOR VISUAL REVIEW**.
 | Checkpoint 2026-10-16 | **All 45 Activities are reworked on the shared library and control kit (P7 W0–W3, SOURCE + DESKTOP VISUAL REVIEW only).** Catalogue is 0.7.0 (62 vocabulary pictures added, `a779b10f`). Encyclopedia **E4 is COMPLETE** (`7b1f6b2c`, 36 authored storybook scenes, canonical cairo backend; 43 PNGs reproduce byte-for-byte); **E5 interaction visual-language pass is next**. Many Activities authored private art kept Activity-local as candidates awaiting library promotion (Serra plants, Specchi mosaic tiles, Alfabeto pictures, Stelle constellations, Morbidi parts, Teatrino puppets, bridge/marble-run/picnic sets, Volo dragon, Colline buggy, instruments, pet props, tokens; full list in `P7_ACTIVITY_QUALITY_PROGRAM.md` §8). No Simulator or physical visual review of the reworks exists. |
 | Checkpoint 2026-10-16 (awards) | **Award frames redrawn as flat `ui.award.<family>` renditions (bronze medal / silver scalloped medal / gold cup / special rosette + grey locked silhouettes); badge celebration and trophy-shelf Badge Library consume them. SOURCE + DESKTOP VISUAL REVIEW only.** |
 | Checkpoint 2026-10-21 (@2x) | **Shared and Activity-private runtime art now has `<name>@2x.png` siblings (same SVG masters, exact 2x) used only by the high-resolution layer at >=1.2x; 13 Activity PNGs have none because the shipped PNG no longer matches its SVG. SOURCE + DESKTOP VISUAL REVIEW only; no Aspire visual review of the new art.** |
+| Parent mark (2026-10-30) | Parent client reuses the existing website Greia star-G asset instead of its placeholder; SOURCE + local browser review, not installed physical review. |
 | Encyclopedia forensic audit | `docs/archive/reviews/2026-08-28_ENCYCLOPEDIA_GRAPHICS_FORENSIC_AUDIT.md` — prior graphics rejected as final product quality |
 | Encyclopedia visual subplan | `docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md` |
 | Encyclopedia current source review | `docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/SOURCE_REVIEW.md` |
@@ -879,3 +880,10 @@ The five glossy `feDropShadow` award masters in `assets/source/achievements/` we
 ## 2026-10-21 — @2x renditions for shared and Activity art (SOURCE / DESKTOP VISUAL REVIEW)
 
 `tools/build_visual_renditions.py` renders an `@2x.png` sibling per declared variant from the same SVG masters (`rsvg-convert`; `--no-hires` skips), and the shared-library contract checks the exact 2x size (`47eafcd49`, 175 files for `alfabeto_leo` and `memory_meraviglie`; `f22db8cb3`, all shared and Activity-private art). The high-resolution layer loads them at >=1.2x; the 1x PNGs stay for the reference netbook. 13 Activity PNGs have no `@2x` because the shipped PNG no longer matches its SVG (redraw or re-render decision open). No SIMULATOR or PHYSICAL visual review.
+
+
+## 2026-10-30 — Parent brand reuse (SOURCE / DESKTOP VISUAL REVIEW)
+
+Parent HTML reuses the existing website Greia mark instead of an unrelated
+constellation. Previewed locally; no installed-Acer visual acceptance. No
+shared Activity artwork or visual workstream phase changed.

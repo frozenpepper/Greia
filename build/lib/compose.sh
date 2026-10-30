@@ -931,6 +931,7 @@ compose_configure_systemd() {
       greia-parent.service
       greia-boot-health.socket
       greia-system-update.socket
+      greia-parent-ssh.socket
       greia-audio-endpoints.service
       greia-microphone-level.socket
       systemd-networkd.service

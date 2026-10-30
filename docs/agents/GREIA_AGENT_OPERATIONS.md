@@ -952,3 +952,14 @@ image composition now normalize public static-client directory/file modes;
 the composed-root verifier rejects unreadable client trees. See
 `docs/agents/2026-10-29_ACER_INSTALLER_AND_PARENT_FIX_HANDOFF.md` for the
 physical read-only evidence and required new-bundle/installed acceptance.
+
+
+## Parent-controlled SSH on normal images (2026-10-30; source only)
+
+Owner requested the Parent switch to enable `greia` / `greia`, including on
+normal images; SSH defaults off and root login stays disabled. The installed
+Parent API uses the fixed-operation `greia-parent-ssh.socket` / service, and
+advertises the capability only when its socket is accessible. These new unit
+files require a full-system image/update; a Python-only `.greia_update` cannot
+install them. Real systemd, SSH login, disable, reboot and Acer acceptance have
+not run. Do not assume the currently installed Acer already contains this.

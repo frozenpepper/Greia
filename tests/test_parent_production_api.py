@@ -156,6 +156,14 @@ class ParentProductionApiTests(unittest.TestCase):
             )
             self.assertEqual(backend.connected, [real])
 
+    def test_ssh_capability_tracks_installed_authority(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            app = self._app(Path(temporary), wifi_backend=_UnavailableWifiBackend())
+            with mock.patch.object(app._parent_ssh_provider, "available", return_value=False):
+                self.assertFalse(app.index_payload()["capabilities"]["maintenance.ssh"])
+            with mock.patch.object(app._parent_ssh_provider, "available", return_value=True):
+                self.assertTrue(app.index_payload()["capabilities"]["maintenance.ssh"])
+
     def test_capability_index_preserves_composed_features(self) -> None:
         backend = _UnavailableWifiBackend()
         with tempfile.TemporaryDirectory() as temporary:

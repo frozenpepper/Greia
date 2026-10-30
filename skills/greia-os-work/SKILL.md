@@ -1023,3 +1023,13 @@ service's unprivileged integrity precheck to fail. Pin/stage/compose now
 normalize its directories and files; composed-root verification checks their
 readability. See `docs/agents/2026-10-29_ACER_INSTALLER_AND_PARENT_FIX_HANDOFF.md`
 for physical read-only evidence and the required new A/B bundle and acceptance.
+
+
+## Parent SSH switch (2026-10-30; source only)
+
+Owner selected explicit Parent-controlled `greia` / `greia` SSH for normal
+images as well as developer images. SSH defaults off on normal images; root
+login remains disabled. The installed Parent API uses the fixed-operation
+`greia-parent-ssh.socket` service and reports capability only when available.
+The new socket/unit requires a full-system image or update, and real systemd,
+reboot and physical login/disable acceptance remain pending.

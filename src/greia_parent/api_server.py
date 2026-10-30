@@ -730,9 +730,11 @@ class ParentApiRequestHandler(ParentRequestHandler):
                 return
             try:
                 body = self._read_json_object()
+                enabled = body.get("enabled")
+                if type(enabled) is not bool:
+                    raise ValueError("SSH enabled must be true or false")
                 payload = self.app.update_ssh(
-                    bool(body.get("enabled", False)),
-                    self._json_text(body, "public_key", default=None),
+                    enabled, self._json_text(body, "public_key", default=None),
                 )
             except Exception as exc:
                 self._send_api_error(400, "ssh_update_failed", str(exc))

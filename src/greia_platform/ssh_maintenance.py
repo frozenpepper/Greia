@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 import os
+import json
+import stat
 import socket
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
+
+from .parent_ssh_control import SOCKET_PATH
 
 
 ENABLE_SSH_SCRIPT = Path("/usr/local/sbin/greia-enable-ssh")
@@ -129,6 +133,51 @@ class SystemSshMaintenanceProvider:
             return completed.stdout.strip() == "enabled"
         except Exception:
             return False
+
+
+class ParentSocketSshMaintenanceProvider:
+    """Use the installed, fixed-operation Parent SSH authority."""
+
+    def __init__(self, path: Path = SOCKET_PATH) -> None:
+        self.path = path
+
+    def available(self) -> bool:
+        try:
+            return stat.S_ISSOCK(self.path.stat().st_mode) and os.access(self.path, os.W_OK)
+        except OSError:
+            return False
+
+    def _request(self, operation: str) -> SshStatus:
+        try:
+            with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as connection:
+                connection.settimeout(180)
+                connection.connect(str(self.path))
+                connection.sendall(operation.encode("ascii") + b"\n")
+                response = bytearray()
+                while b"\n" not in response and len(response) < 512:
+                    part = connection.recv(512 - len(response))
+                    if not part:
+                        break
+                    response.extend(part)
+            payload = json.loads(response)
+            if not isinstance(payload, dict) or payload.get("ok") is not True:
+                raise ValueError("control request refused")
+            if type(payload.get("active")) is not bool or type(payload.get("enabled")) is not bool:
+                raise ValueError("invalid control response")
+            return SshStatus(payload["active"], payload["enabled"], 22, "greia", _detect_lan_ip())
+        except (OSError, ValueError, UnicodeError) as exc:
+            raise RuntimeError("SSH maintenance is unavailable or failed") from exc
+
+    def status(self) -> SshStatus:
+        return self._request("STATUS")
+
+    def enable(self, public_key_content: str | None = None) -> SshStatus:
+        if public_key_content:
+            raise ValueError("SSH public keys are not supported by this switch")
+        return self._request("ENABLE")
+
+    def disable(self) -> SshStatus:
+        return self._request("DISABLE")
 
 
 class MockSshMaintenanceProvider:
