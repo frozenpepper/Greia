@@ -3962,3 +3962,16 @@ documented full-suite-only launcher-memory failure that passes isolated;
 focused tests pass. The LaCie `/dev/sdc` was reflashed and full readback
 matched. Physical Acer install/first boot, Wi-Fi hardware and rollback remain
 unexecuted.
+
+**2026-10-30 Parent SSH/package API bundle + installer, USB reflashed:**
+Built a new A/B fixture bundle from `9ba22f764`
+(`40649f9d615ba1be690f6591f8d1d4999120479cdb53cd6878a0274113cf9c65`,
+714,539,535 bytes) and installer
+`e8d8bb8b9af2cbfcd4c149fe8e0e441e3bc956349e813edb54d126fd9afed2ef`
+(2,273,312,768 bytes). Verified the bundle contains
+`greia-parent-ssh.service/.socket`, the pinned Parent client revision
+`080b4b67…` with the Greia mark, and the active-profile/package API changes;
+Parent client integrity passes as `greiapanel`. `make verify` GREEN: 6,038
+tests OK, 5 skipped. The LaCie `/dev/sdc` was reflashed and full readback
+matched. Installed Linux/Acer SSH-switch, package-install and child-launch
+acceptance remain pending.

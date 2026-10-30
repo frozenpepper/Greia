@@ -48,25 +48,31 @@ Linux-only skip, removal 5, launcher composition 18, end-to-end 2, Parent
 Node 106 (pre-existing unrelated test edit present). Physical Parent API upload,
 listing and removal passed as described above; Bubblewrap, browser upload and
 child launch remain untested. The owner forbids VM/image builds on this Mac.
-Full-system delivery is still needed for the separate SSH systemd unit and
-updated browser bytes.
+A new full-system bundle/installer containing the SSH unit, active-profile
+fix and updated browser bytes was built and flashed to the LaCie; installed
+and physical acceptance of those bytes remains pending.
 
-**2026-10-30 Parent SSH and branding (SOURCE; Acer not updated):** Owner
-requested a Parent switch on normal images using SSH `greia` / `greia`, off
-by default. The new socket-activated fixed-operation service owns the SSH
+**2026-10-30 Parent SSH and branding (NEW BUNDLE/INSTALLER; USB FLASHED;
+installed acceptance pending):** Owner requested a Parent switch on normal
+images using SSH `greia` / `greia`, off by default. The new socket-activated fixed-operation service owns the SSH
 state and the installed Parent API advertises it only when the socket exists.
 The Parent client also uses Greia's existing mark and displays the login.
 Source checks: 8 SSH-control tests, 8 production Parent tests, 34 Parent API
 tests, 5 socket-composition tests, 3 client-pin tests, both client integrity
 checks, and 106 Parent Node tests (the Node checkout had a pre-existing test
-edit). Linux systemd, login, disable, reboot and physical
-Acer acceptance have not run. Current Acer HTTPS responded at 192.168.2.10,
-SSH was closed, and it cannot acquire the new systemd unit through a
-Python-only update. Next: build a current full-system update on the existing
-Linux host, run disposable installed acceptance, then deliver the accepted
-update through the existing A/B Parent route and verify the switch on Acer.
-The later Activity upload source work is described above; installed acceptance
-remains pending.
+edit). A new A/B fixture bundle
+`40649f9d615ba1be690f6591f8d1d4999120479cdb53cd6878a0274113cf9c65`
+and installer
+`e8d8bb8b9af2cbfcd4c149fe8e0e441e3bc956349e813edb54d126fd9afed2ef`
+were built from `9ba22f764`; the bundle contains
+`greia-parent-ssh.service/.socket`, the pinned Parent client revision
+`080b4b67…` with the Greia mark, and the active-profile/package API fixes.
+`make verify` is GREEN: 6,038 tests OK, 5 skipped. The LaCie `/dev/sdc` was
+reflashed and full readback matched. Linux systemd SSH switch/login/disable/
+reboot and physical installed acceptance have not run; the Acer still has the
+old installed system until a full-system update/install is delivered. Next:
+install this bundle on disposable Linux/Acer, verify the Parent SSH switch
+(login/off/reboot) and child-facing launch path.
 
 **2026-10-30 Acer Shell installed-generation regression (SOURCE FIX; device
 retest pending):** Owner reports a successful Italian installation, S+T does
