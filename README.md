@@ -1,8 +1,18 @@
-# Greia OS
+<p align="center">
+  <img src="docs/images/readme/banner.jpg" alt="The Greia logo, a star-constellation G, above a night forest with glowing villages" width="100%">
+</p>
 
-**Greia turns an old laptop into a small learning computer for young children.**
+<h1 align="center">Greia OS</h1>
 
-🌐 **Website:** [frozenpepper.it/greia](https://www.frozenpepper.it/greia/) · ⬇️ **Download the installer:** [frozenpepper.it/greia/downloads.html](https://www.frozenpepper.it/greia/downloads.html)
+<p align="center">
+  <b>Greia turns an old laptop into a small learning computer for young children.</b>
+</p>
+
+<p align="center">
+  🌐 <a href="https://www.frozenpepper.it/greia/"><b>Website</b></a> &nbsp;·&nbsp;
+  ⬇️ <a href="https://www.frozenpepper.it/greia/downloads.html"><b>Download the installer</b></a> &nbsp;·&nbsp;
+  💬 <a href="https://discord.gg/TWuT3z7BVu"><b>Join us on Discord</b></a>
+</p>
 
 A child switches it on, picks their own picture, and chooses something to
 play, draw, write or learn. There is no desktop, no terminal and no web
@@ -13,6 +23,28 @@ Greia is free and open source. It runs on a Linux base, but children never
 see it. It is built for very modest machines first: the reference computer is
 the first-generation Acer Aspire One netbook. Raspberry Pi 400 and 500 are
 planned targets, but there is no Raspberry Pi image yet.
+
+## What children see
+
+Big pictures, friendly voices, and one Home button that always brings them back.
+
+<table>
+  <tr>
+    <td width="33%"><img src="docs/images/readme/home.jpg" alt="Greia home screen with large Activity cards for creating, playing and learning"><br><sub><b>Home:</b> pick something to create, play or learn</sub></td>
+    <td width="33%"><img src="docs/images/readme/aquarium.jpg" alt="The Magic Aquarium Activity with fish, a turtle and an octopus"><br><sub><b>The Magic Aquarium:</b> care for sea creatures</sub></td>
+    <td width="33%"><img src="docs/images/readme/orchestra.jpg" alt="The Magic Orchestra Activity with colourful note keys and instruments"><br><sub><b>Magic Orchestra:</b> play notes and instruments</sub></td>
+  </tr>
+  <tr>
+    <td width="33%"><img src="docs/images/readme/pet.jpg" alt="My Cute Pet Activity with a kitten and buttons for treats, bath, play and sleep"><br><sub><b>My Cute Pet:</b> feed, wash and play</sub></td>
+    <td width="33%"><img src="docs/images/readme/number-train.jpg" alt="The Number Express train Activity showing 2 apples plus 1 apple equals 3"><br><sub><b>Number Express:</b> first sums with apples</sub></td>
+    <td width="33%"><img src="docs/images/readme/encyclopedia.jpg" alt="The Greia Encyclopedia, an open picture book with topics and an owl guide"><br><sub><b>Greia Encyclopedia:</b> explore animals, space and the world</sub></td>
+  </tr>
+</table>
+
+<p align="center">
+  <img src="docs/images/readme/cast.png" alt="Greia's six friendly guide characters" width="720"><br>
+  <sub>Six friends guide the way, in English, Italian, Spanish and French.</sub>
+</p>
 
 > **Status: technical preview (`0.13.1-preview.1`), not a family release.**
 > A preview installer for Acer Aspire One class PCs is on the
@@ -49,6 +81,14 @@ Your Windows PC or Mac is only used to prepare the stick.
 
 ## For parents
 
+<table>
+  <tr>
+    <td width="50%"><img src="docs/images/readme/installer.jpg" alt="The Greia installer's first screen, explaining the steps in plain words"><br><sub>The installer explains every step in plain words.</sub></td>
+    <td width="50%"><img src="docs/images/readme/parents.jpg" alt="The Greia Parents app showing system health, updates, Wi-Fi and language"><br><sub>The Parents app, on your phone or laptop.</sub></td>
+  </tr>
+</table>
+
+
 - **Open the parent settings** on the computer itself: on the profile screen,
   hold the **S** and **T** keys together for five seconds.
   [Greia Parents guide](docs/user/GREIA_PARENTS.md)
@@ -70,7 +110,9 @@ Spanish or French.
 ## Help build Greia
 
 You do not have to be a programmer. Artists, translators and voice
-reviewers are welcome too. Start with [CONTRIBUTING.md](CONTRIBUTING.md).
+reviewers are welcome too. Start with [CONTRIBUTING.md](CONTRIBUTING.md), and
+come say hello on [Discord](https://discord.gg/TWuT3z7BVu): questions, ideas and "it works on my
+old laptop!" stories are all welcome.
 
 | I want to... | Read this |
 |---|---|
@@ -114,4 +156,4 @@ Say where you tested when you open a pull request.
   You may truthfully say a product "runs Greia OS".
 - **Privacy:** [PRIVACY.md](PRIVACY.md). **Security:** [SECURITY.md](SECURITY.md).
   **Conduct:** [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
-- **Website:** https://www.frozenpepper.it/greia/ · **Contact:** greia@frozenpepper.it. **History:** [CHANGELOG.md](CHANGELOG.md).
+- **Website:** https://www.frozenpepper.it/greia/ · **Discord:** https://discord.gg/TWuT3z7BVu · **Contact:** greia@frozenpepper.it. **History:** [CHANGELOG.md](CHANGELOG.md).
