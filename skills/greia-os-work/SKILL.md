@@ -483,7 +483,7 @@ custom
 
 `hide_too_simple` is compatibility input only and normalizes to `age_and_easier`; do not use it for new UI or stored output. Every first-party Activity declares a defensible `recommended_age_min`; `recommended_age_max` remains optional for genuinely open-ended experiences. Age suitability and difficulty are independent, and explicit Parent `always_show` / `always_hide` wins over automatic filtering.
 
-The maintained browser client lives in `frozenpepper/Greia-Parent-App-Html` and is revision/integrity pinned before Greia serves it. Browser source acceptance comes before pin advancement.
+The maintained browser client lives in this repository at `parent-app/` (read `parent-app/README.md` and `parent-app/AGENTS.md`) and is revision/integrity pinned before Greia serves it. Workflow: edit `parent-app/`, `make parent-app-test`, commit, `python3 tools/update_parent_client_pin.py`, commit the pin/manifest/overlay.
 
 ## Activity Simulator
 
@@ -507,9 +507,9 @@ docs/architecture/PARENT_APP_SOURCE_INTEGRATION.md
 docs/product/PARENT_MANAGEMENT.md
 ```
 
-For per-child Activity age/catalogue policy also read the dedicated Activity-discovery route above. Inspect the current Parent client pin/integrity manifest before changing either repository. Parent/browser code must not gain generic shell/root authority.
+For per-child Activity age/catalogue policy also read the dedicated Activity-discovery route above. Inspect the current Parent client pin/integrity manifest before changing `parent-app/` or the Parent API. Parent/browser code must not gain generic shell/root authority.
 
-**Parents HTTPS (owner decision 2026-10-23):** installed `greia_parent.production_api` serves self-signed TLS on LAN `:8766` and shares its bounded Parent application/mutation lock with local-only HTTP at `127.0.0.1:8767` for `greia_launcher.parent_credential_client`. `greia_parent.parent_tls` creates the certificate/key in `/var/lib/greia-os/parent-tls/` on-device using `openssl`, included in `build/package-sets/platform-base.txt`; never ship one shared key. `Greia-Parent-App-Html` owns HTTPS discovery and local proxy; Greia pins it through `runtime/parent-app-client.toml`/manifest and synchronized vendor/image files. Ordinary browser certificate warning is an accepted tradeoff; do not add CA/QR/cloud/account ceremony. Source tests and device acceptance: `docs/testing/2026-10-23_PARENT_HTTPS_ACCEPTANCE.md`. Do not accidentally enable Activity installs merely because TLS exists. The current `tools/dev_source_deploy.py` intentionally does **not** deploy installed `/usr/share/greia-parent-app` HTML assets, so using it alone on a pre-HTTPS image advances the runtime pin without the required web bytes and prevents `greia-parent.service` from starting. Do not use that source-only method for Parent HTTPS physical acceptance; build an exact-head image or separately implement/review an atomic full HTML-runtime deploy.
+**Parents HTTPS (owner decision 2026-10-23):** installed `greia_parent.production_api` serves self-signed TLS on LAN `:8766` and shares its bounded Parent application/mutation lock with local-only HTTP at `127.0.0.1:8767` for `greia_launcher.parent_credential_client`. `greia_parent.parent_tls` creates the certificate/key in `/var/lib/greia-os/parent-tls/` on-device using `openssl`, included in `build/package-sets/platform-base.txt`; never ship one shared key. `parent-app/` owns HTTPS discovery and the local dev proxy; Greia pins it through `runtime/parent-app-client.toml`/manifest and the synchronized image overlay (tool: `tools/update_parent_client_pin.py`; revision is the git tree id of `parent-app/`). A Python application update cannot change the Parent client; only full-system images do. Ordinary browser certificate warning is an accepted tradeoff; do not add CA/QR/cloud/account ceremony. Source tests and device acceptance: `docs/testing/2026-10-23_PARENT_HTTPS_ACCEPTANCE.md`. Do not accidentally enable Activity installs merely because TLS exists. The current `tools/dev_source_deploy.py` intentionally does **not** deploy installed `/usr/share/greia-parent-app` HTML assets, so using it alone on a pre-HTTPS image advances the runtime pin without the required web bytes and prevents `greia-parent.service` from starting. Do not use that source-only method for Parent HTTPS physical acceptance; build an exact-head image or separately implement/review an atomic full HTML-runtime deploy.
 
 ## System output controls (volume / mute / brightness / media keys)
 
@@ -802,7 +802,7 @@ The Wi-Fi page owns a live-installer SSH toggle, off by default on ordinary inst
 
 ## Parent client startup permissions
 
-The installed Parent client web root must be readable by the unprivileged Parent service's integrity precheck (a 0700 web root broke it on the Acer). Pin/stage/compose normalize its directories and files and composed-root verification checks their readability; keep both when touching the Parent client pin or compose path. A fixed image needs a new A/B bundle and acceptance.
+The installed Parent client web root must be readable by the unprivileged Parent service's integrity precheck (a 0700 web root broke it on the Acer). Pin/compose normalize its directories and files and composed-root verification checks their readability; keep both when touching the Parent client pin or compose path. A fixed image needs a new A/B bundle and acceptance.
 
 ## Parent SSH switch (source only)
 

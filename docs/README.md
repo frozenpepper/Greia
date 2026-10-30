@@ -17,6 +17,7 @@ reports and reviews are not in the tree any more; they live in git history.
 | Document | What it is for |
 |---|---|
 | [product/PARENT_MANAGEMENT.md](product/PARENT_MANAGEMENT.md) | What parents can do and how it should feel |
+| [../parent-app/README.md](../parent-app/README.md) | The Parents web client (phone/browser) source in this repository |
 | [product/SYSTEM_UPDATES.md](product/SYSTEM_UPDATES.md) | How system and Activity updates look to a parent |
 | [product/FIRST_BOOT_PROFILE_SETUP.md](product/FIRST_BOOT_PROFILE_SETUP.md) | The voiced first-start wizard that creates the first child profile |
 | [product/MY_GREIA_SETTINGS.md](product/MY_GREIA_SETTINGS.md) | Child-friendly My Greia settings for personalizing their own space |
@@ -74,7 +75,8 @@ Installer and boot lessons live in [engineering/boot/](engineering/boot/):
 | [architecture/GREIA_ACTIVITY_PACKAGE_FORMAT.md](architecture/GREIA_ACTIVITY_PACKAGE_FORMAT.md) | The `.greiaactivity` file format |
 | [architecture/GREIA_AUDIO_SERVICE.md](architecture/GREIA_AUDIO_SERVICE.md) | Sound and microphone service |
 | [architecture/GREIA_PARENT_MANAGEMENT.md](architecture/GREIA_PARENT_MANAGEMENT.md) | How the Parent API is built |
-| [architecture/PARENT_APP_SOURCE_INTEGRATION.md](architecture/PARENT_APP_SOURCE_INTEGRATION.md) | How the Parents web client is pinned into this repo |
+| [architecture/PARENT_APP_SOURCE_INTEGRATION.md](architecture/PARENT_APP_SOURCE_INTEGRATION.md) | How the Parents web client (`parent-app/`) is pinned into the image |
+| [../parent-app/README.md](../parent-app/README.md) | The Parents web client source: run, test and ship it (rules in [parent-app/AGENTS.md](../parent-app/AGENTS.md)) |
 | [architecture/GREIA_VOICE_PRODUCTION_ENGINE.md](architecture/GREIA_VOICE_PRODUCTION_ENGINE.md) | Authoring-time engine for all recorded speech; never shipped to devices |
 | [architecture/UNIVERSAL_GREIA_SETUP_MEDIA_ARCHITECTURE.md](architecture/UNIVERSAL_GREIA_SETUP_MEDIA_ARCHITECTURE.md) | Plan for one setup image for many machines |
 | [governance/LICENSING_AND_TRADEMARK.md](governance/LICENSING_AND_TRADEMARK.md) | Full licensing and trademark policy |

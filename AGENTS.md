@@ -28,6 +28,7 @@ simply imports this file.
 | Find the right manual or skill for a task | [docs/agents/README.md](docs/agents/README.md) |
 | Make or change an Activity (game, tool, story) | [skills/greia-activity-authoring/SKILL.md](skills/greia-activity-authoring/SKILL.md), [docs/development/CREATE_AN_ACTIVITY.md](docs/development/CREATE_AN_ACTIVITY.md) |
 | Work on the Shell, Parent service, installer, image or hardware support | [skills/greia-os-work/SKILL.md](skills/greia-os-work/SKILL.md), [docs/engineering/ENGINEERING_FOUNDATIONS.md](docs/engineering/ENGINEERING_FOUNDATIONS.md) |
+| Change the Parent web app (phone/browser) | [parent-app/README.md](parent-app/README.md), [parent-app/AGENTS.md](parent-app/AGENTS.md) |
 | Add or translate a language | [skills/greia-language-expansion/SKILL.md](skills/greia-language-expansion/SKILL.md) |
 | Record or review speech | [skills/greia-voice-production/SKILL.md](skills/greia-voice-production/SKILL.md) |
 | Draw or integrate art | [skills/greia-visual-authoring/SKILL.md](skills/greia-visual-authoring/SKILL.md) |

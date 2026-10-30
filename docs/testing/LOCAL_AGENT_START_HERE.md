@@ -172,20 +172,14 @@ what remains unverified
 
 ## 7. Parent App
 
-The exact accepted Parent client revision currently integrated into Greia is owned by:
+The browser Parent client source is `parent-app/` in this repository (read `parent-app/README.md` and `parent-app/AGENTS.md`). The exact committed state shipped in the image (the git tree id of `parent-app/`) is owned by:
 
 ```text
 runtime/parent-app-client.toml
 runtime/parent-app-client.manifest.json
 ```
 
-At the September 8 cutover the pin is:
-
-```text
-01301d285c6ba2a9a1f2948a9768b821d2536729
-```
-
-Do not test moving Parent `main` when an acceptance procedure calls for the frozen revision.
+`python3 tools/update_parent_client_pin.py --check` reports drift between `parent-app/` and the pin, manifest and overlay. Do not test the unpinned working tree of `parent-app/` when an acceptance procedure calls for the frozen revision.
 
 Current authentication semantics are:
 
@@ -198,7 +192,7 @@ Greia Parent password
 
 The browser stores the issued device credential, not the Parent password. The retired shared `parent-pairing-token`, `X-Pip-Token`, token query URL and household-wide bearer fallback are not production authentication mechanisms.
 
-If Parent client source changes, update its own repository first, then repin Greia with exact revision/integrity metadata, vendor bytes and image-overlay bytes together. Do not invent an SSH/shell fallback for a missing Parent API capability.
+If Parent client source changes, edit `parent-app/`, run `make parent-app-test`, commit, then run `python3 tools/update_parent_client_pin.py` and commit the pin, manifest and image-overlay bytes it rewrites together. Do not invent an SSH/shell fallback for a missing Parent API capability.
 
 The installed Greia Parent server remains unprivileged. If `network.manage` is false because direct iwd mutation is unavailable under the service sandbox, preserve that fail-closed truth; privileged mutation belongs behind the narrow typed broker described by the Parent architecture.
 

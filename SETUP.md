@@ -345,15 +345,11 @@ docs/agents/GREIA_CHATTERBOX_PRODUCTION_FIELD_GUIDE.md
 
 For parent-facing usage, rather than client development, use [Greia Parents](docs/user/GREIA_PARENTS.md). The on-device **S + T** shortcut and browser connection belong in that simple guide.
 
-Canonical HTML client repository:
+The browser client source is in this repository, under `parent-app/` (no second checkout). Read:
 
 ```text
-frozenpepper/Greia-Parent-App-Html
-```
-
-Read in Greia OS:
-
-```text
+parent-app/README.md
+parent-app/AGENTS.md
 docs/architecture/PARENT_APP_SOURCE_INTEGRATION.md
 docs/architecture/GREIA_PARENT_MANAGEMENT.md
 docs/product/PARENT_MANAGEMENT.md
@@ -362,7 +358,7 @@ runtime/parent-app-client.toml
 runtime/parent-app-client.manifest.json
 ```
 
-Then use the separate repository's own README/AGENTS.
+Client tests need Node.js >= 18 (`make parent-app-test`, also part of `make verify`, skipped when Node is absent). After committing `parent-app/`, run `python3 tools/update_parent_client_pin.py` and commit the pin, manifest and overlay it rewrites.
 
 Installed Greia serves the Parent browser and API over self-signed HTTPS on LAN port 8766; the local S+T Parent panel uses loopback-only HTTP at 127.0.0.1:8767. The on-device TLS certificate is generated with OpenSSL (included in the image base package set). Browser certificate warnings on first visit are expected. See the Parent user guide and the exact transport acceptance note in docs/testing.
 

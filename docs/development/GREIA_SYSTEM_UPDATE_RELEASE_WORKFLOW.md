@@ -364,10 +364,11 @@ Then run the complete repository gate:
 make verify
 ```
 
-For the external Parent HTML repository:
+For the Parent HTML client (`parent-app/`, same repository):
 
 ```bash
-npm test
+make parent-app-test
+python3 tools/update_parent_client_pin.py --check
 ```
 
 Do not label the current update tranche PASS until those commands execute at the exact recorded revisions.

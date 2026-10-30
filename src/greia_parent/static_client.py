@@ -28,7 +28,7 @@ class StaticClientAsset:
 
 
 class ParentStaticClient:
-    """Bounded read-only loader for the separately maintained Parent App assets."""
+    """Bounded read-only loader for the pinned Parent App runtime (source: ``parent-app/``)."""
 
     def __init__(self, root: Path):
         self.root = root

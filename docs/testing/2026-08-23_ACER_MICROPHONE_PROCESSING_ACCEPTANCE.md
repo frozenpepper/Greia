@@ -48,7 +48,7 @@ activities/teatrino_fiabe/main.py
 
 Also inspect the exact current build profile/package set used on the Acer before adding any package.
 
-For Parent client work, read `AGENTS.md` in `frozenpepper/Greia-Parent-App-Html` before editing that repository.
+For Parent client work (`parent-app/`, same repository), read `parent-app/README.md` and `parent-app/AGENTS.md` before editing it.
 
 ## 3. Hard invariants
 
@@ -122,14 +122,14 @@ Do not proceed to hardware integration if the new microphone-focused tests fail.
 
 ## 6. Verify Parent client pin before Acer deployment
 
-The Greia OS repository pins an exact Parent client revision and integrity manifest:
+The Greia repository pins the exact committed state of `parent-app/` (the Git tree id) and an integrity manifest:
 
 ```text
 runtime/parent-app-client.toml
 runtime/parent-app-client.manifest.json
 ```
 
-The microphone UI changes are in the Parent repository. Before building/deploying, ensure the OS pin points to the exact reviewed Parent commit containing:
+The microphone UI changes are in `parent-app/`. Before building/deploying, ensure the pin and image overlay correspond to a commit of `parent-app/` containing:
 
 ```text
 GET/PUT audio client methods
@@ -140,12 +140,12 @@ Enhanced noise reduction opt-in
 Demo behavior + tests
 ```
 
-If the pin is older:
+Check with `python3 tools/update_parent_client_pin.py --check`. If it reports drift or the pin is older:
 
-1. finish/rerun Parent tests;
-2. set `runtime/parent-app-client.toml` to the exact Parent SHA;
-3. regenerate the integrity manifest from the exact bytes at that SHA using the repository's current pin/update procedure;
-4. verify every pinned file byte count and SHA-256;
+1. finish/rerun the client tests (`make parent-app-test`);
+2. commit `parent-app/`;
+3. run `python3 tools/update_parent_client_pin.py`, which rewrites the pin, manifest and image overlay from the committed bytes;
+4. verify every pinned file byte count and SHA-256 (the tool and `tests/test_parent_client_image_integration.py` do this);
 5. commit the repin as a distinct Greia commit.
 
 Never hand-edit hashes from memory.

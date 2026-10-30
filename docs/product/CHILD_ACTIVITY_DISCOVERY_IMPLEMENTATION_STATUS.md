@@ -90,13 +90,7 @@ PUT /api/v1/profiles/{profile_id}/activity-policy
 PATCH /api/v1/profiles/{profile_id}
 ```
 
-The standalone HTML Parent client now contains and loads the corresponding policy UI. Greia pins the runtime-bearing Parent client revision:
-
-```text
-d019af39119f19043b08d0de9c892fe54f152614
-```
-
-through:
+The HTML Parent client (`parent-app/`, same repository) now contains and loads the corresponding policy UI. Greia pins the committed runtime-bearing client (the git tree id of `parent-app/`, not a commit id) through:
 
 ```text
 runtime/parent-app-client.toml

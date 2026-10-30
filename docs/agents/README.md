@@ -18,6 +18,7 @@ which one owns the fact. Do not pick the convenient one.
 |---|---|
 | Create, change, validate or package an Activity | [greia-activity-authoring](../../skills/greia-activity-authoring/SKILL.md) |
 | OS, Shell, Parent API, installer, simulator, build or hardware services | [greia-os-work](../../skills/greia-os-work/SKILL.md) |
+| Parent web app (phone/browser client) | [parent-app/README.md](../../parent-app/README.md), [parent-app/AGENTS.md](../../parent-app/AGENTS.md), then [PARENT_APP_SOURCE_INTEGRATION.md](../architecture/PARENT_APP_SOURCE_INTEGRATION.md) |
 | Boot, initramfs, GRUB, first boot, recovery | [BOOT.md](../../skills/greia-os-work/BOOT.md) (after greia-os-work) |
 | Art, icons, scenes, characters, Activity visuals | [greia-visual-authoring](../../skills/greia-visual-authoring/SKILL.md) |
 | Add, translate, stage or retire a language | [greia-language-expansion](../../skills/greia-language-expansion/SKILL.md) |

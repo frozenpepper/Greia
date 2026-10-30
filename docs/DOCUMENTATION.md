@@ -250,7 +250,7 @@ This is a navigation map, not a substitute for reading source.
 | Installed Parent production composition | `src/greia_parent/production_api.py` |
 | Parent credentials | `src/greia_parent/credentials.py` |
 | Main Parent credential | `src/greia_platform/main_credential.py` |
-| External Parent HTML client pin | `runtime/parent-app-client.toml`, `runtime/parent-app-client.manifest.json` |
+| Parent HTML client source and image pin (`parent-app/`) | `runtime/parent-app-client.toml`, `runtime/parent-app-client.manifest.json` |
 | Storage service/client | `src/greia_platform/storage.py`, `src/greia_platform/storage_client.py` |
 | Session/history/events/progression | current owners under `src/greia_platform/` + `src/greia_launcher/event_broker.py`; policies under `runtime/` |
 | System update format/state | `src/greia_platform/system_updates.py` |

@@ -1,7 +1,7 @@
 # Activity Age Policy + Parent Preset Acceptance — 2026-09-03
 
 **Status:** exact-current local acceptance procedure  
-**Scope:** first-party Activity age metadata, Greia discovery semantics, Parent API policy, maintained HTML Parent client  
+**Scope:** first-party Activity age metadata, Greia discovery semantics, Parent API policy, maintained HTML Parent client (`parent-app/`, same repository since 2026-10-30; see `parent-app/AGENTS.md`)  
 **Do not use GitHub-hosted Actions for this procedure.**
 
 ## 0. Purpose
@@ -35,12 +35,7 @@ Legacy persisted/API value `hide_too_simple` must remain readable but normalize 
 
 ## 1. Prerequisites
 
-Use existing clean local clones of both repositories:
-
-```text
-frozenpepper/Greia
-frozenpepper/Greia-Parent-App-Html
-```
+Use an existing clean local clone of `frozenpepper/Greia`. The browser Parent client is its `parent-app/` directory (it was the separate `Greia-Parent-App-Html` repository until 2026-10-30), so one checkout covers both.
 
 Do not install new packages, edit source, regenerate assets, repair failures or run hosted CI inside this gate.
 
@@ -53,7 +48,7 @@ npm
 Git
 ```
 
-If either repository is missing, dirty before the gate, or cannot fast-forward to current `origin/main`, STOP and report that condition. Do not discard local work.
+If the repository is missing, dirty before the gate, or cannot fast-forward to current `origin/main`, STOP and report that condition. Do not discard local work.
 
 ## 2. Freeze exact revisions
 
@@ -82,22 +77,17 @@ Record:
 GREIA_AGE_POLICY_SHA=<full SHA>
 ```
 
-In the Parent repository:
+Record the pinned Parent client revision (the git tree id of `parent-app/`) and confirm the pin is in sync:
 
 ```bash
-cd /path/to/Greia-Parent-App-Html
-git fetch origin
-git switch main
-git pull --ff-only origin main
-git status --short
-git rev-parse HEAD
-git rev-parse origin/main
+git rev-parse HEAD:parent-app
+python3 tools/update_parent_client_pin.py --check
 ```
 
-Require clean + equal and record:
+Record:
 
 ```text
-PARENT_AGE_POLICY_SHA=<full SHA>
+PARENT_AGE_POLICY_SHA=<git rev-parse HEAD:parent-app>
 ```
 
 If `main` advances during this procedure, complete the current command only, mark the result STALE, and restart from §2 on the new exact heads before claiming PASS.
@@ -144,10 +134,10 @@ If it fails, STOP and return the first failing command/test with its complete tr
 
 ## 5. Parent client full automated tests
 
-From `Greia-Parent-App-Html` root:
+From the Greia repository root:
 
 ```bash
-npm test
+make parent-app-test        # node --test parent-app/tests/*.test.js
 ```
 
 Required: exit 0, all Node tests PASS.
@@ -155,8 +145,8 @@ Required: exit 0, all Node tests PASS.
 The suite must include the age-policy coverage added to:
 
 ```text
-tests/demo_management.test.js
-tests/product_surface.test.js
+parent-app/tests/demo_management.test.js
+parent-app/tests/product_surface.test.js
 ```
 
 The demo-management test must include an Activity with both age bounds missing and prove that restrictive age presets exclude it until `Always show` is applied.
@@ -165,10 +155,10 @@ On failure: STOP and preserve the first failure.
 
 ## 6. Parent visual/interaction review on localhost demo
 
-Serve the Parent app locally using the repository's existing command:
+Serve the Parent app locally using its existing command:
 
 ```bash
-npm run serve
+cd parent-app && npm run serve
 ```
 
 Open:
@@ -266,7 +256,7 @@ PARENT_AGE_POLICY_SHA=
 GREIA_FOCUSED_TESTS=PASS|FAIL
 GREIA_MAKE_VERIFY=PASS|FAIL
 GREIA_MAKE_VERIFY_TEST_COUNT=
-PARENT_NPM_TEST=PASS|FAIL
+PARENT_NODE_TEST=PASS|FAIL
 PARENT_AGE3_ONLY_UI=PASS|FAIL
 PARENT_AGE3_EASIER_UI=PASS|FAIL
 PARENT_UNKNOWN_AGE_EXCLUSION=PASS|FAIL

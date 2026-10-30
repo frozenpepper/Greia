@@ -56,7 +56,7 @@ src/greia_parent/protocol.py
 
 runtime/parent-app-client.toml
 runtime/parent-app-client.manifest.json
-    exact external Parent HTML client pin/integrity boundary
+    exact Parent HTML client (`parent-app/`) pin/integrity boundary
 ```
 
 ## Settings model

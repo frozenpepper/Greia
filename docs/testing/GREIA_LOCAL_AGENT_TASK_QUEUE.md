@@ -806,20 +806,20 @@ operation. The earlier PASS refers to the previous recording/integration batch.
   voice plan until manual inline/external audio
   discovery, canonical speaker assignment,
   approved science scripts and human review.
-  Separate Parent browser repo source at
-  `frozenpepper/Greia-Parent-App-Html` now stages
+  Parent browser client source in this repository at
+  `parent-app/` (read `parent-app/AGENTS.md`) now stages
   373 EN/IT/ES/FR semantic browser text keys, now
   including deep Device UI (Wi-Fi, input/display/mic,
   Parent password, SSH, pairing and OS update), initial
   HTML accessibility, all Home/Children/Activities views,
-  plus discovery/authentication and common chrome. When the checked-out
-  external browser source is available, check out its exact
-  current `main` HEAD, then run `npm test` once.
-  Include `tests/localization_source_contract.test.js`
+  plus discovery/authentication and common chrome. From the
+  Greia repository root run `make parent-app-test`
+  (`node --test parent-app/tests/*.test.js`) once.
+  Include `parent-app/tests/localization_source_contract.test.js`
   (module syntax and literal translation bindings)
-  and `tests/localization.test.js` (deep-Device
+  and `parent-app/tests/localization.test.js` (deep-Device
   Wi-Fi/password/pairing/update translations).
-  Record the exact commit, command output and exit code.
+  Record the exact Greia commit, command output and exit code.
   Separately, at the Greia OS commit, run
   `python3 -m unittest discover -s tests -p 'test_panel_localization.py' -v`
   to verify the repaired Python comments in

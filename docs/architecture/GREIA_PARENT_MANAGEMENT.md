@@ -198,21 +198,16 @@ Activity inventory
 Parent HTML API client
 standalone bounded LAN discovery/proxy tooling
 exact Parent runtime revision/integrity pin in Greia
-vendored runtime and image overlay synchronized to the accepted Parent revision
+image overlay synchronized to the committed `parent-app/` source
 installed-runtime integrity preflight
 ```
 
-Current integrated Parent client revision:
-
-```text
-frozenpepper/Greia-Parent-App-Html
-5518a9eed8ba61503249a1c827b7ef4fef5dab36
-```
+The Parent client source is the `parent-app/` directory of this repository (merged 2026-10-30; formerly the separate `Greia-Parent-App-Html` repository). The integrated revision is the Git tree id of the committed `parent-app/` directory, recorded in `runtime/parent-app-client.toml`; see `docs/architecture/PARENT_APP_SOURCE_INTEGRATION.md`.
 
 Still required before ordinary-family Parent authentication is release-complete:
 
 ```text
-exact-head local automated verification across Greia + Parent client
+exact-head local automated verification (Python tests and `make parent-app-test`)
 physical discovery -> password bootstrap -> reconnect -> password-change -> revoke -> rebootstrap test
 upgrade proof that obsolete token helper/state are absent and not recreated
 source HTTPS + persistent device certificate (physical acceptance pending)

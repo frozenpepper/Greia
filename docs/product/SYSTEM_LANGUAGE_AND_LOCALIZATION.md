@@ -249,17 +249,16 @@ src/greia_parent/protocol.py                 Parent capability/resource vocabula
 src/greia_parent/update_api.py               Parent GET/PUT device-language API
 src/greia_launcher/parent_panel.py            hidden Parent Settings selector
 src/greia_platform/activity_api.py            Activity/profile locale inheritance
-runtime/parent-app-client.toml                exact Parents client pin
+runtime/parent-app-client.toml                exact Parents client pin (tree id of parent-app/)
 runtime/parent-app-client.manifest.json       exact Parents runtime byte integrity
 ```
 
-External HTML client source:
+Browser Parents client source (same repository, `parent-app/`):
 
 ```text
-frozenpepper/Greia-Parent-App-Html
-src/api.js
-src/localization.js
-src/views_device.js  # language choices from API, independent browser-chrome catalogs
+parent-app/src/api.js
+parent-app/src/localization.js
+parent-app/src/views_device.js  # language choices from API, independent browser-chrome catalogs
 ```
 
 ## 13. Evidence status
@@ -270,12 +269,12 @@ Source-level evidence: owner/local agent ran 59/59 focused language tests at
 `bd3aa0a25fdd58220ad1b361ebf7ce2715a3ba47` with Python 3.12.7 and
 zero source/placeholder findings for EN/IT/ES/FR. Subsequent documentation
 and repository-cleanup changes do not imply a new hardware run.
-The separate browser Parents client pulls **device-language choices** from
+The browser Parents client pulls **device-language choices** from
 the API, but its own English/Italian/Spanish/French browser-chrome translation
-strings remain in `frozenpepper/Greia-Parent-App-Html/src/localization.js`.
-For a new fully localized browser language, that independent client needs
-its own catalog and repo/pin integration; an OS manifest does not magically
-translate browser navigation.
+strings remain in `parent-app/src/localization.js`.
+For a new fully localized browser language, that client needs
+its own catalog and a repin (`tools/update_parent_client_pin.py`); an OS
+manifest does not magically translate browser navigation.
 
 Installer, physical viewport, font, child spoken language and fifth-locale
 end-to-end acceptance are **not** established by the source tests.

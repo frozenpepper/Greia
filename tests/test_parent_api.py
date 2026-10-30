@@ -284,7 +284,7 @@ class ParentApiTests(unittest.TestCase):
         # fail-closed with no management controls and no sample data. The
         # versioned API remains the only management surface (covered by the
         # hardware/usage/policy tests); the pinned static client lives in the
-        # separate Greia-Parent-App-Html repo (out of scope per T09 brief).
+        # parent-app/ directory (out of scope per T09 brief).
         page = render_parent_web_app()
         self.assertIn("not installed correctly", page)
         self.assertNotIn('action="/api/profiles', page)

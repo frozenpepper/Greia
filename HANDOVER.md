@@ -34,7 +34,7 @@ Updated 2026-10-30. Newest first inside each topic; the dated source entries are
 
 **Languages** (`docs/development/ADD_A_GREIA_LANGUAGE.md`)
 - Languages load from `src/greia_platform/languages/<locale>/manifest.json`; en/it/es/fr are released. Staging a fifth language never offers it.
-- **Open:** the browser Parent chrome still has its own EN/IT/ES/FR catalog in `Greia-Parent-App-Html` (`src/localization.js`), to be extended with a re-pin; no five-language chooser/rendering exercise has run (next: one bounded 4+1 simulator check).
+- **Open:** the browser Parent chrome still has its own EN/IT/ES/FR catalog in `parent-app/src/localization.js`, to be extended and re-pinned (`tools/update_parent_client_pin.py`); no five-language chooser/rendering exercise has run (next: one bounded 4+1 simulator check).
 
 **Hardware risks** (2026-10-21 reviews, moved off-tree): Debian trixie has no i386 kernel/installer, so the Greia i686 line is bookworm (supported to 2028-06-30), with owner decisions pending; on the Acer, animated Activities use about 45-52% CPU plus Xorg about 50%, not yet compared with hi-res off; the Wi-Fi resume hook reaches a device only after reimage.
 
@@ -105,6 +105,9 @@ promote unvoiced locales.
 ## Recent entries
 
 Add new entries at the top, newest first, at most 8 lines each; fold older ones into **Current state** or drop them when superseded.
+
+### 2026-10-30 — Parent web client merged into Greia (`parent-app/`) (SOURCE)
+Owner decision: the browser Parent client is now developed in this repo at `parent-app/` (imported from `Greia-Parent-App-Html` 999cd69; that repo keeps its old evidence and is no longer the source). `vendor/parent-app/` and `tools/stage_parent_app.py` are gone. The image payload, pin/manifest format and on-device integrity check are unchanged; the pin now names `frozenpepper/Greia:parent-app` with the git tree id of the committed folder (`7e01bdb4…`, same runtime bytes as the old `080b4b67` pin plus Parent HEAD). Workflow: edit → `make parent-app-test` → commit → `python3 tools/update_parent_client_pin.py` → commit; `--check` and a drift test catch forgotten repins. Docs, ADR 0022 amendment, language guide and test procedures updated. Checks: 164 Parent Python tests, 106 Node tests, integrity OK, doc audit 0 unresolved. Owner to decide whether to archive the old GitHub repo.
 
 ### 2026-10-30 — Generic AGENTS.md for outside agents; core-team rules split out (DOCUMENTATION)
 `AGENTS.md` is now the generic file every coding agent reads after cloning: orientation table, run/test, "Sharing what you found" (ask the owner, then a pull request or an email to greia@frozenpepper.it; what never to send), outside-contributor rules, pre-release policy, standing owner decisions, and the unchanged product contracts and engineering rules (contract numbering kept). Branch-on-`main` policy, authoritative read order, active plans, owner campaigns and continuity/progress duties moved verbatim to `docs/agents/CORE_TEAM.md`, which the owner's own agents **must** read. `CLAUDE.md` imports `AGENTS.md`. Added `.github/pull_request_template.md` and hardware/bug issue templates. Doc audit 0 unresolved links.

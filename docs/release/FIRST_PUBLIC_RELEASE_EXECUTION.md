@@ -77,10 +77,13 @@ The reference candidate is the `acer-aspire-one-i386-ab` A/B profile, without
    public tree **and Git history** as well as the final image.
    Confirm MPL/CC BY/third-party notices and redistribution obligations;
    include source/attribution terms for OS package dependencies.
-3. Bring `frozenpepper/Greia-Parent-App-Html` into public-source shape too:
-   root license/notice, current README and handover, test status, no sensitive
-   data, and a pinned vendored runtime consistent with Greia. A public main
-   repository must not point users to an inaccessible dependent source repo.
+3. ~~Bring the Parent browser client repository into public-source shape~~
+   **Done by merge (2026-10-30):** the client now lives in this repository
+   as `parent-app/`, so the public tree, license/notice, history check and
+   secret scan cover it with everything else, and no public document may
+   point to an inaccessible dependent source repo. Remaining check: confirm
+   `parent-app/` contains no sensitive data and that its README/AGENTS are
+   current (`parent-app/README.md`, `parent-app/AGENTS.md`).
 4. Fix factual documentation drift, verify maintained links and installation
    commands, and provide a clear public `README`, `PRIVACY.md`, release
    notes/`CHANGELOG.md`, support/bug reporting, and parental instructions.
@@ -101,7 +104,7 @@ Publishing the repository does **not** itself authorize a family installer.
 ## Do next — one coherent image acceptance campaign
 
 1. Decide a release identifier and freeze the exact source SHA, target profile,
-   Debian package inputs, vendored Parent client SHA and asset inventory.
+   Debian package inputs, Parent client pin (`runtime/parent-app-client.toml`) and asset inventory.
    Use a real non-developer product build, not an experimental fixture.
 2. Resolve the boot-cover release gate with short **actual** USB/Acer visible
    behavior: silent branded boot/installer/transition, useful failure
@@ -142,7 +145,7 @@ Publishing the repository does **not** itself authorize a family installer.
 Keep a compact immutable record alongside the release:
 
 ```text
-version / source SHA / Parent client SHA / build profile / image SHA-256
+version / source SHA / Parent client pin / build profile / image SHA-256
 license+provenance outcome / repo-history check / source gate result
 QEMU installer+first boot / QEMU update matrix / Acer physical install+boot
 Parent S+T and browser / supported languages+Activities / backup and restore

@@ -251,7 +251,7 @@ The release profile must be intentionally different from a developer/test profil
 - exact release version embedded in the system identity;
 - exact build profile recorded in release provenance;
 - `certification_state` changed only when the corresponding evidence exists;
-- release image consumes only pinned/reviewed external artifacts, including the exact Greia Parents client revision.
+- release image consumes only pinned/reviewed external artifacts, including the Greia Parents client pin (the committed `parent-app/` tree).
 
 ## Release/dev separation tests
 
@@ -758,7 +758,7 @@ At minimum provide/complete:
 - source snippets/dependencies license audit;
 - SPDX identifiers or directory-level notices where practical;
 - image/distribution source-offer obligations for Linux/upstream packages;
-- exact licensing for the separate Greia Parents repository;
+- licensing of the Greia Parents client (`parent-app/`, now covered by the repository licence; confirm no separate notices are needed);
 - public fork/rebranding/trademark policy appropriate to the real project/entity;
 - policy for `Greia Approved`/official trust marks if used.
 
@@ -1135,11 +1135,11 @@ At minimum:
 - generated-asset validation PASS;
 - no unexpected untracked build inputs.
 
-### External Parent client
+### Parent client (`parent-app/`)
 
-- exact pinned revision;
+- pin in sync (`python3 tools/update_parent_client_pin.py --check`);
 - integrity manifest matches;
-- `npm test` PASS;
+- `make parent-app-test` PASS;
 - real paired Greia integration PASS;
 - mobile + desktop visual acceptance.
 

@@ -134,8 +134,9 @@ switching or retiring existing languages. Agents start with
 [`skills/greia-language-expansion/SKILL.md`](../../skills/greia-language-expansion/SKILL.md).
 The currently offered four locales (EN/IT/ES/FR) are just the manifests that
 ship today; adding an ordinary new language does not require changing a
-Python selector registry. The separately managed browser Parents App still
-needs its own browser-chrome translation resources and integration.
+Python selector registry. The browser Parents App (`parent-app/`) still
+needs its own browser-chrome translation resources
+(`parent-app/src/localization.js`) and a repin.
 
 ## Documentation check before release
 

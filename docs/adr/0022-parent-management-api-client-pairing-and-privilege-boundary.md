@@ -214,3 +214,18 @@ Before ordinary-family production Parent authentication is accepted:
 - password-change → new bootstrap behavior is proven;
 - image install/upgrade removes obsolete token helper/state;
 - resource measurements remain acceptable on the C0 reference floor.
+
+## Amendment 2026-10-30: Parent browser client source merged into this repository
+
+The browser Parent client no longer lives in the separate private repository `frozenpepper/Greia-Parent-App-Html`. Its source is the `parent-app/` directory of `frozenpepper/Greia`, which is now the single editable source; the former `vendor/parent-app/` provenance copy and `tools/stage_parent_app.py` are removed. Earlier text of this ADR that speaks of a separate Parent client repository or a pinned Parent commit is accepted history and is superseded by this amendment where it differs.
+
+Unchanged: the decisions above (versioned `/api/v1`, Parent-password bootstrap, per-device credentials, privilege boundary), the frozen image payload `build/overlay/usr/share/greia-parent-app/`, the `runtime/parent-app-client.toml` pin and `runtime/parent-app-client.manifest.json` formats, and the on-device integrity check (`greia-parent.service` `ExecStartPre`). Greia still never serves a moving source tree: it serves only the integrity-checked frozen runtime closure.
+
+Changed:
+
+- the pin `repository` is `frozenpepper/Greia:parent-app` and its `revision` is the Git tree id of the committed `parent-app/` directory (`git rev-parse HEAD:parent-app`), not a commit id of another repository;
+- workflow: edit `parent-app/`, run `make parent-app-test`, commit, run `python3 tools/update_parent_client_pin.py`, then commit the pin, manifest and overlay; `--check` reports drift and `tests/test_parent_client_image_integration.py` fails on drift;
+- client-specific rules live in `parent-app/AGENTS.md`, under the repository-root `AGENTS.md`;
+- the Parent client still ships only in full-system images: a Python application update cannot change it.
+
+See `docs/architecture/PARENT_APP_SOURCE_INTEGRATION.md` for the exact procedure.

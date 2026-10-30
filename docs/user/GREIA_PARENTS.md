@@ -115,11 +115,10 @@ read [Make an Activity](../development/CREATE_AN_ACTIVITY.md).
 
 ## For developers
 
-The browser app is a separate open-source project,
-[Greia-Parent-App-Html](https://github.com/frozenpepper/Greia-Parent-App-Html).
-Its source may still be private until the project announces it. Normal
-parents never need it: Greia serves the page itself. A developer with
-Node.js can run it locally with `npm run serve` and open
+The browser app is part of the Greia repository, in the
+[`parent-app/`](../../parent-app/README.md) folder. Normal parents never
+need it: Greia serves the page itself. A developer with Node.js can run it
+locally with `node tools/dev_server.mjs` from that folder and open
 `http://127.0.0.1:8080/`. It finds Greia computers on your network. The
 Parent password and pairing still apply.
 

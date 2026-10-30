@@ -343,14 +343,14 @@ This keeps the HTML interface honest: if the browser cannot perform an operation
 
 A legacy server-rendered troubleshooting view may remain temporarily during migration, but it is not the target product contract and must not restore legacy shared-token authorization through the installed production service.
 
-The separately maintained HTML client is source-pinned by Greia through:
+The HTML client source lives in this repository under `parent-app/` and is pinned for the image by Greia through:
 
 ```text
 runtime/parent-app-client.toml
 runtime/parent-app-client.manifest.json
 ```
 
-The production browser runtime is vendored into the Greia source/image input and integrity checked against the exact pinned Parent revision. Runtime JavaScript/assets must never be fetched from moving repository `main`. The runtime manifest must describe the actual transitive browser dependency closure rather than rely on a hand-maintained file list.
+The production browser runtime is frozen into the image overlay by `tools/update_parent_client_pin.py` from the committed `parent-app/` and integrity checked against the exact pin. Runtime JavaScript/assets must never be fetched from a network or served from the editable source tree. The runtime manifest must describe the actual transitive browser dependency closure rather than rely on a hand-maintained file list.
 
 ## 8. Privilege and safety
 
@@ -419,7 +419,7 @@ The current local Parent foundation can:
 - read system-update status and upload only when capability permits;
 - install/remove Activity packages only when capability permits.
 
-The separately maintained HTML client is frozen as an exact integrity-checked Greia runtime input. The exact Greia pin/integrity manifest must always point to the reviewed Parent revision used in a build.
+The HTML client (`parent-app/`) is frozen as an exact integrity-checked Greia runtime input. The Greia pin/integrity manifest and image overlay must always correspond to the committed `parent-app/` used in a build (`python3 tools/update_parent_client_pin.py --check`).
 
 This does **not** mean that the new HTTPS implementation has passed physical/browser acceptance, or that backups, complete Activity update lifecycle, production system-update activation, every privileged network/package operation, or all future native-client UX are finished. It also does not claim that hardware-specific behavior is physically proven before its dedicated acceptance protocol passes.
 
