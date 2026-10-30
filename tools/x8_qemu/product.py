@@ -138,7 +138,7 @@ INSTALL_PROFILE_ID = "acer-aspire-one-i386-ab"
 
 #: Official installer image file name produced by
 #: ``build/build-installer-image.sh acer-aspire-one-i386-ab <out>``.
-INSTALLER_IMAGE_NAME = "greia-os-installer-acer-aspire-one-i386-ab.img"
+INSTALLER_IMAGE_NAME = "greia-os-installer-i386-ab.img"
 
 #: Live root inside the installer image's first partition (rebuilt in the
 #: disposable clone only; the source image is never touched).

@@ -76,9 +76,12 @@ build commit:
 greia-os-installer-<PROFILE>-<VERSION>-build-<12-char-commit>.img
 ```
 
-The builder also creates `greia-os-installer-<PROFILE>.img` as a compatibility
-symlink for existing flash/verification front doors. Sidecar report/manifest
-names remain stable; the report records `version`, `build`, `output` and
+`<PROFILE>` here is the artifact label: the canonical profile id with the
+leading hardware-family prefix `acer-aspire-one-` removed (for example
+`acer-aspire-one-i386-ab` becomes `i386-ab`). The builder also creates
+`greia-os-installer-<PROFILE>.img` as a compatibility symlink for existing
+flash/verification front doors. Installer sidecars use the same artifact
+label; the report records `version`, `build`, `output` and
 `compatibility_image`. A dirty source tree appends `-dirty` to the build id.
 
 These commands deliberately route legacy-x86 through:

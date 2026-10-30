@@ -93,7 +93,9 @@ raw = tomllib.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
 print(raw["profile"]["id"])
 PY
 )"
-IMAGE="$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}.img"
+ARTIFACT_PROFILE="${PROFILE_ID#acer-aspire-one-}"
+[[ -n "$ARTIFACT_PROFILE" ]] || ARTIFACT_PROFILE="installer"
+IMAGE="$OUTPUT_DIR/greia-os-installer-${ARTIFACT_PROFILE}.img"
 CONSOLE_POLICY="$(python3 "$PROJECT_ROOT/tools/build_profile.py" shell "$PROFILE_PATH" | sed -n "s/^BOOT_CONSOLE_POLICY=//p" | tr -d "'")"
 if [[ "$CONSOLE_POLICY" == quiet ]]; then
   BOOT_DIAGNOSTICS="hidden: hold Shift/Alt at USB boot and type 'verbose'; installed GRUB: hold Shift, owner-only diagnostics entry"

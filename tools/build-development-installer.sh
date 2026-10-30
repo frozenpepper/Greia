@@ -141,7 +141,9 @@ case "$PLATFORM_FAMILY" in
     ;;
 esac
 
-IMAGE="$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}.img"
+ARTIFACT_PROFILE="${PROFILE_ID#acer-aspire-one-}"
+[[ -n "$ARTIFACT_PROFILE" ]] || ARTIFACT_PROFILE="installer"
+IMAGE="$OUTPUT_DIR/greia-os-installer-${ARTIFACT_PROFILE}.img"
 [[ -f "$IMAGE" ]] || {
   echo "Installer builder completed without expected image: $IMAGE" >&2
   exit 1

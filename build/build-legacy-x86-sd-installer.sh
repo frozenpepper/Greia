@@ -189,9 +189,11 @@ BOOT_THEME_SHA="$(sha256sum "$PROJECT_ROOT/build/overlay/boot/grub/greia-theme.t
 restore_boot_derivatives
 trap - EXIT INT TERM
 
-IMAGE="$OUTPUT_DIR/greia-os-installer-${PROFILE}.img"
-REPORT="$OUTPUT_DIR/greia-os-installer-${PROFILE}-report.txt"
-FINAL_DIGEST="$OUTPUT_DIR/greia-os-installer-${PROFILE}.sha256"
+ARTIFACT_PROFILE="${PROFILE#acer-aspire-one-}"
+[[ -n "$ARTIFACT_PROFILE" ]] || ARTIFACT_PROFILE="installer"
+IMAGE="$OUTPUT_DIR/greia-os-installer-${ARTIFACT_PROFILE}.img"
+REPORT="$OUTPUT_DIR/greia-os-installer-${ARTIFACT_PROFILE}-report.txt"
+FINAL_DIGEST="$OUTPUT_DIR/greia-os-installer-${ARTIFACT_PROFILE}.sha256"
 [[ -f "$IMAGE" && -f "$REPORT" ]] || {
   echo "Canonical installer build did not produce the expected image/report." >&2
   exit 1

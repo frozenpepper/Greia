@@ -140,19 +140,21 @@ export AB_RELEASE_SRC
 OUTPUT_DIR="${positional[1]:-$PROJECT_ROOT/out}"
 mkdir -p "$OUTPUT_DIR"
 OUTPUT_DIR="$(realpath "$OUTPUT_DIR")"
+ARTIFACT_PROFILE="${PROFILE_ID#acer-aspire-one-}"
+[[ -n "$ARTIFACT_PROFILE" ]] || ARTIFACT_PROFILE="installer"
 BUILD_VERSION="$(tr -d '[:space:]' < "$PROJECT_ROOT/VERSION")"
 [[ -n "$BUILD_VERSION" ]] || { echo "Repository VERSION is missing or empty." >&2; exit 1; }
 BUILD_ID="$(git -C "$PROJECT_ROOT" rev-parse --short=12 HEAD 2>/dev/null || echo unknown)"
 if [[ "$BUILD_ID" != unknown ]] && ! git -C "$PROJECT_ROOT" diff-index --quiet HEAD -- 2>/dev/null; then
   BUILD_ID="${BUILD_ID}-dirty"
 fi
-ARTIFACT_STEM="greia-os-installer-${PROFILE_ID}-${BUILD_VERSION}-build-${BUILD_ID}"
+ARTIFACT_STEM="greia-os-installer-${ARTIFACT_PROFILE}-${BUILD_VERSION}-build-${BUILD_ID}"
 OUTPUT_IMAGE="$OUTPUT_DIR/${ARTIFACT_STEM}.img"
-COMPAT_IMAGE="$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}.img"
-REPORT="$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}-report.txt"
-INSTALLER_PROFILE_REPORT="$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}-image-profile.json"
-PAYLOAD_PROFILE_REPORT="$OUTPUT_DIR/greia-os-${PROFILE_ID}-payload-image-profile.json"
-HARDWARE_SUPPORT_REPORT="$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}-hardware-support.json"
+COMPAT_IMAGE="$OUTPUT_DIR/greia-os-installer-${ARTIFACT_PROFILE}.img"
+REPORT="$OUTPUT_DIR/greia-os-installer-${ARTIFACT_PROFILE}-report.txt"
+INSTALLER_PROFILE_REPORT="$OUTPUT_DIR/greia-os-installer-${ARTIFACT_PROFILE}-image-profile.json"
+PAYLOAD_PROFILE_REPORT="$OUTPUT_DIR/greia-os-${ARTIFACT_PROFILE}-payload-image-profile.json"
+HARDWARE_SUPPORT_REPORT="$OUTPUT_DIR/greia-os-installer-${ARTIFACT_PROFILE}-hardware-support.json"
 BUILD_DIR="$(mktemp -d -p "${TMPDIR:-/tmp}" greia-installer-build.XXXXXX)"
 INSTALLER_PROFILE_MANIFEST="$BUILD_DIR/installer-image-profile.json"
 python3 "$PROFILE_TOOL" manifest "$PROFILE_PATH" --scope installer > "$INSTALLER_PROFILE_MANIFEST"
@@ -208,7 +210,7 @@ TARGET_IMAGE="$TARGET_OUT/greia-os-${PROFILE_ID}.img"
 TARGET_FOOTPRINT="$TARGET_OUT/greia-os-${PROFILE_ID}-footprint.txt"
 TARGET_PROFILE_MANIFEST="$TARGET_OUT/greia-os-${PROFILE_ID}-image-profile.json"
 [[ -r "$TARGET_PROFILE_MANIFEST" ]] || { echo "Target image profile manifest missing." >&2; exit 1; }
-cp "$TARGET_FOOTPRINT" "$OUTPUT_DIR/greia-os-${PROFILE_ID}-payload-footprint.txt"
+cp "$TARGET_FOOTPRINT" "$OUTPUT_DIR/greia-os-${ARTIFACT_PROFILE}-payload-footprint.txt"
 cp "$TARGET_PROFILE_MANIFEST" "$PAYLOAD_PROFILE_REPORT"
 TARGET_LOOP="$(losetup --find --show --partscan "$TARGET_IMAGE")"
 TARGET_PART="${TARGET_LOOP}p1"
@@ -340,9 +342,9 @@ compose_write_metadata_manifests "$LIVE_ROOT" "live-installer"
 # consumer carrying the engine result into its footprint report).
 live_support_status_exit="$COMPOSE_SECURITY_SUPPORT_EXIT"
 live_security_support_state="$COMPOSE_SECURITY_SUPPORT_STATE"
-cp "$LIVE_ROOT/etc/greia-os/package-manifest.tsv" "$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}-live-package-manifest.tsv"
-cp "$LIVE_ROOT/etc/greia-os/base-system-manifest" "$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}-live-base-system-manifest.txt"
-cp "$LIVE_ROOT/etc/greia-os/security-support-status.txt" "$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}-live-security-support-status.txt"
+cp "$LIVE_ROOT/etc/greia-os/package-manifest.tsv" "$OUTPUT_DIR/greia-os-installer-${ARTIFACT_PROFILE}-live-package-manifest.tsv"
+cp "$LIVE_ROOT/etc/greia-os/base-system-manifest" "$OUTPUT_DIR/greia-os-installer-${ARTIFACT_PROFILE}-live-base-system-manifest.txt"
+cp "$LIVE_ROOT/etc/greia-os/security-support-status.txt" "$OUTPUT_DIR/greia-os-installer-${ARTIFACT_PROFILE}-live-security-support-status.txt"
 compose_footprint_hygiene "$LIVE_ROOT"
 # Read-only bytecode prefix for the live installer too (greia-installer.service
 # carries PYTHONPYCACHEPREFIX): the Atom otherwise cold-compiles the installer
@@ -382,7 +384,7 @@ if [[ "$STORAGE_LAYOUT_ADAPTER" == *-ab-v1 ]]; then
   # at USB assembly: sharing one secret would let the installer recovery
   # code unlock the installed system's GRUB.
   AB_GRUB_SECURITY_ROOT="$BUILD_DIR/installer-ab-grub-security"
-  AB_GRUB_RECOVERY_CODE="$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}-ab-grub-recovery-code.txt"
+  AB_GRUB_RECOVERY_CODE="$OUTPUT_DIR/greia-os-installer-${ARTIFACT_PROFILE}-ab-grub-recovery-code.txt"
   mkdir -p "$AB_GRUB_SECURITY_ROOT"
   PYTHONPATH="$PROJECT_ROOT/src" python3 -m greia_platform.grub_security \
     "$AB_GRUB_SECURITY_ROOT" --copy-code-to "$AB_GRUB_RECOVERY_CODE"
@@ -408,8 +410,8 @@ ABENV
     echo "A/B installer build refused: generated installer-ab.env is missing." >&2
     exit 1
   }
-  cp "$LIVE_ROOT/etc/greia-os/installer-ab.env" "$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}-installer-ab.env"
-  chmod 0644 "$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}-installer-ab.env"
+  cp "$LIVE_ROOT/etc/greia-os/installer-ab.env" "$OUTPUT_DIR/greia-os-installer-${ARTIFACT_PROFILE}-installer-ab.env"
+  chmod 0644 "$OUTPUT_DIR/greia-os-installer-${ARTIFACT_PROFILE}-installer-ab.env"
 else
   # Single-root recovery media carry no A/B facts by construction.
   rm -f "$LIVE_ROOT/etc/greia-os/installer-ab.env"
@@ -515,7 +517,7 @@ cp "$INSTALLER_PROFILE_MANIFEST" "$USB_MOUNT/.disk/installer-image-profile.json"
 printf '%s\n' "$live_media_id" > "$USB_MOUNT/.disk/live-uuid"
 chmod 0644 "$USB_MOUNT/.disk/live-uuid"
 INSTALLER_GRUB_SECURITY_ROOT="$BUILD_DIR/installer-grub-security"
-INSTALLER_RECOVERY_CODE="$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}-grub-recovery-code.txt"
+INSTALLER_RECOVERY_CODE="$OUTPUT_DIR/greia-os-installer-${ARTIFACT_PROFILE}-grub-recovery-code.txt"
 mkdir -p "$INSTALLER_GRUB_SECURITY_ROOT"
 PYTHONPATH="$PROJECT_ROOT/src" python3 -m greia_platform.grub_security \
   "$INSTALLER_GRUB_SECURITY_ROOT" --copy-code-to "$INSTALLER_RECOVERY_CODE"
@@ -617,10 +619,10 @@ install -m 0644 "$INSTALLER_PROFILE_MANIFEST" "$INSTALLER_PROFILE_REPORT"
   echo "installer_grub_recovery_code=$INSTALLER_RECOVERY_CODE"
   echo "live_security_support_state=$live_security_support_state"
   echo "live_security_support_probe_exit=$live_support_status_exit"
-  echo "live_package_manifest=$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}-live-package-manifest.tsv"
-  echo "live_base_system_manifest=$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}-live-base-system-manifest.txt"
-  echo "live_security_support_report=$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}-live-security-support-status.txt"
-  echo "payload_footprint_report=$OUTPUT_DIR/greia-os-${PROFILE_ID}-payload-footprint.txt"
+  echo "live_package_manifest=$OUTPUT_DIR/greia-os-installer-${ARTIFACT_PROFILE}-live-package-manifest.tsv"
+  echo "live_base_system_manifest=$OUTPUT_DIR/greia-os-installer-${ARTIFACT_PROFILE}-live-base-system-manifest.txt"
+  echo "live_security_support_report=$OUTPUT_DIR/greia-os-installer-${ARTIFACT_PROFILE}-live-security-support-status.txt"
+  echo "payload_footprint_report=$OUTPUT_DIR/greia-os-${ARTIFACT_PROFILE}-payload-footprint.txt"
   echo "version=$BUILD_VERSION"
   echo "build=$BUILD_ID"
   echo "output=$OUTPUT_IMAGE"

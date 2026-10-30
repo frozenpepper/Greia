@@ -137,9 +137,11 @@ mkdir -p "$HOST_RESULT_ROOT"
 limactl copy --backend=scp "$INSTANCE:/tmp/greia-final-out.tar.gz" "$HOST_TMP/greia-final-out.tar.gz"
 tar -xzf "$HOST_TMP/greia-final-out.tar.gz" -C "$HOST_RESULT_ROOT" --strip-components=1
 
-IMAGE="$HOST_RESULT_ROOT/greia-os-installer-${PROFILE}.img"
-DIGEST_FILE="$HOST_RESULT_ROOT/greia-os-installer-${PROFILE}.sha256"
-REPORT="$HOST_RESULT_ROOT/greia-os-installer-${PROFILE}-report.txt"
+ARTIFACT_PROFILE="${PROFILE#acer-aspire-one-}"
+[[ -n "$ARTIFACT_PROFILE" ]] || ARTIFACT_PROFILE="installer"
+IMAGE="$HOST_RESULT_ROOT/greia-os-installer-${ARTIFACT_PROFILE}.img"
+DIGEST_FILE="$HOST_RESULT_ROOT/greia-os-installer-${ARTIFACT_PROFILE}.sha256"
+REPORT="$HOST_RESULT_ROOT/greia-os-installer-${ARTIFACT_PROFILE}-report.txt"
 [[ -s "$IMAGE" && -s "$DIGEST_FILE" && -s "$REPORT" ]] || {
   echo "Finished build artifacts are incomplete after copying them back to macOS." >&2
   exit 1
