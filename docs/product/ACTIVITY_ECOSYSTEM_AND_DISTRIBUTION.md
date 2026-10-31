@@ -1,6 +1,6 @@
 # Greia Activity Ecosystem and Distribution — Product Requirements
 
-**Status:** accepted product direction; independent new-install/package seam partly implemented, broader catalogue/update lifecycle incremental  
+**Status:** accepted product direction; independent new-install/package seam partly implemented, broader package/update lifecycle incremental  
 **Date:** 2026-08-23  
 **Architecture owner:** ADR 0023  
 **Package-format contract:** `docs/architecture/GREIA_ACTIVITY_PACKAGE_FORMAT.md`  
@@ -12,8 +12,8 @@ Greia should make it unusually easy for a parent, teacher, hobbyist, developer o
 
 The ecosystem must preserve two values simultaneously:
 
-- **openness:** the OS, Activity contract, authoring knowledge and supported independent installation path are not locked behind Greia's commercial services;
-- **trust:** parents can choose an official, highly curated catalogue where review, provenance and compatibility are significantly stronger than “download arbitrary code from the Internet”.
+- **openness:** the OS, Activity contract, authoring knowledge and independent installation remain publicly available;
+- **trust:** parents can assess origin, review, compatibility and permissions before authorizing installation.
 
 The official catalogue therefore exists to reduce parent uncertainty, not to become the only technically permitted source of Activities.
 
@@ -160,65 +160,22 @@ Greia must distinguish at least these semantic questions, even if final UI label
 2. **Verification/review:** what checks or official review the package passed.
 3. **Compatibility:** whether the current Greia device satisfies the package's declared requirements.
 4. **License:** what legal rights apply to the Activity.
-5. **Price/entitlement:** whether access was free, purchased or otherwise entitled.
 
 These must not collapse into one vague “trusted/untrusted” boolean.
 
 The current package service has explicit trust/source states for implemented sources. Future R10 provenance/signing work may extend those states but must preserve these semantic distinctions.
 
-## 7. Child-facing commerce policy
+## 7. Child-facing safety
 
-Normal child Activities must not turn Greia into an advertising or purchase-pressure environment.
+Child Activities must not display advertising, behavioral targeting, purchase prompts, pressure-based unlocks, paid random rewards or hidden shopping links. Essential learning, play and progress remain usable offline unless an Activity transparently declares a necessary network feature.
 
-The official catalogue direction forbids child-facing patterns such as:
+## 8. Independent distribution
 
-- display advertising;
-- behavioral-ad targeting;
-- purchase prompts addressed to the child;
-- countdown-pressure sales;
-- paid random-reward/loot-box mechanics;
-- “watch an ad to continue” progression;
-- deliberately frustrating free play intended to pressure a purchase;
-- hidden external shopping links.
+Families and schools can share compatible Activities outside any official catalogue. A curated catalogue, if ever implemented, remains an optional discovery and review channel, never a mandatory dependency.
 
-If an Activity or Activity pack is paid, purchase and entitlement management occur through an authenticated parent-facing surface.
+## 9. Parents client interoperability
 
-After installation/entitlement, core Activity use should remain offline-capable unless a genuinely network-dependent Activity explicitly declares an approved network requirement.
-
-## 8. Free and paid Activities may coexist
-
-The official catalogue may contain:
-
-- free first-party Activities;
-- free community/third-party Activities;
-- paid first-party Activity packs;
-- paid third-party Activities.
-
-Price does not determine review level or source-code license.
-
-A paid Activity may be open source. An open-source Activity may be sold through the official catalogue. Parents may be paying for curation, convenient installation, signed updates, support and distribution rather than exclusive access to source code.
-
-Exact pricing, revenue share, refunds, taxes and publisher contracts are intentionally outside this product requirement until marketplace implementation begins.
-
-## 9. Greia Parents native app
-
-A future native Greia Parents app may be sold as a paid product.
-
-That app must remain an optional convenience layer over the same Greia Parent API defined by ADR 0022.
-
-Essential management of a Greia computer must remain available without buying the native app. The free/local path may be the Greia-served HTML client, an on-device parent surface, or both as the product evolves.
-
-The native app may add value through polish and convenience such as:
-
-- easier discovery/pairing;
-- multi-Greia management;
-- notifications;
-- catalogue browsing/purchases;
-- richer backup workflows;
-- easier Activity installation;
-- family-device overview.
-
-It must not receive a private shell/root/package protocol unavailable to other authorized Parent API clients.
+Essential computer management remains accessible through a free, local Greia Parents surface and the documented API. Other authorized clients must use the same API, with no private root or package-management privileges.
 
 ## 10. Privacy and data minimization
 
@@ -253,12 +210,12 @@ Greia's Activity ecosystem is succeeding when all of the following can be true a
 - a hobbyist can create and share an Activity without commercial permission;
 - an agent can create an Activity from public repository guidance and receive useful validator feedback;
 - a school or nonprofit can maintain its own Activity collection;
-- a commercial educational developer can sell a high-quality Activity without being forced to relicense unrelated source under Greia's platform license;
-- a parent can choose the official catalogue for convenience and strong curation;
+- an independent educational developer can choose a compatible license for their own Activity;
+- a parent can distinguish independent packages from any officially reviewed packages;
 - a parent can still install a valid independent Activity through an explicit supported route;
 - a child never has to understand stores, advertisements, Linux packages, filesystem paths or purchase mechanics to use the computer.
 
-That combination — open creation, parent control and unusually strong curation — is the intended Greia ecosystem identity.
+That combination — open creation, parent control and child safety — is the intended Greia ecosystem identity.
 
 ## Activity size guideline (owner decision 2026-10-21)
 

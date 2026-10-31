@@ -7,7 +7,7 @@
 
 The project began under working names centered on “Pip Kids OS” and Professor Pip. During architecture work it became clear that Professor Pip is a character/world element while the project itself is a broader child computing platform.
 
-The platform is non-profit and open source. The selected project identity is **Greia**, a family-inspired name derived during project brainstorming.
+The platform was conceived as a community-oriented open-source project; this historical statement does not claim incorporation as a nonprofit or restrict licensing-compliant independent commercial distribution. The selected project identity is **Greia**, a family-inspired name derived during project brainstorming.
 
 A blind textual replacement of every historic `Pip` identifier would be unsafe because some identifiers may already be compatibility boundaries for saves, Activity IDs, paths, or tests.
 

@@ -14,8 +14,8 @@ From the repository root:
 AGENTS.md
 SETUP.md
 docs/DOCUMENTATION.md
-HANDOVER.md
-docs/agents/GREIA_AGENT_OPERATIONS.md
+CHANGELOG.md
+docs/agents/README.md
 ```
 
 Then read the task/role-specific skill below.
@@ -73,10 +73,10 @@ copies under `.agents/skills/`; refresh the affected skill directories from
 For current testing/evidence routing use:
 
 ```text
-docs/testing/LOCAL_AGENT_START_HERE.md
+docs/testing/HARDWARE_COMPATIBILITY_MATRIX.md
 ```
 
-That file deliberately routes through `HANDOVER.md` instead of freezing one dated test session forever.
+Use the public hardware and development guides for reproducible checks; maintain private session notes separately.
 
 ## 5. Activity creator — standard profile
 
@@ -126,8 +126,8 @@ docs/design/GREIA_VISUAL_STYLE_GUIDE.md
 docs/design/GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md
 docs/design/GREIA_VISUAL_AUTHORING_ARCHITECTURE.md
 docs/design/GREIA_SCENE_COMPOSITION_RUNTIME.md
-docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md
-docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md
+docs/design/GREIA_ART_GRAPHICS_SYSTEM.md
+docs/design/GREIA_VISUAL_STYLE_GUIDE.md
 ```
 
 Build/validate declared visual renditions:
@@ -149,7 +149,7 @@ human acceptance or install anything. Generation DONE is a separate state.
 
 Corpus regeneration/replacement (owner-requested 2026-10-19, v3 run
 2026-10-21) uses `tools/regenerate_voice_corpus.py` with
-`docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md`: external originals and
+`skills/greia-voice-production/SKILL.md`: external originals and
 candidates are kept, deterministic isolated letters and syllables are
 preserved, and every new take is listening-pending. Character acting defaults
 are in `tools/greia_voice_core/character_delivery.json`, with a
@@ -371,8 +371,8 @@ Use only with an explicit developer image.
 Read:
 
 ```text
-docs/agents/GREIA_AGENT_OPERATIONS.md
-docs/testing/2026-08-09_DEVELOPER_REMOTE_CONTROL.md
+docs/agents/README.md
+docs/development/GREIA_DEVELOPER_BOOT_DIAGNOSTICS.md
 docs/development/GREIA_DEVELOPER_BOOT_DIAGNOSTICS.md
 ```
 
@@ -386,7 +386,7 @@ python3 tools/greia_remote.py screenshot out/screen.png
 
 Never commit the operator private key. Never turn developer SSH into a normal/release dependency.
 
-For current acceptance, follow the exact test procedure selected by `HANDOVER.md`; do not run an old dated protocol merely because it exists.
+For acceptance, select tests appropriate to the changed subsystem and record exact commands, device and commit in the pull request.
 
 ## 10. OS image / installer builder
 
@@ -399,7 +399,7 @@ Read:
 ```text
 skills/greia-os-work/SKILL.md
 skills/greia-os-work/BOOT.md
-docs/agents/GREIA_AGENT_OPERATIONS.md
+docs/agents/README.md
 docs/engineering/boot/INSTALLER_IMAGE_CREATION_AND_BOOT.md
 docs/engineering/BOOT_PIPELINE_AGENT_GUIDE.md
 ```
@@ -427,9 +427,9 @@ Do not add destructive disk/removable-media writes to a generic setup helper.
 
 | Need | Entry point |
 |---|---|
-| Current implementation/evidence | `HANDOVER.md` |
-| Current testing route | `docs/testing/LOCAL_AGENT_START_HERE.md` |
-| Repository/agent operations | `docs/agents/GREIA_AGENT_OPERATIONS.md` |
+| Current implementation/evidence | `CHANGELOG.md` |
+| Current testing route | `docs/testing/HARDWARE_COMPATIBILITY_MATRIX.md` |
+| Repository/agent operations | `docs/agents/README.md` |
 | OS/platform work | `skills/greia-os-work/SKILL.md` |
 | Activity authoring | `skills/greia-activity-authoring/SKILL.md` |
 | Activity Simulator | `docs/development/GREIA_ACTIVITY_SIMULATOR.md` |
@@ -440,9 +440,9 @@ Do not add destructive disk/removable-media writes to a generic setup helper.
 | Voice architecture | `docs/architecture/GREIA_VOICE_PRODUCTION_ENGINE.md` |
 | Voice policy/status | `docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md` |
 | Parent source/API | `docs/architecture/GREIA_PARENT_MANAGEMENT.md` |
-| Developer remote | `docs/agents/GREIA_AGENT_OPERATIONS.md` |
+| Developer remote | `docs/agents/README.md` |
 | Installer/image creation | `docs/engineering/boot/INSTALLER_IMAGE_CREATION_AND_BOOT.md` |
-| Public-release gate | `docs/release/GREIA_PUBLIC_RELEASE_READINESS.md` |
+| Public-release gate | `NOTICE.md` |
 
 ## 12. Current readiness ledger
 
@@ -467,7 +467,7 @@ When a change materially alters a required tool, role, external repository, conn
 1. update the narrower owner document;
 2. update this router if setup/navigation changed;
 3. update `AGENTS.md` only if repository-wide mandatory behavior changed;
-4. update `HANDOVER.md` when current readiness/continuation changed;
+4. keep private maintainer continuation records outside the public repository;
 5. preserve evidence scope honestly.
 
 A future setup assistant may automate role bootstrap, but it must consume rather than replace these authorities and must never silently install heavy/privileged dependencies.

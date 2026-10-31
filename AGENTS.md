@@ -13,11 +13,7 @@ simply imports this file.
 - **Your owner** is the person you work for. Greia's rules below limit what
   you build; they never replace your owner's instructions about their own
   machine, money or accounts.
-- **The Greia maintainers' own agents** (your owner is the repository owner,
-  FrozenPepper, or tells you that you are a core agent) **must also read and
-  follow** [`docs/agents/CORE_TEAM.md`](docs/agents/CORE_TEAM.md): branch
-  policy, the active plans, handover and progress duties. Other agents can
-  ignore that file.
+- Contributor instructions in this file are public. Machine-specific owner and maintainer work orders are tracked privately, not in the repository.
 
 ## Start here
 
@@ -116,8 +112,7 @@ never in a public issue.
 
 ## Pre-release policy
 
-Greia has
-never been publicly released. Do **not** build or preserve backward-compatibility
+Greia source is public, but an ordinary-family release has not yet been certified. Do **not** build or preserve backward-compatibility
 mechanisms for old development snapshots, historical package formats or
 legacy receiver bridges. Reinstall fresh current development images rather
 than maintaining upgrade paths from them. Current-generation update recovery
@@ -127,7 +122,6 @@ features and must not be confused with backward compatibility.
 ## Standing owner decisions
 
 - committed recordings are owner-reviewed and accepted; never regenerate them for perceived provenance problems. New speech goes through `tools/greia_voice.py` and needs fresh human acceptance;
-- scoped owner exception (2026-10-19, extended by owner direction 2026-10-21): the requested corpus replacement uses `tools/regenerate_voice_corpus.py` and `docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md`, with the selected masters for that run (the completed v2 run used v0.2; the separately authorized v3 run uses the exact selected v0.3 identities), acting-only prompts, deterministic isolated letter/syllable preservation, recoverable originals and new listening-pending receipts. This does not retrospectively accept any new takes;
 - do not add file anti-tampering, signing or elaborate asset verification; users may edit their own files;
 - the canonical selectable language set is loaded from `src/greia_platform/languages/<locale>/manifest.json`; currently en, it, es, fr are owner-released and ship with their audio. Additional languages require an owner-authorized, fully translated and accepted manifest/data pack. Do not create another language registry.
 
@@ -293,7 +287,7 @@ PYTHONPATH=src python3 -m unittest discover -s tests -v
 
 Activity validation intentionally rejects cached bytecode inside Activity folders.
 
-Do not claim a test result that did not execute against the stated commit/checkout. Exact current executed evidence belongs in `HANDOVER.md` (core team) or in your pull request description.
+Do not claim a test result that did not execute against the stated commit/checkout. Exact executed evidence belongs in your pull request description or in private maintainer records.
 
 ## Evidence labels
 

@@ -40,14 +40,9 @@ reports and reviews are not in the tree any more; they live in git history.
 | [development/GREIA_DEVELOPER_BOOT_DIAGNOSTICS.md](development/GREIA_DEVELOPER_BOOT_DIAGNOSTICS.md) | Diagnose an installed development machine that never reaches the launcher |
 | [development/GREIA_SOFTWARE_UPDATE_PACKAGES.md](development/GREIA_SOFTWARE_UPDATE_PACKAGES.md) | Build `.greia_update` application packages |
 | [development/GREIA_SYSTEM_UPDATE_RELEASE_WORKFLOW.md](development/GREIA_SYSTEM_UPDATE_RELEASE_WORKFLOW.md) | Build a full-system `.greiaupdate` |
-| [release/FIRST_PUBLIC_RELEASE_EXECUTION.md](release/FIRST_PUBLIC_RELEASE_EXECUTION.md) | Short checklist for the first release; not yet approved |
-| [release/GREIA_PUBLIC_RELEASE_READINESS.md](release/GREIA_PUBLIC_RELEASE_READINESS.md) | Full list of what must be true before release |
 | [release/INSTALLER_FAILURE_LOGS_ON_USB.md](release/INSTALLER_FAILURE_LOGS_ON_USB.md) | Where installer failure logs are saved on the USB key |
 | [testing/HARDWARE_COMPATIBILITY_MATRIX.md](testing/HARDWARE_COMPATIBILITY_MATRIX.md) | How hardware support is classified and proven |
-| [testing/GREIA_UPDATE_RELEASE_ACCEPTANCE.md](testing/GREIA_UPDATE_RELEASE_ACCEPTANCE.md) | The update acceptance procedure |
 | [testing/VISUAL_ACCEPTANCE_EVIDENCE_CONTRACT.md](testing/VISUAL_ACCEPTANCE_EVIDENCE_CONTRACT.md) | What counts as visual test evidence |
-| [testing/LOCAL_AGENT_START_HERE.md](testing/LOCAL_AGENT_START_HERE.md) | Router for test operators |
-| [testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md](testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md) | Backlog of checks needing the local machine, screenshots or hearing |
 
 Installer and boot lessons live in [engineering/boot/](engineering/boot/):
 
@@ -123,7 +118,6 @@ What Greia must do, written from the child's and parent's point of view.
 | [design/GREIA_BOOT_PROGRESS.md](design/GREIA_BOOT_PROGRESS.md) | Retired boot progress bar: compatibility notes and history |
 | [design/GREIA_SHARED_CHARACTER_UTTERANCES.md](design/GREIA_SHARED_CHARACTER_UTTERANCES.md) | Shared spoken lines for characters |
 | [design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md](design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md) | Voice policy and how character voices are produced |
-| [handovers/GREIA_VISUAL_SYSTEM_RESUME.md](handovers/GREIA_VISUAL_SYSTEM_RESUME.md) | Where the art work stands and what is next |
 
 ## Engineering
 
@@ -139,15 +133,6 @@ See the [agent index](agents/README.md). The short version:
 [../AGENTS.md](../AGENTS.md), then [../SETUP.md](../SETUP.md), then a skill in
 [../skills/](../skills/README.md).
 
-## Plans and handover
+## Public documentation boundary
 
-| Document | What it is for |
-|---|---|
-| [../HANDOVER.md](../HANDOVER.md) | Current state, evidence and next step |
-| [plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md](plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md) | Active plan for the platform foundations |
-| [plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md](plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md) | Active plan for install, update and release |
-| [plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md](plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md) | Active plan for art and visuals |
-| [../CHANGELOG.md](../CHANGELOG.md) | What changed in each version |
-
-The other workstream plans (Creations Library, four-language rollout,
-voice pipeline) are listed in HANDOVER.md under "Active workstreams".
+Technical decisions, how-to guides and contributor contracts belong here. Owner work orders, historical acceptance journals and private release coordination are maintained outside the public tree. Git history retains prior versions; removing a file from the current tree does not erase an earlier public copy.

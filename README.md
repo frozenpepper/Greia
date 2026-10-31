@@ -52,7 +52,7 @@ Big pictures, friendly voices, and one Home button that always brings them back.
 > passed testing in virtual machines. It has **not** yet been tested on enough
 > real computers, and some recordings still need replacing before a full
 > release. Try it on a spare computer, not one you rely on.
-> Details: [release readiness](docs/release/FIRST_PUBLIC_RELEASE_EXECUTION.md).
+> Distribution and media-rights caveats: [licensing notice](NOTICE.md).
 
 ## Get Greia
 

@@ -224,15 +224,7 @@ Minimum gate:
 
 Until this gate is completed, describe the state as **license policy selected; public-release licensing audit pending**, not “all repository material is licensed under MPL-2.0”.
 
-## 15. Relationship to monetization
-
-Nothing in MPL-2.0, Apache-2.0 or CC BY 4.0 inherently means Greia must charge zero money for every service or distribution.
-
-The project may charge for an optional native parent app, catalogue distribution, premium Activities, support, commissioned educational/localization work and voluntary official OEM branding/integration/support agreements consistent with ADR 0023. This must not be turned into a fee for merely redistributing the open-source platform.
-
-The architectural non-lock-in rule remains: payment must not be required to understand the Activity contract, create a conforming Activity, or use the supported independent parent-authorized Activity installation path.
-
-## 16. Legal review boundary
+## 15. Legal review boundary
 
 This file is a project governance/engineering policy, not a substitute for professional legal advice.
 
