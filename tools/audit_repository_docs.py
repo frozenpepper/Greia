@@ -52,8 +52,8 @@ def maintained(path: Path) -> bool:
         return False
     if name.startswith(_HISTORICAL_TESTING):
         return name in {
-            "docs/testing/LOCAL_AGENT_START_HERE.md",
-            "docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md",
+            "docs/testing/HARDWARE_COMPATIBILITY_MATRIX.md",
+            "docs/testing/VISUAL_ACCEPTANCE_EVIDENCE_CONTRACT.md",
         }
     return True
 

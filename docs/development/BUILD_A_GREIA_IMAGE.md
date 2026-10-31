@@ -8,7 +8,7 @@ This is for people who want to **build Greia from source**. If you simply want t
 
 Greia has declarative profiles for different machines. The current repository has a working legacy-x86 development installer build route, including the Acer Aspire One reference device. A quiet `legacy-x86-i686-rc` profile also exists, **but it is a developer release candidate with developer remote services/SSH**, not an image to distribute to families.
 
-The long-term goal is a single convenient Setup image for compatible PCs and Raspberry Pi machines, but that goal must not be confused with certified outputs from today's commands. Raspberry Pi and universal image paths require exact source/build/hardware evidence before anyone should call them supported. Check the [current handover](../../HANDOVER.md), [profile descriptions](../../build/profiles/README.md) and [release readiness checklist](../release/GREIA_PUBLIC_RELEASE_READINESS.md).
+The long-term goal is a single convenient Setup image for compatible PCs and Raspberry Pi machines, but that goal must not be confused with certified outputs from today's commands. Raspberry Pi and universal image paths require exact source/build/hardware evidence before anyone should call them supported. Check the current handover (internal record archived), [profile descriptions](../../build/profiles/README.md) and release readiness checklist (internal record archived).
 
 ## What you need
 
@@ -22,7 +22,7 @@ The long-term goal is a single convenient Setup image for compatible PCs and Ras
 
 ## The safe development-image path
 
-First check the [setup index](../../SETUP.md#10-os-image--installer-builder), [OS work skill](../../skills/greia-os-work/SKILL.md), [build operations guide](../agents/GREIA_AGENT_OPERATIONS.md), and [installer-image reference](../engineering/boot/INSTALLER_IMAGE_CREATION_AND_BOOT.md). On an appropriate Linux host, from the clean repository root:
+First check the [setup index](../../SETUP.md#10-os-image--installer-builder), [OS work skill](../../skills/greia-os-work/SKILL.md), build operations guide (internal record archived), and [installer-image reference](../engineering/boot/INSTALLER_IMAGE_CREATION_AND_BOOT.md). On an appropriate Linux host, from the clean repository root:
 
 ```bash
 git status --short
@@ -65,7 +65,7 @@ If you are preparing media from an already published, supported image on a perso
 
 `tools/greia_release.py` is the higher-level release operator and has `doctor`, `build`, `build-profile` and `inspect` commands. The [system-update release guide](GREIA_SYSTEM_UPDATE_RELEASE_WORKFLOW.md) explains which `.greiaupdate` payloads it currently produces. **Building a release/update bundle does not automatically mean a tested, universal, bootable USB installer was published.** Read its release report and exact scope. Do not substitute this operator for the proven legacy development installer merely because the name sounds more general.
 
-For release publication, also check [release readiness](../release/GREIA_PUBLIC_RELEASE_READINESS.md), the [multiplatform lifecycle plan](../plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md), and [the current handover](../../HANDOVER.md). Those determine whether a profile/target combination may actually be advertised.
+For release publication, also check release readiness (internal record archived), the multiplatform lifecycle plan (internal record archived), and the current handover (internal record archived). Those determine whether a profile/target combination may actually be advertised.
 
 ## Common mistakes to avoid
 

@@ -10,10 +10,10 @@ The first duty is to avoid misleading the operator or destroying the wrong drive
 
 At the **exact checkout** being built, read in this order:
 
-1. [AGENTS.md](../../AGENTS.md), [SETUP.md](../../SETUP.md), [HANDOVER.md](../../HANDOVER.md) and [documentation ownership](../DOCUMENTATION.md).
-2. [OS work skill](../../skills/greia-os-work/SKILL.md), [boot companion](../../skills/greia-os-work/BOOT.md) and [agent operations](GREIA_AGENT_OPERATIONS.md).
+1. [AGENTS.md](../../AGENTS.md), [SETUP.md](../../SETUP.md), HANDOVER.md (internal record archived) and [documentation ownership](../DOCUMENTATION.md).
+2. [OS work skill](../../skills/greia-os-work/SKILL.md), [boot companion](../../skills/greia-os-work/BOOT.md) and agent operations (internal record archived).
 3. [Installer image creation/boot](../engineering/boot/INSTALLER_IMAGE_CREATION_AND_BOOT.md), especially sections 3, 11–14 and the RC runbook.
-4. [Release lifecycle authority](../plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md), [release readiness](../release/GREIA_PUBLIC_RELEASE_READINESS.md), [image profiles](../../build/profiles/README.md), and [release CLI workflow](../development/GREIA_SYSTEM_UPDATE_RELEASE_WORKFLOW.md) if making publishable/update artifacts.
+4. Release lifecycle authority (internal record archived), release readiness (internal record archived), [image profiles](../../build/profiles/README.md), and [release CLI workflow](../development/GREIA_SYSTEM_UPDATE_RELEASE_WORKFLOW.md) if making publishable/update artifacts.
 5. The actual selected profile TOML, the high-level script's `--help`/usage, its delegated builder, current verifier and any later fixes in source.
 
 Resolve contradictions by authority and current source, not by copying a command from an older review. Do **not** read historical postmortems as instructions without checking their current successor.

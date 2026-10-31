@@ -29,7 +29,9 @@ class DocumentationAuditTests(unittest.TestCase):
 
     def test_maintained_scope_excludes_historical_but_keeps_live_tests(self):
         self.assertTrue(maintained(Path("docs/user/README.md")))
-        self.assertTrue(maintained(Path("docs/testing/LOCAL_AGENT_START_HERE.md")))
+        self.assertTrue(maintained(Path("docs/testing/HARDWARE_COMPATIBILITY_MATRIX.md")))
+        self.assertFalse(maintained(Path("docs/testing/LOCAL_AGENT_START_HERE.md")))
+        self.assertTrue(maintained(Path("docs/testing/VISUAL_ACCEPTANCE_EVIDENCE_CONTRACT.md")))
         self.assertFalse(maintained(Path("docs/testing/2026-09-01_OLD.md")))
         self.assertTrue(maintained(Path("docs/engineering/boot/INSTALLED_OS_BOOT_POSTMORTEM.md")))
         self.assertFalse(maintained(Path("docs/plans/2026-08-01_OLD_PLAN.md")))

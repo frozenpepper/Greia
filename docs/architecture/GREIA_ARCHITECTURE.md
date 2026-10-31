@@ -19,7 +19,7 @@ This document explains the stable product architecture above any particular Linu
 - `docs/DOCUMENTATION.md` defines documentation ownership/precedence.
 - source/runtime declarations own exact currently implemented schemas/APIs.
 - `skills/greia-activity-authoring/SKILL.md` is the current Activity-authoring specification for agents/developers.
-- `HANDOVER.md` owns current branch, verification and hardware-evidence state.
+- Current branch and device-test evidence is maintained privately; public release statements must be grounded in verified test artifacts.
 
 Several examples below are deliberately **conceptual/future-facing** to describe stable semantics. A YAML manifest, a simplified `storage.get()` call, a Web SDK example, `.greiaactivity` layout, Award declaration, or capability-class label shown here is not automatically the current authoring API.
 
@@ -514,7 +514,7 @@ Greia display/session/input authority
     └── future runtime
 ```
 
-Current renderer-neutral geometry/actions live in `src/greia_platform/system_chrome.py`; the backend-neutral lifecycle/navigation seam lives in `src/greia_launcher/system_chrome.py`. Exact current implementation/evidence status belongs in `HANDOVER.md`.
+Current renderer-neutral geometry/actions live in `src/greia_platform/system_chrome.py`; the backend-neutral lifecycle/navigation seam lives in `src/greia_launcher/system_chrome.py`. Exact current implementation/evidence status belongs in private maintainer notes.
 
 A production R7 backend is not accepted merely because it can scan out Activity frames. It must also preserve this trusted chrome/input invariant without turning Greia into a desktop/window-manager environment.
 
@@ -1198,7 +1198,7 @@ ADR 0020 requires physical controller/system input to be normalized/intercepted 
 
 ADR 0025 requires Award grants to persist independently from presentation. A crash after the grant but before the ceremony must not lose the Award, and recovery must not create an unbounded replay storm of stale celebrations.
 
-Exact current source/evidence status belongs in `HANDOVER.md`.
+For current implementation details consult the source; hardware evidence and work-session checkpoints are private.
 
 ## 40. Fail closed
 

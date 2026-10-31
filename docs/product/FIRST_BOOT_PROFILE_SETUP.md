@@ -7,7 +7,7 @@ wizard (very basic: 'What is your name' etc.) with voices guiding the
 kids/parents through first user creation at first boot."
 **Architecture:** ADR 0012 §15.1 amendment (2026-10-17), ADR 0018 Screen
 vocabulary, ADR 0037 shared control kit, ADR 0020 input profiles.
-**Voice script:** [`VOICE_LINES_FIRST_BOOT_WIZARD.md`](../plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/VOICE_LINES_FIRST_BOOT_WIZARD.md).
+**Voice script:** `VOICE_LINES_FIRST_BOOT_WIZARD.md` (internal record archived).
 
 ## 1. When it appears
 

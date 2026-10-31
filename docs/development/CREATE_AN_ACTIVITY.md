@@ -129,7 +129,7 @@ When the installed Greia device **advertises Activity installation as available*
 
 If ordinary **Install Activity** is unavailable, use the **Simulator** for
 normal development or an expressly authorized developer-only deployment
-procedure from [agent operations](../agents/GREIA_AGENT_OPERATIONS.md) for
+procedure from agent operations (internal record archived) for
 hardware testing. A device that advertises `system.update.package.install`
 also supports typed `.greia_update` packages for selected Parent-source
 Activity packages through **Greia Parents → System → Updates → Upload &

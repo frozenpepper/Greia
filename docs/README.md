@@ -51,7 +51,6 @@ Installer and boot lessons live in [engineering/boot/](engineering/boot/):
 | [engineering/boot/INSTALLER_IMAGE_CREATION_AND_BOOT.md](engineering/boot/INSTALLER_IMAGE_CREATION_AND_BOOT.md) | How installer images are made and boot |
 | [engineering/boot/INSTALLED_OS_BOOT_POSTMORTEM.md](engineering/boot/INSTALLED_OS_BOOT_POSTMORTEM.md) | Why installed systems failed to boot, and the fixes |
 | [engineering/boot/INSTALLATION_USB_BOOT_POSTMORTEM.md](engineering/boot/INSTALLATION_USB_BOOT_POSTMORTEM.md) | Why installer USB sticks failed to boot, and the fixes |
-| [engineering/boot/INSTALLATION_ISSUES_LOG.md](engineering/boot/INSTALLATION_ISSUES_LOG.md) | Installation problems met on legacy hardware, and the rules learned |
 
 ## Architecture and decisions (adr)
 

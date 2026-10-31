@@ -2,8 +2,8 @@
 
 **Status:** ACCEPTED CHILD-FACING GOALS / IMPLEMENTATION IN PROGRESS  
 **Adopted:** 2026-10-07  
-**Single implementation and release program:** [Creations Library + Activity Release Plan](../plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md)  
-**Exact session state:** [Progress](../plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PROGRESS.md)
+**Single implementation and release program:** Creations Library + Activity Release Plan (internal record archived)  
+**Exact session state:** Progress (internal record archived)
 
 ## 1. Core promise
 

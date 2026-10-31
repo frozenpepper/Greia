@@ -12,7 +12,7 @@ For documentation authority and precedence, read `docs/DOCUMENTATION.md` first.
 A 2026-08-20 boot-polish change regressed a then-working Acer installer into
 a grey-screen/reboot loop. The reviews below preserve useful hardware
 lessons. **Do not treat this old incident as the current Acer/A-B test order**:
-read `HANDOVER.md` and `docs/testing/LOCAL_AGENT_START_HERE.md` for the
+read private maintainer notes and `docs/testing/HARDWARE_COMPATIBILITY_MATRIX.md` for the
 present candidate, exact source state and accepted procedure before touching
 bootloaders, boot artwork or USB writers. Historical reading:
 

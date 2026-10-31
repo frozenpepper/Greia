@@ -10,7 +10,7 @@ description: Use for substantive Greia OS/platform work: Shell/launcher, Parent 
 
 ## When to use / Read first
 
-Use for any substantive change to the Greia OS, platform, Shell, Parent, installer, simulator, build, runtime or hardware-service code. This file tells an agent **what to read for the task**; it is deliberately not a second architecture manual. Read `AGENTS.md` and `HANDOVER.md` first, then go to the one section below that matches the task. Neighbouring routes: Activity code → `skills/greia-activity-authoring/SKILL.md`; art → `skills/greia-visual-authoring/SKILL.md`; prerecorded speech → `skills/greia-voice-production/SKILL.md`; new language → `skills/greia-language-expansion/SKILL.md`.
+Use for any substantive change to the Greia OS, platform, Shell, Parent, installer, simulator, build, runtime or hardware-service code. This file tells an agent **what to read for the task**; it is deliberately not a second architecture manual. Read `AGENTS.md` and private maintainer notes first, then go to the one section below that matches the task. Neighbouring routes: Activity code → `skills/greia-activity-authoring/SKILL.md`; art → `skills/greia-visual-authoring/SKILL.md`; prerecorded speech → `skills/greia-voice-production/SKILL.md`; new language → `skills/greia-language-expansion/SKILL.md`.
 
 ## Extending Greia's language set
 
@@ -25,14 +25,14 @@ staged language appear release-ready.
 
 ## Universal rules
 
-1. Work from current `main`; preserve concurrent changes. Read `AGENTS.md`, `docs/agents/CORE_TEAM.md` (core team) and `HANDOVER.md` first.
+1. Work from current `main` for inspection, but use a fork and pull request for outside contributions. Read `AGENTS.md`, the architecture ADRs, and applicable developer guides. Maintainers keep owner-only continuity notes outside this repository.
 2. Accepted ADRs own architecture; source/runtime declarations own exact implemented APIs/schemas/limits; product docs own accepted child-facing behavior.
 3. Greia Shell is the child-facing OS surface. Do not expose a generic Linux desktop/shell/package-management path during normal child use.
 4. Platform authority stays platform-owned: profiles/sessions, trust/packages, permissions, Home/Back, physical input, system controls, microphone routing/processing, storage/history, progression/rewards, install/update authority and hardware facts.
 5. Low-resource behavior is correctness. The Acer reference floor is not a later optimization target.
 6. GitHub-hosted Actions/execution are opt-in only and require explicit owner authorization.
 7. Claim only evidence that actually ran. Source, authoring-provider+human, browser, Simulator, VM/image and physical evidence are distinct.
-8. After substantive implementation, update the active plan/HANDOVER and affected living manuals/skills as required by `docs/agents/CORE_TEAM.md`. Refresh affected ignored `.agents/skills/` copies from canonical `skills/` when this workstation uses installed copies.
+8. After substantive implementation, update affected public manuals, ADRs and canonical skills. Keep maintainer checkpoints and machine evidence private.
 9. New prerecorded Greia speech is authoring-time work through `tools/greia_voice.py`; OS/Activity/shared-library code must not grow a parallel TTS/ASR backend.
 10. Launcher spoken labels are Shell-owned prerecorded assets; no child-runtime TTS and no Activity-owned hover/focus speech.
 11. Display/session/input abstraction must preserve direct safe Activity SDL/Pygame rendering and high-rate input paths; do not introduce avoidable full-frame copies or generic high-rate IPC merely for abstraction symmetry.
@@ -68,11 +68,11 @@ Pi support is **not implemented as a bootable installer**. Experimental ARM64 pr
 ## Install / update / release lifecycle
 
 Route install, update, release and multiplatform lifecycle work to
-`docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md`
+private maintainer plan (archived)
 (the ADR 0036 successor plan), not to signed-bundle or Gate-P5/V12G/D6
 closure. That plan owns lifecycle sequencing and closure criteria; the
 2026-08-08 architecture-remediation plan remains blocking only for its
-non-lifecycle obligations. `HANDOVER.md` §2/§8 records current state: Session 04
+non-lifecycle obligations. private maintainer notes §2/§8 records current state: Session 04
 (real legacy-i386 fresh install, first acceptance, alternating updates and
 rollback with current bundles) is tracked there as open until the Linux
 lifecycle predicates actually pass, and exact shipped installer/update/boot-health
@@ -101,7 +101,7 @@ src/greia_platform/creation_media.py
 src/greia_platform/creations.py
 ```
 
-P1 is the trusted repository; P2 is the manifest-bound **publish-own-private-file/import-child-selected-handle** seam over the existing per-session socket; P3 is the common gallery/picker renderer, audio preview owner, authenticated nonblocking request/poll/cancel coordinator and **trusted modal presentation** (Legacy-X keeps native window handles private, re-proves the foreground window's `_NET_WM_PID` against the supervised process before raising Greia's Shell window, and restores the Activity afterward; the Simulator diverts its remote display/input transport to the same Shell picker and blocks Activity frame overwrite while the modal is active). Painting is the first PNG producer+consumer. Current promotion status is in `PROGRESS.md` and `HANDOVER.md`; do not call P3 accepted without the GUI acceptance there. Do not mount a shared folder, duplicate choosers per app or expose arbitrary library listing/deletion to an Activity. Follow `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/P3_TRUSTED_PICKER_DISPLAY_CONTRACT.md`. Wayland/KMSDRM need their own backend implementation of the same runtime-neutral modal lease.
+P1 is the trusted repository; P2 is the manifest-bound **publish-own-private-file/import-child-selected-handle** seam over the existing per-session socket; P3 is the common gallery/picker renderer, audio preview owner, authenticated nonblocking request/poll/cancel coordinator and **trusted modal presentation** (Legacy-X keeps native window handles private, re-proves the foreground window's `_NET_WM_PID` against the supervised process before raising Greia's Shell window, and restores the Activity afterward; the Simulator diverts its remote display/input transport to the same Shell picker and blocks Activity frame overwrite while the modal is active). Painting is the first PNG producer+consumer. Current promotion status is in `PROGRESS.md` and private maintainer notes; do not call P3 accepted without the GUI acceptance there. Do not mount a shared folder, duplicate choosers per app or expose arbitrary library listing/deletion to an Activity. Follow private maintainer plan (archived). Wayland/KMSDRM need their own backend implementation of the same runtime-neutral modal lease.
 
 ## Broad architecture / new platform seam
 
@@ -154,7 +154,7 @@ byte-compares it, refusing any `DISPLAY` on the diagnostic/recovery template.
 `console=tty1` + `panic=0` stay (a panic still prints), and the hidden
 `verbose` label remains the recovery path. This separated the clear file from
 the fatal `console=null` rollback of 2026-08-20. See
-`docs/engineering/boot/INSTALLATION_ISSUES_LOG.md` §34–§35.
+historical boot-failure record (see Git history).
 
 Installer completion power-off: the unprivileged UI writes
 `/run/greia-installer/finish-request`; the root
@@ -163,7 +163,7 @@ performs the single power-off after lowering PID1's `LogLevel` to `emerg`, so
 `systemd-shutdown` teardown text never draws over the Greia cover. The UI must
 not call `systemctl poweroff` directly (logind/polkit denies `nobody`). The
 composed-root verifier enforces the units, helper and silence. See
-`docs/engineering/boot/INSTALLATION_ISSUES_LOG.md` §36.
+historical boot-failure record (see Git history).
 
 ## Installer, image composition or build pipeline
 
@@ -237,7 +237,7 @@ Current strict ownership gate:
 PYTHONPATH=src python3 tools/audit_activity_system_chrome_ownership.py --strict
 ```
 
-The September 2026 missing-Home composition regression is fixed and physically verified at its exact candidate. Current scope/evidence is in `HANDOVER.md`.
+The September 2026 missing-Home composition regression is fixed and physically verified at its exact candidate. Current scope/evidence is in private maintainer notes.
 
 ## R7 display/session/backend work
 
@@ -275,7 +275,7 @@ PYTHONPATH=src python3 tools/audit_activity_backend_independence.py activities
 PYTHONPATH=src python3 tools/audit_activity_system_chrome_ownership.py --strict
 ```
 
-Do not begin a new R7 subphase by relying on stale physical evidence from an older runtime candidate; follow `HANDOVER.md`.
+Do not begin a new R7 subphase by relying on stale physical evidence from an older runtime candidate; follow private maintainer notes.
 
 ## Input, controller, pointer or touch ownership
 
@@ -414,7 +414,7 @@ to validate UI schema and format placeholders (including nested format
 fields) before owner-approved promotion. The release contract then
 checks manifest-derived text/Activity/audio coverage; device/UI review
 remains separate. Follow `docs/development/ADD_A_GREIA_LANGUAGE.md`
-and `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`.
+and private maintainer plan (archived).
 Any newly authored Shell/installer/Parent text still requires accurate
 translations for every offered locale.
 Historical unsupported records are left intact and read as safe
@@ -509,7 +509,7 @@ docs/product/PARENT_MANAGEMENT.md
 
 For per-child Activity age/catalogue policy also read the dedicated Activity-discovery route above. Inspect the current Parent client pin/integrity manifest before changing `parent-app/` or the Parent API. Parent/browser code must not gain generic shell/root authority.
 
-**Parents HTTPS (owner decision 2026-10-23):** installed `greia_parent.production_api` serves self-signed TLS on LAN `:8766` and shares its bounded Parent application/mutation lock with local-only HTTP at `127.0.0.1:8767` for `greia_launcher.parent_credential_client`. `greia_parent.parent_tls` creates the certificate/key in `/var/lib/greia-os/parent-tls/` on-device using `openssl`, included in `build/package-sets/platform-base.txt`; never ship one shared key. `parent-app/` owns HTTPS discovery and the local dev proxy; Greia pins it through `runtime/parent-app-client.toml`/manifest and the synchronized image overlay (tool: `tools/update_parent_client_pin.py`; revision is the git tree id of `parent-app/`). A Python application update cannot change the Parent client; only full-system images do. Ordinary browser certificate warning is an accepted tradeoff; do not add CA/QR/cloud/account ceremony. Source tests and device acceptance: `docs/testing/2026-10-23_PARENT_HTTPS_ACCEPTANCE.md`. Do not accidentally enable Activity installs merely because TLS exists. The current `tools/dev_source_deploy.py` intentionally does **not** deploy installed `/usr/share/greia-parent-app` HTML assets, so using it alone on a pre-HTTPS image advances the runtime pin without the required web bytes and prevents `greia-parent.service` from starting. Do not use that source-only method for Parent HTTPS physical acceptance; build an exact-head image or separately implement/review an atomic full HTML-runtime deploy.
+**Parents HTTPS (owner decision 2026-10-23):** installed `greia_parent.production_api` serves self-signed TLS on LAN `:8766` and shares its bounded Parent application/mutation lock with local-only HTTP at `127.0.0.1:8767` for `greia_launcher.parent_credential_client`. `greia_parent.parent_tls` creates the certificate/key in `/var/lib/greia-os/parent-tls/` on-device using `openssl`, included in `build/package-sets/platform-base.txt`; never ship one shared key. `parent-app/` owns HTTPS discovery and the local dev proxy; Greia pins it through `runtime/parent-app-client.toml`/manifest and the synchronized image overlay (tool: `tools/update_parent_client_pin.py`; revision is the git tree id of `parent-app/`). A Python application update cannot change the Parent client; only full-system images do. Ordinary browser certificate warning is an accepted tradeoff; do not add CA/QR/cloud/account ceremony. Source tests and device acceptance: historical acceptance record (archived). Do not accidentally enable Activity installs merely because TLS exists. The current `tools/dev_source_deploy.py` intentionally does **not** deploy installed `/usr/share/greia-parent-app` HTML assets, so using it alone on a pre-HTTPS image advances the runtime pin without the required web bytes and prevents `greia-parent.service` from starting. Do not use that source-only method for Parent HTTPS physical acceptance; build an exact-head image or separately implement/review an atomic full HTML-runtime deploy.
 
 ## System output controls (volume / mute / brightness / media keys)
 
@@ -526,7 +526,7 @@ src/greia_parent/update_api.py
 
 Persistent desired state is platform-owned. Legacy-X mixer/backlight/media-key mechanics stay below the platform seam. Parent API may mutate only typed desired settings; it must not directly own host mixer/backlight devices or expose arbitrary commands.
 
-Because these files changed after the last physically tested Home candidate, use `HANDOVER.md` before making current physical claims.
+Because these files changed after the last physically tested Home candidate, use private maintainer notes before making current physical claims.
 
 ## System update mechanism
 
@@ -558,7 +558,7 @@ pairs under `src/greia_platform/languages/<locale>/`. These files are validated
 and published with the code in one application generation. For release acceptance, test normal packages on a fresh image composed from
 current source with the current receiver. No support for old development images,
 pre-manifest reader migrations or legacy bridge packages is required.
-See `docs/testing/2026-10-27_LANGUAGE_UPDATE_PACKAGE_ACCEPTANCE.md`
+See historical acceptance record (archived)
 for current-source and installed evidence boundaries. A/B application updates resolve the
 booted slot UUID from the installed layout plus `root=PARTUUID=`; terminal job
 publication and candidate cleanup share the job lock. A/B images must enable
@@ -656,7 +656,7 @@ docs/testing/2026-08-09_DEVELOPER_REMOTE_CONTROL.md
 docs/testing/LOCAL_AGENT_START_HERE.md
 ```
 
-Then follow the exact physical procedure named by `HANDOVER.md`.
+Choose the relevant public hardware test procedure and report the machine and exact revision tested.
 
 ## Visual-system / asset integration
 
@@ -762,7 +762,7 @@ presentation. Resolve Activity UI text at the Activity owner and pass
 renderers the already-resolved labels; leave genuinely language-neutral
 symbols for missing-package emergency rendering, and report missing
 required translations as release blockers. The real My Time/Creations
-local-agent acceptance queue remains `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`;
+local-agent acceptance queue remains private operator checklist;
 source key parity alone cannot certify translated runtime behavior.
 
 ## High-resolution layer, Wi-Fi resume hook and Parent API locking

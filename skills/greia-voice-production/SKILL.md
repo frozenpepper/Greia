@@ -47,7 +47,7 @@ Activity, OS/shared-library and content-project agents must not invoke VoxStage,
 
 ## Standing authority and limits
 
-- EN/IT/ES/FR are all released: every new line is recorded in all four with the same speaker and integrated with `tools/integrate_reviewed_voices.py --layout mirror` (never overwrites). The all-Activity recording order is `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/LOCAL_AGENT_ALL_APP_VOICE_RECORDING_ORDER.md`; cue identity/legacy inventory is in `LOCAL_AGENT_VOICE_PRODUCTION.md` beside it; the single task queue is `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`.
+- EN/IT/ES/FR are all released: every new line is recorded in all four with the same speaker and integrated with `tools/integrate_reviewed_voices.py --layout mirror` (never overwrites). The all-Activity recording order is private maintainer plan (archived); cue identity/legacy inventory is in `LOCAL_AGENT_VOICE_PRODUCTION.md` beside it; the single task queue is private operator checklist.
 - That authority covers an **already configured, registered, no-new-spend local VoiceEngine provider** and exact current approved scripts in reviewed small batches. It is **not** authority for new paid cloud/Modal spend, heavy downloads, direct backend scripting or unreviewed voice anchors. Install the heavy MLX stack only with explicit owner authorization.
 - Owner-approved visible text does not supply an absent long spoken transcript or decide letter-name versus phoneme for preschool content; those stay `BLOCKED_SCRIPT` until a complete script exists.
 - Committed recordings are owner-reviewed and accepted: never regenerate them for perceived provenance problems. Replacement of accepted speech happens only inside an explicit owner-authorized corpus operation (below) and yields listening-pending receipts.
@@ -143,7 +143,7 @@ New synthesis systems implement the provider contract behind `VoiceEngine`. Neve
 
 ## Corpus operations (replacement, recovery, held producers)
 
-The owner-authorized corpus replacement runs through `tools/regenerate_voice_corpus.py` under `docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md`: frozen requests, serial production through the same VoiceEngine, explicit metadata blockers, recoverable originals (external backups) and pending-review receipts. It is an exception to the add-only importer, which must not be used for new unlistened takes. Deterministic isolated letters/syllables are preserved. The v0.3 replacement is complete; exact counts, scope and listening state are in `HANDOVER.md` and the run's external reports.
+The owner-authorized corpus replacement runs through `tools/regenerate_voice_corpus.py` under `skills/greia-voice-production/SKILL.md`: frozen requests, serial production through the same VoiceEngine, explicit metadata blockers, recoverable originals (external backups) and pending-review receipts. It is an exception to the add-only importer, which must not be used for new unlistened takes. Deterministic isolated letters/syllables are preserved. The v0.3 replacement is complete; exact counts, scope and listening state are in private maintainer notes and the run's external reports.
 
 Rules that outlive each run:
 
