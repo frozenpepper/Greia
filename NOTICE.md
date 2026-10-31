@@ -52,24 +52,8 @@ carry the corresponding notices and source offers.
 These items need an explicit decision before they can be redistributed under
 an open license:
 
-- **Recorded speech made with macOS system voices — public-release
-  blocker.** The current tree contains **627** recordings (pedagogical and
-  system speech in English, Italian, Spanish and French) produced with the
-  macOS `say` command; each `.receipt.json` names the provider and voice.
-  The exact files, voices and image usage are listed in the
-  [2026-10-28 inventory](docs/release/2026-10-28_MACOS_SYSTEM_VOICE_AUDIO_INVENTORY.md)
-  and its CSV. The 32-activity draft release roster alone would still ship
-  257 of them. Apple's published [macOS Tahoe 26 software license, §2.F](https://www.apple.com/legal/sla/docs/macOSTahoe.pdf) permits System Voices
-  for personal/non-commercial creation but expressly restricts recording,
-  publishing or redistribution in public, nonprofit or commercial contexts.
-  Earlier Apple macOS licenses contain substantially similar restrictions.
-  **Do not publish this content as open-licensed media without an applicable
-  separate authorization or competent license review of the exact generating
-  system and assets.** Seek permission or replace them with legally
-  redistributable alternatives and fresh listening approval. Owner approval
-  of the audio's quality is distinct from distribution rights. Removing
-  files from HEAD does not remove Git-history copies from a repository whose
-  full history is made public.
+- **Historical macOS System Voice recordings — removed from current tree, history unresolved.** An inventory dated 2026-10-28 identified 627 WAV files generated via the macOS `say` command and 627 associated receipts, including 60 shared files. On 2026-10-31 these 1,254 tracked files were removed from the current `main` tree. The full [inventory](docs/release/2026-10-28_MACOS_SYSTEM_VOICE_AUDIO_INVENTORY.md) remains for provenance and remediation. **This does not retract public Git-history copies or previously published installer images.** Do not distribute old Git revisions or images containing these files without an applicable separate rights grant or legal review. Missing speech must be replaced using redistributable sources and newly accepted recordings; audio-quality acceptance is not a redistribution license. See [Apple's macOS software license](https://www.apple.com/legal/sla/docs/macOSTahoe.pdf), §2.F, for the reported restriction. No conclusion is made here about every generating-system license version.
+
 - **Character voice references.** The cloning references under
   `assets/audio/characters/canonical/v0.1/` and the source masters under
   `assets/source/audio/character-voice-masters/v0.1/` are synthetic

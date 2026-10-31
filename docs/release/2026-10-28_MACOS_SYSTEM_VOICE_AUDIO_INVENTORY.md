@@ -1,12 +1,16 @@
 # macOS System Voice audio inventory — public-release rights review
 
-Date: 2026-10-28 · Status: **ACTIVE PUBLIC-RELEASE BLOCKER**
+Date: 2026-10-28 · Updated: 2026-10-31 · Status: **CURRENT TREE CLEANED; GIT HISTORY AND EXTERNAL IMAGES UNRESOLVED**
 Machine-readable inventory:
 [`2026-10-28_MACOS_SYSTEM_VOICE_AUDIO_INVENTORY.csv`](2026-10-28_MACOS_SYSTEM_VOICE_AUDIO_INVENTORY.csv)
 
-## Why this is a blocker
+## 31 October 2026 remediation
 
-627 committed recordings currently carry a `.receipt.json` whose
+All **627 inventoried audio WAV files and their 627 receipts** were removed from the current `main` tree. This is an exact historical inventory, **not a count of files still present at HEAD**. Current-tree count of the listed WAV/receipt paths after this commit: **0**. This change may leave some activities without recorded speech until licensed replacement clips are generated and approved. The entire Git history remains publicly readable; any previously distributed downloadable installer/image containing the recordings must be independently addressed. Do not use a pre-cleanup checkout or image for public distribution until rights are cleared.
+
+## Why this was a blocker
+
+At the 2026-10-28 snapshot, 627 committed recordings carried a `.receipt.json` whose
 `provider_id` is `macos-native-say`. They were produced with Apple's macOS
 `say` command and a macOS System Voice. Apple's published macOS Tahoe 26
 software license, section 2.F, permits System Voices for personal,
@@ -15,13 +19,13 @@ redistribution in public, nonprofit or commercial contexts. Earlier macOS
 licenses contain substantially similar restrictions. Owner listening
 approval is a quality decision, not a redistribution licence.
 
-The current public-release image must not redistribute these files unless
+Any image assembled from a pre-cleanup snapshot must not redistribute these files unless
 Apple grants a separate permission, or competent counsel identifies another
 applicable grant for the exact generating system and voices. A repository
 whose full history is made public publishes them as well; deleting them
 from the current tree is not a rights remediation.
 
-## Exact current-tree inventory
+## Exact inventory at 2026-10-28 snapshot (historical)
 
 | Dimension | Count / detail |
 |---|---:|
@@ -92,7 +96,7 @@ project-owner-supplied synthetic voice-design recordings with a pending
 asset-licence decision. They are not covered by Apple's System Voices
 restriction.
 
-## Safe public-source options
+## Remaining history and downstream-release options
 
 - Publish a **rights-cleared source snapshot in a new repository** that
   excludes the 627 say recordings and their receipts, with a written
