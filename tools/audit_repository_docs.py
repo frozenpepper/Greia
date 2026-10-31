@@ -6,9 +6,9 @@ Run from any directory:
     python3 tools/audit_repository_docs.py --scope all
 
 Includes all tracked Markdown docs in the selected scope, not just root entry
-pages. Historical plans and dated test procedures may intentionally refer to
-evidence removed in the 2026-10-30 cleanup (kept in git history); those appear
-only with --scope all. Never deletes files.
+pages. Older internal plans and operator reports are no longer published at the
+current branch head. The maintained scope covers public instructions and
+reusable public test specifications. Never deletes files.
 """
 from __future__ import annotations
 
