@@ -175,11 +175,11 @@ docs/architecture/GREIA_VOICE_PRODUCTION_ENGINE.md
 docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md
 ```
 
-First command on any workstation:
-
-```bash
-python3 tools/greia_voice.py doctor
-```
+Select the [macOS](docs/agents/voice-platforms/MACOS.md),
+[Windows](docs/agents/voice-platforms/WINDOWS.md), or
+[Linux](docs/agents/voice-platforms/LINUX.md) workflow first. Use its Python
+command to run `doctor`. This is a readiness report, not a gate requiring
+Parakeet. The human owner chooses whether audio is acceptable.
 
 Semantic production kinds:
 
@@ -203,7 +203,7 @@ Dani, Momo and Tito masters from 2026-10-21 and retains Lilli, Leo and Flash's
 exact v0.2 masters unchanged. Character production uses **VoxCPM2 through the
 shared local VoxStage service** by default. No model runs on the child device.
 
-On this workstation VoxStage is already installed. Start/reuse its single worker:
+On the **owner's prepared Apple Silicon Mac**, VoxStage is already installed. Start/reuse its single worker:
 
 ```bash
 voxstage start
@@ -232,8 +232,7 @@ its weights, venv or generated job cache into this repository.
   entries are imported from the repository's exact reviewed WAV; existing IDs
   are reused without replacement. `doctor` never imports or generates.
 - All six character profiles use cloned references, including the compatible
-  `dani_system_speech` route. `pedagogical_speech` retains deterministic macOS
-  native pronunciation through the independent native provider.
+  `dani_system_speech` route. `pedagogical_speech` is produced with an installed native host voice: macOS `say`, Windows SAPI or Linux `espeak-ng`. Verification is optional and human listening decides acceptance.
 
 Chatterbox remains implemented. Its optional installation and requirements are
 in `docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md` and
@@ -284,13 +283,13 @@ Normal Activity authors do not need a cloning environment merely to consume an a
 
 ### 7.4 Pedagogical/system speech
 
-Letters, syllables, phonics and other pronunciation-authoritative material use `pedagogical_speech` through VoiceEngine. Activity/OS scripts must not call macOS `say` or encode host voice names/pronunciation hacks.
+Letters, syllables, phonics and other pronunciation-authoritative material use `pedagogical_speech` through VoiceEngine. Activity/OS scripts must not call macOS `say`, Windows SAPI, or Linux `espeak-ng` directly, nor embed host voice names or pronunciation hacks.
 
 Dani-specific robotic speech uses `dani_system_speech`, now backed by Dani’s selected cloned master through VoxStage by default.
 
 ### 7.5 Current Parakeet verifier and retained historical Whisper environment
 
-**New VoiceEngine requests (since 2026-10-23)** use offline cached
+**Optional new VoiceEngine ASR on a prepared Mac** uses offline cached
 multilingual **Parakeet-TDT v3** through `tools/greia_voice_core/parakeet_asr.py`,
 with pinned model `mlx-community/parakeet-tdt-0.6b-v3` at revision
 `ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15`.
@@ -453,8 +452,8 @@ Do not add destructive disk/removable-media writes to a generic setup helper.
 | Developer remote | implemented for explicit developer images only |
 | Voice Production Engine | implemented/canonical; provider readiness is workstation-specific and reported by `doctor` |
 | Character production (all six) | shared local VoxStage/VoxCPM2 default behind VoiceEngine; Chatterbox explicitly selectable |
-| Pedagogical production | independent macOS native provider; Dani now uses the cloned-character route |
-| ASR verification | Parakeet-TDT v3 for new requests, Whisper retained for historical review; advisory only, never acceptance authority |
+| Pedagogical production | native system renderer on macOS, Windows and Linux; Dani keeps the cloned-character route |
+| ASR verification | optional Parakeet-TDT v3 for new requests; `off` or absent `auto` never blocks generation; human listening decides acceptance |
 | Shared reactions | **180 EN/IT recordings were owner-accepted in the v0.2 baseline**; selected Dani/Momo/Tito rows included in the 2026-10-21 v3 corpus replacement are now pending fresh listening, with prior bytes/receipts backed up externally |
 | Character introductions | **12 EN/IT introductions were owner-accepted in the v0.2 baseline**; selected Dani/Momo/Tito introductions included in the 2026-10-21 v3 replacement are now pending fresh listening; product placement separate |
 | Shared runtime resolver | separate integration task where still pending |

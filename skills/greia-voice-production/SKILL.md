@@ -6,7 +6,7 @@ description: Use when generating, regenerating, reviewing or installing prerecor
 # Greia Voice Production
 
 **Status:** canonical authoring-time voice-production contract  
-**Reviewed:** 2026-10-30
+**Reviewed:** 2026-11-01
 
 ## When to use / Read first
 
@@ -23,7 +23,10 @@ docs/architecture/GREIA_VOICE_PRODUCTION_ENGINE.md
 Then as needed:
 
 ```text
-docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md      installation/readiness (also SETUP.md §7)
+docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md      cross-platform setup (also SETUP.md §7)
+docs/agents/voice-platforms/MACOS.md                  Mac host setup and usage
+docs/agents/voice-platforms/WINDOWS.md                Windows native SAPI and remote character workflow
+docs/agents/voice-platforms/LINUX.md                  Linux eSpeak NG and remote character workflow
 docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md            post-generation machine screening
 docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md         corpus replacement/recovery operations
 docs/agents/GREIA_NATURAL_VOICE_COMPLETION.md          natural-carrier completion method
@@ -32,6 +35,35 @@ docs/agents/GREIA_CHATTERBOX_PRODUCTION_FIELD_GUIDE.md engine maintainers only
 ```
 
 For a **new language** begin with `skills/greia-language-expansion/SKILL.md` and `docs/development/ADD_A_GREIA_LANGUAGE.md`. The VoxStage worker and cached Parakeet weights on the owner's workstation are not a reproducible installation on another contributor's machine.
+
+## Windows, macOS and Linux — user-controlled verification
+
+The semantic VoiceEngine request format is shared by all hosts. Choose the
+[macOS](../../docs/agents/voice-platforms/MACOS.md),
+[Windows](../../docs/agents/voice-platforms/WINDOWS.md), or
+[Linux](../../docs/agents/voice-platforms/LINUX.md) instructions. Native
+pedagogical audio uses macOS \`say\`, Windows SAPI via PowerShell, or Linux
+\`espeak-ng\`. The canonical **cloned-character** backend remains the prepared
+Apple Silicon VoxStage worker; Windows/Linux authors can call the Mac
+VoiceEngine service over a permissioned SSH loopback tunnel. No user needs
+MLX/Parakeet merely to record and listen to locally available native speech.
+
+**Parakeet is optional, not a gate imposed on the owner.** The user decides
+whether a recording is acceptable:
+
+- \`--verification off\`: no ASR. Generate and package the clip for listening;
+  receipt reports \`NOT_RUN\`.
+- \`--verification auto\` (default): perform ASR if already installed, otherwise
+  generate without it. An ASR WARN is a listening note, **not** a reason to
+  reject the output or trigger additional takes.
+- \`--verification required\`: **only by explicit operator choice**; require
+  a ready verifier and use the strict retry/rejection policy, including short
+  carrier extraction when selected.
+
+Automatic verification never authorizes installing/overwriting committed
+recordings, and its PASS never constitutes human approval. \`doctor\` reports
+character provider and optional verifier separately. A Mac venv path, Homebrew
+command or MLX dependency file must not be copied into Windows/Linux setup.
 
 ## One rule
 
@@ -96,7 +128,7 @@ Before generating shared speech, audit `assets/audio/characters/shared/v0.2/` (i
 
 ## Installation / readiness
 
-The engine source ships in the repository; the heavy MLX production environment lives outside Git. Start with `python3 tools/greia_voice.py doctor`; full Apple-Silicon setup is `tools/greia_voice_core/README.md` with the tested dependency set `tools/greia_voice_requirements_mlx.txt`. Use the explicit prepared Greia venv interpreter from `SETUP.md` §7.5 (the global Anaconda Python has an unrelated NumPy/Numba ABI mismatch). Do not silently install or download a multi-GB stack.
+The engine source ships in the repository; heavy MLX is optional for ASR and required only by the currently selected canonical cloned-character worker. Use the platform-specific guide above and inspect `doctor` statuses; Windows/Linux native speech needs no Mac venv. The Mac-only tested dependency list is `tools/greia_voice_requirements_mlx.txt`, and the Mac owner's prepared interpreter is documented in `SETUP.md` §7.5. Do not silently install/download a multi-GB stack.
 
 ## Generate
 
@@ -110,17 +142,17 @@ python3 tools/greia_voice.py generate --speaker pedagogical --kind pedagogical_s
   --output /tmp/greia-voice-review/ma.wav
 ```
 
-Generate into review staging, never directly into final runtime assets. For repeated work run one warm worker (`python3 tools/greia_voice.py serve`) and use `request`, or `batch` for JSONL queues. Never launch concurrent raw model workers; VoxStage owns one serialized worker and the engine owns the cross-process generation lock.
+These examples are POSIX-shell syntax; the Windows guide supplies PowerShell commands. Generate into review staging, never directly into final runtime assets. For repeated work run one warm worker (`python3 tools/greia_voice.py serve`) and use `request`, or `batch` for JSONL queues. Never launch concurrent raw model workers; VoxStage owns one serialized worker and the engine owns the cross-process generation lock.
 
 **Chatterbox length policy:** for `character_dialogue` and natural-character `shared_character_utterance`, never derive `max_new_tokens` from word count (acoustic-token length is not predictable and short-prompt caps caused truncation). Letters/syllables route through `pedagogical_speech` and do not justify a cap. Do not reintroduce a word-count token table in callers or providers.
 
 ## Short cues, verification and comparison policy
 
-- Normal VoxStage character requests with fewer than five words (including Dani and single words) auto-route through the localized carrier → target-only cut → final Parakeet check (`short_text_mode=auto`, `short_text_max_words=4`, three total takes). Override via CLI/JSON/Python; native pedagogical speech stays excluded; Chatterbox keeps its ordinary route. Explicit corpus raw synthesis uses `short_text_mode=off` to avoid double wrapping.
+- Strict `verification=required` VoxStage character requests with fewer than five words (including Dani and single words) route through the localized carrier → target-only cut → final Parakeet check (`short_text_mode=auto`, `short_text_max_words=4`, three total takes). Override via CLI/JSON/Python; native pedagogical speech stays excluded; Chatterbox keeps its ordinary route. Explicit corpus raw synthesis uses `short_text_mode=off` to avoid double wrapping.
 - Extraction: `tools/voice_carrier.py` / `tools/voice_carrier_search.py` (current v7) generate carrier plus target as one request, keep the raw carrier WAV and receipt, ignore the disposable intro (no raw-intro ASR), and use PCM-first bounded suffix candidates with exactly one target-only match, then cut at a measured low-energy gap. Reject any unidentifiable/ambiguous target, malformed timing, missing clean pause, ambiguous boundary or too little voiced signal (the `warn` corpus policy still requires an identifiable suffix, timing, unique gap and ≥80 ms voiced signal). Never transcribe the removed intro to accept a cut. Normal intros end with a period, not an ellipsis (`period-separated-intro-v1`).
 - Verifier: new requests use the cached local multilingual Parakeet-TDT v3 (`mlx-community/parakeet-tdt-0.6b-v3`, revision `ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15`, from `tools/greia_voice_core/parakeet_asr.py`). Missing model/dependencies are reported; the engine never downloads weights or falls back to Whisper silently. Historical reports keep their recorded verifier (Whisper Base/Tiny); never reinterpret or re-score old evidence.
 - Pass rule: similarity > 0.8, equal canonical unit count, identical numeric sequence (locale cardinals/digits 0–100 are equivalent), and the signal checks clear. Comparison policy `locale-number-tokens-v3-chck-orthographic` (locale cardinals/literals first, then lexical `ch`/`c`/`k` canonicalized to `k`; submitted phrase and exact transcript retained). Registered corpus jobs carry their own frozen policy ID; never rewrite a registered plan to a newer default. Diacritics are ignored only during ASR comparison (`ignore_accents=True` default; `--strict-accents` / `"ignore_accents": false` / `ignore_accents=False` restore strict).
-- `verification=off` is explicitly unverified, not a machine PASS. ASR/IO failures require recovery and must not spend a fresh take. Inspect each result's `disposition`, `verification` and receipt (`result.evidence_dir`), not exit status or error prose.
+- `verification=off` is valid for ordinary new speech and explicitly unverified, not a machine PASS. `auto` leaves a listenable take even when ASR is unavailable or WARN; `required` retains strict checks. Infrastructure/IO failures still require recovery and must not spend a blind fresh take. Inspect each result's `disposition`, `verification` and receipt (`result.evidence_dir`), not exit status or error prose.
 - Parakeet is a screening gate: PASS = transcript plausibly matches (still needs human review); WARN = unresolved candidate, inspect/regenerate. Never use ASR as pronunciation authority for letters, syllables or phonics.
 
 ## Automated review and human listening

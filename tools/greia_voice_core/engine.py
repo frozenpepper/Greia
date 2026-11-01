@@ -232,17 +232,8 @@ class VoiceEngine:
                                    detail="owner waiver only applies to one exact native fallback request with verification off"),
                 0, "owner-authorized deterministic system speech policy does not match this request",
             )
-        # New public speech must never silently bypass the delivered-audio gate.
-        # ShortPhrasePipeline uses OFF only for its disposable carrier request,
-        # which is internal and always followed by target extraction + Parakeet.
-        # The exact owner-scoped native route below is the sole public exception.
-        if request.verification is VerificationMode.OFF and not owner_native_waiver:
-            return GenerationResult(
-                GenerationDisposition.REJECTED, request, None, None, None,
-                VerificationResult(VerificationDisposition.NOT_RUN, "none",
-                                   detail="verification=off is not supported for new public speech"),
-                0, "new speech creation requires automatic delivered-audio verification",
-            )
+        # Human listening is the acceptance authority. ASR is an opt-in strict gate
+        # only for verification=required; auto is advisory and off is allowed.
         try:
             provider, profile = self.route(request)
         except (VoiceRoutingError, VoiceRegistryError, ValueError) as exc:
@@ -278,21 +269,30 @@ class VoiceEngine:
                 detail=status.detail,
             )
 
-        probe_verifier = getattr(self.verifier, "probe", None)
-        ready, verifier_detail = (True, "explicit owner listening-review waiver") if owner_native_waiver else (
-            probe_verifier() if callable(probe_verifier) else (True, "injected verifier"))
-        if not ready:
+        verifier_id = getattr(self.verifier, "verifier_id", "parakeet")
+        ready, verifier_detail = False, "automatic verification disabled"
+        if request.verification is not VerificationMode.OFF and not owner_native_waiver:
+            probe_verifier = getattr(self.verifier, "probe", None)
+            try:
+                ready, verifier_detail = (
+                    probe_verifier() if callable(probe_verifier) else (True, "injected verifier")
+                )
+            except Exception as exc:
+                ready, verifier_detail = False, f"verifier probe unavailable: {exc}"
+        if request.verification is VerificationMode.REQUIRED and not ready:
             return GenerationResult(
                 GenerationDisposition.UNAVAILABLE, request, provider.provider_id, None, None,
-                VerificationResult(VerificationDisposition.NOT_RUN,
-                                   getattr(self.verifier, "verifier_id", "parakeet"),
-                                   detail=verifier_detail),
-                0, "pinned Parakeet verification is unavailable; no synthesis was submitted",
+                VerificationResult(VerificationDisposition.NOT_RUN, verifier_id, detail=verifier_detail),
+                0, "required ASR verifier is unavailable; no synthesis submitted",
             )
 
         output = self._resolve_output(request)
         try:
-            if self.short_phrases.policy.selected(request, provider):
+            # Carrier alignment itself depends on ASR. Only strict, explicitly
+            # required verification opts into the rejection-capable short route.
+            # Auto/off always produce the requested words directly for listening.
+            if (request.verification is VerificationMode.REQUIRED
+                    and self.short_phrases.policy.selected(request, provider)):
                 return self.short_phrases.generate(self, request, provider, profile)
         except (ValueError, VoiceProviderError, AudioPipelineError, GenerationLockError, OSError) as exc:
             return GenerationResult(
@@ -302,7 +302,8 @@ class VoiceEngine:
         best_verification = VerificationResult(
             VerificationDisposition.NOT_RUN,
             "owner-listening-review-waiver" if owner_native_waiver else getattr(self.verifier, "verifier_id", "parakeet"),
-            detail="owner waived ASR/listening review; audio format/integrity checks only" if owner_native_waiver else "not yet run")
+            detail=("owner waived ASR/listening review; audio format/integrity checks only"
+                    if owner_native_waiver else "not yet run"))
         attempts = 0
         take = None
         try:
@@ -323,8 +324,25 @@ class VoiceEngine:
                     self.audio.package(raw, candidate)
                     self.audio.decode_for_review(candidate, delivered)
                     self.audio.validate_review_wav(delivered)
-                    verification = (best_verification if owner_native_waiver
-                                    else self.verifier.verify(request, delivered))
+                    if owner_native_waiver:
+                        verification = best_verification
+                    elif request.verification is VerificationMode.OFF or not ready:
+                        verification = VerificationResult(
+                            VerificationDisposition.NOT_RUN, verifier_id,
+                            detail=("verification disabled by operator"
+                                    if request.verification is VerificationMode.OFF
+                                    else "optional ASR unavailable: " + verifier_detail),
+                        )
+                    else:
+                        try:
+                            verification = self.verifier.verify(request, delivered)
+                        except Exception as exc:
+                            if request.verification is VerificationMode.REQUIRED:
+                                raise
+                            verification = VerificationResult(
+                                VerificationDisposition.NOT_RUN, verifier_id,
+                                detail=f"optional ASR error: {exc}",
+                            )
                     best_verification = verification
                     row = {
                         "attempt": attempts,
@@ -357,7 +375,8 @@ class VoiceEngine:
                             output, receipt, verification, attempts,
                             "owner-authorized deterministic system speech packaged; no ASR or listening review",
                             evidence_dir=evidence.path)
-                    if verification.disposition is VerificationDisposition.PASS:
+                    if (request.verification is not VerificationMode.REQUIRED
+                            or verification.disposition is VerificationDisposition.PASS):
                         output.parent.mkdir(parents=True, exist_ok=True)
                         staging = output.with_name(output.name + "." + evidence.path.name + ".tmp")
                         shutil.copyfile(candidate, staging)
@@ -371,11 +390,13 @@ class VoiceEngine:
                             "history": str(evidence.path / "history.json"),
                         }
                         save_json(receipt, receipt_payload)
-                        evidence.write_state("VERIFIED_PENDING_LISTENING", output=str(output), receipt=str(receipt))
+                        evidence.write_state("PENDING_LISTENING", output=str(output), receipt=str(receipt))
                         return GenerationResult(
-                            GenerationDisposition.REVIEW_REQUIRED, request, provider.provider_id,
-                            output, receipt, verification, attempts,
-                            "delivered audio passed automatic Parakeet checks; human listening remains mandatory",
+                            (GenerationDisposition.REVIEW_REQUIRED_ASR_WARNING
+                             if verification.disposition is VerificationDisposition.WARN
+                             else GenerationDisposition.REVIEW_REQUIRED),
+                            request, provider.provider_id, output, receipt, verification, attempts,
+                            "generated audio ready for human listening; optional ASR is advisory, not acceptance",
                             evidence_dir=evidence.path)
                     if verification.disposition is not VerificationDisposition.WARN:
                         # NOT_RUN/NOT_APPLICABLE is uncertainty, never a quality

@@ -82,7 +82,8 @@ class AutomaticShortRoutingTests(unittest.TestCase):
     def tearDown(self): self.tmp.cleanup()
     def request(self, **kw):
         return VoiceRequest(**({'speaker':'leo','kind':SpeechKind.CHARACTER_DIALOGUE,'locale':'en',
-                                'text':self.target,'output':self.base/'result.wav'} | kw))
+                                'text':self.target,'output':self.base/'result.wav',
+                                'verification':VerificationMode.REQUIRED} | kw))
 
     def test_all_locales_and_all_actors_route_without_caller_wrapping(self):
         for speaker in ('leo','dani','momo','tito','lilli','flash'):
@@ -213,11 +214,13 @@ class AutomaticShortRoutingTests(unittest.TestCase):
         self.assertEqual(result.disposition,GenerationDisposition.UNAVAILABLE)
         self.assertEqual(len(self.provider.calls),0)
 
-    def test_public_off_is_rejected_before_synthesis(self):
+    def test_public_off_uses_direct_audio_without_carrier_asr(self):
         result=self.engine.generate(self.request(verification=VerificationMode.OFF))
-        self.assertEqual(result.disposition,GenerationDisposition.REJECTED)
-        self.assertIsNone(result.output_path)
-        self.assertEqual(len(self.provider.calls),0)
+        self.assertEqual(result.disposition,GenerationDisposition.REVIEW_REQUIRED,result.detail)
+        self.assertIsNotNone(result.output_path)
+        self.assertEqual(result.verification.disposition,VerificationDisposition.NOT_RUN)
+        self.assertEqual(len(self.provider.calls),1)
+        self.assertEqual(self.provider.calls[0].text,self.target)
         self.assertEqual(len(self.asr_calls),0)
 
     def test_provider_failure_never_allocates_another_take(self):

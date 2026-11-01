@@ -1,6 +1,6 @@
 # Greia Voice Production Engine
 
-**Usage reference, reviewed 2026-10-23.** Run commands from the Greia repository
+**Usage reference, reviewed 2026-11-01.** Run commands from the Greia repository
 root. This is authoring software; models, masters, services and authoring Python
 dependencies do not ship on child devices.
 
@@ -8,12 +8,11 @@ All new Greia speech enters through `tools/greia_voice.py` / `VoiceEngine`.
 “Voice Studio” refers to this workflow. Activities and content producers supply
 semantic requests; they do not invoke TTS, ASR or trimming tools themselves.
 
-**Current verification default:** cached local multilingual Parakeet-TDT v3
+**Optional verification backend (default mode `auto`):** cached local multilingual Parakeet-TDT v3
 (`mlx-community/parakeet-tdt-0.6b-v3`, revision
 `ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15`) in the prepared voice environment.
 It checks applicable delivered audio and short-route target candidates. Missing
-model/dependencies fail as unavailable; the engine does not download or silently
-fall back to Whisper. Historical Whisper tools/receipts remain versioned and are
+model/dependencies are recorded as `NOT_RUN` for `auto` and `off`, not a generation blocker. Only explicitly requested `required` mode blocks when unavailable; no silent model download or Whisper fallback. Historical Whisper tools/receipts remain versioned and are
 not relabeled. Machine PASS remains `human_review=PENDING`.
 
 ## Choose the right workflow
@@ -48,8 +47,8 @@ the old Parakeet plans and receipts remain unchanged.
 | Screen an installed corpus without changing it | `regenerate_voice_corpus.py review / reassess` | External automated findings and listening queue |
 | Human listening, master comparison, saved scores/notes | `export_voice_review_batch.py` → shared Takeboard | Separate human judgments; no automatic runtime promotion |
 
-**Current default:** normal VoxStage character requests with **fewer than five
-words** automatically use the localized carrier → cut → final Parakeet pipeline.
+**Strict optional route:** `verification=required` VoxStage character requests with **fewer than five
+words** use the localized carrier → cut → final Parakeet pipeline.
 This applies to CLI, JSONL, Python and warm-service requests, including Dani.
 Deterministic pedagogical speech stays on its native route. `short_text_mode=off`
 explicitly bypasses wrapping; word/character limits are configurable per request.
@@ -59,9 +58,25 @@ verification queues remain [proposed shared work](../../docs/plans/2026-10-22_VE
 
 ## 1. Readiness and dependencies
 
+Choose the [macOS](../../docs/agents/voice-platforms/MACOS.md),
+[Windows](../../docs/agents/voice-platforms/WINDOWS.md), or
+[Linux](../../docs/agents/voice-platforms/LINUX.md) guide before setup. Native
+\`pedagogical_speech\` works on macOS (\`say\`), Windows (\`System.Speech\`)
+and Linux (\`espeak-ng\`). The canonical character backend still uses the
+prepared Mac VoxStage service, accessible through a permissioned SSH local
+forward from Windows/Linux. The request \`--output\` path is always local to the
+\`serve\` workstation.
+
+**Verification modes:**
+\`off\` = produce for human listening, ASR \`NOT_RUN\`;
+\`auto\` = optional advisory ASR, never reject or retry on its WARN;
+\`required\` = strict ASR with bounded retries/rejection and optional
+short-carrier extraction. Human review controls acceptance in all modes.
+
+
 Read [SETUP.md](../../SETUP.md) §7 and the
 [workstation guide](../../docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md)
-before installing anything. Reuse the installed shared VoxStage worker:
+before installing anything. On a **prepared Apple Silicon Mac**, reuse the installed shared VoxStage worker:
 
 ```bash
 voxstage start
@@ -70,7 +85,7 @@ voice_python="$HOME/Library/Application Support/Greia/voice-production/venv/bin/
 "$voice_python" tools/greia_voice.py doctor
 ```
 
-Python 3.11+ and FFmpeg suffice for the default synthesis HTTP client. Parakeet
+Python 3.11+ and FFmpeg suffice for the default synthesis HTTP client and a local native speech provider. Optional Parakeet
 verification additionally needs the prepared Apple Silicon MLX environment and
 pinned cached weights. Use the prepared interpreter above for ASR/cutting. Do not
 reinstall packages or download weights during a recording run.
@@ -284,9 +299,8 @@ spending another take. Evidence is retained under
 WAVs and `search.json` beside its cut. Archive evidence after review. There is
 no blind automatic restart of an uncertain job. Machine PASS is listening-pending.
 
-`--verification off` skips final quality scoring but still runs target-only ASR
-to select a safe cut. For zero ASR, explicitly use **both**
-`--short-text-mode off --verification off`. Such output is unverified, not PASS.
+`--verification off` on the **normal public API** produces direct audio without ASR. Within the separately invoked strict carrier extraction flow, an internal OFF request skips final quality scoring but still runs target-only ASR
+to select a safe cut. For ordinary public generation with zero ASR, use `--verification off`; optional short-carrier extraction is not selected in this mode. Such output is unverified, not PASS.
 
 CLI overrides (JSON/Python use the corresponding underscore names):
 

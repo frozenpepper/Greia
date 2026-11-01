@@ -234,6 +234,7 @@ class VoiceEngineTests(unittest.TestCase):
                     cue_id="presenter.hint",
                     output=output,
                     max_attempts=2,
+                    verification=VerificationMode.REQUIRED,
                     short_text_mode="off",
                 )
             )
@@ -321,6 +322,7 @@ class VoiceEngineTests(unittest.TestCase):
                     "it",
                     "Guarda qui!",
                     output=root / "x.wav",
+                    verification=VerificationMode.REQUIRED,
                     short_text_mode="off",
                 )
             )
@@ -330,7 +332,7 @@ class VoiceEngineTests(unittest.TestCase):
             self.assertEqual(result.attempts, 3)
             self.assertTrue(result.evidence_dir.is_dir())
 
-    def test_public_verification_off_is_rejected_before_provider_submission(self):
+    def test_public_verification_off_generates_for_human_review(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             provider = FakeProvider(SpeechKind.CHARACTER_DIALOGUE)
@@ -339,9 +341,50 @@ class VoiceEngineTests(unittest.TestCase):
                 audio_pipeline=FakeAudioPipeline(), generation_lock=NullLock())
             result = engine.generate(VoiceRequest("leo", SpeechKind.CHARACTER_DIALOGUE,
                 "en", "Hello there", verification=VerificationMode.OFF))
-            self.assertEqual(result.disposition, GenerationDisposition.REJECTED)
+            self.assertEqual(result.disposition, GenerationDisposition.REVIEW_REQUIRED, result.detail)
+            self.assertEqual(provider.calls, 1)
+            self.assertEqual(result.verification.disposition, VerificationDisposition.NOT_RUN)
+            self.assertEqual(json.loads(result.receipt_path.read_text())["human_review"], "PENDING")
+
+    def test_auto_unavailable_verifier_still_generates(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            provider = FakeProvider(SpeechKind.CHARACTER_DIALOGUE)
+            verifier = SequenceVerifier([VerificationDisposition.PASS])
+            verifier.probe = lambda: (False, "no MLX on this host")
+            engine = VoiceEngine(root, make_registry(root), [provider],
+                verifier=verifier, audio_pipeline=FakeAudioPipeline(), generation_lock=NullLock())
+            result = engine.generate(VoiceRequest("leo", SpeechKind.CHARACTER_DIALOGUE,
+                "en", "Listen to this", verification=VerificationMode.AUTO))
+            self.assertEqual(result.disposition, GenerationDisposition.REVIEW_REQUIRED, result.detail)
+            self.assertEqual(result.verification.disposition, VerificationDisposition.NOT_RUN)
+            self.assertEqual(provider.calls, 1)
+
+    def test_auto_asr_warning_does_not_throw_away_recording(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            provider = FakeProvider(SpeechKind.CHARACTER_DIALOGUE)
+            engine = VoiceEngine(root, make_registry(root), [provider],
+                verifier=SequenceVerifier([VerificationDisposition.WARN]),
+                audio_pipeline=FakeAudioPipeline(), generation_lock=NullLock())
+            result = engine.generate(VoiceRequest("leo", SpeechKind.CHARACTER_DIALOGUE,
+                "en", "Listen to this", verification=VerificationMode.AUTO))
+            self.assertEqual(result.disposition, GenerationDisposition.REVIEW_REQUIRED_ASR_WARNING, result.detail)
+            self.assertEqual(provider.calls, 1)
+            self.assertTrue(result.output_path.is_file())
+
+    def test_required_unavailable_verifier_blocks_before_synthesis(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            provider = FakeProvider(SpeechKind.CHARACTER_DIALOGUE)
+            verifier = SequenceVerifier([VerificationDisposition.PASS])
+            verifier.probe = lambda: (False, "no ASR")
+            engine = VoiceEngine(root, make_registry(root), [provider],
+                verifier=verifier, audio_pipeline=FakeAudioPipeline(), generation_lock=NullLock())
+            result = engine.generate(VoiceRequest("leo", SpeechKind.CHARACTER_DIALOGUE,
+                "en", "Hello there", verification=VerificationMode.REQUIRED))
+            self.assertEqual(result.disposition, GenerationDisposition.UNAVAILABLE)
             self.assertEqual(provider.calls, 0)
-            self.assertIn("requires automatic", result.detail)
 
     def test_dani_cannot_route_through_character_dialogue(self):
         with tempfile.TemporaryDirectory() as tmp:

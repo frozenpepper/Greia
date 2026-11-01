@@ -235,6 +235,17 @@ Do not hard-code locale branches into game rules.
 
 ## 7. Produce through VoiceEngine only
 
+Activity authors can work from any of the three host systems. For setup read the
+[macOS](../../docs/agents/voice-platforms/MACOS.md),
+[Windows](../../docs/agents/voice-platforms/WINDOWS.md) or
+[Linux](../../docs/agents/voice-platforms/LINUX.md) instructions. Native
+pronunciation uses an installed host voice via VoiceEngine; cloned character
+speech still uses the prepared Mac service if no local canonical backend exists.
+\`verification=off\` is a valid manual-listening workflow. \`auto\` uses ASR
+as an optional convenience and does not reject outputs. \`required\` is an
+explicit strict opt-in. Human listening, not Parakeet, decides acceptance.
+
+
 Default character production uses the shared local VoxStage/VoxCPM2 worker and active v0.3 registry references: Dani/Momo/Tito use their selected v3 IDs while Lilli/Leo/Flash retain their exact v2 IDs and bytes. The operator starts the installed worker with `voxstage start`; Activity producers still submit only semantic Greia requests. Chatterbox is an explicit operator alternative, never a silent fallback. Do not regenerate existing accepted clips outside an explicit owner-authorized corpus operation.
 
 Start with:

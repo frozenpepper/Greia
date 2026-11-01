@@ -3,7 +3,10 @@ from __future__ import annotations
 
 import os
 
-from .providers import ChatterboxMLXProvider, MacOSNativeSpeechProvider, UnsupportedNativeSpeechProvider, VoiceProvider
+from .providers import (
+    ChatterboxMLXProvider, MacOSNativeSpeechProvider, WindowsSapiSpeechProvider,
+    LinuxEspeakSpeechProvider, UnsupportedNativeSpeechProvider, VoiceProvider,
+)
 from .voxstage_provider import VoxStageProvider
 
 
@@ -22,4 +25,5 @@ def build_providers(character_provider: str | None = None) -> tuple[VoiceProvide
     """Select one character renderer plus the independent pedagogical providers."""
     factories = {"voxstage": VoxStageProvider, "chatterbox": ChatterboxMLXProvider}
     character = factories[selected_character_provider(character_provider)]()
-    return character, MacOSNativeSpeechProvider(), UnsupportedNativeSpeechProvider()
+    return (character, MacOSNativeSpeechProvider(), WindowsSapiSpeechProvider(),
+            LinuxEspeakSpeechProvider(), UnsupportedNativeSpeechProvider())

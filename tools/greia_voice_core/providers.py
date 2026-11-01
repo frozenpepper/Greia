@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+import base64
 from contextlib import redirect_stdout
 import gc
 import os
@@ -374,6 +375,139 @@ class MacOSNativeSpeechProvider(VoiceProvider):
                 "rate_wpm": native.rate_wpm,
                 "synthesis_text": synthesis_text,
             },
+        )
+
+
+
+class WindowsSapiSpeechProvider(VoiceProvider):
+    """Offline Windows SAPI voices, for pronunciation-target authoring only."""
+
+    provider_id = "windows-native-sapi"
+
+    def supports(self, request: VoiceRequest, profile: VoiceProfile | None) -> bool:
+        return sys.platform == "win32" and request.kind is SpeechKind.PEDAGOGICAL_SPEECH
+
+    def probe(self) -> ProviderStatus:
+        available = sys.platform == "win32" and bool(
+            shutil.which("powershell.exe") or shutil.which("powershell"))
+        return ProviderStatus(
+            self.provider_id, available,
+            "Windows PowerShell + installed SAPI language voice (check each locale)"
+            if available else "requires Windows with PowerShell and a matching SAPI voice",
+            capabilities=(SpeechKind.PEDAGOGICAL_SPEECH.value,),
+        )
+
+    def generate(self, request: VoiceRequest, profile: VoiceProfile | None) -> GeneratedTake:
+        status = self.probe()
+        if not status.available:
+            raise VoiceProviderError(status.detail)
+        culture = {"en": "en-US", "it": "it-IT", "es": "es-ES", "fr": "fr-FR"}.get(request.language)
+        if culture is None:
+            raise VoiceProviderError(f"no Windows native speech profile for {request.language}")
+        binary = shutil.which("powershell.exe") or shutil.which("powershell")
+        assert binary is not None
+        with tempfile.TemporaryDirectory(prefix="greia-windows-speech-") as temp_dir:
+            wav = Path(temp_dir) / "speech.wav"
+            # Encode untrusted spoken words and paths as data, not PowerShell code.
+            message = base64.b64encode(request.text.encode("utf-8")).decode("ascii")
+            destination = base64.b64encode(str(wav).encode("utf-8")).decode("ascii")
+            script = (
+                "$ErrorActionPreference='Stop';"
+                "Add-Type -AssemblyName System.Speech;"
+                f"$message=[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('{message}'));"
+                f"$destination=[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('{destination}'));"
+                "$s=New-Object System.Speech.Synthesis.SpeechSynthesizer;"
+                "try {"
+                f"$culture='{culture}';"
+                "$voices=@($s.GetInstalledVoices() | Where-Object { $_.Enabled -and "
+                "$_.VoiceInfo.Culture.Name -eq $culture });"
+                "if ($voices.Count -eq 0) {"
+                "$language=$culture.Substring(0,2);"
+                "$voices=@($s.GetInstalledVoices() | Where-Object { $_.Enabled -and "
+                "$_.VoiceInfo.Culture.TwoLetterISOLanguageName -eq $language });"
+                "}"
+                "if ($voices.Count -eq 0) { throw ('No installed SAPI voice for '+$culture) };"
+                "$voice=$voices[0].VoiceInfo.Name;"
+                "$s.SelectVoice($voice);"
+                "$s.Rate=-1;"
+                "$s.SetOutputToWaveFile($destination);"
+                "$s.Speak($message);"
+                "Write-Output $voice;"
+                "} finally { $s.Dispose() }"
+            )
+            command = base64.b64encode(script.encode("utf-16-le")).decode("ascii")
+            try:
+                result = subprocess.run(
+                    [binary, "-NoProfile", "-NonInteractive", "-EncodedCommand", command],
+                    check=True, capture_output=True, text=True, timeout=90,
+                )
+                fd, name = tempfile.mkstemp(prefix="greia-voice-native-", suffix=".wav")
+                os.close(fd)
+                output = Path(name)
+                try:
+                    shutil.copy2(wav, output)
+                except BaseException:
+                    output.unlink(missing_ok=True)
+                    raise
+            except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError) as exc:
+                detail = getattr(exc, "stderr", None) or str(exc)
+                raise VoiceProviderError(f"Windows SAPI generation failed: {detail}") from exc
+        return GeneratedTake(
+            self.provider_id, output, 22050,
+            {"voice": result.stdout.strip().splitlines()[-1] if result.stdout.strip() else culture,
+             "culture": culture, "synthesis_text": request.text, "rate_sapi": -1},
+        )
+
+
+class LinuxEspeakSpeechProvider(VoiceProvider):
+    """Local eSpeak NG voices; no ML stack, network or shell required."""
+
+    provider_id = "linux-espeak-ng"
+
+    def supports(self, request: VoiceRequest, profile: VoiceProfile | None) -> bool:
+        return sys.platform.startswith("linux") and request.kind is SpeechKind.PEDAGOGICAL_SPEECH
+
+    def probe(self) -> ProviderStatus:
+        available = sys.platform.startswith("linux") and bool(shutil.which("espeak-ng"))
+        return ProviderStatus(
+            self.provider_id, available,
+            "eSpeak NG installed (check each language voice and pronunciation)"
+            if available else "requires Linux with espeak-ng installed",
+            capabilities=(SpeechKind.PEDAGOGICAL_SPEECH.value,),
+        )
+
+    def generate(self, request: VoiceRequest, profile: VoiceProfile | None) -> GeneratedTake:
+        status = self.probe()
+        if not status.available:
+            raise VoiceProviderError(status.detail)
+        if request.language not in {"en", "it", "es", "fr"}:
+            raise VoiceProviderError(f"no Linux native speech profile for {request.language}")
+        rate = {"en": 180, "it": 175, "es": 175, "fr": 175}[request.language]
+        with tempfile.TemporaryDirectory(prefix="greia-linux-speech-") as temp_dir:
+            wav = Path(temp_dir) / "speech.wav"
+            try:
+                # --stdin keeps arbitrary text out of command-line option parsing.
+                subprocess.run(
+                    ["espeak-ng", "-v", request.language, "-s", str(rate),
+                     "-w", str(wav), "--stdin"],
+                    input=request.text, check=True, capture_output=True, text=True,
+                    timeout=90,
+                )
+                fd, name = tempfile.mkstemp(prefix="greia-voice-native-", suffix=".wav")
+                os.close(fd)
+                output = Path(name)
+                try:
+                    shutil.copy2(wav, output)
+                except BaseException:
+                    output.unlink(missing_ok=True)
+                    raise
+            except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError) as exc:
+                detail = getattr(exc, "stderr", None) or str(exc)
+                raise VoiceProviderError(f"Linux eSpeak NG generation failed: {detail}") from exc
+        return GeneratedTake(
+            self.provider_id, output, 22050,
+            {"voice": f"espeak-ng:{request.language}", "rate_wpm": rate,
+             "synthesis_text": request.text},
         )
 
 

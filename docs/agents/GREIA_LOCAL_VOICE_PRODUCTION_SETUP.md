@@ -1,8 +1,28 @@
 # Greia Local Voice Production Setup for Agents
 
 **Status:** canonical authoring-workstation setup / Voice Studio
-**Reviewed:** 2026-10-22
+**Reviewed:** 2026-11-01
 **Not shipped to:** child devices or Activity packages
+
+## Host selection and verification choice
+
+Choose the dedicated [macOS](voice-platforms/MACOS.md),
+[Windows](voice-platforms/WINDOWS.md), or
+[Linux](voice-platforms/LINUX.md) procedure.
+
+| Host | Native pedagogical renderer | Canonical cloned characters |
+|---|---|---|
+| macOS | System \`say\` and \`afconvert\` | Prepared Apple Silicon VoxStage/MLX |
+| Windows | PowerShell \`System.Speech\` / installed SAPI voice | Authorized Mac VoiceEngine service via SSH forward |
+| Linux | \`espeak-ng\` / installed language voices | Authorized Mac VoiceEngine service via SSH forward |
+
+New public production **does not require** Parakeet. \`--verification off\`
+generates a clip directly for human listening; \`auto\` tries cached ASR
+advisorially and continues with \`NOT_RUN\` if missing, or with an advisory
+WARN if it disagrees. \`required\` is the *explicit strict mode*.
+The user decides whether the output is acceptable. No mode automatically
+human-approves or replaces existing accepted recordings. The Mac venv
+and \`brew\` examples below are **macOS-only**.
 
 ## 1. Readiness and canonical boundary
 
@@ -26,7 +46,7 @@ external backups and the same VoiceEngine. Acting defaults live in
 batch/service `delivery_prompt` field overrides one recording. Exact direction
 is retained in receipts. Fresh corpus output remains pending human listening.
 
-Start the installed shared service, then probe Greia:
+On the **prepared Mac** start the installed shared service, then probe Greia:
 
 ```bash
 voxstage start
@@ -46,7 +66,7 @@ The commands below assume the **shared VoxStage command and VoxCPM2 model** alre
 
 For new-language planning and the release boundary, start with `docs/development/ADD_A_GREIA_LANGUAGE.md`.
 
-## 2. Default workstation dependencies
+## 2. Prepared macOS workstation dependencies
 
 The Greia HTTP client needs Python 3.11+ and the repository's canonical v0.3
 assets. FFmpeg packages the generated WAV into Greia's 22,050 Hz mono WAV/OGG.
@@ -100,7 +120,7 @@ connection deadline and separate response timeout (`--timeout`, default 3,600
 seconds, 1–7,200). That client timeout also does not cancel server work.
 Known queues use `batch --input requests.jsonl` with one warm shared worker.
 
-## 4. Retained Chatterbox alternative
+## 4. Retained Apple-Silicon Chatterbox alternative
 
 Select deliberately; unavailable VoxStage never silently chooses this path:
 
@@ -160,8 +180,7 @@ python3 tools/greia_voice.py doctor
 ```
 
 For default cloned-character production, require the selected VoxStage provider,
-active references and FFmpeg. Chatterbox is an explicit alternative; native macOS
-is needed for pedagogical pronunciation. Current new-generation **Parakeet-TDT v3** ASR needs the prepared verifier
+active references and FFmpeg. Chatterbox is an explicit Apple Silicon alternative; native pedagogical speech uses the installed voice of the local host. Current new-generation **Parakeet-TDT v3** ASR needs the prepared verifier
 environment and cached pinned model, independently of synthesis readiness.
 
 Whisper generation/review/cutting resolves cached weights offline and cannot
@@ -185,10 +204,13 @@ does not describe other environments on the machine.
 
 ## 5. Host and semantic boundaries
 
-The default HTTP client is portable, but the shared synthesis host currently
-requires Apple Silicon/MLX. No remote/cloud configuration is implied. Native
-pedagogical production currently requires macOS; Linux/Windows report that
-independent provider gap truthfully. Never bypass the engine with host TTS.
+The semantic HTTP client is portable; the canonical cloned character backend
+currently requires a prepared Apple Silicon/MLX host. The native pedagogical
+providers use macOS system voices, Windows SAPI or Linux eSpeak NG. Windows/Linux
+can run native pronunciation locally and can connect to the prepared Mac Greia
+`serve` process through an authorized loopback SSH tunnel for canonical character
+voices. The `request --output` path is on the server host, not the client.
+Never bypass VoiceEngine from an Activity.
 
 Dani now clones `greia.dani.v3`; `dani_system_speech` remains a compatible kind,
 and ordinary Dani `character_dialogue` is also supported. Native Dani profiles
@@ -203,7 +225,7 @@ No ASR result establishes pronunciation or human acceptance.
 
 ## 6. Smoke and review
 
-Generate into review staging, never over shipping audio:
+No ASR model is required to generate and listen. Generate into review staging, never over shipping audio:
 
 ```bash
 python3 tools/greia_voice.py generate --speaker dani --kind dani_system_speech \
@@ -214,7 +236,7 @@ python3 tools/greia_voice.py generate --speaker pedagogical --kind pedagogical_s
   --verification off --output /tmp/greia-voice-review/ma.wav
 ```
 
-New output remains `human_review=PENDING`. Listen for words, locale, character,
+New output remains `human_review=PENDING`. Parakeet OFF/absent/warning cannot reject an ordinary `auto`/ `off` clip; `required` keeps strict behavior. Listen for words, locale, character,
 pronunciation, clipping/tails, delivery and small-speaker intelligibility. The
 selected reference's acceptance never accepts a future recording.
 
