@@ -90,10 +90,12 @@ verification additionally needs the prepared Apple Silicon MLX environment and
 pinned cached weights. Use the prepared interpreter above for ASR/cutting. Do not
 reinstall packages or download weights during a recording run.
 
-`doctor` does not synthesize, import voices or download weights. Exit 0 means
-selected character provider + references + FFmpeg are ready; exit 2 means they
-are not. Inspect `verifier.available` separately: doctor exit 0 does not promise
-ASR readiness or native pedagogical availability.
+`doctor` does not synthesize, import voices or download weights. Exit 0
+means at least one production route (selected canonical character provider
+or host-native pedagogical renderer) plus FFmpeg is ready. Inspect
+`character_production_ready`, `native_pedagogical_production_ready` and
+`verifier.available` separately; an exit 0 does not promise every voice
+or language is installed.
 
 ## 2. Identity, language and performance
 

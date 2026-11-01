@@ -91,11 +91,22 @@ def cmd_doctor(args: argparse.Namespace) -> int:
         and AudioPipeline.ffmpeg_available()
         and provider_statuses[0]["available"]
     )
+    native_ready = (
+        AudioPipeline.ffmpeg_available()
+        and any(
+            row["available"] and row["provider_id"] in {
+                "macos-native-say", "windows-native-sapi", "linux-espeak-ng",
+            }
+            for row in provider_statuses
+        )
+    )
     payload = {
         "registry_version": registry.registry_version,
         "default_character_provider": "voxstage",
         "selected_character_provider": selected,
         "character_production_ready": bool(character_ready),
+        "native_pedagogical_production_ready": bool(native_ready),
+        "production_ready": bool(character_ready or native_ready),
         "anchors": anchor_status,
         "ffmpeg": {"available": AudioPipeline.ffmpeg_available()},
         "providers": provider_statuses,
@@ -104,7 +115,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
                      "available": verifier_ok, "detail": verifier_detail},
     }
     _print(payload)
-    return 0 if character_ready else 2
+    return 0 if character_ready or native_ready else 2
 
 
 def cmd_generate(args: argparse.Namespace) -> int:

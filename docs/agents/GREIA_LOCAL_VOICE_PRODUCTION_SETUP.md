@@ -252,7 +252,9 @@ receipts, result counts, ASR scope, human acceptance and remaining blockers.
 Provider-free tests, live authoring synthesis, listening and Greia runtime or
 physical playback are distinct evidence lanes.
 
-`doctor` exits 0 when the selected character provider, all active references and
-FFmpeg are ready; otherwise it exits 2. Optional verifier/retained-alternative
-status is reported independently. `selected_character_provider` records the
+`doctor` exits 0 when either the selected character provider and its
+references or a host-native pedagogical renderer is available, together with
+FFmpeg. It exits 2 when neither production route is ready. The optional
+verifier and alternatives are reported independently; voice availability in a
+particular language still needs checking. `selected_character_provider` records the
 effective choice; `default_character_provider` records the built-in `voxstage` default.
