@@ -47,17 +47,14 @@ Big pictures, friendly voices, and one Home button that always brings them back.
 </p>
 
 > **Status: technical preview (`0.13.1-preview.1`), not a family release.**
-> A previous Acer Aspire One technical-preview installer is listed on the
-> [downloads page](https://www.frozenpepper.it/greia/downloads.html). It was
-> built before the 31 October 2026 removal of rights-uncleared macOS voice
-> recordings from the public source tree. **That older binary is not cleared
-> for public redistribution** and requires withdrawal or a rights-cleared
-> replacement. Hardware certification also remains incomplete.
-> Distribution and media-rights caveats: [licensing notice](NOTICE.md).
+> An Acer Aspire One technical-preview installer is listed on the
+> [downloads page](https://www.frozenpepper.it/greia/downloads.html).
+> Hardware testing and release certification are still incomplete.
+> Try it on a spare computer, not one you rely on.
 
 ## Get Greia
 
-**Installer distribution is under review:** the following flashing instructions apply to a future rights-cleared image. Do not mirror or redistribute the older technical-preview image while the audio-rights issue in [NOTICE.md](NOTICE.md) remains unresolved.
+The instructions below apply to the current technical-preview installer.
 
 Installing Greia **erases the whole disk** of the computer you put it on.
 Use a spare computer, and copy off anything you want to keep.
