@@ -18,10 +18,6 @@ one.
   receipts, MBR adapter diagnostics, ARM64 builder-refusal expectations,
   optional voice-provider skips, and the `morbidi_mostriciattoli` first-frame
   budget on the Linux verification host.
-- Added the macOS System Voice audio inventory and corrected the public
-  licensing notice. This is an active public-release blocker: 627 committed
-  recordings use macOS `say` voices and require replacement/permission before
-  public redistribution.
 - Added `PRIVACY.md`, this changelog and a concrete technical-preview release
   record.
 
