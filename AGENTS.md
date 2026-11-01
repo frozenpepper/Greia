@@ -121,6 +121,7 @@ features and must not be confused with backward compatibility.
 
 ## Standing owner decisions
 
+- documentation, public-repository, licensing and provenance cleanup tasks must never delete, replace, regenerate or exclude committed production assets without specific authorization from the owner. This includes committed recordings and their provenance receipts: keep their original bytes and paths unless the owner explicitly authorizes a change;
 - committed recordings are owner-reviewed and accepted; never regenerate them for perceived provenance problems. New speech goes through `tools/greia_voice.py` and needs fresh human acceptance;
 - do not add file anti-tampering, signing or elaborate asset verification; users may edit their own files;
 - the canonical selectable language set is loaded from `src/greia_platform/languages/<locale>/manifest.json`; currently en, it, es, fr are owner-released and ship with their audio. Additional languages require an owner-authorized, fully translated and accepted manifest/data pack. Do not create another language registry.
