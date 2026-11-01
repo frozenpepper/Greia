@@ -5,7 +5,7 @@ and [cross-platform setup](../../docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.
 New speech is **VoxCPM2** on macOS, Windows, and Linux through PyTorch;
 review is **Parakeet-TDT v3** via ONNX on all three platforms.
 
-\`\`\`text
+```text
 python tools/setup_voice_models.py      # explicit one-time download of BOTH models
 python tools/greia_voice.py doctor     # no download, report provider/reference/ASR readiness
 python tools/greia_voice.py generate --speaker leo --kind character_dialogue --locale en --text "Let's explore!" --output <review-path>/leo.wav
@@ -13,31 +13,31 @@ python tools/greia_voice.py batch --input <requests.jsonl>
 python tools/greia_voice.py serve
 python tools/greia_voice.py request --speaker leo --kind character_dialogue --locale it --text "Guardiamo con calma." --output <review-path>/leo.wav
 python tools/greia_voice.py shutdown
-\`\`\`
+```
 
 Use your platform's virtual-environment interpreter instead of the generic
-\`python\` above. In Windows PowerShell, quote file paths and use its supported
+`python` above. In Windows PowerShell, quote file paths and use its supported
 line-continuation syntax, not Unix backslashes.
 
 ## Inputs and reviewers
 
-Kinds: \`character_dialogue\`, \`shared_character_utterance\`,
-\`pedagogical_speech\`, \`dani_system_speech\`. Canonical names: Dani, Lilli,
+Kinds: `character_dialogue`, `shared_character_utterance`,
+`pedagogical_speech`, `dani_system_speech`. Canonical names: Dani, Lilli,
 Leo, Flash, Momo and Tito. Exact approved text, locale and stable cue ID
 belong in the semantic request. Active v0.3 reference WAVs and transcripts
 identify the same Greia characters on all authoring computers.
 
-\`verification\` defaults to \`auto\`: Parakeet runs when installed, and
-NOT_RUN/WARN still leaves the output for the human reviewer. \`off\` skips
-ASR; \`required\` requests strict legacy automated quality gates/retries.
-The ordinary output has a sibling \`<audio>.receipt.json\` with provider,
-model, verifier, hashes, request and \`human_review=PENDING\`.
+`verification` defaults to `auto`: Parakeet runs when installed, and
+NOT_RUN/WARN still leaves the output for the human reviewer. `off` skips
+ASR; `required` requests strict legacy automated quality gates/retries.
+The ordinary output has a sibling `<audio>.receipt.json` with provider,
+model, verifier, hashes, request and `human_review=PENDING`.
 
 The owner decides acceptance. Do not install or replace committed recordings
 or receipts merely because a model reports PASS.
 
-VoxCPM2 \`openbmb/VoxCPM2\` is the only default TTS; \`--character-provider
-voxstage\` is the older Mac MLX VoxCPM2 route, and \`chatterbox\` is retained
+VoxCPM2 `openbmb/VoxCPM2` is the only default TTS; `--character-provider
+voxstage` is the older Mac MLX VoxCPM2 route, and `chatterbox` is retained
 only for explicit historical work. There is no automatic platform-dependent
 fallback to another voice model or OS-native TTS.
 
