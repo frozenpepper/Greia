@@ -330,7 +330,7 @@ class VoiceEngineTests(unittest.TestCase):
             self.assertEqual(result.attempts, 3)
             self.assertTrue(result.evidence_dir.is_dir())
 
-    def test_public_verification_off_is_rejected_before_provider_submission(self):
+    def test_public_verification_off_generates_for_human_review(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             provider = FakeProvider(SpeechKind.CHARACTER_DIALOGUE)
@@ -339,9 +339,10 @@ class VoiceEngineTests(unittest.TestCase):
                 audio_pipeline=FakeAudioPipeline(), generation_lock=NullLock())
             result = engine.generate(VoiceRequest("leo", SpeechKind.CHARACTER_DIALOGUE,
                 "en", "Hello there", verification=VerificationMode.OFF))
-            self.assertEqual(result.disposition, GenerationDisposition.REJECTED)
-            self.assertEqual(provider.calls, 0)
-            self.assertIn("requires automatic", result.detail)
+            self.assertEqual(result.disposition, GenerationDisposition.REVIEW_REQUIRED)
+            self.assertEqual(provider.calls, 1)
+            self.assertEqual(result.verification.disposition, VerificationDisposition.NOT_RUN)
+            self.assertTrue(result.output_path.is_file())
 
     def test_dani_cannot_route_through_character_dialogue(self):
         with tempfile.TemporaryDirectory() as tmp:

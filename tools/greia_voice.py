@@ -81,7 +81,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
 
     selected = selected_character_provider(args.character_provider)
     providers = list(build_providers(selected))
-    if selected != "chatterbox":
+    if selected == "voxstage":
         providers.append(ChatterboxMLXProvider())
     verifier = ParakeetVerifier()
     verifier_ok, verifier_detail = verifier.probe()
@@ -93,7 +93,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     )
     payload = {
         "registry_version": registry.registry_version,
-        "default_character_provider": "voxstage",
+        "default_character_provider": "voxcpm2",
         "selected_character_provider": selected,
         "character_production_ready": bool(character_ready),
         "anchors": anchor_status,
@@ -174,7 +174,7 @@ def add_request_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--locale", required=True, help="BCP-47 locale, e.g. it or en")
     parser.add_argument("--text", required=True, help="exact reviewed text to synthesize")
     parser.add_argument("--cue-id")
-    parser.add_argument("--delivery-prompt", default="", help="acting direction, separate from spoken words; VoxStage only")
+    parser.add_argument("--delivery-prompt", default="", help="acting direction separate from spoken words; VoxCPM2 supports it")
     parser.add_argument("--output", help="optional absolute or repository-relative .wav/.ogg path")
     parser.add_argument(
         "--verification",
@@ -214,7 +214,7 @@ def build_parser() -> argparse.ArgumentParser:
     for command in (doctor, generate, batch, serve):
         command.add_argument(
             "--character-provider", choices=CHARACTER_PROVIDERS,
-            help="operator choice for character speech; defaults to GREIA_VOICE_CHARACTER_PROVIDER or voxstage",
+            help="VoxCPM2 on every OS by default; VoxStage Mac workflow is an explicit legacy choice",
         )
 
     request = sub.add_parser("request", help="send one semantic request to a running service")

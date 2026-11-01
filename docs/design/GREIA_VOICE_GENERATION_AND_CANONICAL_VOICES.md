@@ -1,5 +1,14 @@
 # Greia Voice Generation and Canonical Character Voices
 
+> **Current voice authoring (2026-11-01):** New default production is
+> VoxCPM2 through PyTorch on Windows/macOS/Linux, with Parakeet-TDT v3
+> through ONNX for review. This is the same underlying model family as the
+> earlier Mac VoxStage/MLX VoxCPM2 implementation, not a MOSS migration.
+> Parakeet runs in default `auto` mode but user can choose `off`;
+> only human listening accepts audio. Historical receipts/assets remain intact.
+> See [workstation setup](../agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md).
+
+
 **Status:** accepted voice policy + v0.3 canonical authoring Voice Production Engine; shared/introduction catalogue acceptance is per current cue after authorized replacements
 **Reviewed:** 2026-10-19
 **Scope:** presenter speech, researched narration, shared reactions, pedagogical speech, Dani system speech, character introductions, multilingual static audio and human review  

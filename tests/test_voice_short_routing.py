@@ -18,6 +18,7 @@ from greia_voice_core.engine import VoiceEngine
 from greia_voice_core.locking import NullGenerationLock
 from greia_voice_core.audio import AudioPipeline
 from greia_voice_core.parakeet_asr import ParakeetTranscriber
+from greia_voice_core.onnx_parakeet_asr import OnnxParakeetTranscriber
 from greia_voice_core.models import (GeneratedTake, GenerationDisposition, ProviderStatus,
     SpeechKind, VerificationDisposition, VerificationMode, VerificationResult, VoiceProfile, VoiceRequest)
 from greia_voice_core.service import request_from_mapping
@@ -82,7 +83,8 @@ class AutomaticShortRoutingTests(unittest.TestCase):
     def tearDown(self): self.tmp.cleanup()
     def request(self, **kw):
         return VoiceRequest(**({'speaker':'leo','kind':SpeechKind.CHARACTER_DIALOGUE,'locale':'en',
-                                'text':self.target,'output':self.base/'result.wav'} | kw))
+                                'text':self.target,'output':self.base/'result.wav',
+                                'verification': VerificationMode.REQUIRED} | kw))
 
     def test_all_locales_and_all_actors_route_without_caller_wrapping(self):
         for speaker in ('leo','dani','momo','tito','lilli','flash'):
@@ -139,9 +141,9 @@ class AutomaticShortRoutingTests(unittest.TestCase):
         verified_paths = []
 
         class FixtureModel:
-            def generate(self, path):
+            def recognize(self, path):
                 verified_paths.append(Path(path))
-                return SimpleNamespace(text=text, sentences=[])
+                return text
 
         # Exercise VoiceEngine's real default verifier and transcriber adapter,
         # replacing only the heavyweight model load/inference with a deterministic
@@ -152,10 +154,10 @@ class AutomaticShortRoutingTests(unittest.TestCase):
                                      generation_lock=NullGenerationLock())
         output = self.base / 'default-normal.wav'
         try:
-            with patch.object(ParakeetTranscriber, '_load', return_value=FixtureModel()):
-                result = default_engine.generate(self.request(text=text, output=output))
+            with patch.object(OnnxParakeetTranscriber, '_load', return_value=FixtureModel()):
+                result = default_engine.generate(self.request(text=text, output=output, verification=VerificationMode.AUTO))
             self.assertEqual(result.disposition, GenerationDisposition.REVIEW_REQUIRED, result.detail)
-            self.assertEqual(result.verification.verifier_id, 'mlx-audio-parakeet-tdt-v3')
+            self.assertEqual(result.verification.verifier_id, 'onnx-asr-parakeet-tdt-v3')
             self.assertEqual(result.verification.disposition, VerificationDisposition.PASS)
             self.assertEqual(len(verified_paths), 1)
             self.assertEqual(verified_paths[0].name, 'delivered.wav')
@@ -169,13 +171,11 @@ class AutomaticShortRoutingTests(unittest.TestCase):
         verified_paths = []
 
         class FixtureModel:
-            def generate(self, path):
+            def recognize(self, path):
                 selected = Path(path)
                 verified_paths.append(selected)
-                # Only the first cut is the target; all suffixes are still
-                # independently transcribed and the final package is checked.
                 transcript = text if selected.name in {"candidate-01.wav", "delivered.wav"} else "wrong words"
-                return SimpleNamespace(text=transcript, sentences=[])
+                return transcript
 
         provider = Provider(self.base)
         default_engine = VoiceEngine(self.repo, self.engine.registry, [provider],
@@ -183,16 +183,16 @@ class AutomaticShortRoutingTests(unittest.TestCase):
                                      generation_lock=NullGenerationLock())
         output = self.base / "default-short.wav"
         try:
-            with patch.object(ParakeetTranscriber, "_load", return_value=FixtureModel()):
+            with patch.object(OnnxParakeetTranscriber, "_load", return_value=FixtureModel()):
                 result = default_engine.generate(self.request(text=text, output=output))
             self.assertEqual(result.disposition, GenerationDisposition.REVIEW_REQUIRED, result.detail)
-            self.assertEqual(result.verification.verifier_id, "mlx-audio-parakeet-tdt-v3")
+            self.assertEqual(result.verification.verifier_id, "onnx-asr-parakeet-tdt-v3")
             self.assertEqual(result.verification.disposition, VerificationDisposition.PASS)
             self.assertTrue(any(path.name.startswith("candidate-") for path in verified_paths))
             self.assertEqual(verified_paths[-1].name, "delivered.wav")
             receipt = json.loads(result.receipt_path.read_text())
             self.assertEqual(receipt["short_phrase"]["quality"]["model_id"],
-                             "mlx-community/parakeet-tdt-0.6b-v3")
+                             "nvidia/parakeet-tdt-0.6b-v3")
         finally:
             default_engine.close()
 
@@ -213,11 +213,12 @@ class AutomaticShortRoutingTests(unittest.TestCase):
         self.assertEqual(result.disposition,GenerationDisposition.UNAVAILABLE)
         self.assertEqual(len(self.provider.calls),0)
 
-    def test_public_off_is_rejected_before_synthesis(self):
+    def test_public_off_keeps_generated_audio_without_asr(self):
         result=self.engine.generate(self.request(verification=VerificationMode.OFF))
-        self.assertEqual(result.disposition,GenerationDisposition.REJECTED)
-        self.assertIsNone(result.output_path)
-        self.assertEqual(len(self.provider.calls),0)
+        self.assertEqual(result.disposition,GenerationDisposition.REVIEW_REQUIRED, result.detail)
+        self.assertTrue(result.output_path.is_file())
+        self.assertEqual(result.verification.disposition, VerificationDisposition.NOT_RUN)
+        self.assertEqual(len(self.provider.calls),1)
         self.assertEqual(len(self.asr_calls),0)
 
     def test_provider_failure_never_allocates_another_take(self):

@@ -1,5 +1,14 @@
 # Greia Voice Production Engine
 
+> **Current voice authoring (2026-11-01):** New default production is
+> VoxCPM2 through PyTorch on Windows/macOS/Linux, with Parakeet-TDT v3
+> through ONNX for review. This is the same underlying model family as the
+> earlier Mac VoxStage/MLX VoxCPM2 implementation, not a MOSS migration.
+> Parakeet runs in default `auto` mode but user can choose `off`;
+> only human listening accepts audio. Historical receipts/assets remain intact.
+> See [workstation setup](../agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md).
+
+
 **Status:** canonical authoring-time subsystem; VoxStage/VoxCPM2 synthesis and local Parakeet-TDT verification defaults
 **Reviewed:** 2026-10-23
 **Runtime boundary:** no synthesis model, worker, reference master or authoring dependency ships to the child device.

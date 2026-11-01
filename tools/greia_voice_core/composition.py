@@ -1,25 +1,24 @@
-"""One composition policy for CLI, warm service and repository producers."""
+"""Select one canonical VoxCPM2 renderer plus historical opt-in providers."""
 from __future__ import annotations
-
 import os
 
-from .providers import ChatterboxMLXProvider, MacOSNativeSpeechProvider, UnsupportedNativeSpeechProvider, VoiceProvider
+from .providers import ChatterboxMLXProvider, MacOSNativeSpeechProvider, VoiceProvider
 from .voxstage_provider import VoxStageProvider
+from .voxcpm_provider import VoxCPM2TorchProvider
 
-
-CHARACTER_PROVIDERS = ("voxstage", "chatterbox")
+CHARACTER_PROVIDERS = ("voxcpm2", "voxstage", "chatterbox")
 
 
 def selected_character_provider(explicit: str | None = None) -> str:
-    """Resolve operator policy once; never silently substitute another voice engine."""
-    name = explicit if explicit is not None else os.environ.get("GREIA_VOICE_CHARACTER_PROVIDER", "voxstage")
+    name = explicit if explicit is not None else os.environ.get("GREIA_VOICE_CHARACTER_PROVIDER", "voxcpm2")
     if name not in CHARACTER_PROVIDERS:
         raise ValueError(f"character provider must be one of {CHARACTER_PROVIDERS}: {name}")
     return name
 
 
 def build_providers(character_provider: str | None = None) -> tuple[VoiceProvider, ...]:
-    """Select one character renderer plus the independent pedagogical providers."""
-    factories = {"voxstage": VoxStageProvider, "chatterbox": ChatterboxMLXProvider}
-    character = factories[selected_character_provider(character_provider)]()
-    return character, MacOSNativeSpeechProvider(), UnsupportedNativeSpeechProvider()
+    """Portable VoxCPM2 is the default on every OS; no substitute TTS per host."""
+    factories = {"voxcpm2": VoxCPM2TorchProvider,
+                 "voxstage": VoxStageProvider,
+                 "chatterbox": ChatterboxMLXProvider}
+    return factories[selected_character_provider(character_provider)](), MacOSNativeSpeechProvider()

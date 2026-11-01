@@ -141,205 +141,35 @@ Do not infer physical readability/performance from desktop rendering alone.
 
 ## 7. Voice Production Engine / authoring Voice Studio
 
-**Post-generation review:** follow `docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md`.
-`tools/regenerate_voice_corpus.py review` checks installed audio/receipts and
-produces external resumable reports. Optional ASR uses existing cached weights
-only; disabled/unavailable ASR is incomplete screening. This does not grant
-human acceptance or install anything. Generation DONE is a separate state.
+**Same TTS and ASR on macOS, Windows and Linux:** generate with
+`openbmb/VoxCPM2` (PyTorch CPU/CUDA/MPS) and review with NVIDIA
+`parakeet-tdt-0.6b-v3` (ONNX Runtime). This is authoring-time software only.
 
-Corpus regeneration/replacement (owner-requested 2026-10-19, v3 run
-2026-10-21) uses `tools/regenerate_voice_corpus.py` with
-`skills/greia-voice-production/SKILL.md`: external originals and
-candidates are kept, deterministic isolated letters and syllables are
-preserved, and every new take is listening-pending. Character acting defaults
-are in `tools/greia_voice_core/character_delivery.json`, with a
-`delivery_prompt` override per recording. Short-cue carrier extraction
-(`tools/voice_carrier.py`, `docs/agents/GREIA_SPOKEN_CARRIER_EXTRACTION.md`)
-is technical screening only, never acceptance, and uses cached model weights
-only.
+1. Read [the shared setup](docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md)
+   and the [Windows](docs/agents/voice-platforms/WINDOWS.md),
+   [macOS](docs/agents/voice-platforms/MACOS.md) or
+   [Linux](docs/agents/voice-platforms/LINUX.md) guide.
+2. Install both models once with `tools/setup_voice_models.py` using a
+   host-specific voice-authoring Python environment outside the repository.
+3. Run `tools/greia_voice.py doctor`; inspect **both** the VoxCPM2 provider
+   and Parakeet v3 status. The command never downloads models or creates audio.
+4. Generate using `tools/greia_voice.py`; `verification=auto` runs Parakeet
+   by default, and the user can disable it with `--verification off`.
+   A WARN or unavailable Parakeet is a human-review note, not an automatic
+   rejection in normal mode.
+5. Human listening determines acceptance. Keep new output and receipts in
+   external review staging; do not replace already approved audio or receipts
+   during setup.
 
-Canonical entry point:
+The older Mac VoxStage worker uses an MLX/8-bit build of **the same VoxCPM2
+model family**. It remains selectable explicitly with
+`--character-provider voxstage`, not a requirement on Windows/Linux.
+Other historical models, provider evidence and frozen corpus plans are not
+relabeled. Greia's canonical v0.3 voice masters are not regenerated.
 
-```text
-tools/greia_voice.py
-```
-
-“Voice Studio” is shorthand for the authoring workflow around `VoiceEngine`; it is not child-runtime TTS and does not imply a GUI.
-
-Read:
-
-```text
-skills/greia-voice-production/SKILL.md
-tools/greia_voice_core/README.md
-docs/architecture/GREIA_VOICE_PRODUCTION_ENGINE.md
-docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md
-```
-
-First command on any workstation:
-
-```bash
-python3 tools/greia_voice.py doctor
-```
-
-Semantic production kinds:
-
-```text
-character_dialogue
-shared_character_utterance
-pedagogical_speech
-dani_system_speech
-```
-
-**Owner direction (2026-10-21):** voice-defining pitch/register, timbre, age
-and texture belong in master design only. Per-cue directions must be
-acting/emotion/pace, not repeated persona definitions. The active v0.3 masters
-are Dani v5 candidate 02, Momo v3 candidate 01 and Tito v3 candidate 01;
-Lilli, Leo and Flash keep their v0.2 masters.
-
-### 7.1 Base engine and default character production
-
-Python 3.11+ runs the Greia CLI. The active v0.3 registry uses owner-selected
-Dani, Momo and Tito masters from 2026-10-21 and retains Lilli, Leo and Flash's
-exact v0.2 masters unchanged. Character production uses **VoxCPM2 through the
-shared local VoxStage service** by default. No model runs on the child device.
-
-On this workstation VoxStage is already installed. Start/reuse its single worker:
-
-```bash
-voxstage start
-python3 tools/greia_voice.py doctor
-```
-
-Greia uses only standard-library HTTP to talk to VoxStage; it does not import a
-second MLX model or require the Chatterbox venv for default character production.
-FFmpeg remains required for engine-owned 22,050 Hz mono WAV/OGG packaging.
-VoxStage owns its optional Apple-Silicon model/runtime installation; consult the
-shared tools catalog and VoxStage skill before installing anything. Never copy
-its weights, venv or generated job cache into this repository.
-
-### 7.2 Configuration and retained alternative
-
-- Default character provider: `voxstage` (`voxstage-voxcpm2` in receipts).
-- Override for an engine process: `--character-provider chatterbox` on `doctor`,
-  `generate`, `batch` or `serve`; repository producers can use
-  `GREIA_VOICE_CHARACTER_PROVIDER=chatterbox`. An explicit CLI flag wins.
-- The default service origin is `http://127.0.0.1:8791`;
-  `GREIA_VOXSTAGE_URL` may select another loopback HTTP origin only.
-- `GREIA_VOXSTAGE_TIMEOUT` bounds each job wait (default 1,800 seconds;
-  allowed 1–7,200). A timed-out job can still run in VoxStage; inspect its
-  recorded job ID before submitting more work. No automatic POST resubmission.
-- Voice IDs and transcripts come from the active v0.3 registry. Missing VoxStage library
-  entries are imported from the repository's exact reviewed WAV; existing IDs
-  are reused without replacement. `doctor` never imports or generates.
-- All six character profiles use cloned references, including the compatible
-  `dani_system_speech` route. `pedagogical_speech` retains deterministic macOS
-  native pronunciation through the independent native provider.
-
-Chatterbox remains implemented. Its optional installation and requirements are
-in `docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md` and
-`tools/greia_voice_requirements_mlx.txt`. Unload the shared VoxStage model before
-using in-process Chatterbox on the same workstation. No silent backend fallback
-occurs if the chosen character provider is unavailable.
-
-Greia's `serve` process selects its provider at startup; `request` clients use
-that server's choice. `request --timeout` controls the response wait (default
-3,600 seconds), separate from the ten-second connection deadline. VoxStage
-owns its warm worker: `voxstage unload` releases model memory after production;
-closing a Greia client does not stop a service used by other projects.
-
-### 7.3 Shared reactions + character introductions
-
-The owner-accepted v0.2 baseline is 180 shared reactions plus 12 character
-introductions (192 clips). Rows that the 2026-10-21 v3 replacement regenerated
-for Dani, Momo and Tito are listening-pending again (see §12).
-
-Canonical accepted assets:
-
-```text
-assets/audio/characters/shared/v0.2/
-```
-
-The older `v0.1` set is retired historical material.
-
-Producer/runbook:
-
-```text
-tools/record_shared_character_utterances.py
-docs/agents/GREIA_SHARED_CHARACTER_UTTERANCE_RECORDING.md
-```
-
-Design/status authority:
-
-```text
-docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md
-docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md
-```
-
-Still separate/pending where applicable:
-
-- runtime shared-utterance resolver/catalogue integration;
-- final product UX placement for character introductions.
-
-Normal Activity authors do not need a cloning environment merely to consume an accepted static shared library.
-
-### 7.4 Pedagogical/system speech
-
-Letters, syllables, phonics and other pronunciation-authoritative material use `pedagogical_speech` through VoiceEngine. Activity/OS scripts must not call macOS `say` or encode host voice names/pronunciation hacks.
-
-Dani-specific robotic speech uses `dani_system_speech`, now backed by Dani’s selected cloned master through VoxStage by default.
-
-### 7.5 Current Parakeet verifier and retained historical Whisper environment
-
-**New VoiceEngine requests (since 2026-10-23)** use offline cached
-multilingual **Parakeet-TDT v3** through `tools/greia_voice_core/parakeet_asr.py`,
-with pinned model `mlx-community/parakeet-tdt-0.6b-v3` at revision
-`ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15`.
-This is **not** the same model as VoxCPM2 (speech generation). Verification
-does not silently fall back to Whisper or download missing weights.
-
-On the owner's already-prepared Apple Silicon workstation:
-
-```bash
-voice_python="$HOME/Library/Application Support/Greia/voice-production/venv/bin/python"
-"$voice_python" tools/greia_voice.py doctor
-```
-
-Inspect `verifier.available` and the exact model/revision in the doctor
-response. Character provider readiness and doctor exit code 0 are **not**
-proof of ASR readiness. A fresh workstation must separately install a
-compatible MLX/Parakeet environment and provision the exact cached snapshot;
-the Greia checkout alone does not reproduce the owner's voice workstation.
-See `docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md` and the full entry
-in `tools/greia_voice_core/README.md`. Language support/recognition quality
-must be assessed for *new* languages before trusting machine transcripts.
-
-**Historical frozen corpus review** retains Whisper evidence and the old
-`mlx-community/whisper-base-mlx` pinned revision
-`1e3e249fb8d01c655324bd6841b1deadffd6d04c`
-(older records may use Tiny). The owner's prepared venv also has
-`mlx-whisper==0.4.3` and cached Base/Tiny weights for those workflows.
-Use `docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md` for exact historical
-review commands. Do not relabel, rerun or silently reinterpret prior receipts
-as Parakeet results. Neither ASR gives human listening acceptance.
-
-### 7.6 Human review
-
-Shared `takeboard` provides the local HTML listening desk; see the shared tools
-catalog/skill and `docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md` §6. Greia supplies
-only `tools/export_voice_review_batch.py`. The tool needs Python/browser only,
-no model installation, and saves human states/scores/notes in external review JSON.
-It does not change Greia media/receipts or grant automatic acceptance.
-
-
-New generations begin with human review pending. Provider success, a valid WAV/OGG file or Whisper PASS is not acceptance.
-
-The accepted v0.2 shared/introduction set is an example of the complete flow: generation -> review receipts -> owner listening -> versioned accepted asset promotion.
-
-Low-level provider troubleshooting only:
-
-```text
-docs/agents/GREIA_CHATTERBOX_PRODUCTION_FIELD_GUIDE.md
-```
+[Voice production skill](skills/greia-voice-production/SKILL.md) ·
+[VoiceEngine CLI](tools/greia_voice_core/README.md) ·
+[Canonical voice design](docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md)
 
 ## 8. Parent App developer
 
@@ -452,9 +282,9 @@ Do not add destructive disk/removable-media writes to a generic setup helper.
 | Activity Simulator | implemented/documented; desktop development dependencies required |
 | Developer remote | implemented for explicit developer images only |
 | Voice Production Engine | implemented/canonical; provider readiness is workstation-specific and reported by `doctor` |
-| Character production (all six) | shared local VoxStage/VoxCPM2 default behind VoiceEngine; Chatterbox explicitly selectable |
-| Pedagogical production | independent macOS native provider; Dani now uses the cloned-character route |
-| ASR verification | Parakeet-TDT v3 for new requests, Whisper retained for historical review; advisory only, never acceptance authority |
+| Character production (all six) | VoxCPM2 via PyTorch across Windows/macOS/Linux; VoxStage is explicit historical Mac alternative |
+| Pedagogical production | VoxCPM2 via existing Leo reference; no OS-specific TTS default |
+| ASR verification | Parakeet-TDT v3 via ONNX across platforms, enabled in auto mode; owner can turn off |
 | Shared reactions | **180 EN/IT recordings were owner-accepted in the v0.2 baseline**; selected Dani/Momo/Tito rows included in the 2026-10-21 v3 corpus replacement are now pending fresh listening, with prior bytes/receipts backed up externally |
 | Character introductions | **12 EN/IT introductions were owner-accepted in the v0.2 baseline**; selected Dani/Momo/Tito introductions included in the 2026-10-21 v3 replacement are now pending fresh listening; product placement separate |
 | Shared runtime resolver | separate integration task where still pending |

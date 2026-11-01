@@ -124,7 +124,7 @@ Example:
 Dani: "Metti tre mele nel cestino."
 ```
 
-Dani uses its selected v0.3 cloned master (`greia.dani.v3`) through the default VoxStage/VoxCPM2 provider. `dani_system_speech` remains a compatible semantic kind; ordinary `character_dialogue` is also supported. Pedagogical pronunciation keeps its separate native/system route.
+Dani uses its selected v0.3 cloned master (`greia.dani.v3`) through the default VoxCPM2 provider. `dani_system_speech` remains a compatible semantic kind; ordinary `character_dialogue` is also supported. Pedagogical pronunciation uses VoxCPM2 with the existing canonical Leo reference; it still requires special human review.
 
 ## 4. Canonical speakers
 
@@ -193,7 +193,7 @@ takes stay pending until individually heard. New recordings always require owner
 listening approval. No source/signature tamper checking is required: users are
 allowed to modify installed media.
 
-VoxStage character acting defaults are editable in
+Historical VoxStage acting defaults are editable in
 `tools/greia_voice_core/character_delivery.json`. Use the semantic
 `delivery_prompt` field (CLI `--delivery-prompt`) for a cue-specific tone/mood
 override, separate from spoken text. Batch/service preserve the same field;
@@ -235,42 +235,20 @@ Do not hard-code locale branches into game rules.
 
 ## 7. Produce through VoiceEngine only
 
-Default character production uses the shared local VoxStage/VoxCPM2 worker and active v0.3 registry references: Dani/Momo/Tito use their selected v3 IDs while Lilli/Leo/Flash retain their exact v2 IDs and bytes. The operator starts the installed worker with `voxstage start`; Activity producers still submit only semantic Greia requests. Chatterbox is an explicit operator alternative, never a silent fallback. Do not regenerate existing accepted clips outside an explicit owner-authorized corpus operation.
+All authoring computers use **VoxCPM2** as the default TTS model and
+**Parakeet-TDT v3** for default review, regardless of OS. See the
+[common setup](../../docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md)
+and platform instructions for [Windows](../../docs/agents/voice-platforms/WINDOWS.md),
+[macOS](../../docs/agents/voice-platforms/MACOS.md) and
+[Linux](../../docs/agents/voice-platforms/LINUX.md).
 
-Start with:
-
-```bash
-python3 tools/greia_voice.py doctor
-```
-
-Generate through `generate`, `batch`, or the warm `serve`/`request` workflow described by `skills/greia-voice-production/SKILL.md`.
-
-Example natural-character cue:
-
-```bash
-python3 tools/greia_voice.py generate \
-  --speaker leo \
-  --kind character_dialogue \
-  --locale it \
-  --text "Guardiamo con calma." \
-  --cue-id presenter.hint \
-  --output /tmp/greia-voice-review/my_activity/it/presenter-hint.wav
-```
-
-Example exact pedagogical target:
-
-```bash
-python3 tools/greia_voice.py generate \
-  --speaker pedagogical \
-  --kind pedagogical_speech \
-  --locale it \
-  --text "ma" \
-  --cue-id phonics.ma \
-  --verification off \
-  --output /tmp/greia-voice-review/my_activity/it/phonics-ma.wav
-```
-
-Generate review candidates outside the final runtime asset location. Integrate only accepted clips.
+Generate through `tools/greia_voice.py`, with reviewed semantic speaker,
+speech kind, locale, cue ID, exact text and a staging output. Do not call
+host-native `say`/SAPI/eSpeak, VoxStage or PyTorch directly from an Activity.
+The Greia voice engine owns the canonical reference WAVs, model and receipts.
+By default Parakeet runs (`verification=auto`); user may select `off`.
+Human listening decides acceptance, including phonics pronunciation.
+Never overwrite accepted recordings during authoring-tool setup.
 
 ## 8. Activity-specific voice tooling location
 

@@ -18,6 +18,7 @@ from .models import (
     VoiceRequest,
 )
 from .parakeet_asr import ParakeetTranscriber, ParakeetTranscriptionError
+from .onnx_parakeet_asr import OnnxParakeetTranscriber
 
 
 class SpeechVerifier(Protocol):
@@ -183,15 +184,15 @@ class ParakeetVerifier:
     """Current verifier for every newly created request and delivered rendition.
 
     Historical Whisper verification remains available through ``WhisperVerifier``
-    for explicitly versioned receipts/replay. New requests use this pinned offline
-    multilingual adapter and must pass text, word-count, numeric and signal checks.
+    for explicitly versioned receipts/replay. New requests use the same multilingual Parakeet-TDT v3 via ONNX
+    on all hosts. Human acceptance is final; AUTO never gates generation.
     """
 
-    transcriber: ParakeetTranscriber | None = None
+    transcriber: ParakeetTranscriber | OnnxParakeetTranscriber | None = None
     pass_threshold: float = ASR_PASS_THRESHOLD
 
     def __post_init__(self) -> None:
-        self.transcriber = self.transcriber or ParakeetTranscriber()
+        self.transcriber = self.transcriber or OnnxParakeetTranscriber()
 
     @property
     def verifier_id(self) -> str:
