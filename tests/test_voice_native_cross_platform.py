@@ -4,6 +4,7 @@ import base64
 import sys
 import unittest
 from unittest.mock import Mock, patch
+from types import SimpleNamespace
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
@@ -20,6 +21,39 @@ class NativeCrossPlatformTests(unittest.TestCase):
             "macos-native-say", "windows-native-sapi", "linux-espeak-ng",
             "native-system-unavailable",
         ])
+
+    def test_doctor_accepts_native_only_host_even_without_asr(self):
+        import greia_voice
+        from greia_voice_core.models import ProviderStatus
+
+        class FakeProvider:
+            def __init__(self, provider_id, ready):
+                self.status = ProviderStatus(provider_id, ready, "fixture")
+
+            def probe(self):
+                return self.status
+
+        fake_registry = SimpleNamespace(registry_version="fixture", profiles={})
+        fake_verifier = SimpleNamespace(
+            verifier_id="parakeet-fixture", model_id="fixture", model_revision="fixture",
+            probe=lambda: (False, "not installed"),
+        )
+        with patch.object(greia_voice.VoiceRegistry, "load", return_value=fake_registry), \
+                patch.object(greia_voice, "build_providers", return_value=(
+                    FakeProvider("voxstage-voxcpm2", False),
+                    FakeProvider("linux-espeak-ng", True),
+                )), \
+                patch.object(greia_voice, "ChatterboxMLXProvider", return_value=FakeProvider("chatterbox", False)), \
+                patch.object(greia_voice, "ParakeetVerifier", return_value=fake_verifier), \
+                patch.object(greia_voice.AudioPipeline, "ffmpeg_available", return_value=True), \
+                patch.object(greia_voice, "_print") as output:
+            result = greia_voice.cmd_doctor(SimpleNamespace(character_provider=None))
+        self.assertEqual(result, 0)
+        report = output.call_args.args[0]
+        self.assertFalse(report["character_production_ready"])
+        self.assertTrue(report["native_pedagogical_production_ready"])
+        self.assertTrue(report["production_ready"])
+        self.assertFalse(report["verifier"]["available"])
 
     def test_linux_pedagogical_uses_espeak_stdin_not_shell(self):
         provider = LinuxEspeakSpeechProvider()

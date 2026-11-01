@@ -189,11 +189,13 @@ word-count token caps or cut at internal pauses. Setup requirements remain in
 `tools/greia_voice_requirements_mlx.txt`; its field guide is provider-specific.
 Unload VoxStage before using this alternate multi-GB model on the same host.
 
-`MacOSNativeSpeechProvider` remains the independent pedagogical provider with
-bounded host voice/rate profiles in `native.py`. Native Dani profiles are retained
-for historical compatibility, not default new character synthesis. Other hosts
-report unavailable native routes until a provider implements them. Providers
-are authoring-host adapters; no host command belongs in an Activity.
+`MacOSNativeSpeechProvider`, `WindowsSapiSpeechProvider` and
+`LinuxEspeakSpeechProvider` implement independent native pedagogical speech.
+macOS uses system `say`/`afconvert`, Windows uses installed SAPI voices
+through PowerShell `System.Speech`, Linux uses `espeak-ng`. Native Dani
+profiles are retained for historical compatibility, not normal character
+production. All are authoring-host adapters: no host command belongs in an
+Activity. See `docs/agents/voice-platforms/` for host-specific setup.
 
 ## 7. Verification, receipts and acceptance
 
@@ -201,15 +203,16 @@ The [usage README](../../tools/greia_voice_core/README.md) provides practical re
 CLI, result and recovery examples. New requests default to cached local multilingual
 Parakeet-TDT v3 (`mlx-community/parakeet-tdt-0.6b-v3`, revision
 `ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15`) through the prepared voice Python.
-Missing weights/dependencies are reported; no download or silent Whisper fallback
-is performed. Whisper remains identifiable for historical receipts/replay and is
-not used to reinterpret them. Ordinary requests default to verification `auto`,
-three total takes (configurable 1–4), and accent-insensitive comparison. The
-ordinary verifier retains its semantic eligibility rules; `verification=off` is
-an explicit unverified opt-out. Verified outputs are checked after packaging.
-Known quality WARNs can retry; exhausted or indeterminate results are not published
-as accepted output, and infrastructure uncertainty stops for recovery. Human
-listening is required after machine PASS.
+Missing weights/dependencies are reported; there is no download or silent
+Whisper fallback. Whisper remains identifiable for historical receipts/replay,
+not used to reinterpret them. The default `verification=auto` is **advisory**:
+if ASR is absent, the generated audio is still offered for human listening as
+`NOT_RUN`; if ASR returns WARN, the candidate is still offered for listening
+and not discarded or retried solely for ASR disagreement. Explicit
+`verification=off` skips ASR altogether; explicit `required` restores the
+strict verifier/readiness/retry/rejection policy. Audio decoding/packaging
+and infrastructure errors remain real failures. Every new result is
+human-listening pending, regardless of machine PASS/WARN/NOT_RUN.
 
 One scoped exception is versioned for the owner-authorized native replacement
 of the exact 52 unresolved v4 rows. `owner-2026-10-23-native-system-tts-missing-52`
@@ -222,7 +225,7 @@ or run. Receipts identify the native voice, `verification=NOT_RUN`, and
 PASS. This exact owner authorization does not change ordinary verification or
 historical corpus plans.
 
-Automatic short requests use `voice_carrier_search.extract` v7. Raw synthesis
+Only explicitly strict (`verification=required`) short requests use `voice_carrier_search.extract` v7; default `auto` and `off` generate direct target audio for listening. Raw synthesis
 verification is OFF; the disposable intro is never transcribed for alignment.
 Bounded PCM quiet-run candidates are transcribed as independent target-only
 suffixes with pinned Parakeet-TDT v3. New Parakeet verification and extraction
@@ -235,8 +238,9 @@ legacy comparison. The actual delivered target then passes shared
 after packaging. `required` cutter mode is stricter canonical-token equality.
 See the usage README for limits, overrides and retained evidence.
 
-`ShortPhrasePolicy` selects fewer than five words by default for supported
-VoxStage character providers, excluding pedagogical speech. It selects a safe
+`ShortPhrasePolicy` selects fewer than five words for supported VoxStage
+character providers **when the request opts into strict verification**,
+excluding pedagogical speech. It selects a safe
 alternate intro if the complete target occurs in the standard intro.
 `ShortPhrasePipeline` owns raw takes, extraction and at most three total provider
 takes behind the same VoiceEngine entry point. Provider/ASR/IO uncertainty stops
@@ -433,10 +437,10 @@ proof and current evidence boundaries.
 
 ### 2026-10-23 — Parakeet-TDT verification and bounded full-pipeline check
 
-Current VoiceEngine verification defaults to local cached Parakeet-TDT v3 at
+Current VoiceEngine optional `auto` verification uses cached Parakeet-TDT v3 at
 `ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15`. Both ordinary and automatic-short
-public routes check the delivered packaged result when verification is enabled;
-short route also screens target-only PCM candidates. It retains actual model
+public routes can check delivered packaged audio when the optional verifier is ready;
+strict short route also screens target-only PCM candidates. It retains actual model
 timestamps only, without fabricated alignment, and preserves existing numeric,
 count, score, and signal guards. Quality attempts are capped at three; provider,
 recognizer, or I/O uncertainty is recoverable and not blindly retried. The explicit

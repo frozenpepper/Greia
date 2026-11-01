@@ -15,7 +15,7 @@ For a family changing language, use [the Greia Parents guide](../user/GREIA_PARE
 
 ## Tell your agent
 
-> Let's add a new Greia language: German (`de`). Prepare all OS, installer, Parent and Activity text, phonics/curriculum work and the missing audio. Use the canonical Voice Studio with the selected masters and Parakeet verification. Do not offer the unfinished language in the installer until it has been reviewed.
+> Let's add a new Greia language: German (`de`). Prepare all OS, installer, Parent and Activity text, phonics/curriculum work and the missing audio. Use the canonical Voice Studio with the selected masters and optional Parakeet verification; final audio quality is judged by human listening. Do not offer the unfinished language in the installer until it has been reviewed.
 
 The exact locale, native language name, script and translator should be substituted as appropriate.
 

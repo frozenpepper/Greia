@@ -2,18 +2,21 @@
 
 **Status:** current procedure for reviewing the **2026-10-19 frozen replacement corpus**; its Whisper evidence lane is historical/model-specific (last reviewed 2026-10-26).
 **Entry point:** `tools/regenerate_voice_corpus.py review`.
-**New VoiceEngine generation:** uses pinned multilingual **Parakeet-TDT v3** by default, not the frozen corpus's Whisper Base review path. See `SETUP.md` §7 and `tools/greia_voice_core/asr_policy.py`.
+**New VoiceEngine generation:** offers pinned multilingual **Parakeet-TDT v3** as optional `auto` checking (or explicit strict `required`), not the frozen corpus's Whisper Base review path. See `SETUP.md` §7 and `tools/greia_voice_core/asr_policy.py`.
 **Owner:** Voice Production Engine; no Activity-owned ASR/FFmpeg scripts.
 
 Generation DONE means the file was produced and installed. Follow generation
 with this separate automated review, then listening review. Automated reports
 never change `human_review`, approve assets, regenerate speech or replace files.
+A frozen corpus report marked BLOCKED for missing ASR means only that optional
+machine-review coverage is incomplete; it does **not** prevent the owner from
+listening to or accepting a generated recording.
 An automated PASS is a screening result, not audible/product acceptance.
 
 ## Frozen corpus-review model and comparison (2026-10-22)
 
 This historical corpus-review command uses cached multilingual Whisper Base;
-it does **not** change the Parakeet v3 default used for new VoiceEngine requests.
+it does **not** impose mandatory Parakeet verification on new VoiceEngine requests.
 The frozen review lane's model is
 `mlx-community/whisper-base-mlx` revision
 `1e3e249fb8d01c655324bd6841b1deadffd6d04c`. Screen policy v4 ignores accent/diacritic

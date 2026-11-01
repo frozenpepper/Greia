@@ -12,17 +12,17 @@ Choose the dedicated [macOS](voice-platforms/MACOS.md),
 
 | Host | Native pedagogical renderer | Canonical cloned characters |
 |---|---|---|
-| macOS | System \`say\` and \`afconvert\` | Prepared Apple Silicon VoxStage/MLX |
-| Windows | PowerShell \`System.Speech\` / installed SAPI voice | Authorized Mac VoiceEngine service via SSH forward |
-| Linux | \`espeak-ng\` / installed language voices | Authorized Mac VoiceEngine service via SSH forward |
+| macOS | System `say` and `afconvert` | Prepared Apple Silicon VoxStage/MLX |
+| Windows | PowerShell `System.Speech` / installed SAPI voice | Authorized Mac VoiceEngine service via SSH forward |
+| Linux | `espeak-ng` / installed language voices | Authorized Mac VoiceEngine service via SSH forward |
 
-New public production **does not require** Parakeet. \`--verification off\`
-generates a clip directly for human listening; \`auto\` tries cached ASR
-advisorially and continues with \`NOT_RUN\` if missing, or with an advisory
-WARN if it disagrees. \`required\` is the *explicit strict mode*.
+New public production **does not require** Parakeet. `--verification off`
+generates a clip directly for human listening; `auto` tries cached ASR
+advisorially and continues with `NOT_RUN` if missing, or with an advisory
+WARN if it disagrees. `required` is the *explicit strict mode*.
 The user decides whether the output is acceptable. No mode automatically
 human-approves or replaces existing accepted recordings. The Mac venv
-and \`brew\` examples below are **macOS-only**.
+and `brew` examples below are **macOS-only**.
 
 ## 1. Readiness and canonical boundary
 

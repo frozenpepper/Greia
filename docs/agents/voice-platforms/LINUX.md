@@ -4,7 +4,7 @@
 
 ## Native pedagogical speech (no Mac required)
 
-You need Python 3.11+, \`ffmpeg\` and \`espeak-ng\`. On Debian/Ubuntu, after explicit operator approval to install packages:
+You need Python 3.11+, `ffmpeg` and `espeak-ng`. On Debian/Ubuntu, after explicit operator approval to install packages:
 
 ```sh
 sudo apt-get install python3 ffmpeg espeak-ng
@@ -16,9 +16,9 @@ python3 tools/greia_voice.py generate --speaker pedagogical \
   --output "$HOME/greia-voice-review/ma.wav"
 ```
 
-\`espeak-ng --voices=it\` displays installed voice choices for the requested locale. Greia invokes eSpeak NG via \`--stdin\` without a shell, so text does not become command-line flags. Local system voices sound different from the canonical cloned presenter voices: evaluate their suitability by listening, especially for phonics.
+`espeak-ng --voices=it` displays installed voice choices for the requested locale. Greia invokes eSpeak NG via `--stdin` without a shell, so text does not become command-line flags. Local system voices sound different from the canonical cloned presenter voices: evaluate their suitability by listening, especially for phonics.
 
-\`doctor\` may exit 2 solely because the selected default character provider is unavailable. Check the native eSpeak provider row and FFmpeg instead. This does **not** block local \`pedagogical_speech\` using \`--verification off\`. \`--verification auto\` performs ASR if available, otherwise records \`NOT_RUN\`; it never blocks generation. \`--verification required\` is the explicit strict mode.
+`doctor` may exit 2 solely because the selected default character provider is unavailable. Check the native eSpeak provider row and FFmpeg instead. This does **not** block local `pedagogical_speech` using `--verification off`. `--verification auto` performs ASR if available, otherwise records `NOT_RUN`; it never blocks generation. `--verification required` is the explicit strict mode.
 
 ## Canonical character speech via the Mac service
 
@@ -43,6 +43,6 @@ python3 tools/greia_voice.py request --speaker leo --kind character_dialogue \
   --verification off --output /tmp/greia-voice-review/leo.wav
 ```
 
-The output WAV/OGG and receipt are written on the **Mac**. Copy them to a review station explicitly when needed. Use \`--verification auto\` if advisory ASR on the Mac is desirable; do not make it a prerequisite for owner acceptance.
+The output WAV/OGG and receipt are written on the **Mac**. Copy them to a review station explicitly when needed. Use `--verification auto` if advisory ASR on the Mac is desirable; do not make it a prerequisite for owner acceptance.
 
 Every new clip goes to review staging. Never replace accepted recordings as part of platform setup. Linux backend was inspected at source level, not certified on the full range of Linux distributions.

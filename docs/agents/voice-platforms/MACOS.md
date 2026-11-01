@@ -38,10 +38,10 @@ python3 tools/greia_voice.py generate --speaker leo --kind character_dialogue \
   --verification auto --output /tmp/greia-voice-review/leo.wav
 ```
 
-The second command needs an already configured character worker. \`off\` generates without ASR; \`auto\` uses ASR only if already available and never rejects audio just because ASR disagrees; \`required\` explicitly opts into strict ASR/retries and, for short character lines, the carrier extraction method. All outputs remain human-listening pending regardless of machine results.
+The second command needs an already configured character worker. `off` generates without ASR; `auto` uses ASR only if already available and never rejects audio just because ASR disagrees; `required` explicitly opts into strict ASR/retries and, for short character lines, the carrier extraction method. All outputs remain human-listening pending regardless of machine results.
 
-The macOS native \`say\` and \`afconvert\` tools are used **inside** VoiceEngine for pedagogical speech, not directly by Activity generators. Native voice identity and pronunciation vary with OS-installed voices. An unavailable native voice is a host setup issue; install/select a suitable language voice in macOS system settings, then retry. Language names used for EN/IT/ES/FR default to Samantha/Alice/Mónica/Thomas. Optional \`GREIA_VOICE_PEDAGOGICAL_VOICE_IT\` etc selects an existing local voice.
+The macOS native `say` and `afconvert` tools are used **inside** VoiceEngine for pedagogical speech, not directly by Activity generators. Native voice identity and pronunciation vary with OS-installed voices. An unavailable native voice is a host setup issue; install/select a suitable language voice in macOS system settings, then retry. Language names used for EN/IT/ES/FR default to Samantha/Alice/Mónica/Thomas. Optional `GREIA_VOICE_PEDAGOGICAL_VOICE_IT` etc selects an existing local voice.
 
-For serialized batches use \`python3 tools/greia_voice.py batch --input requests.jsonl\`. For remote clients start \`python3 tools/greia_voice.py serve\` on the Mac and use an **explicit authorized** SSH tunnel as in the Windows/Linux guides. It listens only on loopback by default. Stop only the session you own; do not restart a shared worker because another project may have queued jobs.
+For serialized batches use `python3 tools/greia_voice.py batch --input requests.jsonl`. For remote clients start `python3 tools/greia_voice.py serve` on the Mac and use an **explicit authorized** SSH tunnel as in the Windows/Linux guides. It listens only on loopback by default. Stop only the session you own; do not restart a shared worker because another project may have queued jobs.
 
-Check the generated WAV/OGG and its sibling \`*.receipt.json\`. Only the human owner decides whether to accept or replace audio.
+Check the generated WAV/OGG and its sibling `*.receipt.json`. Only the human owner decides whether to accept or replace audio.

@@ -40,7 +40,7 @@ the old Parakeet plans and receipts remain unchanged.
 
 | Need | Entry point | Implemented behavior |
 |---|---|---|
-| One new line, JSONL batch, or requests over time | `greia_voice.py generate / batch / serve / request` | Automatic short carrier/cut/Parakeet routing; serialized synthesis; review audio and receipt |
+| One new line, JSONL batch, or requests over time | `greia_voice.py generate / batch / serve / request` | Native or cloned speech; optional ASR (`auto`/`off`), strict short carrier only when requested (`required`); review audio and receipt |
 | Inventory and replace an owner-authorized existing corpus | `regenerate_voice_corpus.py` | Frozen scripts, external originals, progress journal, recoverable installation |
 | Finish the frozen problematic short-phrase selection | `finish_voice_priority.py` | Audit installed takes, recover saved sources, then bounded fresh carrier/cut/Parakeet attempts |
 | Cut an already generated carrier recording | `voice_carrier.py` | Target-suffix alignment and measured PCM pause; separate extracted WAV and evidence |
@@ -61,16 +61,16 @@ verification queues remain [proposed shared work](../../docs/plans/2026-10-22_VE
 Choose the [macOS](../../docs/agents/voice-platforms/MACOS.md),
 [Windows](../../docs/agents/voice-platforms/WINDOWS.md), or
 [Linux](../../docs/agents/voice-platforms/LINUX.md) guide before setup. Native
-\`pedagogical_speech\` works on macOS (\`say\`), Windows (\`System.Speech\`)
-and Linux (\`espeak-ng\`). The canonical character backend still uses the
+`pedagogical_speech` works on macOS (`say`), Windows (`System.Speech`)
+and Linux (`espeak-ng`). The canonical character backend still uses the
 prepared Mac VoxStage service, accessible through a permissioned SSH local
-forward from Windows/Linux. The request \`--output\` path is always local to the
-\`serve\` workstation.
+forward from Windows/Linux. The request `--output` path is always local to the
+`serve` workstation.
 
 **Verification modes:**
-\`off\` = produce for human listening, ASR \`NOT_RUN\`;
-\`auto\` = optional advisory ASR, never reject or retry on its WARN;
-\`required\` = strict ASR with bounded retries/rejection and optional
+`off` = produce for human listening, ASR `NOT_RUN`;
+`auto` = optional advisory ASR, never reject or retry on its WARN;
+`required` = strict ASR with bounded retries/rejection and optional
 short-carrier extraction. Human review controls acceptance in all modes.
 
 
@@ -201,7 +201,11 @@ with build_engine() as engine:
 
 ## 4. Verification and result handling
 
-Default ASR uses cached multilingual **Parakeet-TDT v3**,
+The user can choose to skip ASR entirely. `--verification off`
+generates for listening with `NOT_RUN`; `auto` uses the installed
+verifier as a convenience and retains clips on WARN or unavailable ASR;
+only `required` treats ASR as a blocking quality condition.
+Optional ASR uses cached multilingual **Parakeet-TDT v3**,
 `mlx-community/parakeet-tdt-0.6b-v3`, revision
 `ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15`, owned by `parakeet_asr.py`.
 ASR resolution is offline; missing weights/dependencies are reported, not downloaded
@@ -219,7 +223,7 @@ exclusions. For eligible requests:
 
 - `auto`: check if ready; unavailable verifier → `NOT_RUN`.
 - `required`: unavailable verifier → `WARN`.
-- `off`: no ASR; the current verifier reports `NOT_APPLICABLE`.
+- `off`: no ASR; the generation receipt reports `NOT_RUN`.
 - Transcript score **>0.8** → `PASS`; score ≤0.8 or recognition error → `WARN`.
 
 Known quality `WARN` triggers another synthesis, up to `max_attempts`. Each
@@ -237,7 +241,7 @@ provider/job/settings/seeds, master identity, attempts, output hash and
 
 ### Automatic short-phrase pipeline
 
-Automatic short requests use extractor **v7** (`tools/voice_carrier_search.py`)
+Explicit strict (`verification=required`) short requests use extractor **v7** (`tools/voice_carrier_search.py`)
 for all six actors, including Dani and one-word targets. The localized intro is
 disposable: raw carrier synthesis has verification OFF, and no raw-intro ASR is
 requested. PCM measurements identify quiet runs of at least 200 ms (10 ms
