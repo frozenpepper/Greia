@@ -969,9 +969,10 @@ class InstallTransactionService:
         return authorization, settings, locale, target
 
     def _prove_layout_fit(self, target: DeviceObservation) -> None:
-        """Prove the release layout plan fits the freshly verified target.
+        """Prove the profile's layout floor fits the freshly verified target.
 
-        Runs whenever the state names a registered destructive adapter. A
+        Fresh A/B sizing checks the verified payload and selected hardware
+        support later, before partitioning. A
         single-root recovery profile (pre-A/B adapter outside the
         destructive registry) skips this proof on the explicit
         ``"legacy-single"`` path only: the legacy single-partition engine

@@ -1058,8 +1058,6 @@ class InstallerApplication:
             elif key == pygame.K_BACKSPACE:
                 self.wifi.backspace_password()
                 self._last_password_character = None
-            elif key == pygame.K_r:
-                self.wifi.refresh()
             elif key == pygame.K_RETURN:
                 self._activate_primary()
             return True

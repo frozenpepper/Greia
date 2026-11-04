@@ -26,6 +26,7 @@ from greia_installer.layout import (  # noqa: E402
     ProfileSizing,
     minimum_device_bytes_for_profile,
     plan_for_profile,
+    plan_fresh_ab_layout,
 )
 
 ACER_AB_PROFILE = PROJECT_ROOT / "build/profiles/acer-aspire-one-i386-ab.toml"
@@ -90,6 +91,26 @@ class TargetCapacitySeparationTests(unittest.TestCase):
             plan_for_profile(sizing, device_size_bytes=MINIMUM_DEVICE_4417_MIB - 1)
         plan = plan_for_profile(sizing, device_size_bytes=MINIMUM_DEVICE_4417_MIB)
         self.assertEqual(plan.remainder_bytes(), 1024 * MIB)
+
+    def test_reported_hp_footprint_sizes_both_slots_with_headroom(self) -> None:
+        plan = plan_fresh_ab_layout(
+            _acer_sizing(),
+            device_size_bytes=7_000_000_000,
+            required_slot_bytes=1_861_870_592,
+        )
+        self.assertEqual(plan.slot_bytes, 2398 * MIB)
+        for role in ("system-a", "system-b"):
+            self.assertEqual(plan.by_role(role).size_bytes, plan.slot_bytes)
+        self.assertGreater(plan.remainder_bytes(), plan.persist_minimum_bytes)
+
+    def test_tight_disk_keeps_persist_minimum_and_drops_optional_headroom(self) -> None:
+        disk_bytes = (65 + 2 * 1776 + 1024) * MIB
+        kwargs = {"sizing": _acer_sizing(), "required_slot_bytes": 1_861_870_592}
+        plan = plan_fresh_ab_layout(**kwargs, device_size_bytes=disk_bytes)
+        self.assertEqual(plan.slot_bytes, 1776 * MIB)
+        self.assertEqual(plan.remainder_bytes(), 1024 * MIB)
+        with self.assertRaisesRegex(LayoutError, "each system slot needs 1776 MiB"):
+            plan_fresh_ab_layout(**kwargs, device_size_bytes=disk_bytes - 1)
 
     def test_no_duplicate_target_capacity_table_in_build_profile(self) -> None:
         self.assertFalse(hasattr(build_profile, "_LAYOUT_OVERHEAD_BYTES"))

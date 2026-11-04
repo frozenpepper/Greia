@@ -113,7 +113,7 @@ consumes that receipt via `greia_update.py build --payload-receipt`
 (§4), which verifies it against the payload artifact before any bundle
 byte is written. Field and flag names are stable for Session 03.
 
-`--filesystem-bytes` and `--minimum-slot-bytes` are **release-specific build facts**, not fixed Acer constants. The earlier real Acer proof already produced a shrunk payload larger than 1 GiB, so do not copy old 1 GiB examples. `--minimum-slot-bytes` must cover the actual shrunk ext4 image plus the 1 MiB producer headroom (`PAYLOAD_MIN_HEADROOM` in `tools/build_release.py`), while `--filesystem-bytes` is only the temporary image size used to create and shrink that payload. Until Session 03 hides these low-level flags behind `greia_release.py`, obtain them from the current release build/sizing step and record them with the payload receipt. The installed Acer destination slot remains 1536 MiB; do not use that slot size as the manifest minimum by habit, because an inflated minimum can only reject otherwise-valid slots.
+`--filesystem-bytes` sizes the temporary ext4 image used to populate and shrink the payload. The manifest's `minimum_slot_bytes` comes from the measured shrunk ext4 image plus 1 MiB of producer headroom (`PAYLOAD_MIN_HEADROOM` in `tools/build_release.py`). Fresh installs size the physical slots for the verified payload, the selected hardware support and finalization. The installed layout records the resulting size for update checks.
 
 The producer seeds the generic kernel/initramfs plus the release identity,
 then validates the staging tree with the shared slot completeness validator
@@ -177,7 +177,7 @@ profile.id
 platform.family
 base.architecture
 platform.board            # "none" becomes manifest board null
-storage.system_slot_bytes # 1610612736 (1536 MiB) destination-slot bound
+storage.system_slot_bytes # 1744830464 (1664 MiB) base-release budget and fresh slot floor
 ```
 
 Do not substitute the generic single-root `legacy-x86-i686.toml` on the

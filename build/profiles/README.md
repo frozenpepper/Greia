@@ -19,7 +19,8 @@ ADR 0012 distinguishes these concepts deliberately:
 - `[display]`: selected display adapter plus profile-specific video packages;
 - `[runtimes]`: platform-owned Activity runtime families included in the target image;
 - `[packages]`: general target/installer package sets and narrowly justified extra packages;
-- `[resources]`: profile-specific preferred/hard/architecture-review installed-core limits (actual budgets are profile-specific: the current Acer A/B profile declares a 1,500 MiB installed-root build gate and two 1,664 MiB system slots; do not infer installed partition sizes from the intermediate image size).
+- `[resources]` sets the installed-core build budget. The Acer A/B profile has a 1,500 MiB accounting gate.
+- `[storage]` sets the layout and its sizing floors. Acer A/B starts at 1,664 MiB per slot. Fresh installs can grow both slots for the verified release and the machine's selected hardware support, with 35% additional headroom when capacity permits after reserving PERSIST.
 
 Adapter and runtime package sets are composed by `tools/build_profile.py`; profiles do not duplicate those implementation mappings.
 

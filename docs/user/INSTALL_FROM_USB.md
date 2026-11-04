@@ -92,7 +92,7 @@ The installer works with a mouse, touchpad or keyboard. It asks for:
 4. **Pointer.** How the mouse or touchpad behaves. Tap-to-click starts off.
 5. **Screen.** Automatic is right for almost everyone.
 6. **Wi-Fi** (optional). You can connect now or later. Greia works without
-   internet.
+   internet. Use the on-screen **Refresh** button to scan again.
 7. **Ready to install.** Greia shows the disk that will be erased. To go
    ahead, hold the **Hold to erase and install** button for two seconds. You
    can also hold Enter or Space. Letting go early cancels.

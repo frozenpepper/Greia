@@ -36,12 +36,12 @@ namespace authority (A8-PERSIST init).
 Phase 8B Step 8B.1 (X8-LAYOUT) adds the installer-owned profile seam on top
 of the 8A adapters: :class:`ProfileSizing` carries the release-profile
 ``storage``/``updates`` facts (``system_slot_bytes``,
-``persistent_minimum_bytes``, layout adapter, boot backend) so sizes come
-only from profile data; :func:`plan_for_profile` resolves the adapter and
-returns the validated plan; :func:`require_finalized_slot_capacity` rejects
-undersized profiles with the finalizer capacity bound
-(base + support-set installed-size bound + boot-artifact growth bound +
-metadata/reserve <= slot capacity); :func:`mint_fresh_partition_identities`
+``persistent_minimum_bytes``, layout adapter, boot backend).
+:func:`plan_for_profile` validates the profile floor through the adapter.
+:func:`plan_fresh_ab_layout` sizes fresh slots for the selected hardware
+and verified disk; :func:`require_finalized_slot_capacity` checks fit for
+an existing slot or a release build budget.
+:func:`mint_fresh_partition_identities`
 mints the distinct role-owned PARTUUID/filesystem-UUID pairs for the GPT
 path only — MBR layouts bind observed identities instead (see below). ``BOOT_CONTROL`` stays
 outside the layout record by design: it owns stable GRUB
@@ -70,7 +70,7 @@ import subprocess
 import uuid
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Protocol
 
@@ -147,7 +147,7 @@ KNOWN_LAYOUT_ADAPTER_IDS = frozenset(
     }
 )
 
-#: Slot roles whose size must equal the release profile ``slot_bytes``.
+#: Slot roles whose size must equal the layout plan's ``slot_bytes``.
 SLOT_ROLES = frozenset({"system-a", "system-b"})
 
 #: The fill-remainder partition must carry this role in every adapter.
@@ -324,7 +324,7 @@ def validate_layout_plan(plan: LayoutPlan) -> None:
     for partition in plan.partitions:
         if partition.role in SLOT_ROLES and partition.size_bytes != int(plan.slot_bytes):
             raise LayoutError(
-                f"slot role {partition.role!r} must equal the profile slot_bytes"
+                f"slot role {partition.role!r} must equal the layout plan slot_bytes"
             )
     fixed = sum(
         partition.size_bytes
@@ -1197,7 +1197,7 @@ def build_observed_mbr_topology(
 ) -> BlockTopology:
     """Present the observed MBR identities as block topology facts.
 
-    Sizes come from the validated plan (slot roles carry the profile
+    Sizes come from the validated plan (slot roles carry the chosen
     ``slot_bytes``; ``persist`` carries the proven remainder); the disk
     ancestry comes from the verified target name. Fails closed on role
     gaps so a partial observation can never validate.
@@ -1587,6 +1587,40 @@ def minimum_device_bytes_for_profile(sizing: ProfileSizing) -> int:
     )
     return int(
         _layout_overhead_bytes(probe.adapter_id) + probe.fixed_bytes() + int(sizing.persist_minimum_bytes)
+    )
+
+
+def plan_fresh_ab_layout(
+    sizing: ProfileSizing, *, device_size_bytes: int, required_slot_bytes: int
+) -> LayoutPlan:
+    """Size equal A/B slots from the verified finalization bound and disk.
+
+    Keep the profile's slot floor and PERSIST minimum. Reserve an additional
+    35% of the finalized footprint for future releases when space permits.
+    """
+    floor = plan_for_profile(sizing, device_size_bytes=device_size_bytes)
+    required = _require_positive_int(required_slot_bytes, field_name="required slot bytes")
+    # Divide only the space left after reserving PERSIST, equally and on
+    # partition boundaries. The adapter already accounted for its overhead.
+    extra = floor.remainder_bytes() - floor.persist_minimum_bytes
+    alignment = PARTITION_ALIGNMENT_BYTES
+    available = min(
+        floor.slot_bytes + extra // (2 * alignment) * alignment,
+        MAX_SYSTEM_SLOT_BYTES,
+    )
+    minimum = (required + alignment - 1) // alignment * alignment
+    if minimum > available:
+        raise LayoutError(
+            f"each system slot needs {minimum // MIB} MiB; "
+            f"this target allows {available // MIB} MiB per slot with PERSIST reserved"
+        )
+    with_headroom = required + (35 * required + 99) // 100
+    preferred = (with_headroom + alignment - 1) // alignment * alignment
+    slot_bytes = max(floor.slot_bytes, min(preferred, available))
+    if slot_bytes == floor.slot_bytes:
+        return floor
+    return plan_for_profile(
+        replace(sizing, slot_bytes=slot_bytes), device_size_bytes=device_size_bytes
     )
 
 

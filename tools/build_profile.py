@@ -102,12 +102,12 @@ _PHASE0_DISPLAY_ADAPTERS = frozenset({"xorg"})
 # contract, declarative storage/profile extensions) and secs 23-24
 # (regression guards: no single-root+updates, no GRUB Pi backend, no unknown
 # ARM fallback, no global allow_mmc shortcut). Numeric floors below are
-# generic schema floors only, never exact installed-layout sizing: the exact
-# slot/PERSIST bounds are owned by greia_platform.persistent_layout and the
-# exact installed-target minimum is owned by
+# build profile defaults and bounds. The installed layout validates slot
+# and PERSIST facts against greia_platform.persistent_layout. The profile
+# floor for installed-target capacity is owned by
 # greia_installer.layout.minimum_device_bytes_for_profile (called from
-# _validate_storage_lifecycle). They are tightened by on-device measurement
-# later, never loosened by guessing.
+# _validate_storage_lifecycle). Fresh installs may size slots above the
+# profile floor for the verified release and selected support.
 _MIB = 1024 * 1024
 _MIN_SYSTEM_SLOT_BYTES = 1024 * _MIB
 _MAX_SYSTEM_SLOT_BYTES = 2 * 1024 * 1024 * 1024

@@ -13,7 +13,7 @@ read-only consume — this module never edits ``persist.py``), and the shared
 the orchestrator (never reimplemented here).
 
 Every device address derives from the rematerialized ``target`` plus the
-layout authority (``plan_for_profile`` + ``partition_number_path``), never
+layout authority (the observed layout plan + ``partition_number_path``), never
 from request bytes. Factory construction (``config_from_facts_and_state`` +
 ``build_production_seam_pair``) performs no disk probe, no slot write and no
 partition/runner execution — it only binds closures. All block probing
@@ -62,7 +62,6 @@ from .layout import (
     LayoutError,
     LayoutPlan,
     ProfileSizing,
-    plan_for_profile,
 )
 
 #: Platform-owned staging defaults for the shipped installer path. Tests bind
@@ -454,9 +453,11 @@ def build_production_seam_pair(
             "production seam construction requires a typed seam configuration; "
             "refusing a degraded half-wired default"
         )
-    observed_holder: dict[str, object] = {}
+    observation: tuple[DeviceObservation, LayoutPlan, dict[str, dict[str, str]]] | None = None
 
     def _seams_factory(target: DeviceObservation) -> FreshAbInstallSeams:
+        nonlocal observation
+        observation = None
         if not isinstance(target, DeviceObservation):
             raise FreshAbInstallError(
                 "production seams require a rematerialized whole-disk target"
@@ -466,15 +467,6 @@ def build_production_seam_pair(
                 "fresh install requires a whole-disk target; "
                 f"refusing a moved/non-disk target ({target.device_type!r})"
             )
-        try:
-            plan = plan_for_profile(
-                config.sizing, device_size_bytes=int(target.size_bytes)
-            )
-        except (LayoutError, TypeError, ValueError) as exc:
-            raise FreshAbInstallError(
-                f"release layout does not fit the rematerialized target: {exc}"
-            ) from exc
-
         # Release-bound support facts from the bundle manifest (read-only).
         try:
             from greia_platform.system_updates import inspect_update_bundle
@@ -606,9 +598,15 @@ def build_production_seam_pair(
                     f"production staging path is not a real directory: {field_name}"
                 )
 
-        slot_bytes = int(config.sizing.slot_bytes)
         mount_root = Path(config.mount_root)
         package_runner = SubprocessHardwareSupportRunner()
+
+        def _observed_layout() -> tuple[LayoutPlan, dict[str, dict[str, str]]]:
+            if observation is None or observation[0] != target:
+                raise FreshAbInstallError(
+                    "post-layout identities are not yet observed for this target"
+                )
+            return observation[1], observation[2]
 
         def _slot_storage_factory(role: str) -> BlockSlotStorage:
             if role != "A":
@@ -616,6 +614,7 @@ def build_production_seam_pair(
                     "fresh install addresses SYSTEM_A only; "
                     f"refusing second-slot storage ({role!r})"
                 )
+            plan, _ = _observed_layout()
             try:
                 part = plan.by_role("system-a")
                 node = partition_number_path(target.path, part.number)
@@ -624,7 +623,7 @@ def build_production_seam_pair(
                     f"SYSTEM_A device address is not authoritative: {exc}"
                 ) from exc
             try:
-                return BlockSlotStorage(node, slot_bytes)
+                return BlockSlotStorage(node, plan.slot_bytes)
             except BlockSlotError as exc:
                 raise FreshAbInstallError(
                     f"SYSTEM_A slot store is not authoritative: {exc}"
@@ -635,14 +634,9 @@ def build_production_seam_pair(
                 ) from exc
 
         def _slot_filesystem_factory() -> BlockSlotFilesystem:
-            observed = observed_holder.get("observed")
-            if not isinstance(observed, dict):
-                raise FreshAbInstallError(
-                    "post-layout identities are not yet observed; "
-                    "refusing slot finalization before authoritative observation"
-                )
+            plan, observed = _observed_layout()
             try:
-                sys_a = dict(observed["system-a"])  # type: ignore[index]
+                sys_a = observed["system-a"]
                 filesystem_uuid = sys_a["filesystem_uuid"]
                 partuuid = sys_a["partuuid"]
             except (KeyError, TypeError, AttributeError) as exc:
@@ -663,7 +657,7 @@ def build_production_seam_pair(
                     device_node=node,
                     partuuid=partuuid,
                     filesystem_uuid=filesystem_uuid,
-                    capacity_bytes=slot_bytes,
+                    capacity_bytes=plan.slot_bytes,
                     disk_id=str(target.path),
                     layout_id=plan.adapter_id,
                 )
@@ -750,6 +744,7 @@ def build_production_seam_pair(
     def _identities_factory(
         target: DeviceObservation, plan: LayoutPlan
     ) -> dict[str, dict[str, str]]:
+        nonlocal observation
         if not isinstance(target, DeviceObservation):
             raise FreshAbInstallError(
                 "post-layout observation requires a rematerialized whole-disk target"
@@ -762,8 +757,7 @@ def build_production_seam_pair(
             raise FreshAbInstallError(
                 "post-layout identity observation is not authoritative"
             )
-        observed_holder["observed"] = observed
-        observed_holder["target_path"] = str(target.path)
+        observation = (target, plan, observed)
         return observed
 
     return (_seams_factory, _identities_factory)

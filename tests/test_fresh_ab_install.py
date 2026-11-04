@@ -29,6 +29,7 @@ import shutil
 import tempfile
 import unittest
 import uuid
+from dataclasses import replace
 from io import BytesIO
 from pathlib import Path
 
@@ -870,7 +871,7 @@ class FreshAbInstallTests(unittest.TestCase):
 
     # -- refusal ordering: nothing destructive before preflight ------------
 
-    def test_undersized_support_bound_refused_before_destruction(self) -> None:
+    def test_finalized_footprint_that_exceeds_disk_refuses_before_destruction(self) -> None:
         directory = tempfile.mkdtemp(prefix="x8-install-")
         self.addCleanup(shutil.rmtree, directory, True)
         root = Path(directory)
@@ -882,16 +883,32 @@ class FreshAbInstallTests(unittest.TestCase):
             expected_platform_family=_FAMILY,
             expected_architecture=_ARCH,
             sizing=request.sizing,
-            target=request.target,
+            target=_target(size_bytes=(65 + 2 * 1024 + 256) * MIB),
             support_installed_bytes=2 * GIB,
             install_target_sha256=_INSTALL_SHA,
             password_hash=_PASSWORD_HASH,
         )
         bad_seams = harness["seams"]
         bad_seams.support_installed_bound = 2 * GIB
-        with self.assertRaises(FreshAbInstallError):
+        with self.assertRaisesRegex(FreshAbInstallError, "each system slot needs"):
             execute_fresh_ab_install(bad, bad_seams)
         self.assertEqual(harness["runner"].commands, [])
+        self.assertEqual(harness["touched"], [])
+
+    def test_enlarged_slots_bind_finalization_and_installed_authority(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="x8-install-") as directory:
+            harness = self._harness(Path(directory), _payload())
+            request = replace(
+                harness["request"], sizing=_sizing(1664 * MIB),
+                support_installed_bytes=1694 * MIB,
+            )
+            seams = harness["seams"]
+            seams.support_installed_bound = request.support_installed_bytes
+            expected = 2397 * MIB
+            seams.slot_storage_factory = lambda role: SparseSlotStorage(expected)
+            result = execute_fresh_ab_install(request, seams)
+            self.assertEqual(result.receipt.slot_capacity_bytes, expected)
+            self.assertEqual(result.record.slot_bytes, expected)
 
     def test_tampered_bundle_refused_before_destruction(self) -> None:
         directory = tempfile.mkdtemp(prefix="x8-install-")

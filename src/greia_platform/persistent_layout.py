@@ -40,6 +40,7 @@ from pathlib import Path
 from typing import Mapping
 
 from .system_updates import (
+    MAX_BLOCK_DEVICE_BYTES,
     UpdateManifest,
     build_persistent_state_contract_bytes,
     verify_persistent_state_contract_bytes,
@@ -124,9 +125,9 @@ BOOT_CONTROL_KINDS = {
     "pi-tryboot-ab-v1": "pi-tryboot-v1",
 }
 
-#: Slot-size source bounds from L7-PROFILES (tools/build_profile.py).
+#: Profile floor and block-device sanity bound for observed installed slots.
 MIN_SYSTEM_SLOT_BYTES = 1024 * 1024 * 1024
-MAX_SYSTEM_SLOT_BYTES = 2 * 1024 * 1024 * 1024
+MAX_SYSTEM_SLOT_BYTES = MAX_BLOCK_DEVICE_BYTES
 
 #: PERSIST floor source bound from L7-PROFILES (tools/build_profile.py).
 MIN_PERSIST_BYTES = 256 * 1024 * 1024

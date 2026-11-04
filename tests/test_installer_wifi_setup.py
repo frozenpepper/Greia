@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import time
 import unittest
+from pathlib import Path
+from unittest.mock import patch
 
 from greia_installer.wifi import (
     IwdNetworkProfile,
@@ -84,6 +86,32 @@ def finish(controller: WifiSetupController, timeout: float = 1.0) -> None:
 
 
 class InstallerWifiSetupTests(unittest.TestCase):
+    def test_r_is_password_input_and_only_refresh_button_rescans(self) -> None:
+        import pygame
+
+        from greia_installer.main import InstallerApplication, InstallerPage
+
+        root = Path(__file__).resolve().parents[1]
+        app = InstallerApplication(
+            root=root, payload=root / "unused", payload_digest=None,
+            windowed=True, demo=True,
+        )
+        app.state.page = InstallerPage.WIFI
+        app.wifi = WifiSetupController(FakeBackend())
+        app.wifi.begin()
+        finish(app.wifi)
+        app._buttons["wifi-refresh"] = pygame.Rect(10, 10, 20, 20)
+        with patch.object(app.wifi, "refresh", wraps=app.wifi.refresh) as refresh:
+            for character in "rR":
+                app._handle_key(pygame.K_r, pygame)
+                app._handle_text_input(character)
+            self.assertEqual(app.wifi.snapshot.passphrase, "rR")
+            self.assertEqual(app.wifi.snapshot.phase, WifiSetupPhase.READY)
+            refresh.assert_not_called()
+            app._handle_mouse_up((15, 15))
+            refresh.assert_called_once_with()
+        finish(app.wifi)
+
     def test_scan_and_personal_connection(self) -> None:
         backend = FakeBackend()
         controller = WifiSetupController(backend)

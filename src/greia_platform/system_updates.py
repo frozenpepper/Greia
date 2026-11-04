@@ -66,7 +66,7 @@ _BLKGETSIZE64_IOCTL_32BIT = 0x80041272
 _BLKGETSIZE64_IOCTL_64BIT = 0x80081272
 _SYSFS_BLOCK_ROOT = Path("/sys/class/block")
 _MIN_BLOCK_NODE_BYTES = 512
-_MAX_BLOCK_NODE_BYTES = 1 << 48
+MAX_BLOCK_DEVICE_BYTES = 1 << 48
 #: Installed PERSIST contract schema (not a bundle member in v3; the bundle
 #: carries only the three readable/writable schema integers). Kept so the
 #: installed-state helpers below stay importable for persistent_layout.
@@ -3042,7 +3042,7 @@ def _require_capacity_in_bounds(node: Path, size: object) -> int:
         not isinstance(size, int)
         or isinstance(size, bool)
         or size < _MIN_BLOCK_NODE_BYTES
-        or size > _MAX_BLOCK_NODE_BYTES
+        or size > MAX_BLOCK_DEVICE_BYTES
     ):
         raise ValueError(
             f"slot device capacity is outside Greia bounds: {node.name}"

@@ -114,9 +114,8 @@ from .layout import (
     PostLayoutIdentityObserver,
     ProfileSizing,
     adapter_for,
-    plan_for_profile,
+    plan_fresh_ab_layout,
     probe_partition_filesystem_uuid,
-    require_finalized_slot_capacity,
     validate_observed_identities_against_plan,
 )
 from .persist import (
@@ -654,15 +653,15 @@ def execute_fresh_ab_install(
     # Proved on the machine-selected bound (verified pool + inventory
     # selection), already ceiling-checked against the image-authorized
     # facts above — never on the whole-pool total the release carries.
+    writer = SlotWriter()
     try:
-        require_finalized_slot_capacity(
-            slot_bytes=int(request.sizing.slot_bytes),
-            base_bytes=member.payload_uncompressed_bytes,
-            minimum_slot_bytes=member.minimum_slot_bytes,
-            support_installed_bytes=seams.support_installed_bound,
+        required_slot_bytes = writer.required_slot_bytes(
+            member, seams.support_installed_bound
         )
-        plan = plan_for_profile(
-            request.sizing, device_size_bytes=int(request.target.size_bytes)
+        plan = plan_fresh_ab_layout(
+            request.sizing,
+            device_size_bytes=request.target.size_bytes,
+            required_slot_bytes=required_slot_bytes,
         )
     except (LayoutError, SlotWriteError) as exc:
         raise FreshAbInstallError(f"release does not fit this target: {exc}") from exc
@@ -706,7 +705,7 @@ def execute_fresh_ab_install(
             raise FreshAbInstallError("hardware inventory is incomplete; refusing finalization")
         policy = SlotProfilePolicy(
             layout_id=request.sizing.layout_adapter_id,
-            system_slot_bytes=int(request.sizing.slot_bytes),
+            system_slot_bytes=plan.slot_bytes,
             boot_backend=request.sizing.boot_backend,
             architecture=manifest.architecture,
             platform_family=manifest.platform_family,
@@ -818,7 +817,7 @@ def execute_fresh_ab_install(
     destination_a = DestinationSlot(
         semantic_slot="A",
         role="system-a",
-        slot_capacity_bytes=int(request.sizing.slot_bytes),
+        slot_capacity_bytes=plan.slot_bytes,
         active_slot=None,
         accepted_slot=None,
         layout_id=request.sizing.layout_adapter_id,
@@ -836,7 +835,6 @@ def execute_fresh_ab_install(
         storage = _ProgressSlotStorage(
             storage, progress, total_bytes=member.payload_uncompressed_bytes
         )
-    writer = SlotWriter()
     stream_factory = seams.payload_stream_factory or (
         lambda: open_bundle_payload_stream(
             request.bundle_path, expected_size=member.payload_size
@@ -921,7 +919,7 @@ def execute_fresh_ab_install(
         boot_active_slot="A",
         accepted_slot="A",
         accepted_release_id=member.release_id,
-        slot_bytes=int(request.sizing.slot_bytes),
+        slot_bytes=plan.slot_bytes,
         system_a=dict(observed["system-a"]),
         system_b=dict(observed["system-b"]),
         persist_partuuid=observed["persist"]["partuuid"],

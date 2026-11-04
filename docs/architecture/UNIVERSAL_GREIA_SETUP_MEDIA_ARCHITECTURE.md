@@ -761,7 +761,7 @@ required = true
 
 Pi selects a Pi layout/target/tryboot backend. `tools/build_profile.py` remains the typed parser/validator.
 
-Minimum target bytes are calculated from complete layout overhead + two slots + persistent minimum + reserve/alignment. There is no universal `4 GiB` target constant.
+Minimum target bytes are calculated from complete layout overhead, two slots, the PERSIST minimum and alignment. On fresh A/B installs, `system_slot_bytes` is a floor. The installer sizes both slots from the verified finalized footprint of the release and selected hardware support, targeting 35% extra headroom within the space available after reserving PERSIST. It checks fit before partitioning and records the actual slot size in installed layout authority. Subsequent updates validate against those installed slots.
 
 Live-memory limits are likewise profile/build facts derived from measurement, not model-name conditionals buried in Python.
 

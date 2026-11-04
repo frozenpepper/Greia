@@ -400,8 +400,8 @@ Legacy i386:
 ```text
 MBR
 boot-control  64 MiB ext4
-system A    1536 MiB ext4
-system B    1536 MiB ext4
+system A    1664 MiB ext4 minimum for the Acer profile
+system B    same size as system A
 PERSIST     remainder, minimum 1024 MiB
 GRUB A/B backend
 ```
@@ -418,7 +418,7 @@ PERSIST      remainder, minimum 1536 MiB
 UEFI GRUB A/B backend
 ```
 
-These are product defaults.
+The profile declares sizing floors. Fresh A/B installation sizes both slots equally for the verified finalized footprint and targets 35% extra headroom where the disk permits it. The disk-fit proof preserves the PERSIST minimum before partitioning. The installed layout record owns the actual slot size for updates and rollback.
 
 ## 17. Boot health
 

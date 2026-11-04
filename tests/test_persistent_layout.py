@@ -155,7 +155,7 @@ class AuthoritySyncTests(unittest.TestCase):
             set(ALLOWED_PLATFORM_FAMILIES), set(authority._ALLOWED_PLATFORM_FAMILIES)
         )
         self.assertEqual(MIN_SYSTEM_SLOT_BYTES, authority._MIN_SYSTEM_SLOT_BYTES)
-        self.assertEqual(MAX_SYSTEM_SLOT_BYTES, authority._MAX_SYSTEM_SLOT_BYTES)
+        self.assertLess(authority._MAX_SYSTEM_SLOT_BYTES, MAX_SYSTEM_SLOT_BYTES)
         self.assertEqual(MIN_PERSIST_BYTES, authority._MIN_PERSISTENT_BYTES)
 
     def test_namespace_order_matches_release_contract_authority(self) -> None:

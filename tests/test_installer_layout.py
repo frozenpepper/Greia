@@ -153,12 +153,12 @@ class LegacyPlanValidationTests(unittest.TestCase):
         with self.assertRaisesRegex(LayoutError, "slot bound"):
             adapter.plan(
                 device_size_bytes=DEVICE_BYTES,
-                slot_bytes=3 * 1024**3,
+                slot_bytes=(1 << 48) + 1024**2,
                 persist_minimum_bytes=PERSIST_MINIMUM_BYTES,
             )
 
     def test_tampered_role_model_rejected(self) -> None:
-        # system-a resized away from the profile slot_bytes.
+        # system-a resized away from the plan's slot_bytes.
         tampered_system_a = PlannedPartition(
             number=2,
             role="system-a",
@@ -166,7 +166,7 @@ class LegacyPlanValidationTests(unittest.TestCase):
             filesystem="ext4",
             label="GREIA_SYS_A",
         )
-        with self.assertRaisesRegex(LayoutError, "must equal the profile slot_bytes"):
+        with self.assertRaisesRegex(LayoutError, "must equal the layout plan slot_bytes"):
             LayoutPlan(
                 adapter_id="legacy-bios-ab-v1",
                 label_type="msdos",

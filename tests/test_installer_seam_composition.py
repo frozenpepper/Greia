@@ -435,7 +435,6 @@ class NoSubstituteImplementationTests(unittest.TestCase):
             "SubprocessPersistRunner",
             "InstallerSlotPackageInstaller",
             "partition_number_path",
-            "plan_for_profile",
         ):
             self.assertIn(required, source, f"production factory must reuse {required}")
         for forbidden in (
@@ -583,13 +582,43 @@ class PartialSelectionSupportClassTests(unittest.TestCase):
             boot_control_dir=staging / "boot-control",
             mount_root=staging / "mounts",
         )
-        seams_factory, _ = build_production_seam_pair(config)
-        seams = seams_factory(_whole_disk_target())
+        seams_factory, observe = build_production_seam_pair(config)
+        target = _whole_disk_target()
+        seams = seams_factory(target)
         self.assertTrue(callable(seams.bios_bootloader_installer))
-        return seams, verified, _support_set_from_seams
+        return seams, verified, _support_set_from_seams, target, observe
+
+    def test_production_slot_adapters_use_observed_layout_capacity(self) -> None:
+        from greia_installer.layout import adapter_for
+
+        seams, _, _, target, observe = self._production_seams()
+        slot_bytes = 2398 * MIB
+        plan = adapter_for(_AB_LAYOUT).plan(
+            device_size_bytes=target.size_bytes, slot_bytes=slot_bytes,
+            persist_minimum_bytes=256 * MIB,
+        )
+        identities = {
+            "system-a": {
+                "partuuid": "a1b2c3d4-02",
+                "filesystem_uuid": "11111111-2222-4333-8444-555555555555",
+            },
+        }
+        with mock.patch("greia_installer.layout.build_post_layout_mbr_observer") as observer:
+            observer.return_value.return_value = identities
+            observe(target, plan)
+        with (
+            mock.patch("greia_installer.device_seams.BlockSlotStorage") as storage,
+            mock.patch("greia_installer.device_seams.BlockSlotFilesystem") as filesystem,
+        ):
+            seams.slot_storage_factory("A")
+            seams.slot_filesystem_factory()
+        storage.assert_called_once_with(Path("/dev/sda2"), slot_bytes)
+        resolved = filesystem.call_args.args[0]
+        self.assertEqual(resolved.device_node, Path("/dev/sda2"))
+        self.assertEqual(resolved.capacity_bytes, slot_bytes)
 
     def test_production_seams_cover_exactly_the_machine_selection(self) -> None:
-        seams, verified, _support_set_from_seams = self._production_seams()
+        seams, verified, _support_set_from_seams, _, _ = self._production_seams()
         selected = set(seams.firmware_packages) | set(seams.microcode_packages)
         classes = {name for name, _v, _a, _d in seams.support_classes}
         # The invariant the QEMU leg broke: classes == selection exactly,
@@ -629,7 +658,7 @@ class PartialSelectionSupportClassTests(unittest.TestCase):
             )
 
         with mock.patch.object(InstallerHardwareEnablementPlanner, "plan", incomplete_plan):
-            seams, verified, _ = self._production_seams()
+            seams, verified, _, _, _ = self._production_seams()
         self.assertTrue(seams.hardware_detection_incomplete)
         self.assertIn("firmware-a", seams.firmware_packages)
         self.assertEqual(
