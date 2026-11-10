@@ -46,7 +46,7 @@ Big pictures, friendly voices, and one Home button that always brings them back.
   <sub>Six friends guide the way, in English, Italian, Spanish and French.</sub>
 </p>
 
-> **Status: technical preview (`0.13.1-preview.1`), not a family release.**
+> **Status: technical preview (`0.13.2-preview.1`), not a family release.**
 > An Acer Aspire One technical-preview installer is listed on the
 > [downloads page](https://www.frozenpepper.it/greia/downloads.html).
 > Hardware testing and release certification are still incomplete.

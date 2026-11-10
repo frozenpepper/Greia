@@ -21,7 +21,7 @@ Version and build are read from the standard installer file name
 (``greia-os-installer-<profile>-<version>-build-<commit>.img``, as written by
 ``build/build-installer-image.sh``) unless given explicitly. The builder's
 version-less compatibility symlink is resolved to the real file first. The newest entries per target are listed first; the newest
-three per target are kept. Image files are never deleted.
+ten per target are kept (the Downloads page lists the older ones). Image files are never deleted.
 """
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ import build_update_index as _index  # noqa: E402  (shared load/write/hash helpe
 
 STATUSES = ("technical-preview", "release")
 BOOT_MODES = ("bios", "uefi", "uefi-experimental")
-DEFAULT_KEEP = 3
+DEFAULT_KEEP = 10
 # Common USB stick sizes; the page tells people the smallest one that fits.
 MEDIA_SIZES_GB = (2, 4, 8, 16, 32, 64)
 _IMAGE_NAME = re.compile(
@@ -143,7 +143,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--notes-it")
     parser.add_argument("--notes-es")
     parser.add_argument("--notes-fr")
-    parser.add_argument("--keep", type=int, default=DEFAULT_KEEP, help="entries kept per target (default: 3)")
+    parser.add_argument("--keep", type=int, default=DEFAULT_KEEP, help="entries kept per target (default: 10)")
     parser.add_argument("--published-at", default=_dt.date.today().isoformat())
     args = parser.parse_args(argv)
 
