@@ -5,6 +5,15 @@ Greia has no supported ordinary-family release yet. Versions before
 targets; reinstall a current development image rather than migrating an old
 one.
 
+## 0.13.2-preview.1 — 2026-11-10 (technical preview candidate)
+
+- Fresh A/B installs size both system slots for the verified payload and the
+  selected hardware support, with headroom, instead of a fixed slot size.
+- Removed the Wi-Fi rescan shortcut.
+- The Greia Parents web client now lives in the repository as `parent-app/`.
+- Restored the committed voice recordings and their receipts; voice
+  production tooling moved to VoxCPM2 and Parakeet v3.
+
 ## 0.13.1-preview.1 — 2026-10-28 (technical preview candidate)
 
 - Made the A/B boot-control menu use the canonical Greia GRUB theme and logo,
